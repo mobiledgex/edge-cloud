@@ -246,6 +246,11 @@ func startServices() error {
 		return fmt.Errorf("Failed to init settings, %v", err)
 	}
 
+	err = rateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
+	if err != nil {
+		return fmt.Errorf("Failed to init default rate limit settings, %v", err)
+	}
+
 	// get influxDB credentials from vault
 	influxAuth := &cloudcommon.InfluxCreds{}
 	influxAuth, err = cloudcommon.GetInfluxDataAuth(vaultConfig, *region)
@@ -397,9 +402,10 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
+
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
-		grpc.UnaryInterceptor(cloudcommon.AuditUnaryInterceptor),
-		grpc.StreamInterceptor(cloudcommon.AuditStreamInterceptor))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor)))
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
 	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
@@ -421,6 +427,7 @@ func startServices() error {
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
+	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
@@ -460,6 +467,7 @@ func startServices() error {
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterTrustPolicyApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
+			edgeproto.RegisterRateLimitSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
 			edgeproto.RegisterDebugApiHandler,
 			edgeproto.RegisterDeviceApiHandler,
@@ -608,6 +616,7 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitTrustPolicyApi(sync)
 	InitSettingsApi(sync)
+	InitRateLimitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
 	InitAppInstClientApi()
 	InitDeviceApi(sync)
@@ -619,6 +628,8 @@ func InitApis(sync *Sync) {
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
+	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&rateLimitSettingsApi.flowcache)
+	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&rateLimitSettingsApi.maxreqscache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendGPUDriverCache(&gpuDriverApi.cache)

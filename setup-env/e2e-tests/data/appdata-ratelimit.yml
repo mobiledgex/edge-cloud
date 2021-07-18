@@ -1,0 +1,299 @@
+settings:
+  shepherdmetricscollectioninterval: 1s
+  autodeployintervalsec: 1
+  autodeployoffsetsec: 0.3
+  createappinsttimeout: 3s
+  updateappinsttimeout: 2s
+  deleteappinsttimeout: 2s
+  createclusterinsttimeout: 3s
+  updateclusterinsttimeout: 2s
+  deleteclusterinsttimeout: 2s
+  createcloudlettimeout: 10s
+  updatecloudlettimeout: 2s
+  updatetrustpolicytimeout: 5s
+  masternodeflavor: x1.small
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  influxdbmetricsretention: 2h
+  cloudletmaintenancetimeout: 2s
+  dmeapimetricscollectioninterval: 1s
+  locationtilesidelengthkm: 2
+  edgeeventsmetricscollectioninterval: 3s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  influxdbdownsampledmetricsretention: 672h0m0s
+  edgeeventsmetricscontinuousqueriescollectionintervals:
+  - interval: 2s
+  disableratelimit: false
+  maxnumperipratelimiters: 10000
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessShared
+  sharedvolumesize: 100
+  nummasters: 1
+  numnodes: 2
+
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 2
+
+operatorcodes:
+- code: 31026
+  organization: dmuus
+
+cloudlets:
+- key:
+    organization: dmuus
+    name: dmuus-cloud-1
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+- key:
+    organization: dmuus
+    name: dmuus-cloud-2
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+- key:
+    organization: dmuus
+    name: dmuus-cloud-3
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+- key:
+    organization: azure
+    name: azure-cloud-4
+  location:
+    latitude: 32
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+- key:
+    organization: gcp
+    name: gcp-cloud-5
+  location:
+    latitude: 36
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+  platformtype: PlatformTypeFake
+
+apps:
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:80,tcp:443,udp:10002,tcp:81:tls,tcp:444:tls"
+  officialfqdn: someapplication1.acmeappco.com
+  androidpackagename: com.acme.someapplication1
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+- key:
+    organization: AcmeAppCo
+    name: helmApplication
+    version: "1.0"
+  imagepath: mobiledgex/AcmeAppCo/helmApplication
+  deployment: helm
+  defaultflavor:
+    name: x1.small
+  accessports: "udp:20002"
+  androidpackagename: com.acme.helmApplication
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+
+- key:
+    organization: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/dummyvalue
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:64000"
+
+- key:
+    organization: AcmeAppCo1
+    name: vmapp1
+    version: "1.0"
+  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
+  imagetype: ImageTypeQcow
+  deployment: "vm"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:80,tcp:443,udp:10002"
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+- key:
+    organization: AcmeAppCo1
+    name: vmapp2
+    version: "1.0"
+  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img#md5:7e9cfcb763e83573a4b9d9315f56cc5f
+  imagetype: ImageTypeQcow
+  deployment: "vm"
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:80,tcp:443,udp:10002"
+- key:
+    organization: AcmeAppCo
+    name: NoPortsApp
+    version: "1.0"
+  imagepath: http://registry.mobiledgex.net/mobiledgex_AcmeAppCo/noportsapp:1.0
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  officialfqdn: noportsapp.acmeappco.com
+
+appinstances:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: helmApplication
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      organization: AcmeAppCo1
+      name: vmapp1
+      version: "1.0"
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo1
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      organization: AcmeAppCo1
+      name: vmapp2
+      version: "1.0"
+    clusterinstkey:
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: AcmeAppCo1
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: NoPortsApp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small

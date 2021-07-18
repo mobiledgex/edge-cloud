@@ -51,6 +51,8 @@ settings:
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
   userdefinedalertmintriggertime: 30s
+  disableratelimit: true
+  maxnumperipratelimiters: 10000
 trustpolicies:
 - key:
     organization: dmuus

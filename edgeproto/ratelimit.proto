@@ -1,0 +1,210 @@
+syntax = "proto3";
+package edgeproto;
+
+import "result.proto";
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+enum ApiEndpointType {
+  UNKNOWN_API_ENDPOINT_TYPE = 0;
+  DME = 1;
+}
+
+enum RateLimitTarget {
+  UNKNOWN_TARGET = 0;
+  ALL_REQUESTS = 1;
+  PER_IP = 2;
+  PER_USER = 3;
+}
+
+enum FlowRateLimitAlgorithm {
+  UNKNOWN_FLOW_ALGORITHM = 0;
+  TOKEN_BUCKET_ALGORITHM = 1;
+  LEAKY_BUCKET_ALGORITHM = 2;
+}
+
+enum MaxReqsRateLimitAlgorithm {
+  UNKNOWN_MAX_REQS_ALGORITHM = 0;
+  FIXED_WINDOW_ALGORITHM = 1;
+}
+
+message FlowSettings {
+  // Flow Rate Limit algorithm
+  FlowRateLimitAlgorithm flow_algorithm = 1;
+  // requests per second for flow rate limiting
+  double reqsPerSecond = 2;
+  // burst size for flow rate limiting
+  int64 burstSize = 3;
+}
+
+message FlowRateLimitSettingsKey {
+  // Unique name for FlowRateLimitSettings (there can be multiple FlowSettings per RateLimitSettingsKey)
+  string flow_settings_name = 1 [(protogen.keytag) = "flowsettingsname"];
+  // Key that identifies api and rate limit target for settings
+  RateLimitSettingsKey rate_limit_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message FlowRateLimitSettings {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // required: true
+  // Unique identifier key
+  FlowRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
+  // FlowSettings
+  FlowSettings settings = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.uses_org) = "none";
+  option (protogen.alias) = "flowsettingsname=Key.FlowSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,flowalgorithm=Settings.FlowAlgorithm,reqspersecond=Settings.ReqsPerSecond,burstsize=Settings.BurstSize";
+}
+
+message MaxReqsSettings {
+  // MaxReqs Rate Limit Algorithm
+  MaxReqsRateLimitAlgorithm max_reqs_algorithm = 1;
+  // Maximum number of requests for the given Interval
+  int64 max_requests = 2;
+  // Time interval
+  int64 interval = 3 [(gogoproto.casttype) = "Duration"];
+}
+
+message MaxReqsRateLimitSettingsKey {
+  // Unique name for MaxReqsRateLimitSettings (there can be multiple MaxReqsSettings per RateLimitSettingsKey)
+  string max_reqs_settings_name = 1 [(protogen.keytag) = "maxreqssettingsname"];
+  // Key that identifies api and rate limit target for settings
+  RateLimitSettingsKey rate_limit_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message MaxReqsRateLimitSettings {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // required: true
+  // Unique identifier key
+  MaxReqsRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
+  // MaxReqsSettings
+  MaxReqsSettings settings = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.uses_org) = "none";
+  option (protogen.alias) = "maxreqssettingsname=Key.MaxReqsSettingsName,apiendpointtype=Key.RateLimitKey.ApiEndpointType,ratelimittarget=Key.RateLimitKey.RateLimitTarget,apiname=Key.RateLimitKey.ApiName,maxreqsalgorithm=Settings.MaxReqsAlgorithm,maxrequests=Settings.MaxRequests,interval=Settings.Interval";
+}
+
+message RateLimitSettingsKey {
+  // Name of API (eg. CreateApp or RegisterClient) (Use "Global" if not a specific API)
+  string api_name = 1 [(protogen.keytag) = "apiname"];
+  // API Endpoint type
+  ApiEndpointType api_endpoint_type = 2 [(protogen.keytag) = "apiendpointtype"];
+  // Target to rate limit
+  RateLimitTarget rate_limit_target = 3 [(protogen.keytag) = "ratelimittarget"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message RateLimitSettings {
+  // Key that identifies api and rate limit target for settings
+  RateLimitSettingsKey key = 1 [(gogoproto.nullable) = false];
+  // Map of FlowSettings (key: FlowSettingsName, value: FlowSettings)
+  map<string, FlowSettings> flow_settings = 2;
+  // Map of MaxReqsSettings (key: MaxReqsSettingsName, value: MaxReqsSettings)
+  map<string, MaxReqsSettings> max_reqs_settings = 3;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_matches) = true;
+}
+
+service RateLimitSettingsApi {
+  // Show RateLimit settings for an API endpoint and target
+  rpc ShowRateLimitSettings(RateLimitSettings) returns (stream RateLimitSettings) {
+    option (google.api.http) = {
+      post: "/show/ratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
+  // Create Flow RateLimit settings for an API endpoint and target
+  rpc CreateFlowRateLimitSettings(FlowRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Update Flow RateLimit settings for an API endpoint and target
+  rpc UpdateFlowRateLimitSettings(FlowRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Delete Flow RateLimit settings for an API endpoint and target
+  rpc DeleteFlowRateLimitSettings(FlowRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Show Flow RateLimit settings for an API endpoint and target
+  rpc ShowFlowRateLimitSettings(FlowRateLimitSettings) returns (stream FlowRateLimitSettings) {
+    option (google.api.http) = {
+      post: "/show/flowratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
+  // Create MaxReqs RateLimit settings for an API endpoint and target
+  rpc CreateMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Update MaxReqs RateLimit settings for an API endpoint and target
+  rpc UpdateMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Delete MaxReqs RateLimit settings for an API endpoint and target
+  rpc DeleteMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
+  }
+  // Show MaxReqs RateLimit settings for an API endpoint and target
+  rpc ShowMaxReqsRateLimitSettings(MaxReqsRateLimitSettings) returns (stream MaxReqsRateLimitSettings) {
+    option (google.api.http) = {
+      post: "/show/maxreqsratelimitsettings"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceConfig,ActionView,";
+  }
+}
+
+message RateLimitSettingsData {
+  repeated RateLimitSettings settings = 1 [(gogoproto.nullable) = false];
+  option (protogen.e2edata) = true;
+  option (protogen.generate_copy_in_fields) = false;
+}

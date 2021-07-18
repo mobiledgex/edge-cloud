@@ -25,6 +25,12 @@ type CloudletHandler struct {
 type CloudletInfoHandler struct {
 }
 
+type FlowRateLimitSettingsHandler struct {
+}
+
+type MaxReqsRateLimitSettingsHandler struct {
+}
+
 func (s *AppHandler) Update(ctx context.Context, in *edgeproto.App, rev int64) {
 	dmecommon.AddApp(ctx, in)
 }
@@ -99,13 +105,55 @@ func (s *CloudletInfoHandler) Prune(ctx context.Context, keys map[edgeproto.Clou
 
 func (s *CloudletInfoHandler) Flush(ctx context.Context, notifyId int64) {}
 
+func (r *FlowRateLimitSettingsHandler) Update(ctx context.Context, in *edgeproto.FlowRateLimitSettings, rev int64) {
+	if in.Key.RateLimitKey.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+		// Update RateLimitMgr with updated RateLimitSettings
+		dmecommon.RateLimitMgr.UpdateFlowRateLimitSettings(in)
+	}
+}
+
+func (r *FlowRateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.FlowRateLimitSettings, rev int64) {
+	if in.Key.RateLimitKey.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+		dmecommon.RateLimitMgr.RemoveFlowRateLimitSettings(in.Key)
+	}
+}
+
+func (r *FlowRateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.FlowRateLimitSettingsKey]struct{}) {
+	dmecommon.RateLimitMgr.PruneFlowRateLimitSettings(keys)
+}
+
+func (r *FlowRateLimitSettingsHandler) Flush(ctx context.Context, notifyId int64) {}
+
+func (r *MaxReqsRateLimitSettingsHandler) Update(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings, rev int64) {
+	if in.Key.RateLimitKey.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+		// Update RateLimitMgr with updated RateLimitSettings
+		dmecommon.RateLimitMgr.UpdateMaxReqsRateLimitSettings(in)
+	}
+}
+
+func (r *MaxReqsRateLimitSettingsHandler) Delete(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings, rev int64) {
+	if in.Key.RateLimitKey.ApiEndpointType == edgeproto.ApiEndpointType_DME {
+		dmecommon.RateLimitMgr.RemoveMaxReqsRateLimitSettings(in.Key)
+	}
+}
+
+func (r *MaxReqsRateLimitSettingsHandler) Prune(ctx context.Context, keys map[edgeproto.MaxReqsRateLimitSettingsKey]struct{}) {
+	dmecommon.RateLimitMgr.PruneMaxReqsRateLimitSettings(keys)
+}
+
+func (r *MaxReqsRateLimitSettingsHandler) Flush(ctx context.Context, notifyId int64) {}
+
 var nodeCache edgeproto.NodeCache
+var flowRateLimitSettingsCache edgeproto.FlowRateLimitSettingsCache
+var maxReqsRateLimitSettingsCache edgeproto.MaxReqsRateLimitSettingsCache
 
 func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.DialOption, notifyOps ...notify.ClientOp) *notify.Client {
 	edgeproto.InitNodeCache(&nodeCache)
 	edgeproto.InitAppInstClientKeyCache(&dmecommon.AppInstClientKeyCache)
 	edgeproto.InitDeviceCache(&dmecommon.PlatformClientsCache)
 	dmecommon.AppInstClientKeyCache.SetUpdatedCb(dmecommon.SendCachedClients)
+	edgeproto.InitFlowRateLimitSettingsCache(&flowRateLimitSettingsCache)
+	edgeproto.InitMaxReqsRateLimitSettingsCache(&maxReqsRateLimitSettingsCache)
 	notifyClient := notify.NewClient(nodeMgr.Name(), strings.Split(addrs, ","), tlsDialOption, notifyOps...)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(&dmecommon.Settings, dmecommon.SettingsUpdated))
 	notifyClient.RegisterRecv(notify.NewAutoProvPolicyRecv(&dmecommon.AutoProvPolicyHandler{}))
@@ -114,6 +162,8 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	notifyClient.RegisterRecv(notify.NewCloudletRecv(&CloudletHandler{}))
 	notifyClient.RegisterRecv(notify.NewAppInstRecv(&AppInstHandler{}))
 	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&dmecommon.DmeAppTbl.FreeReservableClusterInsts))
+	notifyClient.RegisterRecv(notify.NewFlowRateLimitSettingsRecv(&FlowRateLimitSettingsHandler{}))
+	notifyClient.RegisterRecv(notify.NewMaxReqsRateLimitSettingsRecv(&MaxReqsRateLimitSettingsHandler{}))
 	notifyClient.RegisterRecvAppInstClientKeyCache(&dmecommon.AppInstClientKeyCache)
 
 	notifyClient.RegisterSendNodeCache(&nodeCache)

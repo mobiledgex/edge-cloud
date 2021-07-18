@@ -17,6 +17,7 @@ import "app.proto";
 import "appinst.proto";
 import "refs.proto";
 import "useralert.proto";
+import "ratelimit.proto";
 import "gogoproto/gogo.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
@@ -48,6 +49,8 @@ message AllData {
   repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
   repeated GPUDriver gpu_drivers = 21 [(gogoproto.nullable) = false];
   repeated UserAlert user_defined_alerts = 22 [(gogoproto.nullable) = false];
+  repeated FlowRateLimitSettings flow_rate_limit_settings = 23 [(gogoproto.nullable) = false];
+  repeated MaxReqsRateLimitSettings max_reqs_rate_limit_settings = 24 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

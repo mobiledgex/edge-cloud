@@ -1,3 +1,5 @@
+settings:
+  disableratelimit: true
 flavors:
 - key:
     name: x1.tiny
