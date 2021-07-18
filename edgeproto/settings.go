@@ -98,6 +98,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ChefClientInterval, dur0)
 		case SettingsFieldCloudletMaintenanceTimeout:
 			v.CheckGT(f, s.CloudletMaintenanceTimeout, dur0)
+		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
+			// no validation
 		case SettingsFieldInfluxDbMetricsRetention:
 			// no validation
 		case SettingsFieldInfluxDbCloudletUsageMetricsRetention:
@@ -118,8 +120,6 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			for _, val := range s.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
 				v.CheckGT(f, val.Interval, dur0)
 			}
-		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
-			// no validation
 		case SettingsFieldInfluxDbEdgeEventsMetricsRetention:
 			// no validation
 		case SettingsFieldInfluxDbDownsampledMetricsRetention:
@@ -132,6 +132,10 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ClusterAutoScaleRetryDelay, dur0)
 		case SettingsFieldUserDefinedAlertMinTriggerTime:
 			v.CheckGT(f, s.UserDefinedAlertMinTriggerTime, dur0)
+		case SettingsFieldDisableRateLimit:
+			// no validation
+		case SettingsFieldMaxNumPerIpRateLimiters:
+			v.CheckGT(f, s.MaxNumPerIpRateLimiters, int64(0))
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -191,6 +195,8 @@ func GetDefaultSettings() *Settings {
 	s.ClusterAutoScaleAveragingDurationSec = 60
 	s.ClusterAutoScaleRetryDelay = Duration(time.Minute)
 	s.UserDefinedAlertMinTriggerTime = Duration(30 * time.Second)
+	s.DisableRateLimit = false
+	s.MaxNumPerIpRateLimiters = 10000
 	return &s
 }
 

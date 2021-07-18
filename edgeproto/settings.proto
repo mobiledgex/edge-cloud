@@ -85,6 +85,10 @@ message Settings {
   int64 cluster_auto_scale_retry_delay = 35 [(gogoproto.casttype) = "Duration"];
   // Minimmum user alert trigger time
   int64 user_defined_alert_min_trigger_time = 36 [(gogoproto.casttype) = "Duration"];
+  // Disable rate limiting for APIs (default is false)
+  bool disable_rate_limit = 37;
+  // Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)
+  int64 max_num_per_ip_rate_limiters = 39;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
