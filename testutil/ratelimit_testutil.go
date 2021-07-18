@@ -25,8 +25,7 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 type RateLimitSettingsDataOut struct {
-	Settings []edgeproto.Result
-	Errors   []Err
+	Errors []Err
 }
 
 // used to intersperse other creates/deletes/checks
@@ -36,20 +35,174 @@ type RunRateLimitSettingsDataApiCallback func(objs string)
 
 func RunRateLimitSettingsDataApis(run *Run, in *edgeproto.RateLimitSettingsData, inMap map[string]interface{}, out *RateLimitSettingsDataOut, apicb RunRateLimitSettingsDataApiCallback) {
 	apicb("")
-	run.RateLimitSettingsApi(&in.Settings, inMap["settings"], &out.Settings)
-	apicb("settings")
 	out.Errors = run.Errs
 }
 
 func RunRateLimitSettingsDataReverseApis(run *Run, in *edgeproto.RateLimitSettingsData, inMap map[string]interface{}, out *RateLimitSettingsDataOut, apicb RunRateLimitSettingsDataApiCallback) {
-	apicb("settings")
-	run.RateLimitSettingsApi(&in.Settings, inMap["settings"], &out.Settings)
 	apicb("")
 	out.Errors = run.Errs
 }
 
 func RunRateLimitSettingsDataShowApis(run *Run, in *edgeproto.RateLimitSettingsData, out *edgeproto.RateLimitSettingsData) {
 	run.RateLimitSettingsApi(&in.Settings, nil, &out.Settings)
+}
+
+func (r *Run) RateLimitSettingsApi_FlowRateLimitSettings(data *[]edgeproto.FlowRateLimitSettings, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for FlowRateLimitSettings", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.FlowRateLimitSettings{}
+		out, err := r.client.ShowFlowRateLimitSettings(r.ctx, obj)
+		if err != nil {
+			r.logErr("RateLimitSettingsApi_FlowRateLimitSettings", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.FlowRateLimitSettings)
+			if !ok {
+				panic(fmt.Sprintf("RunRateLimitSettingsApi_FlowRateLimitSettings expected dataOut type *[]edgeproto.FlowRateLimitSettings, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "create":
+			out, err := r.client.CreateFlowRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_FlowRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_FlowRateLimitSettings expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "update":
+			// set specified fields
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for FlowRateLimitSettings", "err", err)
+				*r.Rc = false
+				return
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+
+			out, err := r.client.UpdateFlowRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_FlowRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_FlowRateLimitSettings expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "delete":
+			out, err := r.client.DeleteFlowRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_FlowRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_FlowRateLimitSettings expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowFlowRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_FlowRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.FlowRateLimitSettings)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_FlowRateLimitSettings expected dataOut type *[]edgeproto.FlowRateLimitSettings, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
+}
+
+func (r *Run) RateLimitSettingsApi_MaxReqsRateLimitSettings(data *[]edgeproto.MaxReqsRateLimitSettings, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for MaxReqsRateLimitSettings", "mode", r.Mode)
+	if r.Mode == "show" {
+		obj := &edgeproto.MaxReqsRateLimitSettings{}
+		out, err := r.client.ShowMaxReqsRateLimitSettings(r.ctx, obj)
+		if err != nil {
+			r.logErr("RateLimitSettingsApi_MaxReqsRateLimitSettings", err)
+		} else {
+			outp, ok := dataOut.(*[]edgeproto.MaxReqsRateLimitSettings)
+			if !ok {
+				panic(fmt.Sprintf("RunRateLimitSettingsApi_MaxReqsRateLimitSettings expected dataOut type *[]edgeproto.MaxReqsRateLimitSettings, but was %T", dataOut))
+			}
+			*outp = append(*outp, out...)
+		}
+		return
+	}
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "create":
+			out, err := r.client.CreateMaxReqsRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_MaxReqsRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_MaxReqsRateLimitSettings expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "update":
+			// set specified fields
+			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
+			if err != nil {
+				log.DebugLog(log.DebugLevelApi, "bad dataMap for MaxReqsRateLimitSettings", "err", err)
+				*r.Rc = false
+				return
+			}
+			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
+
+			out, err := r.client.UpdateMaxReqsRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_MaxReqsRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_MaxReqsRateLimitSettings expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "delete":
+			out, err := r.client.DeleteMaxReqsRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_MaxReqsRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_MaxReqsRateLimitSettings expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "showfiltered":
+			out, err := r.client.ShowMaxReqsRateLimitSettings(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("RateLimitSettingsApi_MaxReqsRateLimitSettings[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.MaxReqsRateLimitSettings)
+				if !ok {
+					panic(fmt.Sprintf("RunRateLimitSettingsApi_MaxReqsRateLimitSettings expected dataOut type *[]edgeproto.MaxReqsRateLimitSettings, but was %T", dataOut))
+				}
+				*outp = append(*outp, out...)
+			}
+		}
+	}
 }
 
 func (r *Run) RateLimitSettingsApi(data *[]edgeproto.RateLimitSettings, dataMap interface{}, dataOut interface{}) {
@@ -71,51 +224,6 @@ func (r *Run) RateLimitSettingsApi(data *[]edgeproto.RateLimitSettings, dataMap 
 	for ii, objD := range *data {
 		obj := &objD
 		switch r.Mode {
-		case "create":
-			out, err := r.client.CreateRateLimitSettings(r.ctx, obj)
-			if err != nil {
-				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
-				r.logErr(fmt.Sprintf("RateLimitSettingsApi[%d]", ii), err)
-			} else {
-				outp, ok := dataOut.(*[]edgeproto.Result)
-				if !ok {
-					panic(fmt.Sprintf("RunRateLimitSettingsApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
-				}
-				*outp = append(*outp, *out)
-			}
-		case "update":
-			// set specified fields
-			objMap, err := cli.GetGenericObjFromList(dataMap, ii)
-			if err != nil {
-				log.DebugLog(log.DebugLevelApi, "bad dataMap for RateLimitSettings", "err", err)
-				*r.Rc = false
-				return
-			}
-			obj.Fields = cli.GetSpecifiedFields(objMap, obj, cli.YamlNamespace)
-
-			out, err := r.client.UpdateRateLimitSettings(r.ctx, obj)
-			if err != nil {
-				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
-				r.logErr(fmt.Sprintf("RateLimitSettingsApi[%d]", ii), err)
-			} else {
-				outp, ok := dataOut.(*[]edgeproto.Result)
-				if !ok {
-					panic(fmt.Sprintf("RunRateLimitSettingsApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
-				}
-				*outp = append(*outp, *out)
-			}
-		case "delete":
-			out, err := r.client.DeleteRateLimitSettings(r.ctx, obj)
-			if err != nil {
-				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
-				r.logErr(fmt.Sprintf("RateLimitSettingsApi[%d]", ii), err)
-			} else {
-				outp, ok := dataOut.(*[]edgeproto.Result)
-				if !ok {
-					panic(fmt.Sprintf("RunRateLimitSettingsApi expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
-				}
-				*outp = append(*outp, *out)
-			}
 		case "showfiltered":
 			out, err := r.client.ShowRateLimitSettings(r.ctx, obj)
 			if err != nil {
@@ -131,30 +239,6 @@ func (r *Run) RateLimitSettingsApi(data *[]edgeproto.RateLimitSettings, dataMap 
 	}
 }
 
-func (s *DummyServer) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
-	}
-	s.RateLimitSettingsCache.Update(ctx, in, 0)
-	return &edgeproto.Result{}, nil
-}
-
-func (s *DummyServer) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
-	}
-	s.RateLimitSettingsCache.Update(ctx, in, 0)
-	return &edgeproto.Result{}, nil
-}
-
-func (s *DummyServer) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	if s.CudNoop {
-		return &edgeproto.Result{}, nil
-	}
-	s.RateLimitSettingsCache.Delete(ctx, in, 0)
-	return &edgeproto.Result{}, nil
-}
-
 func (s *DummyServer) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, server edgeproto.RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
 	var err error
 	obj := &edgeproto.RateLimitSettings{}
@@ -163,47 +247,85 @@ func (s *DummyServer) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, ser
 			server.Send(&edgeproto.RateLimitSettings{})
 		}
 	}
-	err = s.RateLimitSettingsCache.Show(in, func(obj *edgeproto.RateLimitSettings) error {
+	return err
+}
+
+func (s *DummyServer) CreateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.FlowRateLimitSettingsCache.Update(ctx, in, 0)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.FlowRateLimitSettingsCache.Update(ctx, in, 0)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.FlowRateLimitSettingsCache.Delete(ctx, in, 0)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowFlowRateLimitSettings(in *edgeproto.FlowRateLimitSettings, server edgeproto.RateLimitSettingsApi_ShowFlowRateLimitSettingsServer) error {
+	var err error
+	obj := &edgeproto.FlowRateLimitSettings{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.FlowRateLimitSettings{})
+		}
+	}
+	err = s.FlowRateLimitSettingsCache.Show(in, func(obj *edgeproto.FlowRateLimitSettings) error {
 		err := server.Send(obj)
 		return err
 	})
 	return err
 }
 
-func (s *ApiClient) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
-	return api.CreateRateLimitSettings(ctx, in)
+func (s *DummyServer) CreateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.MaxReqsRateLimitSettingsCache.Update(ctx, in, 0)
+	return &edgeproto.Result{}, nil
 }
 
-func (s *CliClient) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "CreateRateLimitSettings")
-	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
-	return &out, err
+func (s *DummyServer) UpdateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.MaxReqsRateLimitSettingsCache.Update(ctx, in, 0)
+	return &edgeproto.Result{}, nil
 }
 
-func (s *ApiClient) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
-	return api.UpdateRateLimitSettings(ctx, in)
+func (s *DummyServer) DeleteMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if s.CudNoop {
+		return &edgeproto.Result{}, nil
+	}
+	s.MaxReqsRateLimitSettingsCache.Delete(ctx, in, 0)
+	return &edgeproto.Result{}, nil
 }
 
-func (s *CliClient) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "UpdateRateLimitSettings")
-	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
-	return &out, err
-}
-
-func (s *ApiClient) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
-	return api.DeleteRateLimitSettings(ctx, in)
-}
-
-func (s *CliClient) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	out := edgeproto.Result{}
-	args := append(s.BaseArgs, "controller", "DeleteRateLimitSettings")
-	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
-	return &out, err
+func (s *DummyServer) ShowMaxReqsRateLimitSettings(in *edgeproto.MaxReqsRateLimitSettings, server edgeproto.RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsServer) error {
+	var err error
+	obj := &edgeproto.MaxReqsRateLimitSettings{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		for ii := 0; ii < s.ShowDummyCount; ii++ {
+			server.Send(&edgeproto.MaxReqsRateLimitSettings{})
+		}
+	}
+	err = s.MaxReqsRateLimitSettingsCache.Show(in, func(obj *edgeproto.MaxReqsRateLimitSettings) error {
+		err := server.Send(obj)
+		return err
+	})
+	return err
 }
 
 type RateLimitSettingsStream interface {
@@ -241,9 +363,156 @@ func (s *CliClient) ShowRateLimitSettings(ctx context.Context, in *edgeproto.Rat
 	return output, err
 }
 
+func (s *ApiClient) CreateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.CreateFlowRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) CreateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateFlowRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) UpdateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.UpdateFlowRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) UpdateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateFlowRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.DeleteFlowRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) DeleteFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteFlowRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type FlowRateLimitSettingsStream interface {
+	Recv() (*edgeproto.FlowRateLimitSettings, error)
+}
+
+func FlowRateLimitSettingsReadStream(stream FlowRateLimitSettingsStream) ([]edgeproto.FlowRateLimitSettings, error) {
+	output := []edgeproto.FlowRateLimitSettings{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read FlowRateLimitSettings stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) ([]edgeproto.FlowRateLimitSettings, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	stream, err := api.ShowFlowRateLimitSettings(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return FlowRateLimitSettingsReadStream(stream)
+}
+
+func (s *CliClient) ShowFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) ([]edgeproto.FlowRateLimitSettings, error) {
+	output := []edgeproto.FlowRateLimitSettings{}
+	args := append(s.BaseArgs, "controller", "ShowFlowRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
+func (s *ApiClient) CreateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.CreateMaxReqsRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) CreateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "CreateMaxReqsRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) UpdateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.UpdateMaxReqsRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) UpdateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "UpdateMaxReqsRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) DeleteMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	return api.DeleteMaxReqsRateLimitSettings(ctx, in)
+}
+
+func (s *CliClient) DeleteMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "DeleteMaxReqsRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+type MaxReqsRateLimitSettingsStream interface {
+	Recv() (*edgeproto.MaxReqsRateLimitSettings, error)
+}
+
+func MaxReqsRateLimitSettingsReadStream(stream MaxReqsRateLimitSettingsStream) ([]edgeproto.MaxReqsRateLimitSettings, error) {
+	output := []edgeproto.MaxReqsRateLimitSettings{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read MaxReqsRateLimitSettings stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) ShowMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) ([]edgeproto.MaxReqsRateLimitSettings, error) {
+	api := edgeproto.NewRateLimitSettingsApiClient(s.Conn)
+	stream, err := api.ShowMaxReqsRateLimitSettings(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return MaxReqsRateLimitSettingsReadStream(stream)
+}
+
+func (s *CliClient) ShowMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) ([]edgeproto.MaxReqsRateLimitSettings, error) {
+	output := []edgeproto.MaxReqsRateLimitSettings{}
+	args := append(s.BaseArgs, "controller", "ShowMaxReqsRateLimitSettings")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
 type RateLimitSettingsApiClient interface {
-	CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
-	UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
-	DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error)
 	ShowRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) ([]edgeproto.RateLimitSettings, error)
+	CreateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error)
+	UpdateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error)
+	DeleteFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error)
+	ShowFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) ([]edgeproto.FlowRateLimitSettings, error)
+	CreateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error)
+	UpdateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error)
+	DeleteMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error)
+	ShowMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) ([]edgeproto.MaxReqsRateLimitSettings, error)
 }

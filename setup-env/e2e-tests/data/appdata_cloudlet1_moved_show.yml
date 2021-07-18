@@ -34,7 +34,7 @@ settings:
   - interval: 2s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
-  disabledmeratelimit: true
+  disableratelimit: true
   maxnumperipratelimiters: 10000
 flavors:
 - key:

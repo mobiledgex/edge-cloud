@@ -112,6 +112,50 @@ func TestIntervalLimiter(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
 }
 
+func TestCompositeLimiter(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelDmereq)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	// Create CompositeLimiter that is composed of two IntervalLimiters
+	intervalLimiter1 := NewIntervalLimiter(1, time.Duration(time.Second))
+	intervalLimiter2 := NewIntervalLimiter(2, time.Duration(time.Minute))
+	compositeLimiter := NewCompositeLimiter(intervalLimiter1, intervalLimiter2)
+
+	// test composite limiter serially
+	err := compositeLimiter.Limit(ctx, nil)
+	assert.Nil(t, err)
+	time.Sleep(time.Second)
+	err = compositeLimiter.Limit(ctx, nil)
+	assert.Nil(t, err)
+	time.Sleep(time.Second)
+	err = compositeLimiter.Limit(ctx, nil)
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+
+	// test composite limiter concurrently
+	numRequests := 5
+	intervalLimiter1 = NewIntervalLimiter(numRequests, time.Duration(time.Second))
+	intervalLimiter2 = NewIntervalLimiter(numRequests, time.Duration(time.Minute))
+	compositeLimiter = NewCompositeLimiter(intervalLimiter1, intervalLimiter2)
+	done := make(chan error, numRequests+1)
+	for i := 0; i < numRequests+1; i++ {
+		go func() {
+			time.Sleep(time.Duration(rand.Intn(numRequests-1)) * time.Second)
+			err := compositeLimiter.Limit(ctx, nil)
+			done <- err
+		}()
+	}
+	for i := 0; i < numRequests; i++ {
+		err := <-done
+		assert.Nil(t, err)
+	}
+	err = <-done
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+}
+
 func TestApiRateLimitMgr(t *testing.T) {
 	// init ratelimitmgr
 	mgr := NewRateLimitManager(false, 100, 100)
@@ -128,8 +172,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"api1allreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 100,
 				BurstSize:     100,
@@ -142,8 +186,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"api2allreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 200,
 				BurstSize:     100,
@@ -156,8 +200,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"api3allreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 300,
 				BurstSize:     100,
@@ -170,8 +214,8 @@ func TestApiRateLimitMgr(t *testing.T) {
 			ApiEndpointType: edgeproto.ApiEndpointType_DME,
 			RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 		},
-		FlowSettings: []*edgeproto.FlowSettings{
-			&edgeproto.FlowSettings{
+		FlowSettings: map[string]*edgeproto.FlowSettings{
+			"globalallreqs1": &edgeproto.FlowSettings{
 				FlowAlgorithm: edgeproto.FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
 				ReqsPerSecond: 1000,
 				BurstSize:     100,
@@ -223,21 +267,22 @@ func TestApiRateLimitMgr(t *testing.T) {
 		}(i)
 		// Update settings midway through
 		if i == numClients/2 {
-			newCreateLimitSettings := &edgeproto.RateLimitSettings{
-				Key: edgeproto.RateLimitSettingsKey{
-					ApiName:         apis[0],
-					ApiEndpointType: edgeproto.ApiEndpointType_DME,
-					RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
-				},
-				MaxReqsSettings: []*edgeproto.MaxReqsSettings{
-					&edgeproto.MaxReqsSettings{
-						MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
-						MaxRequests:      1,
-						Interval:         edgeproto.Duration(time.Second),
+			newCreateLimitSettings := &edgeproto.MaxReqsRateLimitSettings{
+				Key: edgeproto.MaxReqsRateLimitSettingsKey{
+					MaxReqsSettingsName: "api1allreqs1",
+					RateLimitKey: edgeproto.RateLimitSettingsKey{
+						ApiName:         apis[0],
+						ApiEndpointType: edgeproto.ApiEndpointType_DME,
+						RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 					},
 				},
+				Settings: &edgeproto.MaxReqsSettings{
+					MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
+					MaxRequests:      1,
+					Interval:         edgeproto.Duration(time.Second),
+				},
 			}
-			mgr.UpdateRateLimitSettings(newCreateLimitSettings)
+			mgr.UpdateMaxReqsRateLimitSettings(newCreateLimitSettings)
 		}
 	}
 	wg.Wait()

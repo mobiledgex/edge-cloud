@@ -47,42 +47,77 @@ func (r *RateLimitManager) CreateApiEndpointLimiter(allRequestsRateLimitSettings
 	r.limitsPerApi[api] = newApiEndpointLimiter(api, apiEndpointRateLimitSettings, r.maxNumPerIpRateLimiters, r.maxNumPerIpRateLimiters)
 }
 
-// Update the rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
-func (r *RateLimitManager) UpdateRateLimitSettings(rateLimitSettings *edgeproto.RateLimitSettings) {
+// Update the flow rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
+func (r *RateLimitManager) UpdateFlowRateLimitSettings(flowRateLimitSettings *edgeproto.FlowRateLimitSettings) {
 	r.Lock()
 	defer r.Unlock()
 	// Look up ApiEndpointLimiter for specified API (create one if not found)
-	api := rateLimitSettings.Key.ApiName
+	api := flowRateLimitSettings.Key.RateLimitKey.ApiName
 	limiter, ok := r.limitsPerApi[api]
 	if !ok || limiter == nil {
 		limiter = newApiEndpointLimiter(api, &apiEndpointRateLimitSettings{}, r.maxNumPerIpRateLimiters, r.maxNumPerIpRateLimiters)
 	}
 	// Update ApiEndpointLimiter with new RateLimitSettings
-	limiter.updateApiEndpointLimiterSettings(rateLimitSettings)
+	limiter.updateFlowRateLimitSettings(flowRateLimitSettings)
 	r.limitsPerApi[api] = limiter
 }
 
 /*
- * Remove the rate limit settings for API associated with the specified RateLimitSettingsKey
+ * Remove the flow rate limit settings for API associated with the specified RateLimitSettingsKey
  * For example, this might remove the PerIp rate limiting for VerifyLocation
  */
-func (r *RateLimitManager) RemoveRateLimitSettings(key edgeproto.RateLimitSettingsKey) {
+func (r *RateLimitManager) RemoveFlowRateLimitSettings(key edgeproto.FlowRateLimitSettingsKey) {
 	r.Lock()
 	defer r.Unlock()
-	api := key.ApiName
+	api := key.RateLimitKey.ApiName
 	limiter, ok := r.limitsPerApi[api]
 	if !ok || limiter == nil {
 		return
 	}
-	limiter.removeApiEndpointLimiterSettings(key.RateLimitTarget)
+	limiter.removeFlowRateLimitSettings(key.RateLimitKey.RateLimitTarget, key.FlowSettingsName)
 }
 
-// Remove RateLimitSettings whose keys are not in the keys map
-func (r *RateLimitManager) PruneRateLimitSettings(keys map[edgeproto.RateLimitSettingsKey]struct{}) {
+// Update the maxreqs rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
+func (r *RateLimitManager) UpdateMaxReqsRateLimitSettings(maxReqsRateLimitSettings *edgeproto.MaxReqsRateLimitSettings) {
+	r.Lock()
+	defer r.Unlock()
+	// Look up ApiEndpointLimiter for specified API (create one if not found)
+	api := maxReqsRateLimitSettings.Key.RateLimitKey.ApiName
+	limiter, ok := r.limitsPerApi[api]
+	if !ok || limiter == nil {
+		limiter = newApiEndpointLimiter(api, &apiEndpointRateLimitSettings{}, r.maxNumPerIpRateLimiters, r.maxNumPerIpRateLimiters)
+	}
+	// Update ApiEndpointLimiter with new RateLimitSettings
+	limiter.updateMaxReqsRateLimitSettings(maxReqsRateLimitSettings)
+	r.limitsPerApi[api] = limiter
+}
+
+func (r *RateLimitManager) RemoveMaxReqsRateLimitSettings(key edgeproto.MaxReqsRateLimitSettingsKey) {
+	r.Lock()
+	defer r.Unlock()
+	api := key.RateLimitKey.ApiName
+	limiter, ok := r.limitsPerApi[api]
+	if !ok || limiter == nil {
+		return
+	}
+	limiter.removeMaxReqsRateLimitSettings(key.RateLimitKey.RateLimitTarget, key.MaxReqsSettingsName)
+}
+
+// Remove FlowRateLimitSettings whose keys are not in the keys map
+func (r *RateLimitManager) PruneFlowRateLimitSettings(keys map[edgeproto.FlowRateLimitSettingsKey]struct{}) {
 	r.Lock()
 	defer r.Unlock()
 	for _, limiter := range r.limitsPerApi {
-		limiter.pruneApiEndpointLimiterSettings(keys)
+		limiter.pruneFlowRateLimitSettings(keys)
+	}
+}
+
+// Remove MaxReqsRateLimitSettings whose keys are not in the keys map
+func (r *RateLimitManager) PruneMaxReqsRateLimitSettings(keys map[edgeproto.MaxReqsRateLimitSettingsKey]struct{}) {
+	r.Lock()
+	defer r.Unlock()
+	for _, limiter := range r.limitsPerApi {
+		limiter.pruneMaxReqsRateLimitSettings(keys)
 	}
 }
 

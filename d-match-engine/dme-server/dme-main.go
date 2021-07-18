@@ -556,7 +556,7 @@ func main() {
 	defer dmecommon.StopAppInstClients()
 
 	// Initialize API RateLimitManager
-	disableRateLimit := dmecommon.Settings.DisableDmeRateLimit
+	disableRateLimit := dmecommon.Settings.DisableRateLimit
 	if *testMode {
 		disableRateLimit = true
 	}

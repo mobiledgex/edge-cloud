@@ -132,7 +132,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ClusterAutoScaleRetryDelay, dur0)
 		case SettingsFieldUserDefinedAlertMinTriggerTime:
 			v.CheckGT(f, s.UserDefinedAlertMinTriggerTime, dur0)
-		case SettingsFieldDisableDmeRateLimit:
+		case SettingsFieldDisableRateLimit:
 			// no validation
 		case SettingsFieldMaxNumPerIpRateLimiters:
 			v.CheckGT(f, s.MaxNumPerIpRateLimiters, int64(0))
@@ -195,7 +195,7 @@ func GetDefaultSettings() *Settings {
 	s.ClusterAutoScaleAveragingDurationSec = 60
 	s.ClusterAutoScaleRetryDelay = Duration(time.Minute)
 	s.UserDefinedAlertMinTriggerTime = Duration(30 * time.Second)
-	s.DisableDmeRateLimit = false
+	s.DisableRateLimit = false
 	s.MaxNumPerIpRateLimiters = 10000
 	return &s
 }

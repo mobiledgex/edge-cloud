@@ -10,28 +10,48 @@ import (
 )
 
 type RateLimitSettingsApi struct {
-	sync  *Sync
-	store edgeproto.RateLimitSettingsStore
-	cache edgeproto.RateLimitSettingsCache
+	sync         *Sync
+	flowstore    edgeproto.FlowRateLimitSettingsStore
+	flowcache    edgeproto.FlowRateLimitSettingsCache
+	maxreqsstore edgeproto.MaxReqsRateLimitSettingsStore
+	maxreqscache edgeproto.MaxReqsRateLimitSettingsCache
 }
 
 var rateLimitSettingsApi = RateLimitSettingsApi{}
 
 func InitRateLimitSettingsApi(sync *Sync) {
 	rateLimitSettingsApi.sync = sync
-	rateLimitSettingsApi.store = edgeproto.NewRateLimitSettingsStore(sync.store)
-	edgeproto.InitRateLimitSettingsCache(&rateLimitSettingsApi.cache)
-	sync.RegisterCache(&rateLimitSettingsApi.cache)
+	// Init store and cache for FlowRateLimitSettings
+	rateLimitSettingsApi.flowstore = edgeproto.NewFlowRateLimitSettingsStore(sync.store)
+	edgeproto.InitFlowRateLimitSettingsCache(&rateLimitSettingsApi.flowcache)
+	sync.RegisterCache(&rateLimitSettingsApi.flowcache)
+	// Init store and cache for MaxReqsRateLimitSettings
+	rateLimitSettingsApi.maxreqsstore = edgeproto.NewMaxReqsRateLimitSettingsStore(sync.store)
+	edgeproto.InitMaxReqsRateLimitSettingsCache(&rateLimitSettingsApi.maxreqscache)
+	sync.RegisterCache(&rateLimitSettingsApi.maxreqscache)
 }
 
-// Store initial default RateLimitSettings
+// Store initial default Flow and MaxReqs RateLimitSettings
 func (r *RateLimitSettingsApi) initDefaultRateLimitSettings(ctx context.Context) error {
 	err := r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		defaultsettings := edgeproto.GetDefaultRateLimitSettings()
-		for _, settings := range defaultsettings {
-			buf := edgeproto.RateLimitSettings{}
-			if !r.store.STMGet(stm, &settings.Key, &buf) {
-				r.store.STMPut(stm, settings)
+		for _, dsetting := range defaultsettings {
+			// Store default FlowRateLimitSettings
+			for name, fsetting := range dsetting.FlowSettings {
+				flowRateLimitSettings := buildFlowRateLimitSettings(dsetting.Key, name, fsetting)
+				buf := edgeproto.FlowRateLimitSettings{}
+				if !r.flowstore.STMGet(stm, &flowRateLimitSettings.Key, &buf) {
+					r.flowstore.STMPut(stm, flowRateLimitSettings)
+				}
+			}
+
+			// Store default MaxReqsRateLimitSettings
+			for name, msetting := range dsetting.MaxReqsSettings {
+				maxReqsRateLimitSettings := buildMaxReqsRateLimitSettings(dsetting.Key, name, msetting)
+				buf := edgeproto.MaxReqsRateLimitSettings{}
+				if !r.maxreqsstore.STMGet(stm, &maxReqsRateLimitSettings.Key, &buf) {
+					r.maxreqsstore.STMPut(stm, maxReqsRateLimitSettings)
+				}
 			}
 		}
 		return nil
@@ -39,107 +59,337 @@ func (r *RateLimitSettingsApi) initDefaultRateLimitSettings(ctx context.Context)
 	return err
 }
 
-// Gets the RateLimitSettings that corresponds to the specified RateLimitSettingsKey
-func (r *RateLimitSettingsApi) Get(key edgeproto.RateLimitSettingsKey) *edgeproto.RateLimitSettings {
-	buf := &edgeproto.RateLimitSettings{}
-	if !r.cache.Get(&key, buf) {
-		return nil
+func buildFlowRateLimitSettings(key edgeproto.RateLimitSettingsKey, name string, f *edgeproto.FlowSettings) *edgeproto.FlowRateLimitSettings {
+	return &edgeproto.FlowRateLimitSettings{
+		Key: edgeproto.FlowRateLimitSettingsKey{
+			FlowSettingsName: name,
+			RateLimitKey:     key,
+		},
+		Settings: f,
 	}
-	return buf
 }
 
-// Update RateLimit settings for an API endpoint type
-func (r *RateLimitSettingsApi) CreateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	err := validateRateLimitSettings(in)
-	if err != nil {
-		return nil, err
+func buildMaxReqsRateLimitSettings(key edgeproto.RateLimitSettingsKey, name string, m *edgeproto.MaxReqsSettings) *edgeproto.MaxReqsRateLimitSettings {
+	return &edgeproto.MaxReqsRateLimitSettings{
+		Key: edgeproto.MaxReqsRateLimitSettingsKey{
+			MaxReqsSettingsName: name,
+			RateLimitKey:        key,
+		},
+		Settings: m,
 	}
-
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateRateLimitSettings", "ratelimitsettings", in)
-
-	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur := edgeproto.RateLimitSettings{}
-		if r.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.ExistsError()
-		}
-
-		log.SpanLog(ctx, log.DebugLevelApi, "Adding new RateLimitSettings", "key", in.Key.String(), "settings", in)
-
-		// Validate fields and key before storing
-		if err = in.Validate(edgeproto.RateLimitSettingsAllFieldsMap); err != nil {
-			return err
-		}
-		r.store.STMPut(stm, in)
-		return nil
-	})
-	return &edgeproto.Result{}, err
 }
 
-// Update RateLimit settings for an API endpoint type
-func (r *RateLimitSettingsApi) UpdateRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
-	err := validateRateLimitSettings(in)
-	if err != nil {
-		return nil, err
+// Show RateLimit settings for an API endpoint type
+func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
+	if settingsApi.Get().DisableRateLimit {
+		return fmt.Errorf("DisableRateLimit must be false to ShowRateLimitSettings")
 	}
-
-	log.SpanLog(ctx, log.DebugLevelApi, "UpdateRateLimitSettings", "ratelimitsettings", in)
-
-	cur := edgeproto.RateLimitSettings{}
-	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !r.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.NotFoundError()
-		}
-
-		// Copy updated fields into cur
-		cur.CopyInFields(in)
-		log.SpanLog(ctx, log.DebugLevelApi, "Updating previous RateLimitSettings", "key", in.Key.String(), "updated settings", cur)
-
-		// Validate fields and key before storing
-		if err = cur.Validate(edgeproto.RateLimitSettingsAllFieldsMap); err != nil {
-			return err
-		}
-		r.store.STMPut(stm, &cur)
+	// Get all FlowRateLimitSettings with corresponding RateLimitKey
+	flowsettings := make([]*edgeproto.FlowRateLimitSettings, 0)
+	ffilter := &edgeproto.FlowRateLimitSettings{
+		Key: edgeproto.FlowRateLimitSettingsKey{
+			RateLimitKey: in.Key,
+		},
+	}
+	err := r.flowcache.Show(ffilter, func(obj *edgeproto.FlowRateLimitSettings) error {
+		flowsettings = append(flowsettings, obj)
 		return nil
 	})
-	return &edgeproto.Result{}, err
+	if err != nil {
+		return err
+	}
+
+	// Get all MaxReqsRateLimitSettings with corresponding RateLimitKey
+	maxreqssettings := make([]*edgeproto.MaxReqsRateLimitSettings, 0)
+	mfilter := &edgeproto.MaxReqsRateLimitSettings{
+		Key: edgeproto.MaxReqsRateLimitSettingsKey{
+			RateLimitKey: in.Key,
+		},
+	}
+	err = r.maxreqscache.Show(mfilter, func(obj *edgeproto.MaxReqsRateLimitSettings) error {
+		maxreqssettings = append(maxreqssettings, obj)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	ratelimitsettings := buildRateLimitSettings(flowsettings, maxreqssettings)
+	for _, settings := range ratelimitsettings {
+		if err = cb.Send(settings); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-// Delete RateLimit settings for an API endpoint type (ie. no rate limiting)
-func (r *RateLimitSettingsApi) DeleteRateLimitSettings(ctx context.Context, in *edgeproto.RateLimitSettings) (*edgeproto.Result, error) {
+func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msettings []*edgeproto.MaxReqsRateLimitSettings) []*edgeproto.RateLimitSettings {
+	settingsmap := make(map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings)
+
+	for _, fsetting := range fsettings {
+		key := fsetting.Key.RateLimitKey
+		ratelimitsetting, ok := settingsmap[key]
+		if !ok || ratelimitsetting == nil {
+			ratelimitsetting = &edgeproto.RateLimitSettings{
+				Key:             key,
+				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
+				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
+			}
+			settingsmap[key] = ratelimitsetting
+		}
+		ratelimitsetting.FlowSettings[fsetting.Key.FlowSettingsName] = fsetting.Settings
+	}
+
+	for _, msetting := range msettings {
+		key := msetting.Key.RateLimitKey
+		ratelimitsetting, ok := settingsmap[key]
+		if !ok || ratelimitsetting == nil {
+			ratelimitsetting = &edgeproto.RateLimitSettings{
+				Key:             key,
+				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
+				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
+			}
+			settingsmap[key] = ratelimitsetting
+		}
+		ratelimitsetting.MaxReqsSettings[msetting.Key.MaxReqsSettingsName] = msetting.Settings
+	}
+
+	ratelimitsettings := make([]*edgeproto.RateLimitSettings, 0)
+	for _, settings := range settingsmap {
+		ratelimitsettings = append(ratelimitsettings, settings)
+	}
+	return ratelimitsettings
+}
+
+// Create FlowRateLimitSettings for the specified RateLimitSettings. If no RateLimitSettings exists, create a new one
+func (r *RateLimitSettingsApi) CreateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to CreateFlowRateLimitSettings")
+	}
+
 	err := in.Key.ValidateKey()
 	if err != nil {
 		return nil, err
 	}
 
-	log.SpanLog(ctx, log.DebugLevelApi, "DeleteRateLimitSettings", "key", in.Key.String())
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateFlowRateLimitSettings", "flowratelimitsettings", in)
 
-	buf := &edgeproto.RateLimitSettings{}
-	if !r.cache.Get(&in.Key, buf) {
-		return nil, in.Key.NotFoundError()
-	}
-	return r.store.Delete(ctx, in, r.sync.syncWait)
+	cur := edgeproto.FlowRateLimitSettings{}
+	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if r.flowstore.STMGet(stm, &in.Key, &cur) {
+			return in.Key.ExistsError()
+		}
+
+		// Validate fields and key before storing
+		if err = in.Validate(edgeproto.FlowRateLimitSettingsAllFieldsMap); err != nil {
+			return err
+		}
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Add new FlowRateLimitSettings to RateLimitSettings", "key", in.Key.String())
+
+		r.flowstore.STMPut(stm, in)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
-// Show RateLimit settings for an API endpoint type
-func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowRateLimitSettingsServer) error {
-	err := r.cache.Show(in, func(obj *edgeproto.RateLimitSettings) error {
+// Update FlowRateLimitSettings for the specified RateLimitSettings
+func (r *RateLimitSettingsApi) UpdateFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to UpdateFlowRateLimitSettings")
+	}
+
+	err := in.Key.ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "UpdateFlowRateLimitSettings", "flowratelimitsettings", in)
+
+	cur := edgeproto.FlowRateLimitSettings{}
+	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !r.flowstore.STMGet(stm, &in.Key, &cur) {
+			return in.Key.RateLimitKey.NotFoundError()
+		}
+
+		old := cur
+		changes := cur.CopyInFields(in)
+		if changes == 0 {
+			return nil
+		}
+
+		// set the values that were set to defaults
+		if cur.Settings.FlowAlgorithm == edgeproto.FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM {
+			cur.Settings.FlowAlgorithm = old.Settings.FlowAlgorithm
+		}
+		if cur.Settings.ReqsPerSecond == 0 {
+			cur.Settings.ReqsPerSecond = old.Settings.ReqsPerSecond
+		}
+		if cur.Settings.BurstSize == 0 {
+			cur.Settings.BurstSize = old.Settings.BurstSize
+		}
+
+		// Validate fields before storing
+		if err = cur.Validate(edgeproto.FlowRateLimitSettingsAllFieldsMap); err != nil {
+			return err
+		}
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Updating FlowRateLimitSettings for RateLimitSettings", "key", in.Key.String(), "updated settings", cur)
+		r.flowstore.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+// Delete FlowRateLimitSettings for the specified RateLimitSettings. If no FlowSettings and MaxReqsSettings left, remove the RateLimitSettings
+func (r *RateLimitSettingsApi) DeleteFlowRateLimitSettings(ctx context.Context, in *edgeproto.FlowRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to DeleteFlowRateLimitSettings")
+	}
+
+	err := in.Key.ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "DeleteFlowRateLimitSettings", "key", in.Key.String())
+
+	buf := &edgeproto.FlowRateLimitSettings{}
+	if !r.flowcache.Get(&in.Key, buf) {
+		return nil, in.Key.NotFoundError()
+	}
+	return r.flowstore.Delete(ctx, in, r.sync.syncWait)
+}
+
+// Show FlowRateLimit settings for an API endpoint type
+func (r *RateLimitSettingsApi) ShowFlowRateLimitSettings(in *edgeproto.FlowRateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowFlowRateLimitSettingsServer) error {
+	if settingsApi.Get().DisableRateLimit {
+		if *testMode {
+			return nil
+		}
+		return fmt.Errorf("DisableRateLimit must be false to ShowFlowRateLimitSettings")
+	}
+
+	err := r.flowcache.Show(in, func(obj *edgeproto.FlowRateLimitSettings) error {
 		err := cb.Send(obj)
 		return err
 	})
 	return err
 }
 
-// Helper function that validates the incoming RateLimitSettings request with current settings
-func validateRateLimitSettings(in *edgeproto.RateLimitSettings) error {
-	// Check that DisableDmeRateLimit is false if ApiEndpointType is Dme
-	if settingsApi.Get().DisableDmeRateLimit && in.Key.ApiEndpointType == edgeproto.ApiEndpointType_DME {
-		return fmt.Errorf("DisableDmeRateLimit in settings must be false for ApiEndpointType Dme")
+// Create MaxReqsRateLimitSettings for the specified RateLimitSettings. If no RateLimitSettings exists, create a new one
+func (r *RateLimitSettingsApi) CreateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to CreateMaxReqsRateLimitSettings")
 	}
 
-	if in.Key.RateLimitTarget == edgeproto.RateLimitTarget_PER_USER {
-		return fmt.Errorf("PerUser rate limiting is not implemented for %v apis", in.Key.ApiEndpointType)
+	err := in.Key.ValidateKey()
+	if err != nil {
+		return nil, err
 	}
 
-	// Validate key
-	return in.Key.ValidateKey()
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateMaxReqsRateLimitSettings", "maxreqsratelimitsettings", in)
+
+	cur := edgeproto.MaxReqsRateLimitSettings{}
+	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if r.maxreqsstore.STMGet(stm, &in.Key, &cur) {
+			return in.Key.ExistsError()
+		}
+
+		// Validate fields and key before storing
+		if err = in.Validate(edgeproto.MaxReqsRateLimitSettingsAllFieldsMap); err != nil {
+			return err
+		}
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Add new MaxReqsRateLimitSettings to RateLimitSettings", "key", in.Key.String())
+
+		r.maxreqsstore.STMPut(stm, in)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+// Update MaxReqsRateLimitSettings for the specified RateLimitSettings
+func (r *RateLimitSettingsApi) UpdateMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to UpdateMaxReqsRateLimitSettings")
+	}
+
+	err := in.Key.ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "UpdateMaxReqsRateLimitSettings", "maxreqsratelimitsettings", in)
+
+	cur := edgeproto.MaxReqsRateLimitSettings{}
+	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !r.maxreqsstore.STMGet(stm, &in.Key, &cur) {
+			return in.Key.RateLimitKey.NotFoundError()
+		}
+
+		old := cur
+		changes := cur.CopyInFields(in)
+		if changes == 0 {
+			return nil
+		}
+
+		// set the values that were set to defaults
+		if cur.Settings.MaxReqsAlgorithm == edgeproto.MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM {
+			cur.Settings.MaxReqsAlgorithm = old.Settings.MaxReqsAlgorithm
+		}
+		if cur.Settings.MaxRequests == 0 {
+			cur.Settings.MaxRequests = old.Settings.MaxRequests
+		}
+		if cur.Settings.Interval == 0 {
+			cur.Settings.Interval = old.Settings.Interval
+		}
+
+		// Validate fields before storing
+		if err = cur.Validate(edgeproto.MaxReqsRateLimitSettingsAllFieldsMap); err != nil {
+			return err
+		}
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Updating MaxReqsRateLimitSettings for RateLimitSettings", "key", in.Key.String(), "updated settings", cur)
+		r.maxreqsstore.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+// Delete MaxReqsRateLimitSettings for the specified RateLimitSettings. If no FlowSettings and MaxReqsSettings left, remove the RateLimitSettings
+func (r *RateLimitSettingsApi) DeleteMaxReqsRateLimitSettings(ctx context.Context, in *edgeproto.MaxReqsRateLimitSettings) (*edgeproto.Result, error) {
+	if settingsApi.Get().DisableRateLimit {
+		return nil, fmt.Errorf("DisableRateLimit must be false to DeleteMaxReqsRateLimitSettings")
+	}
+
+	err := in.Key.ValidateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	log.SpanLog(ctx, log.DebugLevelApi, "DeleteMaxReqsRateLimitSettings", "key", in.Key.String())
+
+	buf := &edgeproto.MaxReqsRateLimitSettings{}
+	if !r.maxreqscache.Get(&in.Key, buf) {
+		return nil, in.Key.NotFoundError()
+	}
+	return r.maxreqsstore.Delete(ctx, in, r.sync.syncWait)
+}
+
+// Show MaxReqsRateLimit settings for an API endpoint type
+func (r *RateLimitSettingsApi) ShowMaxReqsRateLimitSettings(in *edgeproto.MaxReqsRateLimitSettings, cb edgeproto.RateLimitSettingsApi_ShowMaxReqsRateLimitSettingsServer) error {
+	if settingsApi.Get().DisableRateLimit {
+		if *testMode {
+			return nil
+		}
+		return fmt.Errorf("DisableRateLimit must be false to ShowMaxReqsRateLimitSettings")
+	}
+
+	err := r.maxreqscache.Show(in, func(obj *edgeproto.MaxReqsRateLimitSettings) error {
+		err := cb.Send(obj)
+		return err
+	})
+	return err
 }
