@@ -1,0 +1,23 @@
+status: FindFound
+fqdn: smallcluster.dmuus-cloud-2.dmuus.localtest.net
+ports:
+- proto: LProtoTcp
+  internalport: 80
+  publicport: 80
+- proto: LProtoTcp
+  internalport: 81
+  publicport: 81
+  tls: true
+- proto: LProtoTcp
+  internalport: 443
+  publicport: 443
+- proto: LProtoTcp
+  internalport: 444
+  publicport: 444
+  tls: true
+- proto: LProtoUdp
+  internalport: 10002
+  publicport: 10002
+cloudletlocation:
+  latitude: 35
+  longitude: -95

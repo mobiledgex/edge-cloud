@@ -1187,6 +1187,22 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(ApiEndpointType(0)):
+		if en, ok := ApiEndpointType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(RateLimitTarget(0)):
+		if en, ok := RateLimitTarget_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(FlowRateLimitAlgorithm(0)):
+		if en, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
+		if en, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(NoticeAction(0)):
 		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1235,6 +1251,9 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowClusterRefs":               struct{}{},
 	"ShowAppInstRefs":               struct{}{},
 	"ShowUserAlert":                 struct{}{},
+	"ShowRateLimitSettings":         struct{}{},
+	"ShowFlowRateLimitSettings":     struct{}{},
+	"ShowMaxReqsRateLimitSettings":  struct{}{},
 	"ShowController":                struct{}{},
 	"ShowNode":                      struct{}{},
 	"ShowDevice":                    struct{}{},
@@ -1249,6 +1268,8 @@ func IsShow(cmd string) bool {
 var AllKeyTags = []string{
 	"alert",
 	"alertorg",
+	"apiendpointtype",
+	"apiname",
 	"app",
 	"apporg",
 	"appver",
@@ -1263,13 +1284,16 @@ var AllKeyTags = []string{
 	"deviceid",
 	"deviceidtype",
 	"flavor",
+	"flowsettingsname",
 	"gpudriver",
 	"gpudriverorg",
+	"maxreqssettingsname",
 	"node",
 	"noderegion",
 	"nodetype",
 	"policy",
 	"policyorg",
+	"ratelimittarget",
 	"restagtable",
 	"restagtableorg",
 	"uniqueid",
@@ -1279,35 +1303,40 @@ var AllKeyTags = []string{
 }
 
 var AllKeyTagsMap = map[string]struct{}{
-	"alert":           struct{}{},
-	"alertorg":        struct{}{},
-	"app":             struct{}{},
-	"apporg":          struct{}{},
-	"appver":          struct{}{},
-	"cloudlet":        struct{}{},
-	"cloudletorg":     struct{}{},
-	"cloudletpool":    struct{}{},
-	"cloudletpoolorg": struct{}{},
-	"cluster":         struct{}{},
-	"clusterorg":      struct{}{},
-	"clusterreforg":   struct{}{},
-	"controlleraddr":  struct{}{},
-	"deviceid":        struct{}{},
-	"deviceidtype":    struct{}{},
-	"flavor":          struct{}{},
-	"gpudriver":       struct{}{},
-	"gpudriverorg":    struct{}{},
-	"node":            struct{}{},
-	"noderegion":      struct{}{},
-	"nodetype":        struct{}{},
-	"policy":          struct{}{},
-	"policyorg":       struct{}{},
-	"restagtable":     struct{}{},
-	"restagtableorg":  struct{}{},
-	"uniqueid":        struct{}{},
-	"uniqueidtype":    struct{}{},
-	"vmpool":          struct{}{},
-	"vmpoolorg":       struct{}{},
+	"alert":               struct{}{},
+	"alertorg":            struct{}{},
+	"apiendpointtype":     struct{}{},
+	"apiname":             struct{}{},
+	"app":                 struct{}{},
+	"apporg":              struct{}{},
+	"appver":              struct{}{},
+	"cloudlet":            struct{}{},
+	"cloudletorg":         struct{}{},
+	"cloudletpool":        struct{}{},
+	"cloudletpoolorg":     struct{}{},
+	"cluster":             struct{}{},
+	"clusterorg":          struct{}{},
+	"clusterreforg":       struct{}{},
+	"controlleraddr":      struct{}{},
+	"deviceid":            struct{}{},
+	"deviceidtype":        struct{}{},
+	"flavor":              struct{}{},
+	"flowsettingsname":    struct{}{},
+	"gpudriver":           struct{}{},
+	"gpudriverorg":        struct{}{},
+	"maxreqssettingsname": struct{}{},
+	"node":                struct{}{},
+	"noderegion":          struct{}{},
+	"nodetype":            struct{}{},
+	"policy":              struct{}{},
+	"policyorg":           struct{}{},
+	"ratelimittarget":     struct{}{},
+	"restagtable":         struct{}{},
+	"restagtableorg":      struct{}{},
+	"uniqueid":            struct{}{},
+	"uniqueidtype":        struct{}{},
+	"vmpool":              struct{}{},
+	"vmpoolorg":           struct{}{},
 }
 
 func (m *Alert) Size() (n int) {

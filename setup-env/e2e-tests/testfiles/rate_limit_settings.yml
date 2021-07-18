@@ -1,0 +1,128 @@
+description: Create, Show, Update, and Delete RateLimitSettings
+
+tests:
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/appdata-ratelimit.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata-ratelimit_show.yml"
+    filetype: appdata
+
+- name: Show default RateLimitSettings
+  actions: [ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-default_show.yml"
+    filetype: ratelimitsettings
+
+- name: Create FlowRateLimitSettings for FindCloudlet
+  apifile: "{{datadir}}/ratelimit-settings-flowcreate.yml"
+  actions: [ctrlapi-create,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-flowcreate_show.yml"
+    filetype: ratelimitsettings
+
+- name: Update FlowRateLimitSettings, update flow rate limit on FindCloudlet settings (1 req/sec and 1 burstsize)
+  apifile: "{{datadir}}/ratelimit-settings-flowupdate.yml"
+  actions: [ctrlapi-update,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-flowupdate_show.yml"
+    filetype: ratelimitsettings
+
+- name: FindCloudlet1 FlowRateLimit (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: FindCloudlet2 FlowRateLimit (will be rejected)
+  apifile: "{{datadir}}/find_cloudlet_app1_flowratelimit.yml"
+  actions: [dmeapi-findcloudlet]
+
+- name: sleep, allow time token bucket to refill
+  actions: [sleep=2]
+
+- name: FindCloudlet3 FlowRateLimit (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: Delete FlowRateLimitSettings for FindCloudlet
+  apifile: "{{datadir}}/ratelimit-settings-flowdelete.yml"
+  actions: [ctrlapi-delete,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-default_show.yml"
+    filetype: ratelimitsettings
+
+- name: FindCloudlet FlowRateLimit removed (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: FindCloudlet2 FlowRateLimit removed (will still be successful after deleting flow settings)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: Create MaxReqsRateLimitSettings for FindCloudlet
+  apifile: "{{datadir}}/ratelimit-settings-maxreqscreate.yml"
+  actions: [ctrlapi-create,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-maxreqscreate_show.yml"
+    filetype: ratelimitsettings
+
+- name: FindCloudlet1 MaxReqsRateLimit (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: FindCloudlet2 MaxReqsRateLimit (will be rejected)
+  apifile: "{{datadir}}/find_cloudlet_app1_maxreqsratelimit.yml"
+  actions: [dmeapi-findcloudlet]
+
+- name: sleep, allow time for fixed window to reset
+  actions: [sleep=3]
+
+- name: FindCloudlet3 MaxReqsRateLimit (will be successful)
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response.yml"
+    filetype: findcloudlet
+
+- name: Delete MaxReqsRateLimitSettings for FindCloudlet
+  apifile: "{{datadir}}/ratelimit-settings-maxreqsdelete.yml"
+  actions: [ctrlapi-delete,ctrlapi-ratelimitshow]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/ratelimit-settings-default_show.yml"
+    filetype: ratelimitsettings
+
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

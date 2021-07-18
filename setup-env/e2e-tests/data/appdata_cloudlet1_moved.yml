@@ -1,3 +1,5 @@
+settings:
+  disableratelimit: true
 cloudlets:
 - key:
     organization: dmuus

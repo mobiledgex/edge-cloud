@@ -9,7 +9,6 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -117,11 +116,6 @@ func GenerateCookie(key *CookieKey, ctx context.Context, cookieExpiration *time.
 func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	allow := false
 	var cookie string
-
-	_, cmd := cloudcommon.ParseGrpcMethod(info.FullMethod)
-	span := log.NewSpanFromGrpc(ctx, log.DebugLevelDmereq, cmd)
-	defer span.Finish()
-	ctx = log.ContextWithSpan(ctx, span)
 
 	switch typ := req.(type) {
 	case *dme.RegisterClientRequest:

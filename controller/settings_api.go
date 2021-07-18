@@ -121,6 +121,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.UserDefinedAlertMinTriggerTime = def.UserDefinedAlertMinTriggerTime
 			modified = true
 		}
+		if cur.MaxNumPerIpRateLimiters == 0 {
+			cur.MaxNumPerIpRateLimiters = edgeproto.GetDefaultSettings().MaxNumPerIpRateLimiters
+			modified = true
+		}
 
 		if modified {
 			s.store.STMPut(stm, cur)
