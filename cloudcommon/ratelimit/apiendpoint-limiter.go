@@ -135,7 +135,7 @@ func (a *apiEndpointLimiter) updateFlowRateLimitSettings(flowRateLimitSettings *
 
 // Remove the FlowRateLimitSettings for the corresponding RateLimitTarget (eg. remove PerIp RateLimitSettings)
 func (a *apiEndpointLimiter) removeFlowRateLimitSettings(target edgeproto.RateLimitTarget, name string) {
-	// Remove MaxReqsRateLimitSettings and limiters for specified RateLimitTarget
+	// Remove FlowRateLimitSettings and limiters for specified RateLimitTarget
 	switch target {
 	case edgeproto.RateLimitTarget_ALL_REQUESTS:
 		a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings.RemoveFlowSettings(name)
