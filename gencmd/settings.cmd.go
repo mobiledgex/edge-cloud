@@ -231,6 +231,8 @@ var SettingsOptionalArgs = []string{
 	"clusterautoscaleaveragingdurationsec",
 	"clusterautoscaleretrydelay",
 	"userdefinedalertmintriggertime",
+	"disableratelimit",
+	"maxnumperipratelimiters",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -270,6 +272,8 @@ var SettingsComments = map[string]string{
 	"clusterautoscaleaveragingdurationsec":                             "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
 	"clusterautoscaleretrydelay":                                       "Cluster auto scale retry delay if scaling failed",
 	"userdefinedalertmintriggertime":                                   "Minimmum user alert trigger time",
+	"disableratelimit":                                                 "Disable rate limiting for APIs (default is false)",
+	"maxnumperipratelimiters":                                          "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

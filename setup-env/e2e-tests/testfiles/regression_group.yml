@@ -2,6 +2,7 @@ tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
   - includefile: check_dme_nodes.yml
+  - includefile: rate_limit_settings.yml
   - includefile: find_cloudlet_autoprov.yml
   - includefile: add_delete.yml
   - includefile: add_delete.yml

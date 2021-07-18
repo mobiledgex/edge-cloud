@@ -21,6 +21,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	op "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
@@ -425,6 +426,28 @@ func allowCORS(h http.Handler) http.Handler {
 	})
 }
 
+// Helper function that creates all the RateLimitSettings for the specified API, updates cache, and then adds to RateLimitMgr
+func addDmeApiRateLimitSettings(ctx context.Context, apiName string) {
+	settingsMap := edgeproto.GetDefaultRateLimitSettings()
+	// Get RateLimitSettings that correspond to the key
+	allRequestsRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_ALL_REQUESTS, settingsMap)
+	perIpRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_IP, settingsMap)
+	perUserRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_USER, settingsMap)
+	// Add apiendpoint limiter to RateLimitMgrs
+	dmecommon.RateLimitMgr.CreateApiEndpointLimiter(allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings)
+}
+
+// Helper function that generates a RateLimitSettings struct for specified api and target
+func getDmeApiRateLimitSettings(apiName string, target edgeproto.RateLimitTarget, settingsMap map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings) *edgeproto.RateLimitSettings {
+	key := edgeproto.RateLimitSettingsKey{
+		ApiName:         apiName,
+		RateLimitTarget: target,
+		ApiEndpointType: edgeproto.ApiEndpointType_DME,
+	}
+	settings, _ := settingsMap[key]
+	return settings
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
@@ -510,7 +533,7 @@ func main() {
 	notifyClient.RegisterSend(sendAutoProvCounts)
 	nodeMgr.RegisterClient(notifyClient)
 
-	// Start autProvStats before we recieve Settings Update
+	// Start autProvStats before we receive Settings Update
 	dmecommon.Settings = *edgeproto.GetDefaultSettings()
 	autoProvStats := dmecommon.InitAutoProvStats(dmecommon.Settings.AutoDeployIntervalSec, 0, *statsShards, &nodeMgr.MyNode.Key, sendAutoProvCounts.Update)
 	autoProvStats.Start()
@@ -532,9 +555,16 @@ func main() {
 	dmecommon.InitAppInstClients()
 	defer dmecommon.StopAppInstClients()
 
+	// Initialize API RateLimitManager
+	disableRateLimit := dmecommon.Settings.DisableRateLimit
+	if *testMode {
+		disableRateLimit = true
+	}
+	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(disableRateLimit, int(dmecommon.Settings.MaxNumPerIpRateLimiters), 0)
+
 	grpcOpts = append(grpcOpts,
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
-		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(ratelimit.GetDmeUnaryRateLimiterInterceptor(dmecommon.RateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(ratelimit.GetDmeStreamRateLimiterInterceptor(dmecommon.RateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
@@ -591,6 +621,20 @@ func main() {
 	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatchEngineApiServer(s, &server{})
+
+	// Add Global DME RateLimitSettings
+	addDmeApiRateLimitSettings(ctx, edgeproto.GlobalApiName)
+	// Search for specific APIs to add RateLimitSettings for
+	grpcServices := s.GetServiceInfo()
+	for _, serviceInfo := range grpcServices {
+		for _, methodInfo := range serviceInfo.Methods {
+			if strings.Contains(methodInfo.Name, "VerifyLocation") {
+				// Add VerifyLocation RateLimitSettings
+				addDmeApiRateLimitSettings(ctx, methodInfo.Name)
+				break
+			}
+		}
+	}
 
 	InitDebug(&nodeMgr)
 

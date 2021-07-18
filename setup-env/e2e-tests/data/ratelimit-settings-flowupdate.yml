@@ -1,0 +1,10 @@
+flowratelimitsettings:
+- key:
+    flowsettingsname: fcallreqs1
+    ratelimitkey:
+      apiname: FindCloudlet
+      apiendpointtype: Dme
+      ratelimittarget: AllRequests
+  settings:
+    reqspersecond: 1
+    burstsize: 1
