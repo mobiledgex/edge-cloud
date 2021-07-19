@@ -184,6 +184,13 @@ func TestParseArgs(t *testing.T) {
 	}
 	fields := []string{"1.1", "1.3", "1.4", "4", "6", "7", "7.1", "7.4"}
 	testConversionEmptyFields(t, input, &emptySets, &TestObj{}, args, fields)
+
+	// test parse empty invalid value
+	args = []string{"arr:empty=ttrue"}
+	buf := TestObj{}
+	_, err = input.ParseArgs(args, &buf)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), `parsing arg "arr:empty=ttrue" failed: unable to parse "ttrue" as bool, valid values are true, false`)
 }
 
 func testConversionEmptyFields(t *testing.T, input *cli.Input, obj, buf interface{}, args []string, expectedFields []string) {
