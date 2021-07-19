@@ -546,7 +546,12 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 			// special case to specify empty list/map for update
 			colonParts := strings.Split(part, ":")
 			if len(colonParts) == 2 && colonParts[1] == util.EmptySet {
-				if !valIsTrue(val) {
+				b, err := strconv.ParseBool(val)
+				if err != nil {
+					help := getParseErrorHelp(reflect.Bool)
+					return fmt.Errorf("unable to parse %q as bool%s", val, help)
+				}
+				if !b {
 					continue
 				}
 				// get the hier name without the :empty
@@ -632,24 +637,6 @@ func getParseErrorHelp(k reflect.Kind) string {
 		return ", valid values are true, false"
 	}
 	return ""
-}
-
-func valIsTrue(val interface{}) bool {
-	b := false
-	switch v := val.(type) {
-	case string:
-		e, err := strconv.ParseBool(v)
-		if err == nil {
-			b = e
-		}
-	case bool:
-		b = v
-	case int:
-		if v == 1 {
-			b = true
-		}
-	}
-	return b
 }
 
 // Get empty list or map value based on field type.
