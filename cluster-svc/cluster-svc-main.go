@@ -522,11 +522,13 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "err", err)
 	if err == nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "DEVD-CLEAR err", err)
 		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", platformApp.Key.Organization, node.EventType, platformAppInst.Key.GetTags(), err, eventStart, time.Now())
 		clearAlertAppInst(ctx, &platformAppInst)
 	} else {
+		log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "DEVD-CREATE err", err)
 		// Generate an alert
-		createAlertAppInst(ctx, &platformAppInst)
+		createAlertAppInst(ctx, &platformAppInst, err)
 	}
 	return err
 
@@ -536,7 +538,7 @@ func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edge
 	return createAppInstCommon(ctx, dialOpts, inst, app, &MEXPrometheusApp)
 }
 
-func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
+func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst, err error) {
 	alert := edgeproto.Alert{}
 	alert.State = "firing"
 	alert.ActiveAt = dme.Timestamp{}
@@ -544,7 +546,7 @@ func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
 	alert.ActiveAt.Seconds = ts.Unix()
 	alert.ActiveAt.Nanos = int32(ts.Nanosecond())
 
-	alert.Labels = appInstToAlertLabels(in)
+	alert.Labels = appInstToAlertLabels(in, err)
 
 	alert.Annotations = make(map[string]string)
 	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertClusterSvcAppInstFailure
@@ -555,16 +557,18 @@ func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
 
 func clearAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
 	alert := edgeproto.Alert{}
-	alert.Labels = appInstToAlertLabels(in)
+	alert.Labels = appInstToAlertLabels(in, nil)
 	alertCache.Delete(ctx, &alert, 0)
 }
 
-func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
+func appInstToAlertLabels(appInst *edgeproto.AppInst, err error) map[string]string {
 	labels := make(map[string]string)
 
 	labels["alertname"] = cloudcommon.AlertClusterSvcAppInstFailure
 	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopePlatform
-
+	if err != nil {
+		labels["error"] = err.Error()
+	}
 	labels = util.AddMaps(labels, appInst.Key.GetTags())
 
 	return labels

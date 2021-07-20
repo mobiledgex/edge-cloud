@@ -88,7 +88,8 @@ func IsMonitoredAlert(labels map[string]string) bool {
 		alertName == AlertAppInstDown ||
 		alertName == AlertCloudletDown ||
 		alertName == AlertAutoUndeploy ||
-		alertName == AlertCloudletResourceUsage {
+		alertName == AlertCloudletResourceUsage ||
+		alertName == AlertClusterSvcAppInstFailure {
 		return true
 	}
 	return false
@@ -98,7 +99,8 @@ func IsInternalAlert(labels map[string]string) bool {
 	alertName, _ := labels["alertname"]
 	if alertName == AlertAppInstDown ||
 		alertName == AlertCloudletDown ||
-		alertName == AlertCloudletResourceUsage {
+		alertName == AlertCloudletResourceUsage ||
+		alertName == AlertClusterSvcAppInstFailure {
 		return false
 	}
 	alertType, _ := labels[AlertTypeLabel]

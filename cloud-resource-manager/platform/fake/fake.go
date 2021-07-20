@@ -2,6 +2,7 @@ package fake
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -438,9 +439,14 @@ func (s *Platform) GetClusterInfraResources(ctx context.Context, clusterKey *edg
 }
 
 func (s *Platform) CreateAppInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor, updateCallback edgeproto.CacheUpdateCallback) error {
+	clusterSvcAppInstFail := os.Getenv("FAKE_CLUSTER_SVC_APPINST_FAIL")
+	if clusterSvcAppInstFail != "" {
+		return errors.New("FAKE_CLUSTER_SVC_APPINST_FAIL")
+	}
 	updateCallback(edgeproto.UpdateTask, "Creating App Inst")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst ready")
 	updateVmAppResCount(ctx, clusterInst, app, appInst)
+
 	return nil
 }
 
