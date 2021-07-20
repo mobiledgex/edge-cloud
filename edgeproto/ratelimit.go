@@ -8,9 +8,6 @@ var GlobalApiName = "Global"
 
 // TODO: VALIDATE ALL BASED ON FIELDS
 func (f *FlowSettings) Validate() error {
-	if f == nil {
-		return fmt.Errorf("No FlowSettings")
-	}
 	// Validate fields that must be set if FlowAlgorithm is set
 	if f.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM || f.FlowAlgorithm == FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
 		if f.ReqsPerSecond <= 0 {
@@ -28,9 +25,6 @@ func (f *FlowSettings) Validate() error {
 }
 
 func (m *MaxReqsSettings) Validate() error {
-	if m == nil {
-		return fmt.Errorf("No MaxReqsSettings")
-	}
 	// Validate fields that must be set if MaxReqsAlgorithm is set
 	if m.MaxReqsAlgorithm == MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM {
 		if m.MaxRequests <= 0 {
@@ -61,10 +55,16 @@ func (r *RateLimitSettings) Validate(fields map[string]struct{}) error {
 }
 
 func (f *FlowRateLimitSettings) Validate(fields map[string]struct{}) error {
+	if f.Settings == nil {
+		return fmt.Errorf("No FlowSettings")
+	}
 	return f.Settings.Validate()
 }
 
 func (m *MaxReqsRateLimitSettings) Validate(fields map[string]struct{}) error {
+	if m.Settings == nil {
+		return fmt.Errorf("No MaxReqsSettings")
+	}
 	return m.Settings.Validate()
 }
 
