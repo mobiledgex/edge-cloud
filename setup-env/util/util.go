@@ -767,6 +767,18 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 		}
 		y1 = s1
 		y2 = s2
+	} else if fileType == "ratelimitsettings" {
+		var r1 edgeproto.RateLimitSettingsData
+		var r2 edgeproto.RateLimitSettingsData
+		err1 = ReadYamlFile(firstYamlFile, &r1)
+		err2 = ReadYamlFile(secondYamlFile, &r2)
+		copts = []cmp.Option{
+			cmpopts.SortSlices(func(a edgeproto.RateLimitSettings, b edgeproto.RateLimitSettings) bool {
+				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
+			}),
+		}
+		y1 = r1
+		y2 = r2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, yaml1Ops...)
 		err2 = ReadYamlFile(secondYamlFile, &y2, yaml2Ops...)

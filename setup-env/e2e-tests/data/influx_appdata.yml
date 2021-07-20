@@ -25,6 +25,8 @@ settings:
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  disableratelimit: true
+  maxnumperipratelimiters: 10000
 flavors:
 - key:
     name: x1.tiny
@@ -52,8 +54,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   sharedvolumesize: 100
   nummasters: 1
   numnodes: 2
@@ -69,9 +71,9 @@ cloudlets:
   location:
     latitude: 31
     longitude: -91
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: PlatformTypeFake
+  platformtype: Fake
 
 apps:
 - key:
@@ -79,7 +81,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   deployment: "kubernetes"
   defaultflavor:
     name: x1.small
@@ -104,6 +106,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small

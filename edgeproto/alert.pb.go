@@ -1100,12 +1100,21 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := Liveness_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := Liveness_CamelValue["Liveness"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(IpSupport(0)):
 		if en, ok := IpSupport_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := IpSupport_CamelValue["IpSupport"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(IpAccess(0)):
 		if en, ok := IpAccess_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := IpAccess_CamelValue["IpAccess"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(TrackedState(0)):
@@ -1120,8 +1129,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := ImageType_CamelValue["ImageType"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VmAppOsType(0)):
 		if en, ok := VmAppOsType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := VmAppOsType_CamelValue["VmAppOs"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(DeleteType(0)):
@@ -1132,8 +1147,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := AccessType_CamelValue["AccessType"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PlatformType(0)):
 		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := PlatformType_CamelValue["PlatformType"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(InfraApiAccess(0)):
@@ -1152,12 +1173,34 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := VMState_CamelValue["Vm"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VMAction(0)):
 		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := VMAction_CamelValue["VmAction"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PowerState(0)):
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(ApiEndpointType(0)):
+		if en, ok := ApiEndpointType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(RateLimitTarget(0)):
+		if en, ok := RateLimitTarget_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(FlowRateLimitAlgorithm(0)):
+		if en, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
+		if en, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(NoticeAction(0)):
@@ -1168,8 +1211,14 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := StreamState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+		if en, ok := StreamState_CamelValue["Stream"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VersionHash(0)):
 		if en, ok := VersionHash_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := VersionHash_CamelValue["Hash"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	}
@@ -1201,6 +1250,10 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":              struct{}{},
 	"ShowClusterRefs":               struct{}{},
 	"ShowAppInstRefs":               struct{}{},
+	"ShowUserAlert":                 struct{}{},
+	"ShowRateLimitSettings":         struct{}{},
+	"ShowFlowRateLimitSettings":     struct{}{},
+	"ShowMaxReqsRateLimitSettings":  struct{}{},
 	"ShowController":                struct{}{},
 	"ShowNode":                      struct{}{},
 	"ShowDevice":                    struct{}{},
@@ -1213,6 +1266,10 @@ func IsShow(cmd string) bool {
 }
 
 var AllKeyTags = []string{
+	"alert",
+	"alertorg",
+	"apiendpointtype",
+	"apiname",
 	"app",
 	"apporg",
 	"appver",
@@ -1227,13 +1284,16 @@ var AllKeyTags = []string{
 	"deviceid",
 	"deviceidtype",
 	"flavor",
+	"flowsettingsname",
 	"gpudriver",
 	"gpudriverorg",
+	"maxreqssettingsname",
 	"node",
 	"noderegion",
 	"nodetype",
 	"policy",
 	"policyorg",
+	"ratelimittarget",
 	"restagtable",
 	"restagtableorg",
 	"uniqueid",
@@ -1243,33 +1303,40 @@ var AllKeyTags = []string{
 }
 
 var AllKeyTagsMap = map[string]struct{}{
-	"app":             struct{}{},
-	"apporg":          struct{}{},
-	"appver":          struct{}{},
-	"cloudlet":        struct{}{},
-	"cloudletorg":     struct{}{},
-	"cloudletpool":    struct{}{},
-	"cloudletpoolorg": struct{}{},
-	"cluster":         struct{}{},
-	"clusterorg":      struct{}{},
-	"clusterreforg":   struct{}{},
-	"controlleraddr":  struct{}{},
-	"deviceid":        struct{}{},
-	"deviceidtype":    struct{}{},
-	"flavor":          struct{}{},
-	"gpudriver":       struct{}{},
-	"gpudriverorg":    struct{}{},
-	"node":            struct{}{},
-	"noderegion":      struct{}{},
-	"nodetype":        struct{}{},
-	"policy":          struct{}{},
-	"policyorg":       struct{}{},
-	"restagtable":     struct{}{},
-	"restagtableorg":  struct{}{},
-	"uniqueid":        struct{}{},
-	"uniqueidtype":    struct{}{},
-	"vmpool":          struct{}{},
-	"vmpoolorg":       struct{}{},
+	"alert":               struct{}{},
+	"alertorg":            struct{}{},
+	"apiendpointtype":     struct{}{},
+	"apiname":             struct{}{},
+	"app":                 struct{}{},
+	"apporg":              struct{}{},
+	"appver":              struct{}{},
+	"cloudlet":            struct{}{},
+	"cloudletorg":         struct{}{},
+	"cloudletpool":        struct{}{},
+	"cloudletpoolorg":     struct{}{},
+	"cluster":             struct{}{},
+	"clusterorg":          struct{}{},
+	"clusterreforg":       struct{}{},
+	"controlleraddr":      struct{}{},
+	"deviceid":            struct{}{},
+	"deviceidtype":        struct{}{},
+	"flavor":              struct{}{},
+	"flowsettingsname":    struct{}{},
+	"gpudriver":           struct{}{},
+	"gpudriverorg":        struct{}{},
+	"maxreqssettingsname": struct{}{},
+	"node":                struct{}{},
+	"noderegion":          struct{}{},
+	"nodetype":            struct{}{},
+	"policy":              struct{}{},
+	"policyorg":           struct{}{},
+	"ratelimittarget":     struct{}{},
+	"restagtable":         struct{}{},
+	"restagtableorg":      struct{}{},
+	"uniqueid":            struct{}{},
+	"uniqueidtype":        struct{}{},
+	"vmpool":              struct{}{},
+	"vmpoolorg":           struct{}{},
 }
 
 func (m *Alert) Size() (n int) {

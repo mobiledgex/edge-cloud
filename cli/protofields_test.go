@@ -16,7 +16,7 @@ func TestGetSpecifiedFields(t *testing.T) {
 		[]string{"2.2", "2.3", "13", "23", "25"})
 	// test App args, make sure empty string value still sets field
 	testGetFieldsArgs(t, &edgeproto.App{},
-		[]string{"key.organization=niantic", `key.name="Pokemon Go!"`, "imagetype=ImageTypeDocker", `accessports=""`, "defaultflavor.name=x1.small"},
+		[]string{"key.organization=niantic", `key.name="Pokemon Go!"`, "imagetype=1", `accessports=""`, "defaultflavor.name=x1.small"},
 		[]string{"2.1", "2.2", "5", "7", "9.1"})
 
 	dat := `

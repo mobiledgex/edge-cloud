@@ -101,6 +101,8 @@ extend google.protobuf.EnumOptions {
   bool version_hash = 51023;
   // Modify salt to generate a new hash even if the data structures have not changed.
   string version_hash_salt = 51024;
+  // Set common prefix that will be removed for custom marshalers
+  string common_prefix = 51051;
 }
 
 extend google.protobuf.EnumValueOptions {
@@ -141,7 +143,7 @@ extend google.protobuf.MethodOptions {
   // Typically used for additional show commands that the generator
   // does not recognize as the Show API for a CUD API set.
   bool input_required = 51033;
-  // Generate a hook function for customing the authorization behavior of the
+  // Generate a hook function for customizing the authorization behavior of the
   // API in MC.
   bool mc2_custom_authz = 51034;
   // Same as noconfig option for Message, but overrides it for this API.

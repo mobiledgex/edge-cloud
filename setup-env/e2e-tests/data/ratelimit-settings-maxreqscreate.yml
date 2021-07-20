@@ -1,0 +1,11 @@
+maxreqsratelimitsettings:
+- key:
+    maxreqssettingsname: fcallreqs1
+    ratelimitkey:
+      apiname: FindCloudlet
+      apiendpointtype: Dme
+      ratelimittarget: AllRequests
+  settings:
+    maxreqsalgorithm: FixedWindowAlgorithm
+    maxrequests: 1
+    interval: 3s

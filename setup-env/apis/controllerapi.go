@@ -128,6 +128,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
+	} else if api == "ratelimitshow" {
+		output := &edgeproto.RateLimitSettingsData{}
+		run.Mode = "show"
+		run.RateLimitSettingsApi(nil, nil, &output.Settings)
+		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, apiFileVars, outputDir)
 	} else {

@@ -4050,6 +4050,10 @@ func (e *VMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := VMState_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = VMState_CamelValue["Vm"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -4065,7 +4069,9 @@ func (e *VMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e VMState) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(VMState_CamelName, int32(e)), nil
+	str := proto.EnumName(VMState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Vm")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -4074,6 +4080,10 @@ func (e *VMState) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := VMState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = VMState_CamelValue["Vm"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -4097,10 +4107,17 @@ func (e *VMState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e VMState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VMState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Vm")
 	return json.Marshal(str)
 }
+*/
+var VMStateCommonPrefix = "Vm"
 
 var VMActionStrings = []string{
 	"VM_ACTION_DONE",
@@ -4136,6 +4153,10 @@ func (e *VMAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := VMAction_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = VMAction_CamelValue["VmAction"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -4151,7 +4172,9 @@ func (e *VMAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e VMAction) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(VMAction_CamelName, int32(e)), nil
+	str := proto.EnumName(VMAction_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "VmAction")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -4160,6 +4183,10 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := VMAction_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = VMAction_CamelValue["VmAction"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -4183,10 +4210,18 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e VMAction) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VMAction_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "VmAction")
 	return json.Marshal(str)
 }
+*/
+var VMActionCommonPrefix = "VmAction"
+
 func (m *VMPool) IsValidArgsForCreateVMPool() error {
 	if m.Vms != nil {
 	}

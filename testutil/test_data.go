@@ -1898,6 +1898,46 @@ var GPUDriverData = []edgeproto.GPUDriver{
 	},
 }
 
+var UserAlertData = []edgeproto.UserAlert{
+	edgeproto.UserAlert{ // Warning alert with no labels/annotations
+		Key: edgeproto.UserAlertKey{
+			Name:         "testAlert1",
+			Organization: DevData[0],
+		},
+		CpuUtilizationLimit:  80,
+		MemUtilizationLimit:  70,
+		DiskUtilizationLimit: 70,
+		Severity:             "warning",
+		TriggerTime:          edgeproto.Duration(30 * time.Second),
+	},
+	edgeproto.UserAlert{ // Warning alert with Active Connections
+		Key: edgeproto.UserAlertKey{
+			Name:         "testAlert2",
+			Organization: DevData[0],
+		},
+		ActiveConnLimit: 10,
+		Severity:        "info",
+		TriggerTime:     edgeproto.Duration(5 * time.Minute),
+	},
+	edgeproto.UserAlert{ // Error alert with extra labels
+		Key: edgeproto.UserAlertKey{
+			Name:         "testAlert3",
+			Organization: DevData[1],
+		},
+		CpuUtilizationLimit: 100,
+		Severity:            "error",
+		TriggerTime:         edgeproto.Duration(30 * time.Second),
+		Labels: map[string]string{
+			"testLabel1": "testValue1",
+			"testLabel2": "testValue2",
+		},
+		Annotations: map[string]string{
+			"testAnnotation1": "description1",
+			"testAnnotation2": "description2",
+		},
+	},
+}
+
 func GetTimestamp(t time.Time) *types.Timestamp {
 	ts, _ := types.TimestampProto(t)
 	return ts

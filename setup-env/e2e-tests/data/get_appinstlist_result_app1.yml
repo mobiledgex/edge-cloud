@@ -11,13 +11,13 @@ cloudlets:
     appvers: "1.0"
     fqdn: shared.tmus-cloud-1.tmus.localtest.net
     ports:
-    - proto: LProtoTcp
+    - proto: Tcp
       internalport: 80
       publicport: 80
-    - proto: LProtoTcp
+    - proto: Tcp
       internalport: 443
       publicport: 443
-    - proto: LProtoUdp
+    - proto: Udp
       internalport: 10002
       publicport: 10002
     orgname: AcmeAppCo
@@ -32,13 +32,13 @@ cloudlets:
     appvers: "1.0"
     fqdn: shared.tmus-cloud-2.tmus.localtest.net
     ports:
-    - proto: LProtoTcp
+    - proto: Tcp
       internalport: 80
       publicport: 80
-    - proto: LProtoTcp
+    - proto: Tcp
       internalport: 443
       publicport: 443
-    - proto: LProtoUdp
+    - proto: Udp
       internalport: 10002
       publicport: 10002
     orgname: AcmeAppCo
@@ -53,13 +53,13 @@ cloudlets:
     appvers: "1.0"
     fqdn: shared.tmus-cloud-3.tmus.localtest.net
     ports:
-    - proto: LProtoTcp
+    - proto: Tcp
       internalport: 80
       publicport: 80
-    - proto: LProtoTcp
+    - proto: Tcp
       internalport: 443
       publicport: 443
-    - proto: LProtoUdp
+    - proto: Udp
       internalport: 10002
       publicport: 10002
     orgname: AcmeAppCo

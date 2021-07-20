@@ -7,7 +7,7 @@ cloudlets:
   location:
     latitude: 53.1424
     longitude: -7.6921
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 5
 
 clusterinsts:
@@ -19,7 +19,7 @@ clusterinsts:
       name: aznortheuropecloudlet
   flavor:
     name: x1.medium
-  liveness: LivenessStatic
+  liveness: Static
 
 appinstances:
 - key:
@@ -33,7 +33,7 @@ appinstances:
       cloudletkey:
         organization: azure
         name: aznortheuropecloudlet
-  liveness: LivenessStatic
+  liveness: Static
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7

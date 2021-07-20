@@ -117,6 +117,14 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ClusterAutoScaleRetryDelay = def.ClusterAutoScaleRetryDelay
 			modified = true
 		}
+		if cur.UserDefinedAlertMinTriggerTime == 0 {
+			cur.UserDefinedAlertMinTriggerTime = def.UserDefinedAlertMinTriggerTime
+			modified = true
+		}
+		if cur.MaxNumPerIpRateLimiters == 0 {
+			cur.MaxNumPerIpRateLimiters = edgeproto.GetDefaultSettings().MaxNumPerIpRateLimiters
+			modified = true
+		}
 
 		if modified {
 			s.store.STMPut(stm, cur)
@@ -146,6 +154,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 			// nothing changed
 			return nil
 		}
+		newCqs := false
 		for _, field := range in.Fields {
 			if field == edgeproto.SettingsFieldMasterNodeFlavor {
 				if in.MasterNodeFlavor == "" {
@@ -186,31 +195,36 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 					return res.Err
 				}
 			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				// Drop old cqs
-				for _, collectioninterval := range oldSettings.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-					interval := collectioninterval.Interval
-					latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-					if errl := services.edgeEventsInfluxQ.DropContinuousQuery(latencyCqSettings); errl != nil {
-						return errl
-					}
-					deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-					if errd := services.edgeEventsInfluxQ.DropContinuousQuery(deviceCqSettings); errd != nil {
-						return errd
-					}
+				newCqs = true
+			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval {
+				newCqs = true
+			}
+		}
+		if newCqs {
+			// Drop old cqs
+			for _, collectioninterval := range oldSettings.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+				interval := collectioninterval.Interval
+				latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+				if errl := services.edgeEventsInfluxQ.DropContinuousQuery(latencyCqSettings); errl != nil {
+					return errl
 				}
-				// Create new cqs
-				for _, collectioninterval := range in.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-					interval := collectioninterval.Interval
-					latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-					resl := services.edgeEventsInfluxQ.CreateContinuousQuery(latencyCqSettings)
-					if resl.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
-						return resl.Err
-					}
-					deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-					resd := services.edgeEventsInfluxQ.CreateContinuousQuery(deviceCqSettings)
-					if resd.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
-						return resd.Err
-					}
+				deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+				if errd := services.edgeEventsInfluxQ.DropContinuousQuery(deviceCqSettings); errd != nil {
+					return errd
+				}
+			}
+			// Create new cqs
+			for _, collectioninterval := range in.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+				interval := collectioninterval.Interval
+				latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+				resl := services.edgeEventsInfluxQ.CreateContinuousQuery(latencyCqSettings)
+				if resl.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
+					return resl.Err
+				}
+				deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
+				resd := services.edgeEventsInfluxQ.CreateContinuousQuery(deviceCqSettings)
+				if resd.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
+					return resd.Err
 				}
 			}
 		}

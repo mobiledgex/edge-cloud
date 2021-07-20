@@ -3146,6 +3146,10 @@ func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	val, ok := OuterEnum_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = OuterEnum_CamelValue["Outer"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -3161,7 +3165,9 @@ func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e OuterEnum) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(OuterEnum_CamelName, int32(e)), nil
+	str := proto.EnumName(OuterEnum_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Outer")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -3170,6 +3176,10 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := OuterEnum_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = OuterEnum_CamelValue["Outer"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -3193,10 +3203,17 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e OuterEnum) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(OuterEnum_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Outer")
 	return json.Marshal(str)
 }
+*/
+var OuterEnumCommonPrefix = "Outer"
 
 var InnerEnumStrings = []string{
 	"INNER0",
@@ -3237,6 +3254,10 @@ func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) err
 	}
 	val, ok := TestGen_InnerEnum_CamelValue[util.CamelCase(str)]
 	if !ok {
+		// may have omitted common prefix
+		val, ok = TestGen_InnerEnum_CamelValue["Inner"+util.CamelCase(str)]
+	}
+	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
@@ -3252,7 +3273,9 @@ func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
-	return proto.EnumName(TestGen_InnerEnum_CamelName, int32(e)), nil
+	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Inner")
+	return str, nil
 }
 
 // custom JSON encoding/decoding
@@ -3261,6 +3284,10 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 	err := json.Unmarshal(b, &str)
 	if err == nil {
 		val, ok := TestGen_InnerEnum_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = TestGen_InnerEnum_CamelValue["Inner"+util.CamelCase(str)]
+		}
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -3284,10 +3311,18 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("No enum value for %v", b)
 }
 
+/*
+ * This is removed because we do not have enough time in
+ * release 3.0 to update the SDK, UI, and documentation for this
+ * change. It should be done in 3.1.
 func (e TestGen_InnerEnum) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Inner")
 	return json.Marshal(str)
 }
+*/
+var InnerEnumCommonPrefix = "Inner"
+
 func (m *TestGen) IsValidArgsForRequest() error {
 	return nil
 }
@@ -3338,6 +3373,9 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 	switch to {
 	case reflect.TypeOf(OuterEnum(0)):
 		if en, ok := OuterEnum_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := OuterEnum_CamelValue["Outer"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	}

@@ -26,7 +26,7 @@ clusterinsts:
       name: tmus-cloud-1
   flavor:
     name: x1.small
-  liveness: LivenessDynamic
+  liveness: Dynamic
   auto: true
 
 cloudlets:
@@ -36,7 +36,7 @@ cloudlets:
   accessuri: tmus.tmus-cloud-1
   location:
     longitude: -175
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 254
   containerversion: 2019-10-24
 
@@ -46,7 +46,7 @@ apps:
     name: someapplication1
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
@@ -71,9 +71,9 @@ appinstances:
     cloudletkey:
       organization: tmus
       name: tmus-cloud-1
-  liveness: LivenessStatic
+  liveness: Static
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
+  imagetype: Docker
   mappedpath: someapplication1
   flavor:
     name: x1.small

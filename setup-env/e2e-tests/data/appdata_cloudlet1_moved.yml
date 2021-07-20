@@ -1,3 +1,5 @@
+settings:
+  disableratelimit: true
 cloudlets:
 - key:
     organization: tmus
@@ -5,5 +7,5 @@ cloudlets:
   location:
     latitude: 40
     longitude: -99
-  ipsupport: IpSupportDynamic
+  ipsupport: Dynamic
   numdynamicips: 100

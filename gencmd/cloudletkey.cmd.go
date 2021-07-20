@@ -17,11 +17,11 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var CloudletKeyRequiredArgs = []string{}
-var CloudletKeyOptionalArgs = []string{
+var CloudletKeyRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
 }
+var CloudletKeyOptionalArgs = []string{}
 var CloudletKeyAliasArgs = []string{
 	"cloudlet-org=organization",
 	"cloudlet=name",

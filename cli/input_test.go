@@ -153,7 +153,7 @@ func TestParseArgs(t *testing.T) {
 	rc := edgeproto.Cloudlet{
 		IpSupport: edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
 	}
-	args = []string{"ipsupport=IpSupportDynamic"}
+	args = []string{"ipsupport=2"}
 	testParseArgs(t, input, args, &rc, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{})
 
 	// For updates, we need to distinguish between empty fields to be updated,
@@ -184,6 +184,13 @@ func TestParseArgs(t *testing.T) {
 	}
 	fields := []string{"1.1", "1.3", "1.4", "4", "6", "7", "7.1", "7.4"}
 	testConversionEmptyFields(t, input, &emptySets, &TestObj{}, args, fields)
+
+	// test parse empty invalid value
+	args = []string{"arr:empty=ttrue"}
+	buf := TestObj{}
+	_, err = input.ParseArgs(args, &buf)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), `parsing arg "arr:empty=ttrue" failed: unable to parse "ttrue" as bool, valid values are true, false`)
 }
 
 func testConversionEmptyFields(t *testing.T, input *cli.Input, obj, buf interface{}, args []string, expectedFields []string) {
@@ -370,8 +377,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessShared
+  liveness: Static
+  ipaccess: Shared
   nummasters: 1
   numnodes: 2
 
@@ -384,8 +391,8 @@ clusterinsts:
     organization: AcmeAppCo
   flavor:
     name: x1.small
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicated
+  liveness: Static
+  ipaccess: Dedicated
   nummasters: 1
   numnodes: 2
 `,
@@ -432,8 +439,8 @@ clusterinsts:
          "flavor": {
             "name": "x1.small"
          },
-         "liveness": "LivenessStatic",
-         "ip_access": "IpAccessShared",
+         "liveness": "Static",
+         "ip_access": "Shared",
          "num_masters": 1,
          "num_nodes": 2
       },
@@ -451,8 +458,8 @@ clusterinsts:
          "flavor": {
             "name": "x1.small"
          },
-         "liveness": "LivenessStatic",
-         "ip_access": "IpAccessDedicated",
+         "liveness": "Static",
+         "ip_access": "Dedicated",
          "num_masters": 1,
          "num_nodes": 2
       }
