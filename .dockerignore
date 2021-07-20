@@ -4,6 +4,7 @@
 # (like abc-priv, secrets, grpc-gateway, golang-ssh, etc).
 # Only edge-cloud, edge-cloud-infra, and edge-proto are needed.
 *
+!.git
 !edge-cloud
 !edge-cloud-infra
 !edge-proto
