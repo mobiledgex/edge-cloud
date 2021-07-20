@@ -40,9 +40,7 @@ WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 RUN go mod download
 
 WORKDIR /go/src/github.com/mobiledgex
-COPY edge-cloud edge-cloud
-COPY edge-cloud-infra edge-cloud-infra
-COPY edge-proto edge-proto
+COPY . .
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
 RUN make
