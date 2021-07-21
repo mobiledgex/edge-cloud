@@ -809,9 +809,9 @@ type AppApiClient interface {
 	AddAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
 	// Remove an AutoProvPolicy from the App
 	RemoveAppAutoProvPolicy(ctx context.Context, in *AppAutoProvPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Add an UserAlert to the App
+	// Add an AlertPolicy to the App
 	AddAppAlertPolicy(ctx context.Context, in *AppAlertPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Remove an UserAlert from the App
+	// Remove an AlertPolicy from the App
 	RemoveAppAlertPolicy(ctx context.Context, in *AppAlertPolicy, opts ...grpc.CallOption) (*Result, error)
 	// Discover cloudlets supporting deployments of App.DefaultFlavor
 	ShowCloudletsForAppDeployment(ctx context.Context, in *DeploymentCloudletRequest, opts ...grpc.CallOption) (AppApi_ShowCloudletsForAppDeploymentClient, error)
@@ -968,9 +968,9 @@ type AppApiServer interface {
 	AddAppAutoProvPolicy(context.Context, *AppAutoProvPolicy) (*Result, error)
 	// Remove an AutoProvPolicy from the App
 	RemoveAppAutoProvPolicy(context.Context, *AppAutoProvPolicy) (*Result, error)
-	// Add an UserAlert to the App
+	// Add an AlertPolicy to the App
 	AddAppAlertPolicy(context.Context, *AppAlertPolicy) (*Result, error)
-	// Remove an UserAlert from the App
+	// Remove an AlertPolicy from the App
 	RemoveAppAlertPolicy(context.Context, *AppAlertPolicy) (*Result, error)
 	// Discover cloudlets supporting deployments of App.DefaultFlavor
 	ShowCloudletsForAppDeployment(*DeploymentCloudletRequest, AppApi_ShowCloudletsForAppDeploymentServer) error

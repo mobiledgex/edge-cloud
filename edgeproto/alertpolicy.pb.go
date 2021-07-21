@@ -228,13 +228,13 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type AlertPolicyApiClient interface {
-	// Create a User Defined Alert
+	// Create an Alert Policy
 	CreateAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Delete a User Defined Alert
+	// Delete an Alert Policy
 	DeleteAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Update a User Defined Alert
+	// Update an Alert Policy
 	UpdateAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error)
-	// Show User Defined Alerts. Any fields specified will be used to filter results.
+	// Show Alert Policies. Any fields specified will be used to filter results.
 	ShowAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (AlertPolicyApi_ShowAlertPolicyClient, error)
 }
 
@@ -307,13 +307,13 @@ func (x *alertPolicyApiShowAlertPolicyClient) Recv() (*AlertPolicy, error) {
 
 // AlertPolicyApiServer is the server API for AlertPolicyApi service.
 type AlertPolicyApiServer interface {
-	// Create a User Defined Alert
+	// Create an Alert Policy
 	CreateAlertPolicy(context.Context, *AlertPolicy) (*Result, error)
-	// Delete a User Defined Alert
+	// Delete an Alert Policy
 	DeleteAlertPolicy(context.Context, *AlertPolicy) (*Result, error)
-	// Update a User Defined Alert
+	// Update an Alert Policy
 	UpdateAlertPolicy(context.Context, *AlertPolicy) (*Result, error)
-	// Show User Defined Alerts. Any fields specified will be used to filter results.
+	// Show Alert Policies. Any fields specified will be used to filter results.
 	ShowAlertPolicy(*AlertPolicy, AlertPolicyApi_ShowAlertPolicyServer) error
 }
 

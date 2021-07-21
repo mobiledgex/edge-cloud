@@ -53,7 +53,7 @@ message AlertPolicy {
 }
 
 service AlertPolicyApi {
-  // Create a User Defined Alert
+  // Create an Alert Policy
   rpc CreateAlertPolicy(AlertPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/create/alertpolicy"
@@ -63,7 +63,7 @@ service AlertPolicyApi {
     option (protogen.method_also_required) = "Severity";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete a User Defined Alert
+  // Delete an Alert Policy
   rpc DeleteAlertPolicy(AlertPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/delete/alertpolicy"
@@ -71,7 +71,7 @@ service AlertPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
-  // Update a User Defined Alert
+  // Update an Alert Policy
   rpc UpdateAlertPolicy(AlertPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/update/alertpolicy"
@@ -79,7 +79,7 @@ service AlertPolicyApi {
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
-  // Show User Defined Alerts. Any fields specified will be used to filter results.
+  // Show Alert Policies. Any fields specified will be used to filter results.
   rpc ShowAlertPolicy(AlertPolicy) returns (stream AlertPolicy) {
     option (google.api.http) = {
       post: "/show/alertpolicy"

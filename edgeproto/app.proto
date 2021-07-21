@@ -320,7 +320,7 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Add an UserAlert to the App
+  // Add an AlertPolicy to the App
   rpc AddAppAlertPolicy(AppAlertPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/add/appalertpolicy"
@@ -329,7 +329,7 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Remove an UserAlert from the App
+  // Remove an AlertPolicy from the App
   rpc RemoveAppAlertPolicy(AppAlertPolicy) returns (Result) {
     option (google.api.http) = {
       post: "/remove/appalertpolicy"

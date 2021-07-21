@@ -291,7 +291,7 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 }
 
 // Walk all the app Instances and update the clusters that have the instances that use this alert
-func userAlertCb(ctx context.Context, old *edgeproto.AlertPolicy, new *edgeproto.AlertPolicy) {
+func alertPolicyCb(ctx context.Context, old *edgeproto.AlertPolicy, new *edgeproto.AlertPolicy) {
 	log.SpanLog(ctx, log.DebugLevelNotify, "User Alert update", "new", new, "old", old)
 	if new == nil || old == nil {
 		// deleted, so all the appInsts should've been cleaned up already
@@ -341,7 +341,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	AutoScalePolicyCache.SetUpdatedCb(autoScalePolicyCb)
 	AppInstCache.SetUpdatedCb(appInstCb)
 	AppCache.SetUpdatedCb(appCb)
-	AlertPolicyCache.SetUpdatedCb(userAlertCb)
+	AlertPolicyCache.SetUpdatedCb(alertPolicyCb)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
