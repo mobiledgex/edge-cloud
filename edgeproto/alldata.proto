@@ -16,7 +16,7 @@ import "clusterinst.proto";
 import "app.proto";
 import "appinst.proto";
 import "refs.proto";
-import "useralert.proto";
+import "alertpolicy.proto";
 import "ratelimit.proto";
 import "gogoproto/gogo.proto";
 
