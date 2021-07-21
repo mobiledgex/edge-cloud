@@ -434,7 +434,7 @@ func startServices() error {
 	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
 	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
-	edgeproto.RegisterUserAlertApiServer(server, &userAlertApi)
+	edgeproto.RegisterAlertPolicyApiServer(server, &userAlertApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -472,7 +472,7 @@ func startServices() error {
 			edgeproto.RegisterDebugApiHandler,
 			edgeproto.RegisterDeviceApiHandler,
 			edgeproto.RegisterOrganizationApiHandler,
-			edgeproto.RegisterUserAlertApiHandler,
+			edgeproto.RegisterAlertPolicyApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
@@ -623,7 +623,7 @@ func InitApis(sync *Sync) {
 	InitOrganizationApi(sync)
 	InitAppInstLatencyApi(sync)
 	InitGPUDriverApi(sync)
-	InitUserAlertApi(sync)
+	InitAlertPolicyApi(sync)
 }
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
@@ -646,7 +646,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
-	notify.ServerMgrOne.RegisterSendUserAlertCache(&userAlertApi.cache)
+	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&userAlertApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 

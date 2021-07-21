@@ -36,25 +36,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type UserAlertKey struct {
+type AlertPolicyKey struct {
 	// Name of the organization for the app that this alert can be applied to
 	Organization string `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`
-	// Alert name
+	// Alert Policy name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 
-func (m *UserAlertKey) Reset()         { *m = UserAlertKey{} }
-func (m *UserAlertKey) String() string { return proto.CompactTextString(m) }
-func (*UserAlertKey) ProtoMessage()    {}
-func (*UserAlertKey) Descriptor() ([]byte, []int) {
+func (m *AlertPolicyKey) Reset()         { *m = AlertPolicyKey{} }
+func (m *AlertPolicyKey) String() string { return proto.CompactTextString(m) }
+func (*AlertPolicyKey) ProtoMessage()    {}
+func (*AlertPolicyKey) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d0fdf0a21ada7e04, []int{0}
 }
-func (m *UserAlertKey) XXX_Unmarshal(b []byte) error {
+func (m *AlertPolicyKey) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UserAlertKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AlertPolicyKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UserAlertKey.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AlertPolicyKey.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -64,22 +64,22 @@ func (m *UserAlertKey) XXX_Marshal(b []byte, deterministic bool) ([]byte, error)
 		return b[:n], nil
 	}
 }
-func (m *UserAlertKey) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserAlertKey.Merge(m, src)
+func (m *AlertPolicyKey) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AlertPolicyKey.Merge(m, src)
 }
-func (m *UserAlertKey) XXX_Size() int {
+func (m *AlertPolicyKey) XXX_Size() int {
 	return m.Size()
 }
-func (m *UserAlertKey) XXX_DiscardUnknown() {
-	xxx_messageInfo_UserAlertKey.DiscardUnknown(m)
+func (m *AlertPolicyKey) XXX_DiscardUnknown() {
+	xxx_messageInfo_AlertPolicyKey.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UserAlertKey proto.InternalMessageInfo
+var xxx_messageInfo_AlertPolicyKey proto.InternalMessageInfo
 
-type UserAlert struct {
+type AlertPolicy struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
-	Key UserAlertKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
+	Key AlertPolicyKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// container or pod CPU utilization rate(percentage) across all nodes
 	CpuUtilizationLimit uint32 `protobuf:"varint,3,opt,name=cpu_utilization_limit,json=cpuUtilizationLimit,proto3" json:"cpu_utilization_limit,omitempty"`
 	// container or pod memory utilization rate(percentage) across all nodes
@@ -88,7 +88,7 @@ type UserAlert struct {
 	DiskUtilizationLimit uint32 `protobuf:"varint,5,opt,name=disk_utilization_limit,json=diskUtilizationLimit,proto3" json:"disk_utilization_limit,omitempty"`
 	// Active Connections alert threshold
 	ActiveConnLimit uint32 `protobuf:"varint,6,opt,name=active_conn_limit,json=activeConnLimit,proto3" json:"active_conn_limit,omitempty"`
-	// Alert Severity
+	// Alert Policy Severity
 	Severity string `protobuf:"bytes,7,opt,name=severity,proto3" json:"severity,omitempty"`
 	// Duration for which alert interval is active
 	TriggerTime Duration `protobuf:"varint,8,opt,name=trigger_time,json=triggerTime,proto3,casttype=Duration" json:"trigger_time,omitempty"`
@@ -98,18 +98,18 @@ type UserAlert struct {
 	Annotations map[string]string `protobuf:"bytes,10,rep,name=annotations,proto3" json:"annotations,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
-func (m *UserAlert) Reset()         { *m = UserAlert{} }
-func (m *UserAlert) String() string { return proto.CompactTextString(m) }
-func (*UserAlert) ProtoMessage()    {}
-func (*UserAlert) Descriptor() ([]byte, []int) {
+func (m *AlertPolicy) Reset()         { *m = AlertPolicy{} }
+func (m *AlertPolicy) String() string { return proto.CompactTextString(m) }
+func (*AlertPolicy) ProtoMessage()    {}
+func (*AlertPolicy) Descriptor() ([]byte, []int) {
 	return fileDescriptor_d0fdf0a21ada7e04, []int{1}
 }
-func (m *UserAlert) XXX_Unmarshal(b []byte) error {
+func (m *AlertPolicy) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *UserAlert) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AlertPolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_UserAlert.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AlertPolicy.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -119,89 +119,89 @@ func (m *UserAlert) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *UserAlert) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserAlert.Merge(m, src)
+func (m *AlertPolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AlertPolicy.Merge(m, src)
 }
-func (m *UserAlert) XXX_Size() int {
+func (m *AlertPolicy) XXX_Size() int {
 	return m.Size()
 }
-func (m *UserAlert) XXX_DiscardUnknown() {
-	xxx_messageInfo_UserAlert.DiscardUnknown(m)
+func (m *AlertPolicy) XXX_DiscardUnknown() {
+	xxx_messageInfo_AlertPolicy.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_UserAlert proto.InternalMessageInfo
+var xxx_messageInfo_AlertPolicy proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*UserAlertKey)(nil), "edgeproto.UserAlertKey")
-	proto.RegisterType((*UserAlert)(nil), "edgeproto.UserAlert")
-	proto.RegisterMapType((map[string]string)(nil), "edgeproto.UserAlert.AnnotationsEntry")
-	proto.RegisterMapType((map[string]string)(nil), "edgeproto.UserAlert.LabelsEntry")
+	proto.RegisterType((*AlertPolicyKey)(nil), "edgeproto.AlertPolicyKey")
+	proto.RegisterType((*AlertPolicy)(nil), "edgeproto.AlertPolicy")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.AlertPolicy.AnnotationsEntry")
+	proto.RegisterMapType((map[string]string)(nil), "edgeproto.AlertPolicy.LabelsEntry")
 }
 
 func init() { proto.RegisterFile("useralert.proto", fileDescriptor_d0fdf0a21ada7e04) }
 
 var fileDescriptor_d0fdf0a21ada7e04 = []byte{
 	// 822 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x94, 0x4f, 0x6f, 0xe3, 0x44,
-	0x18, 0xc6, 0x33, 0x4d, 0x1b, 0x92, 0x49, 0x56, 0x69, 0x4d, 0x28, 0xa3, 0x68, 0x49, 0xa3, 0x48,
-	0x48, 0xd1, 0xca, 0x89, 0x57, 0x59, 0x90, 0x4a, 0xa4, 0x20, 0x25, 0x0d, 0xe2, 0xb0, 0xbb, 0xfc,
-	0xf1, 0x6e, 0xb8, 0x46, 0x8e, 0xf3, 0xe2, 0x8e, 0x6a, 0x7b, 0xac, 0xb1, 0x9d, 0x12, 0x4e, 0x88,
-	0x4f, 0x50, 0xc4, 0x05, 0x71, 0xe2, 0xcc, 0x09, 0x38, 0xee, 0x27, 0xe8, 0x71, 0x05, 0x17, 0x4e,
-	0x2b, 0x48, 0x39, 0xa0, 0xe5, 0x82, 0xd4, 0x6c, 0x84, 0x90, 0x10, 0xc8, 0x63, 0x93, 0x38, 0x8d,
-	0x05, 0xa2, 0x17, 0x2e, 0xd1, 0x78, 0xde, 0xe7, 0x79, 0xe7, 0x97, 0x79, 0x1f, 0x1b, 0x17, 0x7d,
-	0x17, 0xb8, 0x66, 0x02, 0xf7, 0x9a, 0x0e, 0x67, 0x1e, 0x93, 0x72, 0x30, 0x36, 0x40, 0x2c, 0xcb,
-	0x37, 0x0d, 0xc6, 0x0c, 0x13, 0x14, 0xcd, 0xa1, 0x8a, 0x66, 0xdb, 0xcc, 0xd3, 0x3c, 0xca, 0x6c,
-	0x37, 0x14, 0x96, 0x0b, 0x1c, 0x5c, 0xdf, 0x8c, 0x6c, 0xe5, 0x43, 0x83, 0x7a, 0xc7, 0xfe, 0xa8,
-	0xa9, 0x33, 0x4b, 0xb1, 0xd8, 0x88, 0x9a, 0x41, 0x9b, 0x0f, 0x94, 0xe0, 0xb7, 0xa1, 0x9b, 0xcc,
-	0x1f, 0x2b, 0x42, 0x67, 0x80, 0xbd, 0x5c, 0x44, 0xce, 0x92, 0xc1, 0x0c, 0x26, 0x96, 0x4a, 0xb0,
-	0x0a, 0x77, 0x6b, 0x16, 0x2e, 0x0c, 0x5c, 0xe0, 0xdd, 0x80, 0xec, 0x2e, 0x4c, 0xa5, 0xdb, 0xb8,
-	0xc0, 0xb8, 0xa1, 0xd9, 0xf4, 0x43, 0x01, 0x41, 0x50, 0x15, 0xd5, 0x73, 0xbd, 0xc2, 0xa3, 0x05,
-	0xc9, 0x0a, 0x7a, 0xc6, 0x0d, 0x75, 0x4d, 0x21, 0xbd, 0x84, 0xb7, 0x6d, 0xcd, 0x02, 0xb2, 0x25,
-	0x94, 0xb9, 0x47, 0x0b, 0xb2, 0x23, 0x94, 0xaa, 0xd8, 0x6e, 0x17, 0x7e, 0xbe, 0x24, 0xe8, 0xb7,
-	0x4b, 0x82, 0xbe, 0xfa, 0xe2, 0x00, 0xd5, 0x7e, 0xc9, 0xe0, 0xdc, 0xf2, 0x3c, 0x69, 0x1f, 0x67,
-	0xde, 0xa7, 0x60, 0x8e, 0x5d, 0x82, 0xaa, 0xe9, 0x7a, 0x4e, 0x8d, 0x9e, 0x24, 0x05, 0xa7, 0x4f,
-	0x60, 0x2a, 0x3a, 0xe6, 0x5b, 0x2f, 0x36, 0x97, 0x37, 0xd5, 0x8c, 0xa3, 0xf6, 0xb6, 0xcf, 0x9f,
-	0x1c, 0xa4, 0xd4, 0x40, 0x29, 0xb5, 0xf0, 0x0b, 0xba, 0xe3, 0x0f, 0x7d, 0x8f, 0x9a, 0x11, 0xd6,
-	0xd0, 0xa4, 0x16, 0xf5, 0x48, 0xba, 0x8a, 0xea, 0x37, 0xd4, 0xe7, 0x75, 0xc7, 0x1f, 0xac, 0x6a,
-	0xf7, 0x82, 0x52, 0xe0, 0xb1, 0xc0, 0x4a, 0xf0, 0x6c, 0x87, 0x1e, 0x0b, 0xac, 0x0d, 0xcf, 0x2b,
-	0x78, 0x7f, 0x4c, 0xdd, 0x93, 0x04, 0xd3, 0x8e, 0x30, 0x95, 0x82, 0xea, 0x86, 0xeb, 0x16, 0xde,
-	0xd3, 0x74, 0x8f, 0x4e, 0x60, 0xa8, 0x33, 0xfb, 0x6f, 0x43, 0x46, 0x18, 0x8a, 0x61, 0xe1, 0x88,
-	0xd9, 0x91, 0xb6, 0x8c, 0xb3, 0x2e, 0x4c, 0x80, 0x53, 0x6f, 0x4a, 0x9e, 0x0b, 0x6e, 0x54, 0x5d,
-	0x3e, 0x4b, 0x0a, 0x2e, 0x78, 0x9c, 0x1a, 0x06, 0xf0, 0xa1, 0x47, 0x2d, 0x20, 0xd9, 0x2a, 0xaa,
-	0xa7, 0x7b, 0x85, 0xdf, 0x9f, 0x1c, 0x64, 0xfb, 0x3e, 0x17, 0x07, 0xaa, 0xf9, 0x48, 0xf1, 0x90,
-	0x5a, 0x20, 0x1d, 0xe2, 0x8c, 0xa9, 0x8d, 0xc0, 0x74, 0x49, 0xae, 0x9a, 0xae, 0xe7, 0x5b, 0xd5,
-	0xa4, 0xab, 0x6c, 0xde, 0x13, 0x92, 0x37, 0x6c, 0x8f, 0x4f, 0xd5, 0x48, 0x2f, 0xbd, 0x89, 0xf3,
-	0xb1, 0x24, 0x12, 0x2c, 0xec, 0x2f, 0x27, 0xda, 0xbb, 0x2b, 0x5d, 0xd8, 0x23, 0xee, 0x2c, 0xbf,
-	0x86, 0xf3, 0xb1, 0xfe, 0xd2, 0x6e, 0x38, 0x59, 0x91, 0xaa, 0x70, 0x74, 0x25, 0xbc, 0x33, 0xd1,
-	0x4c, 0x3f, 0xca, 0x8f, 0x1a, 0x3e, 0xb4, 0xb7, 0x0e, 0x51, 0xf9, 0x75, 0xbc, 0x7b, 0xb5, 0xf7,
-	0x7f, 0xf1, 0xb7, 0xff, 0x44, 0x41, 0xf4, 0x7e, 0xbd, 0x24, 0xe8, 0xa3, 0x39, 0x41, 0x67, 0x73,
-	0x82, 0x3e, 0x9b, 0x13, 0xf4, 0xf9, 0x33, 0xf2, 0x2d, 0x0a, 0x92, 0xd9, 0xb9, 0x0b, 0xd3, 0xe6,
-	0x5b, 0x9a, 0x05, 0xb2, 0x88, 0x6b, 0x83, 0x71, 0x43, 0x6c, 0xbd, 0x1d, 0x0b, 0xb7, 0xac, 0x3b,
-	0x7e, 0x23, 0x36, 0xec, 0xce, 0xd1, 0x66, 0x90, 0x64, 0x0b, 0xac, 0x35, 0xcd, 0xfd, 0xcd, 0xe0,
-	0xc8, 0x41, 0x2e, 0xd6, 0x44, 0xfd, 0x84, 0xa0, 0xc8, 0x61, 0x18, 0x1a, 0x41, 0x4a, 0x40, 0x17,
-	0xff, 0xba, 0xd3, 0x5d, 0xcf, 0x87, 0x1c, 0x8d, 0xb7, 0x11, 0x04, 0xa0, 0xf3, 0x70, 0x35, 0xeb,
-	0x6f, 0x16, 0x64, 0xf7, 0x04, 0xa6, 0x9d, 0x38, 0x7d, 0xeb, 0x8f, 0xed, 0xd8, 0xdb, 0xdd, 0x75,
-	0xa8, 0xf4, 0x35, 0xc2, 0xc5, 0x23, 0x0e, 0x9a, 0x07, 0xab, 0x97, 0xb0, 0x94, 0x34, 0xd5, 0xf2,
-	0x5e, 0x6c, 0x57, 0x15, 0x1f, 0xa0, 0x9a, 0xff, 0x74, 0x4e, 0x5e, 0x55, 0xc1, 0x65, 0x3e, 0xd7,
-	0xa1, 0x0f, 0x13, 0x30, 0x99, 0x03, 0xfc, 0x1d, 0x66, 0x52, 0x7d, 0x2a, 0x77, 0x05, 0xef, 0x7d,
-	0xcd, 0xd6, 0x0c, 0x90, 0xaf, 0x5e, 0xe3, 0xec, 0x19, 0xc9, 0x3e, 0x88, 0x52, 0xfc, 0xe5, 0x82,
-	0xec, 0x5e, 0xad, 0x7f, 0xfc, 0xdd, 0x4f, 0x9f, 0x6e, 0xed, 0xd7, 0xf6, 0x14, 0x5d, 0xb0, 0x29,
-	0xcb, 0x6f, 0x65, 0x1b, 0xdd, 0x92, 0x3e, 0x41, 0xb8, 0xd8, 0x07, 0x13, 0xae, 0xc5, 0x3c, 0xb8,
-	0x36, 0xf3, 0x92, 0x69, 0x2c, 0xce, 0xde, 0x64, 0x1a, 0x38, 0x63, 0xed, 0xff, 0x62, 0xf2, 0xc5,
-	0xd9, 0xeb, 0x4c, 0x67, 0x08, 0xdf, 0x78, 0x70, 0xcc, 0x4e, 0xff, 0x8d, 0x28, 0x71, 0xb7, 0xf6,
-	0xee, 0xd3, 0x39, 0xb9, 0xf3, 0xcf, 0x50, 0xef, 0x51, 0x38, 0x4d, 0x46, 0x2a, 0xd5, 0x8a, 0x8a,
-	0x7b, 0xcc, 0x4e, 0xd7, 0x80, 0x6e, 0xa3, 0xde, 0xcd, 0xf3, 0x1f, 0x2b, 0xa9, 0xf3, 0x59, 0x05,
-	0x3d, 0x9e, 0x55, 0xd0, 0x0f, 0xb3, 0x0a, 0x3a, 0xbb, 0xa8, 0xa4, 0x1e, 0x5f, 0x54, 0x52, 0xdf,
-	0x5f, 0x54, 0x52, 0xa3, 0x8c, 0x60, 0xb8, 0xf3, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0x54, 0xae,
-	0x43, 0x54, 0x1b, 0x07, 0x00, 0x00,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x94, 0xcd, 0x6f, 0x2a, 0x55,
+	0x18, 0xc6, 0x39, 0xa5, 0x20, 0x1c, 0xd0, 0xc2, 0xdc, 0xda, 0x1c, 0xc9, 0x95, 0x12, 0x36, 0x92,
+	0x9b, 0x81, 0xb9, 0x72, 0x35, 0xb9, 0x92, 0x60, 0x02, 0xc5, 0x85, 0xb9, 0xf7, 0xaa, 0x99, 0xde,
+	0xab, 0x4b, 0x32, 0x0c, 0xaf, 0xd3, 0x93, 0xce, 0xcc, 0x99, 0xcc, 0x07, 0x88, 0x2b, 0xe3, 0x5f,
+	0xd0, 0xc4, 0x85, 0xd5, 0x95, 0x6b, 0x57, 0xc6, 0x8d, 0x49, 0xff, 0x82, 0x2e, 0x1b, 0xdd, 0xb8,
+	0x6a, 0x94, 0xba, 0x30, 0x5d, 0x99, 0x40, 0x89, 0x71, 0xa3, 0x99, 0x33, 0x23, 0x1d, 0x3e, 0x6a,
+	0xb4, 0x1b, 0x37, 0xcd, 0xf9, 0x78, 0x9e, 0xf7, 0xfd, 0xf5, 0xbc, 0xcf, 0x80, 0xb7, 0x3c, 0x07,
+	0x6c, 0x45, 0x07, 0xdb, 0xad, 0x59, 0x36, 0x73, 0x99, 0x90, 0x86, 0xbe, 0x06, 0x7c, 0x59, 0xb8,
+	0xab, 0x31, 0xa6, 0xe9, 0x20, 0x29, 0x16, 0x95, 0x14, 0xd3, 0x64, 0xae, 0xe2, 0x52, 0x66, 0x3a,
+	0x81, 0xb0, 0x90, 0xb5, 0xc1, 0xf1, 0xf4, 0xd0, 0x56, 0x78, 0xa8, 0x51, 0xf7, 0xc0, 0xeb, 0xd5,
+	0x54, 0x66, 0x48, 0x06, 0xeb, 0x51, 0xdd, 0x2f, 0xf3, 0x91, 0xe4, 0xff, 0xad, 0xaa, 0x3a, 0xf3,
+	0xfa, 0x12, 0xd7, 0x69, 0x60, 0xce, 0x17, 0xa1, 0x73, 0x5b, 0x63, 0x1a, 0xe3, 0x4b, 0xc9, 0x5f,
+	0x05, 0xa7, 0x65, 0x86, 0x5f, 0x68, 0xf9, 0x54, 0xef, 0x31, 0x9d, 0xaa, 0xa3, 0x47, 0x30, 0x12,
+	0xee, 0xe3, 0x2c, 0xb3, 0x35, 0xc5, 0xa4, 0x1f, 0x73, 0x0c, 0x82, 0x4a, 0xa8, 0x92, 0x6e, 0x67,
+	0x4f, 0x66, 0x24, 0xc5, 0xf9, 0x99, 0xad, 0xc9, 0x0b, 0x0a, 0xe1, 0x65, 0xbc, 0x69, 0x2a, 0x06,
+	0x90, 0x0d, 0xae, 0x4c, 0x9f, 0xcc, 0x48, 0x82, 0x2b, 0x65, 0x7e, 0xdc, 0xc8, 0xfe, 0x3a, 0x21,
+	0xe8, 0xf7, 0x09, 0x41, 0xdf, 0x7c, 0xb5, 0x8b, 0xca, 0x93, 0x24, 0xce, 0x44, 0x3a, 0x0a, 0x3b,
+	0x38, 0xf9, 0x21, 0x05, 0xbd, 0xef, 0x10, 0x54, 0x8a, 0x57, 0xd2, 0x72, 0xb8, 0x13, 0x5e, 0xc5,
+	0xf1, 0x43, 0x18, 0xf1, 0x9a, 0x99, 0xfa, 0x4b, 0xb5, 0xf9, 0x6b, 0xd5, 0x16, 0x71, 0xdb, 0x9b,
+	0xa7, 0xe7, 0xbb, 0x31, 0xd9, 0xd7, 0x0a, 0x75, 0xfc, 0xa2, 0x6a, 0x79, 0x5d, 0xcf, 0xa5, 0x7a,
+	0x88, 0xd6, 0xd5, 0xa9, 0x41, 0x5d, 0x12, 0x2f, 0xa1, 0xca, 0xf3, 0xf2, 0x1d, 0xd5, 0xf2, 0x9e,
+	0x5d, 0xdf, 0x3d, 0xf6, 0xaf, 0x7c, 0x8f, 0x01, 0xc6, 0x1a, 0xcf, 0x66, 0xe0, 0x31, 0xc0, 0x58,
+	0xf1, 0xbc, 0x86, 0x77, 0xfa, 0xd4, 0x39, 0x5c, 0x63, 0x4a, 0x70, 0xd3, 0xb6, 0x7f, 0xbb, 0xe2,
+	0xba, 0x87, 0xf3, 0x8a, 0xea, 0xd2, 0x01, 0x74, 0x55, 0x66, 0xfe, 0x6d, 0x48, 0x72, 0xc3, 0x56,
+	0x70, 0xb1, 0xc7, 0xcc, 0x50, 0x5b, 0xc0, 0x29, 0x07, 0x06, 0x60, 0x53, 0x77, 0x44, 0x9e, 0xf3,
+	0x5f, 0x55, 0x9e, 0xef, 0x05, 0x09, 0x67, 0x5d, 0x9b, 0x6a, 0x1a, 0xd8, 0x5d, 0x97, 0x1a, 0x40,
+	0x52, 0x25, 0x54, 0x89, 0xb7, 0xb3, 0x7f, 0x9c, 0xef, 0xa6, 0x3a, 0x9e, 0xcd, 0x1b, 0xca, 0x99,
+	0x50, 0xf1, 0x94, 0x1a, 0x20, 0x34, 0x70, 0x52, 0x57, 0x7a, 0xa0, 0x3b, 0x24, 0x5d, 0x8a, 0x57,
+	0x32, 0xf5, 0xf2, 0xfa, 0xc7, 0xac, 0x3d, 0xe6, 0xa2, 0xb7, 0x4c, 0xd7, 0x1e, 0xc9, 0xa1, 0x43,
+	0x78, 0x1b, 0x67, 0x22, 0x89, 0x24, 0x98, 0x17, 0x78, 0xe5, 0x86, 0x02, 0xad, 0x6b, 0x65, 0x50,
+	0x25, 0xea, 0x2d, 0xbc, 0x81, 0x33, 0x91, 0x0e, 0x42, 0x2e, 0x98, 0x2f, 0x4f, 0x57, 0x30, 0xbe,
+	0x6d, 0x9c, 0x18, 0x28, 0xba, 0x17, 0xe6, 0x48, 0x0e, 0x36, 0x8d, 0x8d, 0x87, 0xa8, 0xf0, 0x26,
+	0xce, 0x2d, 0xd7, 0xfe, 0x2f, 0xfe, 0xc6, 0x9f, 0xc8, 0x8f, 0xe0, 0x6f, 0x13, 0x82, 0x3e, 0x99,
+	0x12, 0x74, 0x34, 0x25, 0xe8, 0x78, 0x4a, 0xd0, 0x97, 0x57, 0xe4, 0x7b, 0xe4, 0x27, 0xb4, 0xf9,
+	0x08, 0x46, 0xb5, 0x77, 0x14, 0x03, 0x44, 0x1e, 0xdb, 0x2a, 0xb3, 0x35, 0x7e, 0xf4, 0x6e, 0x24,
+	0xe4, 0xa2, 0x6a, 0x79, 0xd5, 0xc8, 0xc0, 0x9b, 0x7b, 0xab, 0x61, 0x12, 0x0d, 0x30, 0x16, 0x34,
+	0x4f, 0x56, 0xc3, 0x23, 0xfa, 0xd9, 0x58, 0x10, 0x75, 0xd6, 0x84, 0x45, 0x0c, 0x02, 0x51, 0xf5,
+	0x93, 0x02, 0x2a, 0xff, 0xaf, 0x9b, 0xad, 0xc5, 0x8c, 0x88, 0xe1, 0x88, 0xab, 0x7e, 0x08, 0x9a,
+	0x4f, 0xaf, 0xe7, 0xfd, 0xed, 0x8c, 0xe4, 0x0e, 0x61, 0xd4, 0x8c, 0xd2, 0xd7, 0xbf, 0x48, 0x2c,
+	0x7c, 0xe7, 0x2d, 0x8b, 0x0a, 0xdf, 0x21, 0x9c, 0xdf, 0xb3, 0x41, 0x71, 0x61, 0xe1, 0x73, 0x5c,
+	0x3f, 0xdb, 0x42, 0x3e, 0x72, 0x2e, 0xf3, 0x1f, 0xa4, 0xf2, 0xf0, 0x72, 0x4a, 0x5e, 0x97, 0xc1,
+	0x61, 0x9e, 0xad, 0x42, 0x07, 0x06, 0xa0, 0x33, 0x0b, 0xec, 0x40, 0x2f, 0xb6, 0x38, 0xf5, 0x13,
+	0xc5, 0x54, 0x34, 0x10, 0x97, 0x1f, 0x73, 0x7c, 0x45, 0x52, 0xfb, 0x61, 0x9e, 0xbf, 0x9e, 0x91,
+	0xdc, 0xf2, 0xfd, 0xa7, 0x3f, 0xfc, 0xf2, 0xd9, 0x06, 0x29, 0xdf, 0x91, 0x54, 0xce, 0x27, 0xf1,
+	0xb1, 0x58, 0xbc, 0x70, 0x03, 0xdd, 0x13, 0x3e, 0x47, 0x38, 0xdf, 0x01, 0x1d, 0x6e, 0x4d, 0xfe,
+	0xc1, 0xad, 0xc9, 0xe7, 0x64, 0x7d, 0xde, 0x7f, 0x1d, 0xd9, 0x33, 0xab, 0xaf, 0xfc, 0x9f, 0x64,
+	0x1e, 0xef, 0xbf, 0x4c, 0x76, 0x8c, 0xf0, 0xd6, 0xfe, 0x01, 0x1b, 0xfe, 0x1b, 0xae, 0x1b, 0xce,
+	0xcb, 0xfb, 0x97, 0x53, 0xf2, 0xe0, 0x9f, 0xe1, 0xde, 0xa7, 0x30, 0x5c, 0x8f, 0xb6, 0x53, 0xce,
+	0x4b, 0xce, 0x01, 0x1b, 0x2e, 0x81, 0xdd, 0x47, 0xed, 0xbb, 0xa7, 0x3f, 0x17, 0x63, 0xa7, 0xe3,
+	0x22, 0x3a, 0x1b, 0x17, 0xd1, 0x4f, 0xe3, 0x22, 0x3a, 0xba, 0x28, 0xc6, 0xce, 0x2e, 0x8a, 0xb1,
+	0x1f, 0x2f, 0x8a, 0xb1, 0x5e, 0x92, 0x73, 0x3c, 0xf8, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x91, 0xe0,
+	0xfe, 0xd2, 0x41, 0x07, 0x00, 0x00,
 }
 
-func (this *UserAlertKey) GoString() string {
+func (this *AlertPolicyKey) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 6)
-	s = append(s, "&edgeproto.UserAlertKey{")
+	s = append(s, "&edgeproto.AlertPolicyKey{")
 	s = append(s, "Organization: "+fmt.Sprintf("%#v", this.Organization)+",\n")
 	s = append(s, "Name: "+fmt.Sprintf("%#v", this.Name)+",\n")
 	s = append(s, "}")
@@ -224,61 +224,61 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// UserAlertApiClient is the client API for UserAlertApi service.
+// AlertPolicyApiClient is the client API for AlertPolicyApi service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type UserAlertApiClient interface {
+type AlertPolicyApiClient interface {
 	// Create a User Defined Alert
-	CreateUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (*Result, error)
+	CreateAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error)
 	// Delete a User Defined Alert
-	DeleteUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (*Result, error)
+	DeleteAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error)
 	// Update a User Defined Alert
-	UpdateUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (*Result, error)
+	UpdateAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error)
 	// Show User Defined Alerts. Any fields specified will be used to filter results.
-	ShowUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (UserAlertApi_ShowUserAlertClient, error)
+	ShowAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (AlertPolicyApi_ShowAlertPolicyClient, error)
 }
 
-type userAlertApiClient struct {
+type alertPolicyApiClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewUserAlertApiClient(cc *grpc.ClientConn) UserAlertApiClient {
-	return &userAlertApiClient{cc}
+func NewAlertPolicyApiClient(cc *grpc.ClientConn) AlertPolicyApiClient {
+	return &alertPolicyApiClient{cc}
 }
 
-func (c *userAlertApiClient) CreateUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (*Result, error) {
+func (c *alertPolicyApiClient) CreateAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := c.cc.Invoke(ctx, "/edgeproto.UserAlertApi/CreateUserAlert", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AlertPolicyApi/CreateAlertPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAlertApiClient) DeleteUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (*Result, error) {
+func (c *alertPolicyApiClient) DeleteAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := c.cc.Invoke(ctx, "/edgeproto.UserAlertApi/DeleteUserAlert", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AlertPolicyApi/DeleteAlertPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAlertApiClient) UpdateUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (*Result, error) {
+func (c *alertPolicyApiClient) UpdateAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (*Result, error) {
 	out := new(Result)
-	err := c.cc.Invoke(ctx, "/edgeproto.UserAlertApi/UpdateUserAlert", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/edgeproto.AlertPolicyApi/UpdateAlertPolicy", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *userAlertApiClient) ShowUserAlert(ctx context.Context, in *UserAlert, opts ...grpc.CallOption) (UserAlertApi_ShowUserAlertClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_UserAlertApi_serviceDesc.Streams[0], "/edgeproto.UserAlertApi/ShowUserAlert", opts...)
+func (c *alertPolicyApiClient) ShowAlertPolicy(ctx context.Context, in *AlertPolicy, opts ...grpc.CallOption) (AlertPolicyApi_ShowAlertPolicyClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_AlertPolicyApi_serviceDesc.Streams[0], "/edgeproto.AlertPolicyApi/ShowAlertPolicy", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &userAlertApiShowUserAlertClient{stream}
+	x := &alertPolicyApiShowAlertPolicyClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -288,159 +288,159 @@ func (c *userAlertApiClient) ShowUserAlert(ctx context.Context, in *UserAlert, o
 	return x, nil
 }
 
-type UserAlertApi_ShowUserAlertClient interface {
-	Recv() (*UserAlert, error)
+type AlertPolicyApi_ShowAlertPolicyClient interface {
+	Recv() (*AlertPolicy, error)
 	grpc.ClientStream
 }
 
-type userAlertApiShowUserAlertClient struct {
+type alertPolicyApiShowAlertPolicyClient struct {
 	grpc.ClientStream
 }
 
-func (x *userAlertApiShowUserAlertClient) Recv() (*UserAlert, error) {
-	m := new(UserAlert)
+func (x *alertPolicyApiShowAlertPolicyClient) Recv() (*AlertPolicy, error) {
+	m := new(AlertPolicy)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-// UserAlertApiServer is the server API for UserAlertApi service.
-type UserAlertApiServer interface {
+// AlertPolicyApiServer is the server API for AlertPolicyApi service.
+type AlertPolicyApiServer interface {
 	// Create a User Defined Alert
-	CreateUserAlert(context.Context, *UserAlert) (*Result, error)
+	CreateAlertPolicy(context.Context, *AlertPolicy) (*Result, error)
 	// Delete a User Defined Alert
-	DeleteUserAlert(context.Context, *UserAlert) (*Result, error)
+	DeleteAlertPolicy(context.Context, *AlertPolicy) (*Result, error)
 	// Update a User Defined Alert
-	UpdateUserAlert(context.Context, *UserAlert) (*Result, error)
+	UpdateAlertPolicy(context.Context, *AlertPolicy) (*Result, error)
 	// Show User Defined Alerts. Any fields specified will be used to filter results.
-	ShowUserAlert(*UserAlert, UserAlertApi_ShowUserAlertServer) error
+	ShowAlertPolicy(*AlertPolicy, AlertPolicyApi_ShowAlertPolicyServer) error
 }
 
-// UnimplementedUserAlertApiServer can be embedded to have forward compatible implementations.
-type UnimplementedUserAlertApiServer struct {
+// UnimplementedAlertPolicyApiServer can be embedded to have forward compatible implementations.
+type UnimplementedAlertPolicyApiServer struct {
 }
 
-func (*UnimplementedUserAlertApiServer) CreateUserAlert(ctx context.Context, req *UserAlert) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateUserAlert not implemented")
+func (*UnimplementedAlertPolicyApiServer) CreateAlertPolicy(ctx context.Context, req *AlertPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateAlertPolicy not implemented")
 }
-func (*UnimplementedUserAlertApiServer) DeleteUserAlert(ctx context.Context, req *UserAlert) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserAlert not implemented")
+func (*UnimplementedAlertPolicyApiServer) DeleteAlertPolicy(ctx context.Context, req *AlertPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteAlertPolicy not implemented")
 }
-func (*UnimplementedUserAlertApiServer) UpdateUserAlert(ctx context.Context, req *UserAlert) (*Result, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserAlert not implemented")
+func (*UnimplementedAlertPolicyApiServer) UpdateAlertPolicy(ctx context.Context, req *AlertPolicy) (*Result, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAlertPolicy not implemented")
 }
-func (*UnimplementedUserAlertApiServer) ShowUserAlert(req *UserAlert, srv UserAlertApi_ShowUserAlertServer) error {
-	return status.Errorf(codes.Unimplemented, "method ShowUserAlert not implemented")
-}
-
-func RegisterUserAlertApiServer(s *grpc.Server, srv UserAlertApiServer) {
-	s.RegisterService(&_UserAlertApi_serviceDesc, srv)
+func (*UnimplementedAlertPolicyApiServer) ShowAlertPolicy(req *AlertPolicy, srv AlertPolicyApi_ShowAlertPolicyServer) error {
+	return status.Errorf(codes.Unimplemented, "method ShowAlertPolicy not implemented")
 }
 
-func _UserAlertApi_CreateUserAlert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserAlert)
+func RegisterAlertPolicyApiServer(s *grpc.Server, srv AlertPolicyApiServer) {
+	s.RegisterService(&_AlertPolicyApi_serviceDesc, srv)
+}
+
+func _AlertPolicyApi_CreateAlertPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AlertPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAlertApiServer).CreateUserAlert(ctx, in)
+		return srv.(AlertPolicyApiServer).CreateAlertPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/edgeproto.UserAlertApi/CreateUserAlert",
+		FullMethod: "/edgeproto.AlertPolicyApi/CreateAlertPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAlertApiServer).CreateUserAlert(ctx, req.(*UserAlert))
+		return srv.(AlertPolicyApiServer).CreateAlertPolicy(ctx, req.(*AlertPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAlertApi_DeleteUserAlert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserAlert)
+func _AlertPolicyApi_DeleteAlertPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AlertPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAlertApiServer).DeleteUserAlert(ctx, in)
+		return srv.(AlertPolicyApiServer).DeleteAlertPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/edgeproto.UserAlertApi/DeleteUserAlert",
+		FullMethod: "/edgeproto.AlertPolicyApi/DeleteAlertPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAlertApiServer).DeleteUserAlert(ctx, req.(*UserAlert))
+		return srv.(AlertPolicyApiServer).DeleteAlertPolicy(ctx, req.(*AlertPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAlertApi_UpdateUserAlert_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserAlert)
+func _AlertPolicyApi_UpdateAlertPolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AlertPolicy)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserAlertApiServer).UpdateUserAlert(ctx, in)
+		return srv.(AlertPolicyApiServer).UpdateAlertPolicy(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/edgeproto.UserAlertApi/UpdateUserAlert",
+		FullMethod: "/edgeproto.AlertPolicyApi/UpdateAlertPolicy",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserAlertApiServer).UpdateUserAlert(ctx, req.(*UserAlert))
+		return srv.(AlertPolicyApiServer).UpdateAlertPolicy(ctx, req.(*AlertPolicy))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserAlertApi_ShowUserAlert_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(UserAlert)
+func _AlertPolicyApi_ShowAlertPolicy_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AlertPolicy)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(UserAlertApiServer).ShowUserAlert(m, &userAlertApiShowUserAlertServer{stream})
+	return srv.(AlertPolicyApiServer).ShowAlertPolicy(m, &alertPolicyApiShowAlertPolicyServer{stream})
 }
 
-type UserAlertApi_ShowUserAlertServer interface {
-	Send(*UserAlert) error
+type AlertPolicyApi_ShowAlertPolicyServer interface {
+	Send(*AlertPolicy) error
 	grpc.ServerStream
 }
 
-type userAlertApiShowUserAlertServer struct {
+type alertPolicyApiShowAlertPolicyServer struct {
 	grpc.ServerStream
 }
 
-func (x *userAlertApiShowUserAlertServer) Send(m *UserAlert) error {
+func (x *alertPolicyApiShowAlertPolicyServer) Send(m *AlertPolicy) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-var _UserAlertApi_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "edgeproto.UserAlertApi",
-	HandlerType: (*UserAlertApiServer)(nil),
+var _AlertPolicyApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.AlertPolicyApi",
+	HandlerType: (*AlertPolicyApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateUserAlert",
-			Handler:    _UserAlertApi_CreateUserAlert_Handler,
+			MethodName: "CreateAlertPolicy",
+			Handler:    _AlertPolicyApi_CreateAlertPolicy_Handler,
 		},
 		{
-			MethodName: "DeleteUserAlert",
-			Handler:    _UserAlertApi_DeleteUserAlert_Handler,
+			MethodName: "DeleteAlertPolicy",
+			Handler:    _AlertPolicyApi_DeleteAlertPolicy_Handler,
 		},
 		{
-			MethodName: "UpdateUserAlert",
-			Handler:    _UserAlertApi_UpdateUserAlert_Handler,
+			MethodName: "UpdateAlertPolicy",
+			Handler:    _AlertPolicyApi_UpdateAlertPolicy_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ShowUserAlert",
-			Handler:       _UserAlertApi_ShowUserAlert_Handler,
+			StreamName:    "ShowAlertPolicy",
+			Handler:       _AlertPolicyApi_ShowAlertPolicy_Handler,
 			ServerStreams: true,
 		},
 	},
 	Metadata: "useralert.proto",
 }
 
-func (m *UserAlertKey) Marshal() (dAtA []byte, err error) {
+func (m *AlertPolicyKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -450,12 +450,12 @@ func (m *UserAlertKey) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UserAlertKey) MarshalTo(dAtA []byte) (int, error) {
+func (m *AlertPolicyKey) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UserAlertKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AlertPolicyKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -477,7 +477,7 @@ func (m *UserAlertKey) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *UserAlert) Marshal() (dAtA []byte, err error) {
+func (m *AlertPolicy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -487,12 +487,12 @@ func (m *UserAlert) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *UserAlert) MarshalTo(dAtA []byte) (int, error) {
+func (m *AlertPolicy) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *UserAlert) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AlertPolicy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -600,7 +600,7 @@ func encodeVarintUseralert(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *UserAlertKey) Matches(o *UserAlertKey, fopts ...MatchOpt) bool {
+func (m *AlertPolicyKey) Matches(o *AlertPolicyKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
 	if o == nil {
@@ -622,7 +622,7 @@ func (m *UserAlertKey) Matches(o *UserAlertKey, fopts ...MatchOpt) bool {
 	return true
 }
 
-func (m *UserAlertKey) CopyInFields(src *UserAlertKey) int {
+func (m *AlertPolicyKey) CopyInFields(src *AlertPolicyKey) int {
 	changed := 0
 	if m.Organization != src.Organization {
 		m.Organization = src.Organization
@@ -635,38 +635,38 @@ func (m *UserAlertKey) CopyInFields(src *UserAlertKey) int {
 	return changed
 }
 
-func (m *UserAlertKey) DeepCopyIn(src *UserAlertKey) {
+func (m *AlertPolicyKey) DeepCopyIn(src *AlertPolicyKey) {
 	m.Organization = src.Organization
 	m.Name = src.Name
 }
 
-func (m *UserAlertKey) GetKeyString() string {
+func (m *AlertPolicyKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		log.FatalLog("Failed to marshal UserAlertKey key string", "obj", m)
+		log.FatalLog("Failed to marshal AlertPolicyKey key string", "obj", m)
 	}
 	return string(key)
 }
 
-func UserAlertKeyStringParse(str string, key *UserAlertKey) {
+func AlertPolicyKeyStringParse(str string, key *AlertPolicyKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		log.FatalLog("Failed to unmarshal UserAlertKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal AlertPolicyKey key string", "str", str)
 	}
 }
 
-func (m *UserAlertKey) NotFoundError() error {
-	return fmt.Errorf("UserAlert key %s not found", m.GetKeyString())
+func (m *AlertPolicyKey) NotFoundError() error {
+	return fmt.Errorf("AlertPolicy key %s not found", m.GetKeyString())
 }
 
-func (m *UserAlertKey) ExistsError() error {
-	return fmt.Errorf("UserAlert key %s already exists", m.GetKeyString())
+func (m *AlertPolicyKey) ExistsError() error {
+	return fmt.Errorf("AlertPolicy key %s already exists", m.GetKeyString())
 }
 
-var UserAlertKeyTagOrganization = "alertorg"
-var UserAlertKeyTagName = "alert"
+var AlertPolicyKeyTagOrganization = "alertorg"
+var AlertPolicyKeyTagName = "alert"
 
-func (m *UserAlertKey) GetTags() map[string]string {
+func (m *AlertPolicyKey) GetTags() map[string]string {
 	tags := make(map[string]string)
 	tags["alertorg"] = m.Organization
 	tags["alert"] = m.Name
@@ -674,11 +674,11 @@ func (m *UserAlertKey) GetTags() map[string]string {
 }
 
 // Helper method to check that enums have valid values
-func (m *UserAlertKey) ValidateEnums() error {
+func (m *AlertPolicyKey) ValidateEnums() error {
 	return nil
 }
 
-func (m *UserAlert) Matches(o *UserAlert, fopts ...MatchOpt) bool {
+func (m *AlertPolicy) Matches(o *AlertPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
 	if o == nil {
@@ -759,152 +759,152 @@ func (m *UserAlert) Matches(o *UserAlert, fopts ...MatchOpt) bool {
 	return true
 }
 
-const UserAlertFieldKey = "2"
-const UserAlertFieldKeyOrganization = "2.1"
-const UserAlertFieldKeyName = "2.2"
-const UserAlertFieldCpuUtilizationLimit = "3"
-const UserAlertFieldMemUtilizationLimit = "4"
-const UserAlertFieldDiskUtilizationLimit = "5"
-const UserAlertFieldActiveConnLimit = "6"
-const UserAlertFieldSeverity = "7"
-const UserAlertFieldTriggerTime = "8"
-const UserAlertFieldLabels = "9"
-const UserAlertFieldLabelsKey = "9.1"
-const UserAlertFieldLabelsValue = "9.2"
-const UserAlertFieldAnnotations = "10"
-const UserAlertFieldAnnotationsKey = "10.1"
-const UserAlertFieldAnnotationsValue = "10.2"
+const AlertPolicyFieldKey = "2"
+const AlertPolicyFieldKeyOrganization = "2.1"
+const AlertPolicyFieldKeyName = "2.2"
+const AlertPolicyFieldCpuUtilizationLimit = "3"
+const AlertPolicyFieldMemUtilizationLimit = "4"
+const AlertPolicyFieldDiskUtilizationLimit = "5"
+const AlertPolicyFieldActiveConnLimit = "6"
+const AlertPolicyFieldSeverity = "7"
+const AlertPolicyFieldTriggerTime = "8"
+const AlertPolicyFieldLabels = "9"
+const AlertPolicyFieldLabelsKey = "9.1"
+const AlertPolicyFieldLabelsValue = "9.2"
+const AlertPolicyFieldAnnotations = "10"
+const AlertPolicyFieldAnnotationsKey = "10.1"
+const AlertPolicyFieldAnnotationsValue = "10.2"
 
-var UserAlertAllFields = []string{
-	UserAlertFieldKeyOrganization,
-	UserAlertFieldKeyName,
-	UserAlertFieldCpuUtilizationLimit,
-	UserAlertFieldMemUtilizationLimit,
-	UserAlertFieldDiskUtilizationLimit,
-	UserAlertFieldActiveConnLimit,
-	UserAlertFieldSeverity,
-	UserAlertFieldTriggerTime,
-	UserAlertFieldLabelsKey,
-	UserAlertFieldLabelsValue,
-	UserAlertFieldAnnotationsKey,
-	UserAlertFieldAnnotationsValue,
+var AlertPolicyAllFields = []string{
+	AlertPolicyFieldKeyOrganization,
+	AlertPolicyFieldKeyName,
+	AlertPolicyFieldCpuUtilizationLimit,
+	AlertPolicyFieldMemUtilizationLimit,
+	AlertPolicyFieldDiskUtilizationLimit,
+	AlertPolicyFieldActiveConnLimit,
+	AlertPolicyFieldSeverity,
+	AlertPolicyFieldTriggerTime,
+	AlertPolicyFieldLabelsKey,
+	AlertPolicyFieldLabelsValue,
+	AlertPolicyFieldAnnotationsKey,
+	AlertPolicyFieldAnnotationsValue,
 }
 
-var UserAlertAllFieldsMap = map[string]struct{}{
-	UserAlertFieldKeyOrganization:      struct{}{},
-	UserAlertFieldKeyName:              struct{}{},
-	UserAlertFieldCpuUtilizationLimit:  struct{}{},
-	UserAlertFieldMemUtilizationLimit:  struct{}{},
-	UserAlertFieldDiskUtilizationLimit: struct{}{},
-	UserAlertFieldActiveConnLimit:      struct{}{},
-	UserAlertFieldSeverity:             struct{}{},
-	UserAlertFieldTriggerTime:          struct{}{},
-	UserAlertFieldLabelsKey:            struct{}{},
-	UserAlertFieldLabelsValue:          struct{}{},
-	UserAlertFieldAnnotationsKey:       struct{}{},
-	UserAlertFieldAnnotationsValue:     struct{}{},
+var AlertPolicyAllFieldsMap = map[string]struct{}{
+	AlertPolicyFieldKeyOrganization:      struct{}{},
+	AlertPolicyFieldKeyName:              struct{}{},
+	AlertPolicyFieldCpuUtilizationLimit:  struct{}{},
+	AlertPolicyFieldMemUtilizationLimit:  struct{}{},
+	AlertPolicyFieldDiskUtilizationLimit: struct{}{},
+	AlertPolicyFieldActiveConnLimit:      struct{}{},
+	AlertPolicyFieldSeverity:             struct{}{},
+	AlertPolicyFieldTriggerTime:          struct{}{},
+	AlertPolicyFieldLabelsKey:            struct{}{},
+	AlertPolicyFieldLabelsValue:          struct{}{},
+	AlertPolicyFieldAnnotationsKey:       struct{}{},
+	AlertPolicyFieldAnnotationsValue:     struct{}{},
 }
 
-var UserAlertAllFieldsStringMap = map[string]string{
-	UserAlertFieldKeyOrganization:      "Key Organization",
-	UserAlertFieldKeyName:              "Key Name",
-	UserAlertFieldCpuUtilizationLimit:  "Cpu Utilization Limit",
-	UserAlertFieldMemUtilizationLimit:  "Mem Utilization Limit",
-	UserAlertFieldDiskUtilizationLimit: "Disk Utilization Limit",
-	UserAlertFieldActiveConnLimit:      "Active Conn Limit",
-	UserAlertFieldSeverity:             "Severity",
-	UserAlertFieldTriggerTime:          "Trigger Time",
-	UserAlertFieldLabelsKey:            "Labels Key",
-	UserAlertFieldLabelsValue:          "Labels Value",
-	UserAlertFieldAnnotationsKey:       "Annotations Key",
-	UserAlertFieldAnnotationsValue:     "Annotations Value",
+var AlertPolicyAllFieldsStringMap = map[string]string{
+	AlertPolicyFieldKeyOrganization:      "Key Organization",
+	AlertPolicyFieldKeyName:              "Key Name",
+	AlertPolicyFieldCpuUtilizationLimit:  "Cpu Utilization Limit",
+	AlertPolicyFieldMemUtilizationLimit:  "Mem Utilization Limit",
+	AlertPolicyFieldDiskUtilizationLimit: "Disk Utilization Limit",
+	AlertPolicyFieldActiveConnLimit:      "Active Conn Limit",
+	AlertPolicyFieldSeverity:             "Severity",
+	AlertPolicyFieldTriggerTime:          "Trigger Time",
+	AlertPolicyFieldLabelsKey:            "Labels Key",
+	AlertPolicyFieldLabelsValue:          "Labels Value",
+	AlertPolicyFieldAnnotationsKey:       "Annotations Key",
+	AlertPolicyFieldAnnotationsValue:     "Annotations Value",
 }
 
-func (m *UserAlert) IsKeyField(s string) bool {
-	return strings.HasPrefix(s, UserAlertFieldKey+".") || s == UserAlertFieldKey
+func (m *AlertPolicy) IsKeyField(s string) bool {
+	return strings.HasPrefix(s, AlertPolicyFieldKey+".") || s == AlertPolicyFieldKey
 }
 
-func (m *UserAlert) DiffFields(o *UserAlert, fields map[string]struct{}) {
+func (m *AlertPolicy) DiffFields(o *AlertPolicy, fields map[string]struct{}) {
 	if m.Key.Organization != o.Key.Organization {
-		fields[UserAlertFieldKeyOrganization] = struct{}{}
-		fields[UserAlertFieldKey] = struct{}{}
+		fields[AlertPolicyFieldKeyOrganization] = struct{}{}
+		fields[AlertPolicyFieldKey] = struct{}{}
 	}
 	if m.Key.Name != o.Key.Name {
-		fields[UserAlertFieldKeyName] = struct{}{}
-		fields[UserAlertFieldKey] = struct{}{}
+		fields[AlertPolicyFieldKeyName] = struct{}{}
+		fields[AlertPolicyFieldKey] = struct{}{}
 	}
 	if m.CpuUtilizationLimit != o.CpuUtilizationLimit {
-		fields[UserAlertFieldCpuUtilizationLimit] = struct{}{}
+		fields[AlertPolicyFieldCpuUtilizationLimit] = struct{}{}
 	}
 	if m.MemUtilizationLimit != o.MemUtilizationLimit {
-		fields[UserAlertFieldMemUtilizationLimit] = struct{}{}
+		fields[AlertPolicyFieldMemUtilizationLimit] = struct{}{}
 	}
 	if m.DiskUtilizationLimit != o.DiskUtilizationLimit {
-		fields[UserAlertFieldDiskUtilizationLimit] = struct{}{}
+		fields[AlertPolicyFieldDiskUtilizationLimit] = struct{}{}
 	}
 	if m.ActiveConnLimit != o.ActiveConnLimit {
-		fields[UserAlertFieldActiveConnLimit] = struct{}{}
+		fields[AlertPolicyFieldActiveConnLimit] = struct{}{}
 	}
 	if m.Severity != o.Severity {
-		fields[UserAlertFieldSeverity] = struct{}{}
+		fields[AlertPolicyFieldSeverity] = struct{}{}
 	}
 	if m.TriggerTime != o.TriggerTime {
-		fields[UserAlertFieldTriggerTime] = struct{}{}
+		fields[AlertPolicyFieldTriggerTime] = struct{}{}
 	}
 	if m.Labels != nil && o.Labels != nil {
 		if len(m.Labels) != len(o.Labels) {
-			fields[UserAlertFieldLabels] = struct{}{}
+			fields[AlertPolicyFieldLabels] = struct{}{}
 		} else {
 			for k0, _ := range m.Labels {
 				_, vok0 := o.Labels[k0]
 				if !vok0 {
-					fields[UserAlertFieldLabels] = struct{}{}
+					fields[AlertPolicyFieldLabels] = struct{}{}
 				} else {
 					if m.Labels[k0] != o.Labels[k0] {
-						fields[UserAlertFieldLabels] = struct{}{}
+						fields[AlertPolicyFieldLabels] = struct{}{}
 						break
 					}
 				}
 			}
 		}
 	} else if (m.Labels != nil && o.Labels == nil) || (m.Labels == nil && o.Labels != nil) {
-		fields[UserAlertFieldLabels] = struct{}{}
+		fields[AlertPolicyFieldLabels] = struct{}{}
 	}
 	if m.Annotations != nil && o.Annotations != nil {
 		if len(m.Annotations) != len(o.Annotations) {
-			fields[UserAlertFieldAnnotations] = struct{}{}
+			fields[AlertPolicyFieldAnnotations] = struct{}{}
 		} else {
 			for k0, _ := range m.Annotations {
 				_, vok0 := o.Annotations[k0]
 				if !vok0 {
-					fields[UserAlertFieldAnnotations] = struct{}{}
+					fields[AlertPolicyFieldAnnotations] = struct{}{}
 				} else {
 					if m.Annotations[k0] != o.Annotations[k0] {
-						fields[UserAlertFieldAnnotations] = struct{}{}
+						fields[AlertPolicyFieldAnnotations] = struct{}{}
 						break
 					}
 				}
 			}
 		}
 	} else if (m.Annotations != nil && o.Annotations == nil) || (m.Annotations == nil && o.Annotations != nil) {
-		fields[UserAlertFieldAnnotations] = struct{}{}
+		fields[AlertPolicyFieldAnnotations] = struct{}{}
 	}
 }
 
-var UpdateUserAlertFieldsMap = map[string]struct{}{
-	UserAlertFieldCpuUtilizationLimit:  struct{}{},
-	UserAlertFieldMemUtilizationLimit:  struct{}{},
-	UserAlertFieldDiskUtilizationLimit: struct{}{},
-	UserAlertFieldActiveConnLimit:      struct{}{},
-	UserAlertFieldSeverity:             struct{}{},
-	UserAlertFieldTriggerTime:          struct{}{},
-	UserAlertFieldLabels:               struct{}{},
-	UserAlertFieldLabelsValue:          struct{}{},
-	UserAlertFieldAnnotations:          struct{}{},
-	UserAlertFieldAnnotationsValue:     struct{}{},
+var UpdateAlertPolicyFieldsMap = map[string]struct{}{
+	AlertPolicyFieldCpuUtilizationLimit:  struct{}{},
+	AlertPolicyFieldMemUtilizationLimit:  struct{}{},
+	AlertPolicyFieldDiskUtilizationLimit: struct{}{},
+	AlertPolicyFieldActiveConnLimit:      struct{}{},
+	AlertPolicyFieldSeverity:             struct{}{},
+	AlertPolicyFieldTriggerTime:          struct{}{},
+	AlertPolicyFieldLabels:               struct{}{},
+	AlertPolicyFieldLabelsValue:          struct{}{},
+	AlertPolicyFieldAnnotations:          struct{}{},
+	AlertPolicyFieldAnnotationsValue:     struct{}{},
 }
 
-func (m *UserAlert) ValidateUpdateFields() error {
+func (m *AlertPolicy) ValidateUpdateFields() error {
 	if m.Fields == nil {
 		return fmt.Errorf("nothing specified to update")
 	}
@@ -914,11 +914,11 @@ func (m *UserAlert) ValidateUpdateFields() error {
 		if m.IsKeyField(field) {
 			continue
 		}
-		if _, ok := UpdateUserAlertFieldsMap[field]; !ok {
-			if _, ok := UserAlertAllFieldsStringMap[field]; !ok {
+		if _, ok := UpdateAlertPolicyFieldsMap[field]; !ok {
+			if _, ok := AlertPolicyAllFieldsStringMap[field]; !ok {
 				continue
 			}
-			badFieldStrs = append(badFieldStrs, UserAlertAllFieldsStringMap[field])
+			badFieldStrs = append(badFieldStrs, AlertPolicyAllFieldsStringMap[field])
 		}
 	}
 	if len(badFieldStrs) > 0 {
@@ -927,7 +927,7 @@ func (m *UserAlert) ValidateUpdateFields() error {
 	return nil
 }
 
-func (m *UserAlert) CopyInFields(src *UserAlert) int {
+func (m *AlertPolicy) CopyInFields(src *AlertPolicy) int {
 	changed := 0
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -1007,7 +1007,7 @@ func (m *UserAlert) CopyInFields(src *UserAlert) int {
 	return changed
 }
 
-func (m *UserAlert) DeepCopyIn(src *UserAlert) {
+func (m *AlertPolicy) DeepCopyIn(src *AlertPolicy) {
 	m.Key.DeepCopyIn(&src.Key)
 	m.CpuUtilizationLimit = src.CpuUtilizationLimit
 	m.MemUtilizationLimit = src.MemUtilizationLimit
@@ -1033,24 +1033,24 @@ func (m *UserAlert) DeepCopyIn(src *UserAlert) {
 	}
 }
 
-func (s *UserAlert) HasFields() bool {
+func (s *AlertPolicy) HasFields() bool {
 	return true
 }
 
-type UserAlertStore struct {
+type AlertPolicyStore struct {
 	kvstore objstore.KVStore
 }
 
-func NewUserAlertStore(kvstore objstore.KVStore) UserAlertStore {
-	return UserAlertStore{kvstore: kvstore}
+func NewAlertPolicyStore(kvstore objstore.KVStore) AlertPolicyStore {
+	return AlertPolicyStore{kvstore: kvstore}
 }
 
-func (s *UserAlertStore) Create(ctx context.Context, m *UserAlert, wait func(int64)) (*Result, error) {
-	err := m.Validate(UserAlertAllFieldsMap)
+func (s *AlertPolicyStore) Create(ctx context.Context, m *AlertPolicy, wait func(int64)) (*Result, error) {
+	err := m.Validate(AlertPolicyAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("UserAlert", m.GetKey())
+	key := objstore.DbKeyString("AlertPolicy", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
@@ -1065,19 +1065,19 @@ func (s *UserAlertStore) Create(ctx context.Context, m *UserAlert, wait func(int
 	return &Result{}, err
 }
 
-func (s *UserAlertStore) Update(ctx context.Context, m *UserAlert, wait func(int64)) (*Result, error) {
+func (s *AlertPolicyStore) Update(ctx context.Context, m *AlertPolicy, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("UserAlert", m.GetKey())
+	key := objstore.DbKeyString("AlertPolicy", m.GetKey())
 	var vers int64 = 0
 	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
-	var cur UserAlert
+	var cur AlertPolicy
 	err = json.Unmarshal(curBytes, &cur)
 	if err != nil {
 		return nil, err
@@ -1099,13 +1099,13 @@ func (s *UserAlertStore) Update(ctx context.Context, m *UserAlert, wait func(int
 	return &Result{}, err
 }
 
-func (s *UserAlertStore) Put(ctx context.Context, m *UserAlert, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	err := m.Validate(UserAlertAllFieldsMap)
+func (s *AlertPolicyStore) Put(ctx context.Context, m *AlertPolicy, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+	err := m.Validate(AlertPolicyAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("UserAlert", m.GetKey())
+	key := objstore.DbKeyString("AlertPolicy", m.GetKey())
 	var val []byte
 	val, err = json.Marshal(m)
 	if err != nil {
@@ -1121,12 +1121,12 @@ func (s *UserAlertStore) Put(ctx context.Context, m *UserAlert, wait func(int64)
 	return &Result{}, err
 }
 
-func (s *UserAlertStore) Delete(ctx context.Context, m *UserAlert, wait func(int64)) (*Result, error) {
+func (s *AlertPolicyStore) Delete(ctx context.Context, m *AlertPolicy, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("UserAlert", m.GetKey())
+	key := objstore.DbKeyString("AlertPolicy", m.GetKey())
 	rev, err := s.kvstore.Delete(ctx, key)
 	if err != nil {
 		return nil, err
@@ -1137,22 +1137,22 @@ func (s *UserAlertStore) Delete(ctx context.Context, m *UserAlert, wait func(int
 	return &Result{}, err
 }
 
-func (s *UserAlertStore) LoadOne(key string) (*UserAlert, int64, error) {
+func (s *AlertPolicyStore) LoadOne(key string) (*AlertPolicy, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
-	var obj UserAlert
+	var obj AlertPolicy
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse UserAlert data", "val", string(val), "err", err)
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AlertPolicy data", "val", string(val), "err", err)
 		return nil, 0, err
 	}
 	return &obj, rev, nil
 }
 
-func (s *UserAlertStore) STMGet(stm concurrency.STM, key *UserAlertKey, buf *UserAlert) bool {
-	keystr := objstore.DbKeyString("UserAlert", key)
+func (s *AlertPolicyStore) STMGet(stm concurrency.STM, key *AlertPolicyKey, buf *AlertPolicy) bool {
+	keystr := objstore.DbKeyString("AlertPolicy", key)
 	valstr := stm.Get(keystr)
 	if valstr == "" {
 		return false
@@ -1166,54 +1166,54 @@ func (s *UserAlertStore) STMGet(stm concurrency.STM, key *UserAlertKey, buf *Use
 	return true
 }
 
-func (s *UserAlertStore) STMPut(stm concurrency.STM, obj *UserAlert, ops ...objstore.KVOp) {
-	keystr := objstore.DbKeyString("UserAlert", obj.GetKey())
+func (s *AlertPolicyStore) STMPut(stm concurrency.STM, obj *AlertPolicy, ops ...objstore.KVOp) {
+	keystr := objstore.DbKeyString("AlertPolicy", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("UserAlert json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("AlertPolicy json marsahal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *UserAlertStore) STMDel(stm concurrency.STM, key *UserAlertKey) {
-	keystr := objstore.DbKeyString("UserAlert", key)
+func (s *AlertPolicyStore) STMDel(stm concurrency.STM, key *AlertPolicyKey) {
+	keystr := objstore.DbKeyString("AlertPolicy", key)
 	stm.Del(keystr)
 }
 
-type UserAlertKeyWatcher struct {
+type AlertPolicyKeyWatcher struct {
 	cb func(ctx context.Context)
 }
 
-type UserAlertCacheData struct {
-	Obj    *UserAlert
+type AlertPolicyCacheData struct {
+	Obj    *AlertPolicy
 	ModRev int64
 }
 
-// UserAlertCache caches UserAlert objects in memory in a hash table
+// AlertPolicyCache caches AlertPolicy objects in memory in a hash table
 // and keeps them in sync with the database.
-type UserAlertCache struct {
-	Objs          map[UserAlertKey]*UserAlertCacheData
+type AlertPolicyCache struct {
+	Objs          map[AlertPolicyKey]*AlertPolicyCacheData
 	Mux           util.Mutex
-	List          map[UserAlertKey]struct{}
+	List          map[AlertPolicyKey]struct{}
 	FlushAll      bool
-	NotifyCbs     []func(ctx context.Context, obj *UserAlertKey, old *UserAlert, modRev int64)
-	UpdatedCbs    []func(ctx context.Context, old *UserAlert, new *UserAlert)
-	DeletedCbs    []func(ctx context.Context, old *UserAlert)
-	KeyWatchers   map[UserAlertKey][]*UserAlertKeyWatcher
-	UpdatedKeyCbs []func(ctx context.Context, key *UserAlertKey)
-	DeletedKeyCbs []func(ctx context.Context, key *UserAlertKey)
+	NotifyCbs     []func(ctx context.Context, obj *AlertPolicyKey, old *AlertPolicy, modRev int64)
+	UpdatedCbs    []func(ctx context.Context, old *AlertPolicy, new *AlertPolicy)
+	DeletedCbs    []func(ctx context.Context, old *AlertPolicy)
+	KeyWatchers   map[AlertPolicyKey][]*AlertPolicyKeyWatcher
+	UpdatedKeyCbs []func(ctx context.Context, key *AlertPolicyKey)
+	DeletedKeyCbs []func(ctx context.Context, key *AlertPolicyKey)
 }
 
-func NewUserAlertCache() *UserAlertCache {
-	cache := UserAlertCache{}
-	InitUserAlertCache(&cache)
+func NewAlertPolicyCache() *AlertPolicyCache {
+	cache := AlertPolicyCache{}
+	InitAlertPolicyCache(&cache)
 	return &cache
 }
 
-func InitUserAlertCache(cache *UserAlertCache) {
-	cache.Objs = make(map[UserAlertKey]*UserAlertCacheData)
-	cache.KeyWatchers = make(map[UserAlertKey][]*UserAlertKeyWatcher)
+func InitAlertPolicyCache(cache *AlertPolicyCache) {
+	cache.Objs = make(map[AlertPolicyKey]*AlertPolicyCacheData)
+	cache.KeyWatchers = make(map[AlertPolicyKey][]*AlertPolicyKeyWatcher)
 	cache.NotifyCbs = nil
 	cache.UpdatedCbs = nil
 	cache.DeletedCbs = nil
@@ -1221,16 +1221,16 @@ func InitUserAlertCache(cache *UserAlertCache) {
 	cache.DeletedKeyCbs = nil
 }
 
-func (c *UserAlertCache) GetTypeString() string {
-	return "UserAlert"
+func (c *AlertPolicyCache) GetTypeString() string {
+	return "AlertPolicy"
 }
 
-func (c *UserAlertCache) Get(key *UserAlertKey, valbuf *UserAlert) bool {
+func (c *AlertPolicyCache) Get(key *AlertPolicyKey, valbuf *AlertPolicy) bool {
 	var modRev int64
 	return c.GetWithRev(key, valbuf, &modRev)
 }
 
-func (c *UserAlertCache) GetWithRev(key *UserAlertKey, valbuf *UserAlert, modRev *int64) bool {
+func (c *AlertPolicyCache) GetWithRev(key *AlertPolicyKey, valbuf *AlertPolicy, modRev *int64) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
@@ -1241,14 +1241,14 @@ func (c *UserAlertCache) GetWithRev(key *UserAlertKey, valbuf *UserAlert, modRev
 	return found
 }
 
-func (c *UserAlertCache) HasKey(key *UserAlertKey) bool {
+func (c *AlertPolicyCache) HasKey(key *AlertPolicyKey) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	_, found := c.Objs[*key]
 	return found
 }
 
-func (c *UserAlertCache) GetAllKeys(ctx context.Context, cb func(key *UserAlertKey, modRev int64)) {
+func (c *AlertPolicyCache) GetAllKeys(ctx context.Context, cb func(key *AlertPolicyKey, modRev int64)) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, data := range c.Objs {
@@ -1256,15 +1256,15 @@ func (c *UserAlertCache) GetAllKeys(ctx context.Context, cb func(key *UserAlertK
 	}
 }
 
-func (c *UserAlertCache) Update(ctx context.Context, in *UserAlert, modRev int64) {
-	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *UserAlert) (*UserAlert, bool) {
+func (c *AlertPolicyCache) Update(ctx context.Context, in *AlertPolicy, modRev int64) {
+	c.UpdateModFunc(ctx, in.GetKey(), modRev, func(old *AlertPolicy) (*AlertPolicy, bool) {
 		return in, true
 	})
 }
 
-func (c *UserAlertCache) UpdateModFunc(ctx context.Context, key *UserAlertKey, modRev int64, modFunc func(old *UserAlert) (new *UserAlert, changed bool)) {
+func (c *AlertPolicyCache) UpdateModFunc(ctx context.Context, key *AlertPolicyKey, modRev int64, modFunc func(old *AlertPolicy) (new *AlertPolicy, changed bool)) {
 	c.Mux.Lock()
-	var old *UserAlert
+	var old *AlertPolicy
 	if oldData, found := c.Objs[*key]; found {
 		old = oldData.Obj
 	}
@@ -1274,7 +1274,7 @@ func (c *UserAlertCache) UpdateModFunc(ctx context.Context, key *UserAlertKey, m
 		return
 	}
 	for _, cb := range c.UpdatedCbs {
-		newCopy := &UserAlert{}
+		newCopy := &AlertPolicy{}
 		newCopy.DeepCopyIn(new)
 		defer cb(ctx, old, newCopy)
 	}
@@ -1286,9 +1286,9 @@ func (c *UserAlertCache) UpdateModFunc(ctx context.Context, key *UserAlertKey, m
 	for _, cb := range c.UpdatedKeyCbs {
 		defer cb(ctx, key)
 	}
-	store := &UserAlert{}
+	store := &AlertPolicy{}
 	store.DeepCopyIn(new)
-	c.Objs[new.GetKeyVal()] = &UserAlertCacheData{
+	c.Objs[new.GetKeyVal()] = &AlertPolicyCacheData{
 		Obj:    store,
 		ModRev: modRev,
 	}
@@ -1297,15 +1297,15 @@ func (c *UserAlertCache) UpdateModFunc(ctx context.Context, key *UserAlertKey, m
 	c.TriggerKeyWatchers(ctx, new.GetKey())
 }
 
-func (c *UserAlertCache) Delete(ctx context.Context, in *UserAlert, modRev int64) {
-	c.DeleteCondFunc(ctx, in, modRev, func(old *UserAlert) bool {
+func (c *AlertPolicyCache) Delete(ctx context.Context, in *AlertPolicy, modRev int64) {
+	c.DeleteCondFunc(ctx, in, modRev, func(old *AlertPolicy) bool {
 		return true
 	})
 }
 
-func (c *UserAlertCache) DeleteCondFunc(ctx context.Context, in *UserAlert, modRev int64, condFunc func(old *UserAlert) bool) {
+func (c *AlertPolicyCache) DeleteCondFunc(ctx context.Context, in *AlertPolicy, modRev int64, condFunc func(old *AlertPolicy) bool) {
 	c.Mux.Lock()
-	var old *UserAlert
+	var old *AlertPolicy
 	oldData, found := c.Objs[in.GetKeyVal()]
 	if found {
 		old = oldData.Obj
@@ -1333,8 +1333,8 @@ func (c *UserAlertCache) DeleteCondFunc(ctx context.Context, in *UserAlert, modR
 	c.TriggerKeyWatchers(ctx, in.GetKey())
 }
 
-func (c *UserAlertCache) Prune(ctx context.Context, validKeys map[UserAlertKey]struct{}) {
-	notify := make(map[UserAlertKey]*UserAlertCacheData)
+func (c *AlertPolicyCache) Prune(ctx context.Context, validKeys map[AlertPolicyKey]struct{}) {
+	notify := make(map[AlertPolicyKey]*AlertPolicyCacheData)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
@@ -1363,16 +1363,16 @@ func (c *UserAlertCache) Prune(ctx context.Context, validKeys map[UserAlertKey]s
 	}
 }
 
-func (c *UserAlertCache) GetCount() int {
+func (c *AlertPolicyCache) GetCount() int {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	return len(c.Objs)
 }
 
-func (c *UserAlertCache) Flush(ctx context.Context, notifyId int64) {
+func (c *AlertPolicyCache) Flush(ctx context.Context, notifyId int64) {
 }
 
-func (c *UserAlertCache) Show(filter *UserAlert, cb func(ret *UserAlert) error) error {
+func (c *AlertPolicyCache) Show(filter *AlertPolicy, cb func(ret *AlertPolicy) error) error {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, data := range c.Objs {
@@ -1387,66 +1387,66 @@ func (c *UserAlertCache) Show(filter *UserAlert, cb func(ret *UserAlert) error) 
 	return nil
 }
 
-func UserAlertGenericNotifyCb(fn func(key *UserAlertKey, old *UserAlert)) func(objstore.ObjKey, objstore.Obj) {
+func AlertPolicyGenericNotifyCb(fn func(key *AlertPolicyKey, old *AlertPolicy)) func(objstore.ObjKey, objstore.Obj) {
 	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*UserAlertKey), obj.(*UserAlert))
+		fn(objkey.(*AlertPolicyKey), obj.(*AlertPolicy))
 	}
 }
 
-func (c *UserAlertCache) SetNotifyCb(fn func(ctx context.Context, obj *UserAlertKey, old *UserAlert, modRev int64)) {
-	c.NotifyCbs = []func(ctx context.Context, obj *UserAlertKey, old *UserAlert, modRev int64){fn}
+func (c *AlertPolicyCache) SetNotifyCb(fn func(ctx context.Context, obj *AlertPolicyKey, old *AlertPolicy, modRev int64)) {
+	c.NotifyCbs = []func(ctx context.Context, obj *AlertPolicyKey, old *AlertPolicy, modRev int64){fn}
 }
 
-func (c *UserAlertCache) SetUpdatedCb(fn func(ctx context.Context, old *UserAlert, new *UserAlert)) {
-	c.UpdatedCbs = []func(ctx context.Context, old *UserAlert, new *UserAlert){fn}
+func (c *AlertPolicyCache) SetUpdatedCb(fn func(ctx context.Context, old *AlertPolicy, new *AlertPolicy)) {
+	c.UpdatedCbs = []func(ctx context.Context, old *AlertPolicy, new *AlertPolicy){fn}
 }
 
-func (c *UserAlertCache) SetDeletedCb(fn func(ctx context.Context, old *UserAlert)) {
-	c.DeletedCbs = []func(ctx context.Context, old *UserAlert){fn}
+func (c *AlertPolicyCache) SetDeletedCb(fn func(ctx context.Context, old *AlertPolicy)) {
+	c.DeletedCbs = []func(ctx context.Context, old *AlertPolicy){fn}
 }
 
-func (c *UserAlertCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *UserAlertKey)) {
-	c.UpdatedKeyCbs = []func(ctx context.Context, key *UserAlertKey){fn}
+func (c *AlertPolicyCache) SetUpdatedKeyCb(fn func(ctx context.Context, key *AlertPolicyKey)) {
+	c.UpdatedKeyCbs = []func(ctx context.Context, key *AlertPolicyKey){fn}
 }
 
-func (c *UserAlertCache) SetDeletedKeyCb(fn func(ctx context.Context, key *UserAlertKey)) {
-	c.DeletedKeyCbs = []func(ctx context.Context, key *UserAlertKey){fn}
+func (c *AlertPolicyCache) SetDeletedKeyCb(fn func(ctx context.Context, key *AlertPolicyKey)) {
+	c.DeletedKeyCbs = []func(ctx context.Context, key *AlertPolicyKey){fn}
 }
 
-func (c *UserAlertCache) AddUpdatedCb(fn func(ctx context.Context, old *UserAlert, new *UserAlert)) {
+func (c *AlertPolicyCache) AddUpdatedCb(fn func(ctx context.Context, old *AlertPolicy, new *AlertPolicy)) {
 	c.UpdatedCbs = append(c.UpdatedCbs, fn)
 }
 
-func (c *UserAlertCache) AddDeletedCb(fn func(ctx context.Context, old *UserAlert)) {
+func (c *AlertPolicyCache) AddDeletedCb(fn func(ctx context.Context, old *AlertPolicy)) {
 	c.DeletedCbs = append(c.DeletedCbs, fn)
 }
 
-func (c *UserAlertCache) AddNotifyCb(fn func(ctx context.Context, obj *UserAlertKey, old *UserAlert, modRev int64)) {
+func (c *AlertPolicyCache) AddNotifyCb(fn func(ctx context.Context, obj *AlertPolicyKey, old *AlertPolicy, modRev int64)) {
 	c.NotifyCbs = append(c.NotifyCbs, fn)
 }
 
-func (c *UserAlertCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *UserAlertKey)) {
+func (c *AlertPolicyCache) AddUpdatedKeyCb(fn func(ctx context.Context, key *AlertPolicyKey)) {
 	c.UpdatedKeyCbs = append(c.UpdatedKeyCbs, fn)
 }
 
-func (c *UserAlertCache) AddDeletedKeyCb(fn func(ctx context.Context, key *UserAlertKey)) {
+func (c *AlertPolicyCache) AddDeletedKeyCb(fn func(ctx context.Context, key *AlertPolicyKey)) {
 	c.DeletedKeyCbs = append(c.DeletedKeyCbs, fn)
 }
 
-func (c *UserAlertCache) SetFlushAll() {
+func (c *AlertPolicyCache) SetFlushAll() {
 	c.FlushAll = true
 }
 
-func (c *UserAlertCache) WatchKey(key *UserAlertKey, cb func(ctx context.Context)) context.CancelFunc {
+func (c *AlertPolicyCache) WatchKey(key *AlertPolicyKey, cb func(ctx context.Context)) context.CancelFunc {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	list, ok := c.KeyWatchers[*key]
 	if !ok {
-		list = make([]*UserAlertKeyWatcher, 0)
+		list = make([]*AlertPolicyKeyWatcher, 0)
 	}
-	watcher := UserAlertKeyWatcher{cb: cb}
+	watcher := AlertPolicyKeyWatcher{cb: cb}
 	c.KeyWatchers[*key] = append(list, &watcher)
-	log.DebugLog(log.DebugLevelApi, "Watching UserAlert", "key", key)
+	log.DebugLog(log.DebugLevelApi, "Watching AlertPolicy", "key", key)
 	return func() {
 		c.Mux.Lock()
 		defer c.Mux.Unlock()
@@ -1470,8 +1470,8 @@ func (c *UserAlertCache) WatchKey(key *UserAlertKey, cb func(ctx context.Context
 	}
 }
 
-func (c *UserAlertCache) TriggerKeyWatchers(ctx context.Context, key *UserAlertKey) {
-	watchers := make([]*UserAlertKeyWatcher, 0)
+func (c *AlertPolicyCache) TriggerKeyWatchers(ctx context.Context, key *AlertPolicyKey) {
+	watchers := make([]*AlertPolicyKeyWatcher, 0)
 	c.Mux.Lock()
 	if list, ok := c.KeyWatchers[*key]; ok {
 		watchers = append(watchers, list...)
@@ -1488,11 +1488,11 @@ func (c *UserAlertCache) TriggerKeyWatchers(ctx context.Context, key *UserAlertK
 // or multiple updates compressed into one update, so the state of the cache at
 // any point in time may not by in sync with a particular database revision number.
 
-func (c *UserAlertCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
-	obj := UserAlert{}
+func (c *AlertPolicyCache) SyncUpdate(ctx context.Context, key, val []byte, rev, modRev int64) {
+	obj := AlertPolicy{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		log.WarnLog("Failed to parse UserAlert data", "val", string(val), "err", err)
+		log.WarnLog("Failed to parse AlertPolicy data", "val", string(val), "err", err)
 		return
 	}
 	c.Update(ctx, &obj, modRev)
@@ -1503,19 +1503,19 @@ func (c *UserAlertCache) SyncUpdate(ctx context.Context, key, val []byte, rev, m
 	c.Mux.Unlock()
 }
 
-func (c *UserAlertCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
-	obj := UserAlert{}
+func (c *AlertPolicyCache) SyncDelete(ctx context.Context, key []byte, rev, modRev int64) {
+	obj := AlertPolicy{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	UserAlertKeyStringParse(keystr, obj.GetKey())
+	AlertPolicyKeyStringParse(keystr, obj.GetKey())
 	c.Delete(ctx, &obj, modRev)
 }
 
-func (c *UserAlertCache) SyncListStart(ctx context.Context) {
-	c.List = make(map[UserAlertKey]struct{})
+func (c *AlertPolicyCache) SyncListStart(ctx context.Context) {
+	c.List = make(map[AlertPolicyKey]struct{})
 }
 
-func (c *UserAlertCache) SyncListEnd(ctx context.Context) {
-	deleted := make(map[UserAlertKey]*UserAlertCacheData)
+func (c *AlertPolicyCache) SyncListEnd(ctx context.Context) {
+	deleted := make(map[AlertPolicyKey]*AlertPolicyCacheData)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -1543,7 +1543,7 @@ func (c *UserAlertCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *UserAlertCache) UsesOrg(org string) bool {
+func (c *AlertPolicyCache) UsesOrg(org string) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
@@ -1554,48 +1554,48 @@ func (c *UserAlertCache) UsesOrg(org string) bool {
 	return false
 }
 
-func (m *UserAlert) GetObjKey() objstore.ObjKey {
+func (m *AlertPolicy) GetObjKey() objstore.ObjKey {
 	return m.GetKey()
 }
 
-func (m *UserAlert) GetKey() *UserAlertKey {
+func (m *AlertPolicy) GetKey() *AlertPolicyKey {
 	return &m.Key
 }
 
-func (m *UserAlert) GetKeyVal() UserAlertKey {
+func (m *AlertPolicy) GetKeyVal() AlertPolicyKey {
 	return m.Key
 }
 
-func (m *UserAlert) SetKey(key *UserAlertKey) {
+func (m *AlertPolicy) SetKey(key *AlertPolicyKey) {
 	m.Key = *key
 }
 
-func CmpSortUserAlert(a UserAlert, b UserAlert) bool {
+func CmpSortAlertPolicy(a AlertPolicy, b AlertPolicy) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
-func (m *UserAlert) ValidateEnums() error {
+func (m *AlertPolicy) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *UserAlert) IsValidArgsForCreateUserAlert() error {
+func (m *AlertPolicy) IsValidArgsForCreateAlertPolicy() error {
 	return nil
 }
 
-func (m *UserAlert) IsValidArgsForDeleteUserAlert() error {
+func (m *AlertPolicy) IsValidArgsForDeleteAlertPolicy() error {
 	return nil
 }
 
-func (m *UserAlert) IsValidArgsForUpdateUserAlert() error {
+func (m *AlertPolicy) IsValidArgsForUpdateAlertPolicy() error {
 	return nil
 }
 
-func (m *UserAlertKey) Size() (n int) {
+func (m *AlertPolicyKey) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1612,7 +1612,7 @@ func (m *UserAlertKey) Size() (n int) {
 	return n
 }
 
-func (m *UserAlert) Size() (n int) {
+func (m *AlertPolicy) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1670,7 +1670,7 @@ func sovUseralert(x uint64) (n int) {
 func sozUseralert(x uint64) (n int) {
 	return sovUseralert(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *UserAlertKey) Unmarshal(dAtA []byte) error {
+func (m *AlertPolicyKey) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1693,10 +1693,10 @@ func (m *UserAlertKey) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UserAlertKey: wiretype end group for non-group")
+			return fmt.Errorf("proto: AlertPolicyKey: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UserAlertKey: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AlertPolicyKey: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1787,7 +1787,7 @@ func (m *UserAlertKey) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *UserAlert) Unmarshal(dAtA []byte) error {
+func (m *AlertPolicy) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1810,10 +1810,10 @@ func (m *UserAlert) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: UserAlert: wiretype end group for non-group")
+			return fmt.Errorf("proto: AlertPolicy: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: UserAlert: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AlertPolicy: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

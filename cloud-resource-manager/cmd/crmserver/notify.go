@@ -34,7 +34,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvTrustPolicyCache(&cd.TrustPolicyCache)
 	client.RegisterRecvAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	client.RegisterRecvAutoScalePolicyCache(&cd.AutoScalePolicyCache)
-	client.RegisterRecvUserAlertCache(&cd.UserAlertCache)
+	client.RegisterRecvAlertPolicyCache(&cd.AlertPolicyCache)
 	client.RegisterSendAllRecv(cd)
 	nodeMgr.RegisterClient(client)
 }
@@ -51,7 +51,7 @@ func initSrvNotify(notifyServer *notify.ServerMgr) {
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
-	notifyServer.RegisterSendUserAlertCache(&controllerData.UserAlertCache)
+	notifyServer.RegisterSendAlertPolicyCache(&controllerData.AlertPolicyCache)
 
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)

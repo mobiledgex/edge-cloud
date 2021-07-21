@@ -1250,7 +1250,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":              struct{}{},
 	"ShowClusterRefs":               struct{}{},
 	"ShowAppInstRefs":               struct{}{},
-	"ShowUserAlert":                 struct{}{},
+	"ShowAlertPolicy":               struct{}{},
 	"ShowRateLimitSettings":         struct{}{},
 	"ShowFlowRateLimitSettings":     struct{}{},
 	"ShowMaxReqsRateLimitSettings":  struct{}{},

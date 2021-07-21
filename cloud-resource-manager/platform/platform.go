@@ -153,7 +153,7 @@ type ClusterSvc interface {
 	// Get AppInst Configs
 	GetAppInstConfigs(ctx context.Context, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst,
 		autoScalePolicy *edgeproto.AutoScalePolicy, settings *edgeproto.Settings,
-		userAlerts []edgeproto.UserAlert) ([]*edgeproto.ConfigFile, error)
+		userAlerts []edgeproto.AlertPolicy) ([]*edgeproto.ConfigFile, error)
 }
 
 // AccessApi handles functions that require secrets access, but

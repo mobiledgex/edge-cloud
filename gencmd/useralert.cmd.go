@@ -25,58 +25,58 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var UserAlertApiCmd edgeproto.UserAlertApiClient
+var AlertPolicyApiCmd edgeproto.AlertPolicyApiClient
 
-var CreateUserAlertCmd = &cli.Command{
-	Use:          "CreateUserAlert",
-	RequiredArgs: strings.Join(CreateUserAlertRequiredArgs, " "),
-	OptionalArgs: strings.Join(CreateUserAlertOptionalArgs, " "),
-	AliasArgs:    strings.Join(UserAlertAliasArgs, " "),
-	SpecialArgs:  &UserAlertSpecialArgs,
-	Comments:     UserAlertComments,
-	ReqData:      &edgeproto.UserAlert{},
+var CreateAlertPolicyCmd = &cli.Command{
+	Use:          "CreateAlertPolicy",
+	RequiredArgs: strings.Join(CreateAlertPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateAlertPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AlertPolicyAliasArgs, " "),
+	SpecialArgs:  &AlertPolicySpecialArgs,
+	Comments:     AlertPolicyComments,
+	ReqData:      &edgeproto.AlertPolicy{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runCreateUserAlert,
+	Run:          runCreateAlertPolicy,
 }
 
-func runCreateUserAlert(c *cli.Command, args []string) error {
+func runCreateAlertPolicy(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.UserAlert)
+	obj := c.ReqData.(*edgeproto.AlertPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return CreateUserAlert(c, obj)
+	return CreateAlertPolicy(c, obj)
 }
 
-func CreateUserAlert(c *cli.Command, in *edgeproto.UserAlert) error {
-	if UserAlertApiCmd == nil {
-		return fmt.Errorf("UserAlertApi client not initialized")
+func CreateAlertPolicy(c *cli.Command, in *edgeproto.AlertPolicy) error {
+	if AlertPolicyApiCmd == nil {
+		return fmt.Errorf("AlertPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := UserAlertApiCmd.CreateUserAlert(ctx, in)
+	obj, err := AlertPolicyApiCmd.CreateAlertPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("CreateUserAlert failed: %s", errstr)
+		return fmt.Errorf("CreateAlertPolicy failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func CreateUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
+func CreateAlertPolicys(c *cli.Command, data []edgeproto.AlertPolicy, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("CreateUserAlert %v\n", data[ii])
-		myerr := CreateUserAlert(c, &data[ii])
+		fmt.Printf("CreateAlertPolicy %v\n", data[ii])
+		myerr := CreateAlertPolicy(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -84,56 +84,56 @@ func CreateUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
 	}
 }
 
-var DeleteUserAlertCmd = &cli.Command{
-	Use:          "DeleteUserAlert",
-	RequiredArgs: strings.Join(UserAlertRequiredArgs, " "),
-	OptionalArgs: strings.Join(UserAlertOptionalArgs, " "),
-	AliasArgs:    strings.Join(UserAlertAliasArgs, " "),
-	SpecialArgs:  &UserAlertSpecialArgs,
-	Comments:     UserAlertComments,
-	ReqData:      &edgeproto.UserAlert{},
+var DeleteAlertPolicyCmd = &cli.Command{
+	Use:          "DeleteAlertPolicy",
+	RequiredArgs: strings.Join(AlertPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AlertPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AlertPolicyAliasArgs, " "),
+	SpecialArgs:  &AlertPolicySpecialArgs,
+	Comments:     AlertPolicyComments,
+	ReqData:      &edgeproto.AlertPolicy{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runDeleteUserAlert,
+	Run:          runDeleteAlertPolicy,
 }
 
-func runDeleteUserAlert(c *cli.Command, args []string) error {
+func runDeleteAlertPolicy(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.UserAlert)
+	obj := c.ReqData.(*edgeproto.AlertPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return DeleteUserAlert(c, obj)
+	return DeleteAlertPolicy(c, obj)
 }
 
-func DeleteUserAlert(c *cli.Command, in *edgeproto.UserAlert) error {
-	if UserAlertApiCmd == nil {
-		return fmt.Errorf("UserAlertApi client not initialized")
+func DeleteAlertPolicy(c *cli.Command, in *edgeproto.AlertPolicy) error {
+	if AlertPolicyApiCmd == nil {
+		return fmt.Errorf("AlertPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := UserAlertApiCmd.DeleteUserAlert(ctx, in)
+	obj, err := AlertPolicyApiCmd.DeleteAlertPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("DeleteUserAlert failed: %s", errstr)
+		return fmt.Errorf("DeleteAlertPolicy failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func DeleteUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
+func DeleteAlertPolicys(c *cli.Command, data []edgeproto.AlertPolicy, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("DeleteUserAlert %v\n", data[ii])
-		myerr := DeleteUserAlert(c, &data[ii])
+		fmt.Printf("DeleteAlertPolicy %v\n", data[ii])
+		myerr := DeleteAlertPolicy(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -141,57 +141,57 @@ func DeleteUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
 	}
 }
 
-var UpdateUserAlertCmd = &cli.Command{
-	Use:          "UpdateUserAlert",
-	RequiredArgs: strings.Join(UserAlertRequiredArgs, " "),
-	OptionalArgs: strings.Join(UserAlertOptionalArgs, " "),
-	AliasArgs:    strings.Join(UserAlertAliasArgs, " "),
-	SpecialArgs:  &UserAlertSpecialArgs,
-	Comments:     UserAlertComments,
-	ReqData:      &edgeproto.UserAlert{},
+var UpdateAlertPolicyCmd = &cli.Command{
+	Use:          "UpdateAlertPolicy",
+	RequiredArgs: strings.Join(AlertPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AlertPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AlertPolicyAliasArgs, " "),
+	SpecialArgs:  &AlertPolicySpecialArgs,
+	Comments:     AlertPolicyComments,
+	ReqData:      &edgeproto.AlertPolicy{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runUpdateUserAlert,
+	Run:          runUpdateAlertPolicy,
 }
 
-func runUpdateUserAlert(c *cli.Command, args []string) error {
+func runUpdateAlertPolicy(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.UserAlert)
+	obj := c.ReqData.(*edgeproto.AlertPolicy)
 	jsonMap, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
 	obj.Fields = cli.GetSpecifiedFields(jsonMap, c.ReqData)
-	return UpdateUserAlert(c, obj)
+	return UpdateAlertPolicy(c, obj)
 }
 
-func UpdateUserAlert(c *cli.Command, in *edgeproto.UserAlert) error {
-	if UserAlertApiCmd == nil {
-		return fmt.Errorf("UserAlertApi client not initialized")
+func UpdateAlertPolicy(c *cli.Command, in *edgeproto.AlertPolicy) error {
+	if AlertPolicyApiCmd == nil {
+		return fmt.Errorf("AlertPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := UserAlertApiCmd.UpdateUserAlert(ctx, in)
+	obj, err := AlertPolicyApiCmd.UpdateAlertPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("UpdateUserAlert failed: %s", errstr)
+		return fmt.Errorf("UpdateAlertPolicy failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func UpdateUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
+func UpdateAlertPolicys(c *cli.Command, data []edgeproto.AlertPolicy, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("UpdateUserAlert %v\n", data[ii])
-		myerr := UpdateUserAlert(c, &data[ii])
+		fmt.Printf("UpdateAlertPolicy %v\n", data[ii])
+		myerr := UpdateAlertPolicy(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -199,45 +199,45 @@ func UpdateUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
 	}
 }
 
-var ShowUserAlertCmd = &cli.Command{
-	Use:          "ShowUserAlert",
-	OptionalArgs: strings.Join(append(UserAlertRequiredArgs, UserAlertOptionalArgs...), " "),
-	AliasArgs:    strings.Join(UserAlertAliasArgs, " "),
-	SpecialArgs:  &UserAlertSpecialArgs,
-	Comments:     UserAlertComments,
-	ReqData:      &edgeproto.UserAlert{},
-	ReplyData:    &edgeproto.UserAlert{},
-	Run:          runShowUserAlert,
+var ShowAlertPolicyCmd = &cli.Command{
+	Use:          "ShowAlertPolicy",
+	OptionalArgs: strings.Join(append(AlertPolicyRequiredArgs, AlertPolicyOptionalArgs...), " "),
+	AliasArgs:    strings.Join(AlertPolicyAliasArgs, " "),
+	SpecialArgs:  &AlertPolicySpecialArgs,
+	Comments:     AlertPolicyComments,
+	ReqData:      &edgeproto.AlertPolicy{},
+	ReplyData:    &edgeproto.AlertPolicy{},
+	Run:          runShowAlertPolicy,
 }
 
-func runShowUserAlert(c *cli.Command, args []string) error {
+func runShowAlertPolicy(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.UserAlert)
+	obj := c.ReqData.(*edgeproto.AlertPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return ShowUserAlert(c, obj)
+	return ShowAlertPolicy(c, obj)
 }
 
-func ShowUserAlert(c *cli.Command, in *edgeproto.UserAlert) error {
-	if UserAlertApiCmd == nil {
-		return fmt.Errorf("UserAlertApi client not initialized")
+func ShowAlertPolicy(c *cli.Command, in *edgeproto.AlertPolicy) error {
+	if AlertPolicyApiCmd == nil {
+		return fmt.Errorf("AlertPolicyApi client not initialized")
 	}
 	ctx := context.Background()
-	stream, err := UserAlertApiCmd.ShowUserAlert(ctx, in)
+	stream, err := AlertPolicyApiCmd.ShowAlertPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("ShowUserAlert failed: %s", errstr)
+		return fmt.Errorf("ShowAlertPolicy failed: %s", errstr)
 	}
 
-	objs := make([]*edgeproto.UserAlert, 0)
+	objs := make([]*edgeproto.AlertPolicy, 0)
 	for {
 		obj, err := stream.Recv()
 		if err == io.EOF {
@@ -249,7 +249,7 @@ func ShowUserAlert(c *cli.Command, in *edgeproto.UserAlert) error {
 			if ok {
 				errstr = st.Message()
 			}
-			return fmt.Errorf("ShowUserAlert recv failed: %s", errstr)
+			return fmt.Errorf("ShowAlertPolicy recv failed: %s", errstr)
 		}
 		objs = append(objs, obj)
 	}
@@ -261,13 +261,13 @@ func ShowUserAlert(c *cli.Command, in *edgeproto.UserAlert) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func ShowUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
+func ShowAlertPolicys(c *cli.Command, data []edgeproto.AlertPolicy, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("ShowUserAlert %v\n", data[ii])
-		myerr := ShowUserAlert(c, &data[ii])
+		fmt.Printf("ShowAlertPolicy %v\n", data[ii])
+		myerr := ShowAlertPolicy(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -275,29 +275,29 @@ func ShowUserAlerts(c *cli.Command, data []edgeproto.UserAlert, err *error) {
 	}
 }
 
-var UserAlertApiCmds = []*cobra.Command{
-	CreateUserAlertCmd.GenCmd(),
-	DeleteUserAlertCmd.GenCmd(),
-	UpdateUserAlertCmd.GenCmd(),
-	ShowUserAlertCmd.GenCmd(),
+var AlertPolicyApiCmds = []*cobra.Command{
+	CreateAlertPolicyCmd.GenCmd(),
+	DeleteAlertPolicyCmd.GenCmd(),
+	UpdateAlertPolicyCmd.GenCmd(),
+	ShowAlertPolicyCmd.GenCmd(),
 }
 
-var UserAlertKeyRequiredArgs = []string{}
-var UserAlertKeyOptionalArgs = []string{
+var AlertPolicyKeyRequiredArgs = []string{}
+var AlertPolicyKeyOptionalArgs = []string{
 	"organization",
 	"name",
 }
-var UserAlertKeyAliasArgs = []string{}
-var UserAlertKeyComments = map[string]string{
+var AlertPolicyKeyAliasArgs = []string{}
+var AlertPolicyKeyComments = map[string]string{
 	"organization": "Name of the organization for the app that this alert can be applied to",
-	"name":         "Alert name",
+	"name":         "Alert Policy name",
 }
-var UserAlertKeySpecialArgs = map[string]string{}
-var UserAlertRequiredArgs = []string{
+var AlertPolicyKeySpecialArgs = map[string]string{}
+var AlertPolicyRequiredArgs = []string{
 	"alert-org",
 	"name",
 }
-var UserAlertOptionalArgs = []string{
+var AlertPolicyOptionalArgs = []string{
 	"cpu-utilization",
 	"mem-utilization",
 	"disk-utilization",
@@ -307,7 +307,7 @@ var UserAlertOptionalArgs = []string{
 	"labels",
 	"annotations",
 }
-var UserAlertAliasArgs = []string{
+var AlertPolicyAliasArgs = []string{
 	"alert-org=key.organization",
 	"name=key.name",
 	"cpu-utilization=cpuutilizationlimit",
@@ -316,29 +316,29 @@ var UserAlertAliasArgs = []string{
 	"active-connections=activeconnlimit",
 	"trigger-time=triggertime",
 }
-var UserAlertComments = map[string]string{
+var AlertPolicyComments = map[string]string{
 	"alert-org":          "Name of the organization for the app that this alert can be applied to",
-	"name":               "Alert name",
+	"name":               "Alert Policy name",
 	"cpu-utilization":    "container or pod CPU utilization rate(percentage) across all nodes",
 	"mem-utilization":    "container or pod memory utilization rate(percentage) across all nodes",
 	"disk-utilization":   "container or pod disk utilization rate(percentage) across all nodes",
 	"active-connections": "Active Connections alert threshold",
-	"severity":           "Alert Severity",
+	"severity":           "Alert Policy Severity",
 	"trigger-time":       "Duration for which alert interval is active",
 	"labels":             "Additional Labels, specify labels:empty=true to clear",
 	"annotations":        "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
 }
-var UserAlertSpecialArgs = map[string]string{
+var AlertPolicySpecialArgs = map[string]string{
 	"annotations": "StringToString",
 	"fields":      "StringArray",
 	"labels":      "StringToString",
 }
-var CreateUserAlertRequiredArgs = []string{
+var CreateAlertPolicyRequiredArgs = []string{
 	"alert-org",
 	"name",
 	"severity",
 }
-var CreateUserAlertOptionalArgs = []string{
+var CreateAlertPolicyOptionalArgs = []string{
 	"cpu-utilization",
 	"mem-utilization",
 	"disk-utilization",
