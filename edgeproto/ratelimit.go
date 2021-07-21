@@ -55,10 +55,16 @@ func (r *RateLimitSettings) Validate(fields map[string]struct{}) error {
 }
 
 func (f *FlowRateLimitSettings) Validate(fields map[string]struct{}) error {
+	if f.Settings == nil {
+		return fmt.Errorf("No FlowSettings")
+	}
 	return f.Settings.Validate()
 }
 
 func (m *MaxReqsRateLimitSettings) Validate(fields map[string]struct{}) error {
+	if m.Settings == nil {
+		return fmt.Errorf("No MaxReqsSettings")
+	}
 	return m.Settings.Validate()
 }
 
