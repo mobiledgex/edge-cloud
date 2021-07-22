@@ -465,7 +465,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if err := s.validatePolicies(stm, in); err != nil {
 		return err
 	}
-	if err := s.validateUserDefinedAlerts(stm, in); err != nil {
+	if err := s.validateAlertPolicies(stm, in); err != nil {
 		return err
 	}
 	return nil
@@ -873,19 +873,19 @@ func manifestContainsDaemonSet(manifest string) bool {
 	return false
 }
 
-func (s *AppApi) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+func (s *AppApi) AddAppAlertPolicy(ctx context.Context, in *edgeproto.AppAlertPolicy) (*edgeproto.Result, error) {
 	cur := edgeproto.App{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.AppKey, &cur) {
 			return in.AppKey.NotFoundError()
 		}
-		for _, name := range cur.UserDefinedAlerts {
-			if name == in.UserDefinedAlert {
+		for _, name := range cur.AlertPolicies {
+			if name == in.AlertPolicy {
 				return fmt.Errorf("Alert %s already monitored on App", name)
 			}
 		}
-		cur.UserDefinedAlerts = append(cur.UserDefinedAlerts, in.UserDefinedAlert)
-		if err := s.validateUserDefinedAlerts(stm, &cur); err != nil {
+		cur.AlertPolicies = append(cur.AlertPolicies, in.AlertPolicy)
+		if err := s.validateAlertPolicies(stm, &cur); err != nil {
 			return err
 		}
 		s.store.STMPut(stm, &cur)
@@ -894,18 +894,18 @@ func (s *AppApi) AddAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUs
 	return &edgeproto.Result{}, err
 }
 
-func (s *AppApi) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.AppUserDefinedAlert) (*edgeproto.Result, error) {
+func (s *AppApi) RemoveAppAlertPolicy(ctx context.Context, in *edgeproto.AppAlertPolicy) (*edgeproto.Result, error) {
 	cur := edgeproto.App{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.AppKey, &cur) {
 			return in.AppKey.NotFoundError()
 		}
 		changed := false
-		for ii, name := range cur.UserDefinedAlerts {
-			if name != in.UserDefinedAlert {
+		for ii, name := range cur.AlertPolicies {
+			if name != in.AlertPolicy {
 				continue
 			}
-			cur.UserDefinedAlerts = append(cur.UserDefinedAlerts[:ii], cur.UserDefinedAlerts[ii+1:]...)
+			cur.AlertPolicies = append(cur.AlertPolicies[:ii], cur.AlertPolicies[ii+1:]...)
 			changed = true
 			break
 		}
@@ -913,19 +913,19 @@ func (s *AppApi) RemoveAppUserDefinedAlert(ctx context.Context, in *edgeproto.Ap
 			s.store.STMPut(stm, &cur)
 			return nil
 		}
-		return (&edgeproto.UserAlertKey{}).NotFoundError()
+		return (&edgeproto.AlertPolicyKey{}).NotFoundError()
 	})
 	return &edgeproto.Result{}, err
 }
 
-func (s *AppApi) validateUserDefinedAlerts(stm concurrency.STM, app *edgeproto.App) error {
+func (s *AppApi) validateAlertPolicies(stm concurrency.STM, app *edgeproto.App) error {
 	// make sure alerts exist
-	for ii := range app.UserDefinedAlerts {
-		alertKey := edgeproto.UserAlertKey{
-			Name:         app.UserDefinedAlerts[ii],
+	for ii := range app.AlertPolicies {
+		alertKey := edgeproto.AlertPolicyKey{
+			Name:         app.AlertPolicies[ii],
 			Organization: app.Key.Organization,
 		}
-		alert := edgeproto.UserAlert{}
+		alert := edgeproto.AlertPolicy{}
 		if !userAlertApi.store.STMGet(stm, &alertKey, &alert) {
 			return alertKey.NotFoundError()
 		}
@@ -933,13 +933,13 @@ func (s *AppApi) validateUserDefinedAlerts(stm concurrency.STM, app *edgeproto.A
 	return nil
 }
 
-func (s *AppApi) UsesUserDefinedAlert(key *edgeproto.UserAlertKey) bool {
+func (s *AppApi) UsesAlertPolicy(key *edgeproto.AlertPolicyKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Key.Organization == key.Organization {
-			for _, name := range app.UserDefinedAlerts {
+			for _, name := range app.AlertPolicies {
 				if name == key.Name {
 					return true
 				}

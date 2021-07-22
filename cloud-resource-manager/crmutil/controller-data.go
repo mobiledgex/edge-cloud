@@ -39,7 +39,7 @@ type ControllerData struct {
 	SettingsCache               edgeproto.SettingsCache
 	ResTagTableCache            edgeproto.ResTagTableCache
 	GPUDriverCache              edgeproto.GPUDriverCache
-	UserAlertCache              edgeproto.UserAlertCache
+	AlertPolicyCache            edgeproto.AlertPolicyCache
 	ExecReqHandler              *ExecReqHandler
 	ExecReqSend                 *notify.ExecRequestSend
 	ControllerWait              chan bool
@@ -89,7 +89,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
 	edgeproto.InitGPUDriverCache(&cd.GPUDriverCache)
-	edgeproto.InitUserAlertCache(&cd.UserAlertCache)
+	edgeproto.InitAlertPolicyCache(&cd.AlertPolicyCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes

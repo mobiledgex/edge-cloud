@@ -462,56 +462,56 @@ func RemoveAppAutoProvPolicys(c *cli.Command, data []edgeproto.AppAutoProvPolicy
 	}
 }
 
-var AddAppUserDefinedAlertCmd = &cli.Command{
-	Use:          "AddAppUserDefinedAlert",
-	RequiredArgs: strings.Join(AppUserDefinedAlertRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppUserDefinedAlertOptionalArgs, " "),
-	AliasArgs:    strings.Join(AppUserDefinedAlertAliasArgs, " "),
-	SpecialArgs:  &AppUserDefinedAlertSpecialArgs,
-	Comments:     AppUserDefinedAlertComments,
-	ReqData:      &edgeproto.AppUserDefinedAlert{},
+var AddAppAlertPolicyCmd = &cli.Command{
+	Use:          "AddAppAlertPolicy",
+	RequiredArgs: strings.Join(AppAlertPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppAlertPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAlertPolicyAliasArgs, " "),
+	SpecialArgs:  &AppAlertPolicySpecialArgs,
+	Comments:     AppAlertPolicyComments,
+	ReqData:      &edgeproto.AppAlertPolicy{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runAddAppUserDefinedAlert,
+	Run:          runAddAppAlertPolicy,
 }
 
-func runAddAppUserDefinedAlert(c *cli.Command, args []string) error {
+func runAddAppAlertPolicy(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.AppUserDefinedAlert)
+	obj := c.ReqData.(*edgeproto.AppAlertPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return AddAppUserDefinedAlert(c, obj)
+	return AddAppAlertPolicy(c, obj)
 }
 
-func AddAppUserDefinedAlert(c *cli.Command, in *edgeproto.AppUserDefinedAlert) error {
+func AddAppAlertPolicy(c *cli.Command, in *edgeproto.AppAlertPolicy) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := AppApiCmd.AddAppUserDefinedAlert(ctx, in)
+	obj, err := AppApiCmd.AddAppAlertPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("AddAppUserDefinedAlert failed: %s", errstr)
+		return fmt.Errorf("AddAppAlertPolicy failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func AddAppUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, err *error) {
+func AddAppAlertPolicys(c *cli.Command, data []edgeproto.AppAlertPolicy, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("AddAppUserDefinedAlert %v\n", data[ii])
-		myerr := AddAppUserDefinedAlert(c, &data[ii])
+		fmt.Printf("AddAppAlertPolicy %v\n", data[ii])
+		myerr := AddAppAlertPolicy(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -519,56 +519,56 @@ func AddAppUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAler
 	}
 }
 
-var RemoveAppUserDefinedAlertCmd = &cli.Command{
-	Use:          "RemoveAppUserDefinedAlert",
-	RequiredArgs: strings.Join(AppUserDefinedAlertRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppUserDefinedAlertOptionalArgs, " "),
-	AliasArgs:    strings.Join(AppUserDefinedAlertAliasArgs, " "),
-	SpecialArgs:  &AppUserDefinedAlertSpecialArgs,
-	Comments:     AppUserDefinedAlertComments,
-	ReqData:      &edgeproto.AppUserDefinedAlert{},
+var RemoveAppAlertPolicyCmd = &cli.Command{
+	Use:          "RemoveAppAlertPolicy",
+	RequiredArgs: strings.Join(AppAlertPolicyRequiredArgs, " "),
+	OptionalArgs: strings.Join(AppAlertPolicyOptionalArgs, " "),
+	AliasArgs:    strings.Join(AppAlertPolicyAliasArgs, " "),
+	SpecialArgs:  &AppAlertPolicySpecialArgs,
+	Comments:     AppAlertPolicyComments,
+	ReqData:      &edgeproto.AppAlertPolicy{},
 	ReplyData:    &edgeproto.Result{},
-	Run:          runRemoveAppUserDefinedAlert,
+	Run:          runRemoveAppAlertPolicy,
 }
 
-func runRemoveAppUserDefinedAlert(c *cli.Command, args []string) error {
+func runRemoveAppAlertPolicy(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.AppUserDefinedAlert)
+	obj := c.ReqData.(*edgeproto.AppAlertPolicy)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
 	}
-	return RemoveAppUserDefinedAlert(c, obj)
+	return RemoveAppAlertPolicy(c, obj)
 }
 
-func RemoveAppUserDefinedAlert(c *cli.Command, in *edgeproto.AppUserDefinedAlert) error {
+func RemoveAppAlertPolicy(c *cli.Command, in *edgeproto.AppAlertPolicy) error {
 	if AppApiCmd == nil {
 		return fmt.Errorf("AppApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := AppApiCmd.RemoveAppUserDefinedAlert(ctx, in)
+	obj, err := AppApiCmd.RemoveAppAlertPolicy(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("RemoveAppUserDefinedAlert failed: %s", errstr)
+		return fmt.Errorf("RemoveAppAlertPolicy failed: %s", errstr)
 	}
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func RemoveAppUserDefinedAlerts(c *cli.Command, data []edgeproto.AppUserDefinedAlert, err *error) {
+func RemoveAppAlertPolicys(c *cli.Command, data []edgeproto.AppAlertPolicy, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("RemoveAppUserDefinedAlert %v\n", data[ii])
-		myerr := RemoveAppUserDefinedAlert(c, &data[ii])
+		fmt.Printf("RemoveAppAlertPolicy %v\n", data[ii])
+		myerr := RemoveAppAlertPolicy(c, &data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -663,8 +663,8 @@ var AppApiCmds = []*cobra.Command{
 	ShowAppCmd.GenCmd(),
 	AddAppAutoProvPolicyCmd.GenCmd(),
 	RemoveAppAutoProvPolicyCmd.GenCmd(),
-	AddAppUserDefinedAlertCmd.GenCmd(),
-	RemoveAppUserDefinedAlertCmd.GenCmd(),
+	AddAppAlertPolicyCmd.GenCmd(),
+	RemoveAppAlertPolicyCmd.GenCmd(),
 	ShowCloudletsForAppDeploymentCmd.GenCmd(),
 }
 
@@ -744,7 +744,7 @@ var AppOptionalArgs = []string{
 	"serverlessconfig.ram",
 	"serverlessconfig.minreplicas",
 	"vmappostype",
-	"userdefinedalerts",
+	"alertpolicies",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -793,12 +793,12 @@ var AppComments = map[string]string{
 	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"userdefinedalerts":                      "User Defined Alerts, specify userdefinedalerts:empty=true to clear",
+	"alertpolicies":                          "Alert Policies, specify alertpolicies:empty=true to clear",
 }
 var AppSpecialArgs = map[string]string{
-	"autoprovpolicies":  "StringArray",
-	"fields":            "StringArray",
-	"userdefinedalerts": "StringArray",
+	"alertpolicies":    "StringArray",
+	"autoprovpolicies": "StringArray",
+	"fields":           "StringArray",
 }
 var ServerlessConfigRequiredArgs = []string{}
 var ServerlessConfigOptionalArgs = []string{
@@ -832,26 +832,26 @@ var AppAutoProvPolicyComments = map[string]string{
 	"autoprovpolicy": "Auto provisioning policy name",
 }
 var AppAutoProvPolicySpecialArgs = map[string]string{}
-var AppUserDefinedAlertRequiredArgs = []string{
+var AppAlertPolicyRequiredArgs = []string{
 	"app-org",
 	"appname",
 	"appvers",
-	"alert-name",
+	"alertpolicy-name",
 }
-var AppUserDefinedAlertOptionalArgs = []string{}
-var AppUserDefinedAlertAliasArgs = []string{
+var AppAlertPolicyOptionalArgs = []string{}
+var AppAlertPolicyAliasArgs = []string{
 	"app-org=appkey.organization",
 	"appname=appkey.name",
 	"appvers=appkey.version",
-	"alert-name=userdefinedalert",
+	"alertpolicy-name=alertpolicy",
 }
-var AppUserDefinedAlertComments = map[string]string{
-	"app-org":    "App developer organization",
-	"appname":    "App name",
-	"appvers":    "App version",
-	"alert-name": "Alert name",
+var AppAlertPolicyComments = map[string]string{
+	"app-org":          "App developer organization",
+	"appname":          "App name",
+	"appvers":          "App version",
+	"alertpolicy-name": "Alert name",
 }
-var AppUserDefinedAlertSpecialArgs = map[string]string{}
+var AppAlertPolicySpecialArgs = map[string]string{}
 var DeploymentCloudletRequestRequiredArgs = []string{}
 var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.fields",
@@ -889,7 +889,7 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.ram",
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
-	"app.userdefinedalerts",
+	"app.alertpolicies",
 	"dryrundeploy",
 	"numnodes",
 }
@@ -936,12 +936,12 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"app.vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"app.userdefinedalerts":                      "User Defined Alerts",
+	"app.alertpolicies":                          "Alert Policies",
 	"dryrundeploy":                               "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                   "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }
 var DeploymentCloudletRequestSpecialArgs = map[string]string{
-	"app.autoprovpolicies":  "StringArray",
-	"app.fields":            "StringArray",
-	"app.userdefinedalerts": "StringArray",
+	"app.alertpolicies":    "StringArray",
+	"app.autoprovpolicies": "StringArray",
+	"app.fields":           "StringArray",
 }
