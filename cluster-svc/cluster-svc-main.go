@@ -116,7 +116,7 @@ var AutoScalePolicyCache edgeproto.AutoScalePolicyCache
 var ClusterInstCache edgeproto.ClusterInstCache
 var AppInstCache edgeproto.AppInstCache
 var AppCache edgeproto.AppCache
-var UserAlertCache edgeproto.UserAlertCache
+var AlertPolicyCache edgeproto.AlertPolicyCache
 var settings *edgeproto.Settings = edgeproto.GetDefaultSettings()
 var nodeMgr node.NodeMgr
 var alertCache edgeproto.AlertCache
@@ -232,7 +232,7 @@ func appInstCb(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppIn
 			return
 		}
 		// No user-defined alerts configured
-		if len(app.UserDefinedAlerts) == 0 {
+		if len(app.AlertPolicies) == 0 {
 			log.SpanLog(ctx, log.DebugLevelNotify, "No user-defined alerts configured", "app", new)
 			return
 		}
@@ -282,7 +282,7 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 	if new == nil || old == nil {
 		return
 	}
-	if !old.AppUserAlertsDifferent(new) {
+	if !old.AppAlertPoliciesDifferent(new) {
 		// nothing to update
 		return
 	}
@@ -291,7 +291,7 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 }
 
 // Walk all the app Instances and update the clusters that have the instances that use this alert
-func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.UserAlert) {
+func alertPolicyCb(ctx context.Context, old *edgeproto.AlertPolicy, new *edgeproto.AlertPolicy) {
 	log.SpanLog(ctx, log.DebugLevelNotify, "User Alert update", "new", new, "old", old)
 	if new == nil || old == nil {
 		// deleted, so all the appInsts should've been cleaned up already
@@ -309,7 +309,7 @@ func userAlertCb(ctx context.Context, old *edgeproto.UserAlert, new *edgeproto.U
 		if new.Key.Organization != k.Organization {
 			continue
 		}
-		for _, alertName := range v.Obj.UserDefinedAlerts {
+		for _, alertName := range v.Obj.AlertPolicies {
 			if alertName == new.Key.Name {
 				app := edgeproto.App{}
 				app.DeepCopyIn(v.Obj)
@@ -335,13 +335,13 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	edgeproto.InitAutoScalePolicyCache(&AutoScalePolicyCache)
 	edgeproto.InitClusterInstCache(&ClusterInstCache)
 	edgeproto.InitAppInstCache(&AppInstCache)
-	edgeproto.InitUserAlertCache(&UserAlertCache)
+	edgeproto.InitAlertPolicyCache(&AlertPolicyCache)
 	edgeproto.InitAppCache(&AppCache)
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
 	AutoScalePolicyCache.SetUpdatedCb(autoScalePolicyCb)
 	AppInstCache.SetUpdatedCb(appInstCb)
 	AppCache.SetUpdatedCb(appCb)
-	UserAlertCache.SetUpdatedCb(userAlertCb)
+	AlertPolicyCache.SetUpdatedCb(alertPolicyCb)
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
@@ -425,7 +425,7 @@ func appInstGetApi(ctx context.Context, apiClient edgeproto.AppInstApiClient, ap
 }
 
 // Only active connections limit is a cloudlet prometheus level alert
-func isClusterPrometheusAlert(alert *edgeproto.UserAlert) bool {
+func isClusterPrometheusAlert(alert *edgeproto.AlertPolicy) bool {
 	if alert.ActiveConnLimit != 0 {
 		return false
 	}
@@ -452,7 +452,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	}
 	if clusterSvcPlugin != nil {
 		var policy *edgeproto.AutoScalePolicy
-		var userAlerts []edgeproto.UserAlert
+		var userAlerts []edgeproto.AlertPolicy
 		var userAppInst *edgeproto.AppInst
 		if clusterInst.AutoScalePolicy != "" {
 			policy = &edgeproto.AutoScalePolicy{}
@@ -464,22 +464,22 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			}
 		}
 		// Check if we need to collect alerts
-		if app != nil && len(app.UserDefinedAlerts) > 0 {
-			userAlerts = []edgeproto.UserAlert{}
+		if app != nil && len(app.AlertPolicies) > 0 {
+			userAlerts = []edgeproto.AlertPolicy{}
 			userAppInst = &edgeproto.AppInst{
 				Key: edgeproto.AppInstKey{
 					AppKey:         app.Key,
 					ClusterInstKey: *clusterInst.Key.Virtual(""),
 				},
 			}
-			for _, alertName := range app.UserDefinedAlerts {
-				userAlert := edgeproto.UserAlert{
-					Key: edgeproto.UserAlertKey{
+			for _, alertName := range app.AlertPolicies {
+				userAlert := edgeproto.AlertPolicy{
+					Key: edgeproto.AlertPolicyKey{
 						Name:         alertName,
 						Organization: app.Key.Organization,
 					},
 				}
-				found := UserAlertCache.Get(&userAlert.Key, &userAlert)
+				found := AlertPolicyCache.Get(&userAlert.Key, &userAlert)
 				if !found {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to find alert definition", "alert", userAlert)
 					continue
@@ -866,7 +866,7 @@ func main() {
 	notifyClient.RegisterRecvCloudletCache(nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion))
 	notifyClient.RegisterRecvAppCache(&AppCache)
 	notifyClient.RegisterRecvAppInstCache(&AppInstCache)
-	notifyClient.RegisterRecvUserAlertCache(&UserAlertCache)
+	notifyClient.RegisterRecvAlertPolicyCache(&AlertPolicyCache)
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(settings, nil))
 	edgeproto.InitAlertCache(&alertCache)
 	notifyClient.RegisterSendAlertCache(&alertCache)

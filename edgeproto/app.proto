@@ -212,8 +212,8 @@ message App {
   ServerlessConfig serverless_config = 40;
   // OS Type for VM Apps
   VmAppOsType vm_app_os_type = 41;
-  // User Defined Alerts
-  repeated string user_defined_alerts = 42;
+  // Alert Policies
+  repeated string alert_policies = 42;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -245,13 +245,13 @@ message AppAutoProvPolicy {
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
-message AppUserDefinedAlert {
+message AppAlertPolicy {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Alert name 
-  string user_defined_alert = 2;
-  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization,alert-name=UserDefinedAlert";
-  option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,UserDefinedAlert";
+  string alert_policy = 2;
+  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization,alertpolicy-name=AlertPolicy";
+  option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AlertPolicy";
 }
 
 message DeploymentCloudletRequest {
@@ -320,19 +320,19 @@ service AppApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Add an UserAlert to the App
-  rpc AddAppUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
+  // Add an AlertPolicy to the App
+  rpc AddAppAlertPolicy(AppAlertPolicy) returns (Result) {
     option (google.api.http) = {
-      post: "/add/appuseralert"
+      post: "/add/appalertpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";
     option (protogen.input_required) = true;
   }
-  // Remove an UserAlert from the App
-  rpc RemoveAppUserDefinedAlert(AppUserDefinedAlert) returns (Result) {
+  // Remove an AlertPolicy from the App
+  rpc RemoveAppAlertPolicy(AppAlertPolicy) returns (Result) {
     option (google.api.http) = {
-      post: "/remove/appuseralert"
+      post: "/remove/appalertpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,AppKey.Organization";

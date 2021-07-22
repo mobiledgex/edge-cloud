@@ -12,29 +12,29 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
-message UserAlertKey {
+message AlertPolicyKey {
   // Name of the organization for the app that this alert can be applied to
   string organization = 1 [(protogen.keytag) = "alertorg"];
-  // Alert name
+  // Alert Policy name
   string name = 2 [(protogen.keytag) = "alert"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
-message UserAlert {
+message AlertPolicy {
   repeated string fields = 1;
   // Unique identifier key
-  UserAlertKey key = 2 [(gogoproto.nullable) = false];
-  // container or pod CPU utilization rate(percentage) across all nodes
+  AlertPolicyKey key = 2 [(gogoproto.nullable) = false];
+  // container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 cpu_utilization_limit = 3;
-  // container or pod memory utilization rate(percentage) across all nodes 
+  // container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 mem_utilization_limit = 4;
-  // container or pod disk utilization rate(percentage) across all nodes
+  // container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 disk_utilization_limit = 5;
-  // Active Connections alert threshold
+  // Active Connections alert threshold. Valid values 1-4294967295
   uint32 active_conn_limit = 6;
-  // Alert Severity
+  // Alert severity level - one of "info", "warning", "error"
   string severity = 7;
   // Duration for which alert interval is active
   int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
@@ -52,37 +52,37 @@ message UserAlert {
   option (protogen.uses_org) = "key=Organization";
 }
 
-service UserAlertApi {
-  // Create a User Defined Alert
-  rpc CreateUserAlert(UserAlert) returns (Result) {
+service AlertPolicyApi {
+  // Create an Alert Policy
+  rpc CreateAlertPolicy(AlertPolicy) returns (Result) {
     option (google.api.http) = {
-      post: "/create/useralert"
+      post: "/create/alertpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
     option (protogen.method_also_required) = "Severity";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete a User Defined Alert
-  rpc DeleteUserAlert(UserAlert) returns (Result) {
+  // Delete an Alert Policy
+  rpc DeleteAlertPolicy(AlertPolicy) returns (Result) {
     option (google.api.http) = {
-      post: "/delete/useralert"
+      post: "/delete/alertpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
-  // Update a User Defined Alert
-  rpc UpdateUserAlert(UserAlert) returns (Result) {
+  // Update an Alert Policy
+  rpc UpdateAlertPolicy(AlertPolicy) returns (Result) {
     option (google.api.http) = {
-      post: "/update/useralert"
+      post: "/update/alertpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionManage,Key.Organization";
   }
-  // Show User Defined Alerts. Any fields specified will be used to filter results.
-  rpc ShowUserAlert(UserAlert) returns (stream UserAlert) {
+  // Show Alert Policies. Any fields specified will be used to filter results.
+  rpc ShowAlertPolicy(AlertPolicy) returns (stream AlertPolicy) {
     option (google.api.http) = {
-      post: "/show/useralert"
+      post: "/show/alertpolicy"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceDeveloperPolicy,ActionView,Key.Organization";

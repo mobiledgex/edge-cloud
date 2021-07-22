@@ -36,7 +36,7 @@ type AllDataOut struct {
 	AppInstances               [][]edgeproto.Result
 	VmPools                    []edgeproto.Result
 	GpuDrivers                 [][]edgeproto.Result
-	UserDefinedAlerts          []edgeproto.Result
+	AlertPolicies              []edgeproto.Result
 	FlowRateLimitSettings      []edgeproto.Result
 	MaxReqsRateLimitSettings   []edgeproto.Result
 	Errors                     []Err
@@ -83,8 +83,8 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("vmpools")
 	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
 	apicb("gpudrivers")
-	run.UserAlertApi(&in.UserDefinedAlerts, inMap["userdefinedalerts"], &out.UserDefinedAlerts)
-	apicb("userdefinedalerts")
+	run.AlertPolicyApi(&in.AlertPolicies, inMap["alertpolicies"], &out.AlertPolicies)
+	apicb("alertpolicies")
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, inMap["flowratelimitsettings"], &out.FlowRateLimitSettings)
 	apicb("flowratelimitsettings")
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, inMap["maxreqsratelimitsettings"], &out.MaxReqsRateLimitSettings)
@@ -97,8 +97,8 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, inMap["maxreqsratelimitsettings"], &out.MaxReqsRateLimitSettings)
 	apicb("flowratelimitsettings")
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, inMap["flowratelimitsettings"], &out.FlowRateLimitSettings)
-	apicb("userdefinedalerts")
-	run.UserAlertApi(&in.UserDefinedAlerts, inMap["userdefinedalerts"], &out.UserDefinedAlerts)
+	apicb("alertpolicies")
+	run.AlertPolicyApi(&in.AlertPolicies, inMap["alertpolicies"], &out.AlertPolicies)
 	apicb("gpudrivers")
 	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
 	apicb("vmpools")
@@ -154,7 +154,7 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.AppInstRefsApi(&in.AppInstRefs, nil, &out.AppInstRefs)
 	run.VMPoolApi(&in.VmPools, nil, &out.VmPools)
 	run.GPUDriverApi(&in.GpuDrivers, nil, &out.GpuDrivers)
-	run.UserAlertApi(&in.UserDefinedAlerts, nil, &out.UserDefinedAlerts)
+	run.AlertPolicyApi(&in.AlertPolicies, nil, &out.AlertPolicies)
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, nil, &out.FlowRateLimitSettings)
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, nil, &out.MaxReqsRateLimitSettings)
 }

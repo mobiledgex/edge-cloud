@@ -1208,14 +1208,14 @@ func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 	return false
 }
 
-func (key *UserAlertKey) ValidateKey() error {
+func (key *AlertPolicyKey) ValidateKey() error {
 	if key.Name == "" || key.Organization == "" {
 		return errors.New("Missing name, or organization of alert")
 	}
 	return nil
 }
 
-func (a *UserAlert) Validate(fields map[string]struct{}) error {
+func (a *AlertPolicy) Validate(fields map[string]struct{}) error {
 	if err := a.GetKey().ValidateKey(); err != nil {
 		return err
 	}
@@ -1246,17 +1246,17 @@ func (a *UserAlert) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-// Check if UserDefinedAlerts are different between two apps
-func (app *App) AppUserAlertsDifferent(other *App) bool {
+// Check if AlertPolicies are different between two apps
+func (app *App) AppAlertPoliciesDifferent(other *App) bool {
 	alertsDiff := false
-	if len(app.UserDefinedAlerts) != len(other.UserDefinedAlerts) {
+	if len(app.AlertPolicies) != len(other.AlertPolicies) {
 		alertsDiff = true
 	} else {
 		oldAlerts := make(map[string]struct{})
-		for _, alert := range app.UserDefinedAlerts {
+		for _, alert := range app.AlertPolicies {
 			oldAlerts[alert] = struct{}{}
 		}
-		for _, alert := range other.UserDefinedAlerts {
+		for _, alert := range other.AlertPolicies {
 			if _, found := oldAlerts[alert]; !found {
 				alertsDiff = true
 				break
