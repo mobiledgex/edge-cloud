@@ -1067,7 +1067,7 @@ var AllDataComments = map[string]string{
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"apps:#.vmappostype":                                                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"apps:#.alertpolicies":                                                          "Alerts Policies",
+	"apps:#.alertpolicies":                                                          "Alert Policies",
 	"appinstances:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                                        "App developer organization",
 	"appinstances:#.key.appkey.name":                                                "App name",

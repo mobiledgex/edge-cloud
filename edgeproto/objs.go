@@ -1247,7 +1247,7 @@ func (a *AlertPolicy) Validate(fields map[string]struct{}) error {
 }
 
 // Check if AlertPolicies are different between two apps
-func (app *App) AppAlertPoliciessDifferent(other *App) bool {
+func (app *App) AppAlertPoliciesDifferent(other *App) bool {
 	alertsDiff := false
 	if len(app.AlertPolicies) != len(other.AlertPolicies) {
 		alertsDiff = true

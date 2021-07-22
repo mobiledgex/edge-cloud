@@ -212,7 +212,7 @@ message App {
   ServerlessConfig serverless_config = 40;
   // OS Type for VM Apps
   VmAppOsType vm_app_os_type = 41;
-  // Alerts Policies
+  // Alert Policies
   repeated string alert_policies = 42;
 
   option (protogen.generate_matches) = true;

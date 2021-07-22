@@ -282,7 +282,7 @@ func appCb(ctx context.Context, old *edgeproto.App, new *edgeproto.App) {
 	if new == nil || old == nil {
 		return
 	}
-	if !old.AppAlertPoliciessDifferent(new) {
+	if !old.AppAlertPoliciesDifferent(new) {
 		// nothing to update
 		return
 	}

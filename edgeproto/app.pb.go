@@ -403,7 +403,7 @@ type App struct {
 	ServerlessConfig *ServerlessConfig `protobuf:"bytes,40,opt,name=serverless_config,json=serverlessConfig,proto3" json:"serverless_config,omitempty"`
 	// OS Type for VM Apps
 	VmAppOsType VmAppOsType `protobuf:"varint,41,opt,name=vm_app_os_type,json=vmAppOsType,proto3,enum=edgeproto.VmAppOsType" json:"vm_app_os_type,omitempty"`
-	// Alerts Policies
+	// Alert Policies
 	AlertPolicies []string `protobuf:"bytes,42,rep,name=alert_policies,json=alertPolicies,proto3" json:"alert_policies,omitempty"`
 }
 

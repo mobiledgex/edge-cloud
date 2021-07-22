@@ -793,7 +793,7 @@ var AppComments = map[string]string{
 	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"alertpolicies":                          "Alerts Policies, specify alertpolicies:empty=true to clear",
+	"alertpolicies":                          "Alert Policies, specify alertpolicies:empty=true to clear",
 }
 var AppSpecialArgs = map[string]string{
 	"alertpolicies":    "StringArray",
@@ -936,7 +936,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"app.vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"app.alertpolicies":                          "Alerts Policies",
+	"app.alertpolicies":                          "Alert Policies",
 	"dryrundeploy":                               "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                   "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }
