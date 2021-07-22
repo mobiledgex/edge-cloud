@@ -34,6 +34,7 @@ enum VersionHash {
   HASH_8ba950479a03ab77edfad426ea53c173 = 26;
   HASH_f4eb139f7a8373a484ab9749eadc31f5 = 27;
   HASH_09fae4d440aa06acb9664167d2e1f036 = 28;
+  HASH_8c5a9c29caff4ace0a23a9dab9a15bf7 = 29;
 
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "1";

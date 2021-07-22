@@ -130,8 +130,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ClusterAutoScaleAveragingDurationSec, int64(0))
 		case SettingsFieldClusterAutoScaleRetryDelay:
 			v.CheckGT(f, s.ClusterAutoScaleRetryDelay, dur0)
-		case SettingsFieldUserDefinedAlertMinTriggerTime:
-			v.CheckGT(f, s.UserDefinedAlertMinTriggerTime, dur0)
+		case SettingsFieldAlertPolicyMinTriggerTime:
+			v.CheckGT(f, s.AlertPolicyMinTriggerTime, dur0)
 		case SettingsFieldDisableRateLimit:
 			// no validation
 		case SettingsFieldMaxNumPerIpRateLimiters:
@@ -194,7 +194,7 @@ func GetDefaultSettings() *Settings {
 	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year
 	s.ClusterAutoScaleAveragingDurationSec = 60
 	s.ClusterAutoScaleRetryDelay = Duration(time.Minute)
-	s.UserDefinedAlertMinTriggerTime = Duration(30 * time.Second)
+	s.AlertPolicyMinTriggerTime = Duration(30 * time.Second)
 	s.DisableRateLimit = false
 	s.MaxNumPerIpRateLimiters = 10000
 	return &s
