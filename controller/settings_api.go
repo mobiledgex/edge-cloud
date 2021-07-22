@@ -117,8 +117,8 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ClusterAutoScaleRetryDelay = def.ClusterAutoScaleRetryDelay
 			modified = true
 		}
-		if cur.UserDefinedAlertMinTriggerTime == 0 {
-			cur.UserDefinedAlertMinTriggerTime = def.UserDefinedAlertMinTriggerTime
+		if cur.AlertPolicyMinTriggerTime == 0 {
+			cur.AlertPolicyMinTriggerTime = def.AlertPolicyMinTriggerTime
 			modified = true
 		}
 		if cur.MaxNumPerIpRateLimiters == 0 {

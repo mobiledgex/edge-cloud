@@ -1898,9 +1898,9 @@ var GPUDriverData = []edgeproto.GPUDriver{
 	},
 }
 
-var UserAlertData = []edgeproto.UserAlert{
-	edgeproto.UserAlert{ // Warning alert with no labels/annotations
-		Key: edgeproto.UserAlertKey{
+var AlertPolicyData = []edgeproto.AlertPolicy{
+	edgeproto.AlertPolicy{ // Warning alert with no labels/annotations
+		Key: edgeproto.AlertPolicyKey{
 			Name:         "testAlert1",
 			Organization: DevData[0],
 		},
@@ -1910,8 +1910,8 @@ var UserAlertData = []edgeproto.UserAlert{
 		Severity:             "warning",
 		TriggerTime:          edgeproto.Duration(30 * time.Second),
 	},
-	edgeproto.UserAlert{ // Warning alert with Active Connections
-		Key: edgeproto.UserAlertKey{
+	edgeproto.AlertPolicy{ // Warning alert with Active Connections
+		Key: edgeproto.AlertPolicyKey{
 			Name:         "testAlert2",
 			Organization: DevData[0],
 		},
@@ -1919,8 +1919,8 @@ var UserAlertData = []edgeproto.UserAlert{
 		Severity:        "info",
 		TriggerTime:     edgeproto.Duration(5 * time.Minute),
 	},
-	edgeproto.UserAlert{ // Error alert with extra labels
-		Key: edgeproto.UserAlertKey{
+	edgeproto.AlertPolicy{ // Error alert with extra labels
+		Key: edgeproto.AlertPolicyKey{
 			Name:         "testAlert3",
 			Organization: DevData[1],
 		},

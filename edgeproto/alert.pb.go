@@ -1227,6 +1227,7 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 
 var ShowMethodNames = map[string]struct{}{
 	"ShowAlert":                     struct{}{},
+	"ShowAlertPolicy":               struct{}{},
 	"ShowSettings":                  struct{}{},
 	"ShowFlavor":                    struct{}{},
 	"ShowOperatorCode":              struct{}{},
@@ -1250,7 +1251,6 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletRefs":              struct{}{},
 	"ShowClusterRefs":               struct{}{},
 	"ShowAppInstRefs":               struct{}{},
-	"ShowUserAlert":                 struct{}{},
 	"ShowRateLimitSettings":         struct{}{},
 	"ShowFlowRateLimitSettings":     struct{}{},
 	"ShowMaxReqsRateLimitSettings":  struct{}{},

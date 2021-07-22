@@ -83,8 +83,8 @@ message Settings {
   int64 cluster_auto_scale_averaging_duration_sec = 34;
   // Cluster auto scale retry delay if scaling failed
   int64 cluster_auto_scale_retry_delay = 35 [(gogoproto.casttype) = "Duration"];
-  // Minimmum user alert trigger time
-  int64 user_defined_alert_min_trigger_time = 36 [(gogoproto.casttype) = "Duration"];
+  // Minimmum trigger time for alert policies
+  int64 alert_policy_min_trigger_time = 36 [(gogoproto.casttype) = "Duration"];
   // Disable rate limiting for APIs (default is false)
   bool disable_rate_limit = 37;
   // Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)

@@ -35,7 +35,7 @@ settings:
   - interval: 672h0m0s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
-  userdefinedalertmintriggertime: 30s
+  alertpolicymintriggertime: 30s
   disableratelimit: true
   maxnumperipratelimiters: 10000
 cloudlets:

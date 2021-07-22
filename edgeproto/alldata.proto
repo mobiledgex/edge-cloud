@@ -16,7 +16,7 @@ import "clusterinst.proto";
 import "app.proto";
 import "appinst.proto";
 import "refs.proto";
-import "useralert.proto";
+import "alertpolicy.proto";
 import "ratelimit.proto";
 import "gogoproto/gogo.proto";
 
@@ -48,7 +48,7 @@ message AllData {
   repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
   repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
   repeated GPUDriver gpu_drivers = 21 [(gogoproto.nullable) = false];
-  repeated UserAlert user_defined_alerts = 22 [(gogoproto.nullable) = false];
+  repeated AlertPolicy alert_policies = 22 [(gogoproto.nullable) = false];
   repeated FlowRateLimitSettings flow_rate_limit_settings = 23 [(gogoproto.nullable) = false];
   repeated MaxReqsRateLimitSettings max_reqs_rate_limit_settings = 24 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;

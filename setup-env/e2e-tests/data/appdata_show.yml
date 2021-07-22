@@ -33,7 +33,7 @@ settings:
   - interval: 2s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
-  userdefinedalertmintriggertime: 30s
+  alertpolicymintriggertime: 30s
   disableratelimit: true
   maxnumperipratelimiters: 10000
 flavors:
