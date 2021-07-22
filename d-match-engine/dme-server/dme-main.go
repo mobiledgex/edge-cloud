@@ -448,6 +448,15 @@ func getDmeApiRateLimitSettings(apiName string, target edgeproto.RateLimitTarget
 	return settings
 }
 
+// Initialize API RateLimitManager
+func initRateLimitMgr() {
+	disableRateLimit := dmecommon.Settings.DisableRateLimit
+	if *testMode {
+		disableRateLimit = true
+	}
+	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(disableRateLimit, int(dmecommon.Settings.MaxNumPerIpRateLimiters), 0)
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
@@ -555,13 +564,7 @@ func main() {
 	dmecommon.InitAppInstClients()
 	defer dmecommon.StopAppInstClients()
 
-	// Initialize API RateLimitManager
-	disableRateLimit := dmecommon.Settings.DisableRateLimit
-	if *testMode {
-		disableRateLimit = true
-	}
-	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(disableRateLimit, int(dmecommon.Settings.MaxNumPerIpRateLimiters), 0)
-
+	initRateLimitMgr()
 	grpcOpts = append(grpcOpts,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(ratelimit.GetDmeUnaryRateLimiterInterceptor(dmecommon.RateLimitMgr), dmecommon.UnaryAuthInterceptor, dmecommon.Stats.UnaryStatsInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(ratelimit.GetDmeStreamRateLimiterInterceptor(dmecommon.RateLimitMgr), dmecommon.GetStreamAuthInterceptor(), dmecommon.Stats.GetStreamStatsInterceptor())))
