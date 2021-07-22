@@ -55,9 +55,6 @@ authpublickey: "-----BEGIN PUBLIC KEY-----\nsomekey\n-----END PUBLIC KEY-----\n"
 func testGetFieldsArgs(t *testing.T, obj interface{}, args []string, expected []string) {
 	// test GetSpecifiedFields
 	input := Input{
-		SpecialArgs: &map[string]string{
-			"envvar": "StringToString",
-		},
 		DecodeHook: edgeproto.EnumDecodeHook,
 	}
 	dat, err := input.ParseArgs(args, obj)
