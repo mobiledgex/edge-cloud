@@ -30,6 +30,7 @@ func TestNotify(t *testing.T) {
 	eehandler, err := initEdgeEventsPlugin(ctx, "standalone")
 	require.Nil(t, err, "init edge events plugin")
 	dmecommon.SetupMatchEngine(eehandler)
+	initRateLimitMgr()
 	dmecommon.InitAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
