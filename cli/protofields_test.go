@@ -36,6 +36,20 @@ authpublickey: "-----BEGIN PUBLIC KEY-----\nsomekey\n-----END PUBLIC KEY-----\n"
 `
 	testGetFieldsYaml(t, &edgeproto.App{}, dat,
 		[]string{"2.1", "2.2", "2.3", "4", "5", "15", "9.1", "7", "25", "18", "12"})
+
+	// Test json namespace with special map[string]string that is
+	// represented by map[string]interface{}, which is the same structs.
+	jsData := &MapData{
+		Namespace: JsonNamespace,
+		Data: map[string]interface{}{
+			"env_var": map[string]interface{}{
+				"key": "val",
+				"k2":  "v2",
+			},
+		},
+	}
+	fields := GetSpecifiedFields(jsData, &edgeproto.Cloudlet{})
+	require.ElementsMatch(t, []string{"19"}, fields)
 }
 
 func testGetFieldsArgs(t *testing.T, obj interface{}, args []string, expected []string) {
