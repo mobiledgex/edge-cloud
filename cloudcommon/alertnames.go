@@ -52,9 +52,10 @@ var AlertSeverityTypes = map[string]struct{}{
 
 // Map represents severities for the specific alerts that the platfrom generates
 var AlertSeverityValues = map[string]string{
-	AlertAppInstDown:           AlertSeverityError,
-	AlertCloudletDown:          AlertSeverityError,
-	AlertCloudletResourceUsage: AlertSeverityWarn,
+	AlertAppInstDown:              AlertSeverityError,
+	AlertCloudletDown:             AlertSeverityError,
+	AlertCloudletResourceUsage:    AlertSeverityWarn,
+	AlertClusterSvcAppInstFailure: AlertSeverityError,
 }
 
 func GetSeverityForAlert(alertname string) string {
