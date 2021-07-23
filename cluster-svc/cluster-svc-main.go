@@ -533,11 +533,9 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "err", err)
 	if err == nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "DEVD-CLEAR err", err)
 		nodeMgr.TimedEvent(ctx, "cluster-svc create AppInst", platformApp.Key.Organization, node.EventType, platformAppInst.Key.GetTags(), err, eventStart, time.Now())
 		clearAlertAppInst(ctx, &platformAppInst)
 	} else {
-		log.SpanLog(ctx, log.DebugLevelApi, "create appinst", "appinst", platformAppInst.String(), "result", res.String(), "DEVD-CREATE err", err)
 		// Generate an alert
 		createAlertAppInst(ctx, &platformAppInst)
 	}
@@ -577,6 +575,7 @@ func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 
 	labels["alertname"] = cloudcommon.AlertClusterSvcAppInstFailure
 	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopePlatform
+
 	labels = util.AddMaps(labels, appInst.Key.GetTags())
 
 	return labels
