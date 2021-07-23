@@ -7,11 +7,16 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"sync"
 )
 
 var cpuprofile *os.File
+var cpufilelock sync.Mutex
 
 func StartCpuProfile() string {
+	cpufilelock.Lock()
+	defer cpufilelock.Unlock()
+
 	if cpuprofile != nil {
 		return "cpu profiling already in progress"
 	}
@@ -30,6 +35,9 @@ func StartCpuProfile() string {
 }
 
 func StopCpuProfile() string {
+	cpufilelock.Lock()
+	defer cpufilelock.Unlock()
+
 	if cpuprofile == nil {
 		return "no cpu profiling in progress"
 	}
