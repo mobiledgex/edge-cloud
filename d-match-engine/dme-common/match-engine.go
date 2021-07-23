@@ -137,6 +137,7 @@ func SetupMatchEngine(eehandler EdgeEventsHandler) {
 // AppInst state is a superset of the cloudlet state and appInst state
 // Returns if this AppInstance is usable or not
 func IsAppInstUsable(appInst *DmeAppInst) bool {
+	fmt.Printf("IsAppInstUsable: %+v\n", *appInst)
 	if appInst == nil {
 		return false
 	}
