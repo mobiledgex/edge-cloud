@@ -407,7 +407,7 @@ message Cloudlet {
   // Platform type
   PlatformType platform_type = 15;
   // Address for the CRM notify listener to run on
-  string notify_srv_addr = 16 [(protogen.hidetag) = "nocmp"];
+  string notify_srv_addr = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Min system resource requirements for platform
   FlavorKey flavor = 17 [(gogoproto.nullable) = false];
   // Physical infrastructure cloudlet name
@@ -475,7 +475,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,NotifySrvAddr,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
