@@ -510,7 +510,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			if nerr := createAppCommon(ctx, dialOpts, platformApp); nerr == nil {
 				eventStart = time.Now()
 				res, err = appInstCreateApi(ctx, apiClient, platformAppInst)
-				if strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
+				if err != nil && strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
 					/*
 						There are two cluster-svc instances that will receive a notification about cluster being created.
 						They don't know about each other(they are just replicas for HA) and both try to do the same thing.
@@ -577,7 +577,6 @@ func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 
 	labels["alertname"] = cloudcommon.AlertClusterSvcAppInstFailure
 	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopePlatform
-	//labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopeCloudlet
 	labels = util.AddMaps(labels, appInst.Key.GetTags())
 
 	return labels
