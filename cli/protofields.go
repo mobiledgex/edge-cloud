@@ -30,8 +30,12 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 		if !ok {
 			continue
 		}
+		sfType := sf.Type
+		if sfType.Kind() == reflect.Ptr {
+			sfType = sfType.Elem()
+		}
 
-		if subdata, ok := val.(map[string]interface{}); ok && len(subdata) > 0 {
+		if subdata, ok := val.(map[string]interface{}); ok && len(subdata) > 0 && sfType.Kind() == reflect.Struct {
 			// sub struct
 			subfields := getFields(subdata, sf.Type, ns, append(fvals, fval))
 			fields = append(fields, subfields...)
@@ -39,14 +43,14 @@ func getFields(data map[string]interface{}, t reflect.Type, ns FieldNamespace, f
 		}
 		if subdataArr, ok := arrayOfMaps(val); ok && len(subdataArr) > 0 {
 			// array of sub structs
-			if sf.Type.Kind() != reflect.Slice {
+			if sfType.Kind() != reflect.Slice {
 				continue
 			}
 			fields = append(fields, strings.Join(append(fvals, fval), "."))
 			// use map to eliminate duplicate fields
 			subfieldsMap := make(map[string]struct{})
 			for _, subdata := range subdataArr {
-				subfields := getFields(subdata, sf.Type.Elem(), ns, append(fvals, fval))
+				subfields := getFields(subdata, sfType.Elem(), ns, append(fvals, fval))
 				for _, s := range subfields {
 					subfieldsMap[s] = struct{}{}
 				}
