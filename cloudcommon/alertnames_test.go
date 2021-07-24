@@ -39,6 +39,9 @@ func TestValidateMonitoredAlert(t *testing.T) {
 	labels = map[string]string{"alertname": AlertAutoUndeploy, AlertScopeTypeTag: AlertScopeCloudlet}
 	require.True(t, IsMonitoredAlert(labels))
 
+	labels = map[string]string{"alertname": AlertClusterSvcAppInstFailure, AlertScopeTypeTag: AlertScopePlatform}
+	require.True(t, IsMonitoredAlert(labels))
+
 	labels = map[string]string{"alertname": "", AlertScopeTypeTag: AlertScopeCloudlet}
 	require.False(t, IsMonitoredAlert(labels))
 
