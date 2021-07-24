@@ -221,6 +221,36 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	}
 }
 
+func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.ClusterInstKey) {
+	matches := []*edgeproto.Alert{}
+	s.cache.Mux.Lock()
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		if cloudletName, found := val.Labels[edgeproto.CloudletKeyTagName]; !found ||
+			cloudletName != key.CloudletKey.Name {
+			continue
+		}
+		if cloudletOrg, found := val.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+			cloudletOrg != key.CloudletKey.Organization {
+			continue
+		}
+		if clusterName, found := val.Labels[edgeproto.ClusterKeyTagName]; !found ||
+			clusterName != key.ClusterKey.Name {
+			continue
+		}
+		if clusterOrg, found := val.Labels[edgeproto.ClusterInstKeyTagOrganization]; !found ||
+			clusterOrg != key.Organization {
+			continue
+		}
+		matches = append(matches, val)
+	}
+	s.cache.Mux.Unlock()
+	for _, val := range matches {
+		s.sourceCache.Delete(ctx, val, 0)
+		s.store.Delete(ctx, val, s.sync.syncWait)
+	}
+}
+
 func (s *AlertApi) syncSourceData(ctx context.Context, lease int64) error {
 	// Note that we don't need to delete "stale" data, because
 	// if the lease expired, it will be deleted automatically.
