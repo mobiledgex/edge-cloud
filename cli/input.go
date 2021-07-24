@@ -577,6 +577,10 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 				if len(valSlice) != 2 {
 					return fmt.Errorf("value \"%s\" must be formatted as key=value", val)
 				}
+				// if value has spaces, may be quoted
+				if str, err := strconv.Unquote(valSlice[1]); err == nil {
+					valSlice[1] = str
+				}
 				if _, ok := dat[part]; !ok {
 					dat[part] = make(map[string]string)
 				}
