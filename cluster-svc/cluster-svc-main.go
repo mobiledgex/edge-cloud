@@ -507,9 +507,19 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		} else if strings.Contains(err.Error(), "not found") {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", platformApp.String())
 			// Create the app
-			if nerr := createAppCommon(ctx, dialOpts, platformApp); nerr == nil {
+			if nerr := createAppCommon(ctx, dialOpts, platformApp); nerr == nil || nerr == platformApp.Key.ExistsError() {
 				eventStart = time.Now()
 				res, err = appInstCreateApi(ctx, apiClient, platformAppInst)
+				if err != nil && strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
+
+					// If there are multiple cluster-svc instances running, each will receive a notification about cluster being created.
+					// They don't know about each other(they are just replicas for HA) and both try to do the same thing.
+					// One of them will succeed and create prometheus appInstance.
+					// Suppress the AlertClusterSvcAppInstFailure alert for the other cluster-svc instance in such a case by setting err to nil.
+
+					log.SpanLog(ctx, log.DebugLevelApi, "appinst now exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
+					err = nil
+				}
 			}
 		} else {
 			errstr := err.Error()
