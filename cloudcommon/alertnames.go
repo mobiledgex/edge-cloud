@@ -75,7 +75,8 @@ func IsMonitoredAlert(labels map[string]string) bool {
 	alertScope, _ := labels[AlertScopeTypeTag]
 	// All App/Cloudlet alerts are monitored
 	if alertScope == AlertScopeApp ||
-		alertScope == AlertScopeCloudlet {
+		alertScope == AlertScopeCloudlet ||
+		alertScope == AlertScopePlatform {
 		return true
 	}
 	alertType, _ := labels[AlertTypeLabel]
