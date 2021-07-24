@@ -44,7 +44,7 @@ func (e *Duration) UnmarshalJSON(b []byte) error {
 	if err == nil {
 		dur, err := time.ParseDuration(str)
 		if err != nil {
-			return err
+			return NewDurationParseError(str, err)
 		}
 		*e = Duration(dur)
 		return nil
@@ -74,13 +74,13 @@ func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
 		case reflect.TypeOf(Duration(0)):
 			dur, err := time.ParseDuration(data.(string))
 			if err != nil {
-				return data, err
+				return data, NewDurationParseError(data.(string), err)
 			}
 			return Duration(dur), nil
 		case reflect.TypeOf(time.Duration(0)):
 			dur, err := time.ParseDuration(data.(string))
 			if err != nil {
-				return data, err
+				return data, NewDurationParseError(data.(string), err)
 			}
 			return dur, nil
 		case reflect.TypeOf(time.Time{}):
@@ -90,4 +90,23 @@ func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
 
 	// decode enums
 	return EnumDecodeHook(from, to, data)
+}
+
+// DurationParseError wraps a time.Duration parse error so that
+// it can be recognized as such from errors returned from json.Unmarshal.
+type DurationParseError struct {
+	Value string
+	Err   error
+}
+
+func (e *DurationParseError) Error() string {
+	return e.Err.Error()
+}
+
+func NewDurationParseError(val string, err error) *DurationParseError {
+	dpe := DurationParseError{
+		Value: val,
+		Err:   err,
+	}
+	return &dpe
 }

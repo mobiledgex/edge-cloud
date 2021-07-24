@@ -9,7 +9,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
@@ -158,7 +157,7 @@ func TestEvents(t *testing.T) {
 
 	// check terms aggregations over all events
 	search := EventSearch{
-		TimeRange: util.TimeRange{
+		TimeRange: edgeproto.TimeRange{
 			StartTime: starttime,
 			EndTime:   endtime,
 		},
@@ -274,7 +273,7 @@ func TestEvents(t *testing.T) {
 	// ---------------------------------------------------
 	//
 	spansearch := SpanSearch{
-		TimeRange: util.TimeRange{
+		TimeRange: edgeproto.TimeRange{
 			StartTime: starttime,
 			EndTime:   endtime,
 		},
@@ -317,7 +316,7 @@ func TestEvents(t *testing.T) {
 	// limit time range to just our test events.
 	// this avoids the startup event added by nodeMgr.Init().
 	search = EventSearch{
-		TimeRange: util.TimeRange{
+		TimeRange: edgeproto.TimeRange{
 			StartTime: starttime,
 			EndTime:   starttime.Add(time.Hour),
 		},
