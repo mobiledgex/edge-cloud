@@ -11,6 +11,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/jaegertracing/jaeger/plugin/storage/es/spanstore/dbmodel"
 	"github.com/mitchellh/mapstructure"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -29,12 +30,12 @@ type SpanMatch struct {
 }
 
 type SpanSearch struct {
-	Match             SpanMatch `json:"match,omitempty"`
-	NotMatch          SpanMatch `json:"notmatch,omitempty"`
-	util.TimeRange    `json:",inline"`
-	From              int  `json:"from,omitempty"`  // start document offset
-	Limit             int  `json:"limit,omitempty"` // number of documents to return
-	SearchByRelevance bool `json:"searchbyrelevance"`
+	Match               SpanMatch `json:"match,omitempty"`
+	NotMatch            SpanMatch `json:"notmatch,omitempty"`
+	edgeproto.TimeRange `json:",inline"`
+	From                int  `json:"from,omitempty"`  // start document offset
+	Limit               int  `json:"limit,omitempty"` // number of documents to return
+	SearchByRelevance   bool `json:"searchbyrelevance"`
 }
 
 type SpanOutCondensed struct {
