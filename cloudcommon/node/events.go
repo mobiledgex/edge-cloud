@@ -18,7 +18,6 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -127,12 +126,12 @@ type EventMatch struct {
 }
 
 type EventSearch struct {
-	Match          EventMatch `json:"match,omitempty"`
-	NotMatch       EventMatch `json:"notmatch,omitempty"`
-	AllowedOrgs    []string   `json:"allowedorgs"` // to enforce rbac
-	util.TimeRange `json:",inline"`
-	From           int `json:"from,omitempty"`  // start document offset
-	Limit          int `json:"limit,omitempty"` // number of documents to return
+	Match               EventMatch `json:"match,omitempty"`
+	NotMatch            EventMatch `json:"notmatch,omitempty"`
+	AllowedOrgs         []string   `json:"allowedorgs"` // to enforce rbac
+	edgeproto.TimeRange `json:",inline"`
+	From                int `json:"from,omitempty"`  // start document offset
+	Limit               int `json:"limit,omitempty"` // number of documents to return
 }
 
 type EventTerms struct {
@@ -551,7 +550,7 @@ func (s *NodeMgr) getQuery(ctx context.Context, searchType string, search *Event
 	return s.getQueryCommon(ctx, searchType, search.TimeRange, search.From, search.Limit, "timestamp", smaps, mustnot, filter)
 }
 
-func (s *NodeMgr) getQueryCommon(ctx context.Context, searchType string, tr util.TimeRange, from, limit int, timeField string, smaps, mustnot, filter []map[string]interface{}) (map[string]interface{}, error) {
+func (s *NodeMgr) getQueryCommon(ctx context.Context, searchType string, tr edgeproto.TimeRange, from, limit int, timeField string, smaps, mustnot, filter []map[string]interface{}) (map[string]interface{}, error) {
 	query := map[string]interface{}{}
 	if searchType == searchTypeFilter {
 		query["query"] = map[string]interface{}{
