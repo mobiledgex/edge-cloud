@@ -1368,6 +1368,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err == nil {
 		s.updateCloudletResourcesMetric(ctx, in)
 	}
+	alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
 	return err
 }
 
