@@ -1340,6 +1340,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		return err
 	}
 	if ignoreCRM(cctx) {
+		alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
 		return nil
 	}
 	streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
