@@ -1,17 +1,16 @@
-package util
+package edgeproto
 
 import (
 	"fmt"
-	"strings"
 	"time"
 )
 
 // Used for search queries to specify a time range
 type TimeRange struct {
-	StartTime time.Time     `json:"starttime"`
-	EndTime   time.Time     `json:"endtime"`
-	StartAge  time.Duration `json:"startage"`
-	EndAge    time.Duration `json:"endage"`
+	StartTime time.Time `json:"starttime"`
+	EndTime   time.Time `json:"endtime"`
+	StartAge  Duration  `json:"startage"`
+	EndAge    Duration  `json:"endage"`
 }
 
 // Resolve possible arguments to ensure StartTime and EndTime are set.
@@ -21,9 +20,9 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 		// derive start time from start age
 		if s.StartAge == 0 {
 			// default duration
-			s.StartAge = defaultDuration
+			s.StartAge = Duration(defaultDuration)
 		}
-		s.StartTime = now.Add(-1 * s.StartAge)
+		s.StartTime = now.Add(-1 * s.StartAge.TimeDuration())
 		// set age to 0 so function can be idempotent
 		s.StartAge = 0
 	} else {
@@ -34,7 +33,7 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 	if s.EndTime.IsZero() {
 		// derive end time from end age
 		// default end age of 0 will result in end time of now.
-		s.EndTime = now.Add(-1 * s.EndAge)
+		s.EndTime = now.Add(-1 * s.EndAge.TimeDuration())
 		// set age to 0 so function can be idempotent
 		s.EndAge = 0
 	} else {
@@ -46,27 +45,4 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 		return fmt.Errorf("start time must be before (older than) end time")
 	}
 	return nil
-}
-
-// Get the number of milliseconds since epoch for the time.
-// This is used for ElasticSearch.
-func GetEpochMillis(t time.Time) int64 {
-	return (t.Unix()*1e3 + int64(t.Nanosecond())/1e6)
-}
-
-func TimeFromEpochMicros(us int64) time.Time {
-	sec := us / 1e6
-	ns := (us % 1e6) * 1e3
-	return time.Unix(sec, ns)
-}
-
-// Change the time.ParseError into something more user-friendly to read.
-func NiceTimeParseError(err error) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), time.RFC3339) {
-		err = fmt.Errorf("%s into RFC3339 format failed. Example: \"%s\"", strings.Split(err.Error(), " as")[0], time.RFC3339)
-	}
-	return err
 }

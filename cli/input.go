@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -183,7 +184,7 @@ func ConvertDecodeErr(err error, reals map[string]string) error {
 			if ne, ok := suberr.(*strconv.NumError); ok {
 				suberr = ne.Err
 			}
-			help := getParseErrorHelp(e.To)
+			help := GetParseHelpKind(e.To)
 			err = fmt.Errorf(`Unable to parse "%s" value "%v" as %v: %v%s`, name, e.Val, e.To, suberr, help)
 		case *mapstructure.OverflowError:
 			name := getDecodeArg(e.Name, reals)
@@ -548,7 +549,7 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 			if len(colonParts) == 2 && colonParts[1] == util.EmptySet {
 				b, err := strconv.ParseBool(val)
 				if err != nil {
-					help := getParseErrorHelp(reflect.Bool)
+					help := GetParseHelpKind(reflect.Bool)
 					return fmt.Errorf("unable to parse %q as bool%s", val, help)
 				}
 				if !b {
@@ -593,7 +594,7 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 			v := reflect.New(sf.Type)
 			_, err := WeakDecode(val, v.Interface(), s.DecodeHook)
 			if err != nil {
-				asType := sf.Type.String()
+				asType, help, surpressErr := GetParseHelp(sf.Type)
 				switch e := err.(type) {
 				case *mapstructure.ParseError:
 					err = e.Err
@@ -611,11 +612,10 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 					if strings.Contains(err.Error(), replace) {
 						err = errors.New(strings.Replace(err.Error(), replace, "", -1))
 					}
+					if surpressErr {
+						err = fmt.Errorf("invalid format")
+					}
 				}
-				if sf.Type == reflect.TypeOf(time.Time{}) || sf.Type == reflect.TypeOf(&time.Time{}) {
-					err = util.NiceTimeParseError(err)
-				}
-				help := getParseErrorHelp(sf.Type.Kind())
 				return fmt.Errorf("unable to parse %q as %s: %v%s", val, asType, err, help)
 			}
 			// elem to dereference it
@@ -636,7 +636,27 @@ func (s *Input) setKeyVal(dat map[string]interface{}, obj interface{}, key, val,
 	return nil
 }
 
-func getParseErrorHelp(k reflect.Kind) string {
+// GetParseHelp gets end-user specific messages for error messages
+// without any golang-specific language.
+// It returns a non-golang specific type name, a help message with valid
+// values, and a bool that represents whether the original error
+// should be suppressed because it is too golang-specific.
+func GetParseHelp(t reflect.Type) (string, string, bool) {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	// Specially handled types are typically types with
+	// custom unmarshalers and custom DecodeHooks.
+	if t == reflect.TypeOf(time.Time{}) {
+		return "time", fmt.Sprintf(", valid values are RFC3339 format, i.e. %q", time.RFC3339), true
+	}
+	if t == reflect.TypeOf(time.Duration(0)) || t == reflect.TypeOf(edgeproto.Duration(0)) {
+		return "duration", fmt.Sprintf(", valid values are 300ms, 1s, 1.5h, 2h45m, etc"), true
+	}
+	return t.Kind().String(), GetParseHelpKind(t.Kind()), false
+}
+
+func GetParseHelpKind(k reflect.Kind) string {
 	if k == reflect.Bool {
 		return ", valid values are true, false"
 	}
