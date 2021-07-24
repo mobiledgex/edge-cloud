@@ -49,6 +49,14 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ShepherdAlertEvaluationInterval = def.ShepherdAlertEvaluationInterval
 			modified = true
 		}
+		if cur.ShepherdMetricsScrapeInterval == 0 {
+			cur.ShepherdMetricsScrapeInterval = def.ShepherdMetricsScrapeInterval
+			if cur.ShepherdAlertEvaluationInterval < cur.ShepherdMetricsScrapeInterval {
+				// eval interval cannot be less than scrape interval
+				cur.ShepherdMetricsScrapeInterval = cur.ShepherdAlertEvaluationInterval
+			}
+			modified = true
+		}
 		if cur.UpdateVmPoolTimeout == 0 {
 			cur.UpdateVmPoolTimeout = def.UpdateVmPoolTimeout
 			modified = true
@@ -153,6 +161,9 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 		if changeCount == 0 {
 			// nothing changed
 			return nil
+		}
+		if cur.ShepherdAlertEvaluationInterval < cur.ShepherdMetricsScrapeInterval {
+			return fmt.Errorf("Shepherd alert evaluation interval cannot be less than Shepherd metrics scrape interval")
 		}
 		newCqs := false
 		for _, field := range in.Fields {
