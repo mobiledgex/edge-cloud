@@ -16,11 +16,15 @@ type TimeRange struct {
 // Resolve possible arguments to ensure StartTime and EndTime are set.
 func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 	now := time.Now()
+	startName := "start time"
+	endName := "end time"
 	if s.StartTime.IsZero() {
 		// derive start time from start age
 		if s.StartAge == 0 {
 			// default duration
 			s.StartAge = Duration(defaultDuration)
+		} else {
+			startName = "start age"
 		}
 		s.StartTime = now.Add(-1 * s.StartAge.TimeDuration())
 		// set age to 0 so function can be idempotent
@@ -31,6 +35,9 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 		}
 	}
 	if s.EndTime.IsZero() {
+		if s.EndAge != 0 {
+			endName = "end age"
+		}
 		// derive end time from end age
 		// default end age of 0 will result in end time of now.
 		s.EndTime = now.Add(-1 * s.EndAge.TimeDuration())
@@ -42,7 +49,7 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 		}
 	}
 	if !s.StartTime.Before(s.EndTime) {
-		return fmt.Errorf("start time must be before (older than) end time")
+		return fmt.Errorf("%s must be before (older than) %s", startName, endName)
 	}
 	return nil
 }
