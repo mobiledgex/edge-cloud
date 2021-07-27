@@ -26,7 +26,7 @@ func NewIntervalLimiter(reqLimit int, interval time.Duration) *IntervalLimiter {
 		requestLimit:            reqLimit,
 		currentNumberOfRequests: 0,
 		interval:                interval,
-		intervalStartTime:       time.Now().Truncate(interval),
+		intervalStartTime:       time.Now(),
 	}
 }
 
@@ -36,7 +36,7 @@ func (i *IntervalLimiter) Limit(ctx context.Context, info *CallerInfo) error {
 	defer i.Unlock()
 	// Check start of interval
 	if time.Since(i.intervalStartTime) > i.interval {
-		i.intervalStartTime = time.Now().Truncate(i.interval)
+		i.intervalStartTime = time.Now()
 		i.currentNumberOfRequests = 0
 	}
 	if i.currentNumberOfRequests >= i.requestLimit && i.requestLimit != 0 {
