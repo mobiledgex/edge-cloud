@@ -88,11 +88,11 @@ func (a *AlertPolicyApi) UpdateAlertPolicy(ctx context.Context, in *edgeproto.Al
 		if changed == 0 {
 			return nil
 		}
-		if err := cur.Validate(edgeproto.AlertPolicyAllFieldsMap); err != nil {
+		if err := cur.Validate(nil); err != nil {
 			return err
 		}
 		// Protect against user defined alerts that can oscillate too quickly
-		if in.TriggerTime < settingsApi.Get().AlertPolicyMinTriggerTime {
+		if cur.TriggerTime < settingsApi.Get().AlertPolicyMinTriggerTime {
 			return fmt.Errorf("Trigger time cannot be less than %s",
 				settingsApi.Get().AlertPolicyMinTriggerTime.TimeDuration().String())
 		}
