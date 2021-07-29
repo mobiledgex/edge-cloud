@@ -1209,8 +1209,11 @@ func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 }
 
 func (key *AlertPolicyKey) ValidateKey() error {
-	if key.Name == "" || key.Organization == "" {
-		return errors.New("Missing name, or organization of alert")
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid alert policy name")
+	}
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid alert policy organization")
 	}
 	return nil
 }

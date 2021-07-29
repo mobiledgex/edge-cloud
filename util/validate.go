@@ -28,6 +28,20 @@ const maxHostnameLength = 63
 // restrictive in what characters they allow.
 var regionMatch = regexp.MustCompile(`^\w+$`)
 
+// walk through the map of names and values and validate the values
+// return key for the first invalid name(value) we found, or empty stirng
+func ValidateNames(names map[string]string) string {
+	if names == nil {
+		return ""
+	}
+	for k, v := range names {
+		if v != "" && !ValidName(v) {
+			return k
+		}
+	}
+	return ""
+}
+
 func ValidName(name string) bool {
 	return nameMatch.MatchString(name)
 }
