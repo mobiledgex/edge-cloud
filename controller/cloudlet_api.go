@@ -1882,7 +1882,7 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 		if result.errString == "" {
 			numPassed++
 		} else if strings.Contains(result.errString, "Timed out") {
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Update cloudlet is in progress: %s - %s Please use 'trustpolicy show' to check current status", k, result.errString)})
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Update cloudlet is in progress: %s - %s Please use 'cloudlet show' to check current status", k, result.errString)})
 			numInProgress++
 		} else {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to update cloudlet: %s - %s", k, result.errString)})
@@ -1894,7 +1894,9 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 		if numInProgress == 0 {
 			return fmt.Errorf("Failed to update trust policy on any cloudlets")
 		}
-		return fmt.Errorf("Timed out while work still in progress state Updating. Please use 'trustpolicy show' to see current status")
+		// If numInProgress is nonzero, there is still at least one cloudlet still doing the update which may eventually succeed.
+		// If we return an error here, the UpdateTrustPolicy API itself will fail, and the trust policy in etcd will be reverted to the pre-update state.
+		// This could cause an inconsistency, and so better to return nil error in this case. Fall through.
 	}
 	return nil
 }
