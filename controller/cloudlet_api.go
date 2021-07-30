@@ -777,6 +777,8 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 	err = s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
 	if err == nil {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String())})
+	} else if strings.Contains(err.Error(), "Timed out") {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("In progress TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
 	} else {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
 	}
@@ -1872,20 +1874,27 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 	numPassed := 0
 	numFailed := 0
 	numTotal := 0
+	numInProgress := 0
 	for k, r := range updateResults {
 		numTotal++
 		result := <-r
 		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
 		if result.errString == "" {
 			numPassed++
+		} else if strings.Contains(result.errString, "Timed out") {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Update cloudlet is in progress: %s - %s Please use 'trustpolicy show' to check current status", k, result.errString)})
+			numInProgress++
 		} else {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to update cloudlet: %s - %s", k, result.errString)})
 			numFailed++
 		}
 	}
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d InProgress: %d Failed: %d", numTotal, numPassed, numInProgress, numFailed)})
 	if numPassed == 0 {
-		return fmt.Errorf("Failed to update trust policy on any cloudlets")
+		if numInProgress == 0 {
+			return fmt.Errorf("Failed to update trust policy on any cloudlets")
+		}
+		return fmt.Errorf("Timed out while work still in progress state Updating. Please use 'trustpolicy show' to see current status")
 	}
 	return nil
 }
