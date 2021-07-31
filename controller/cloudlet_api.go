@@ -410,6 +410,15 @@ func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, 
 	return nil
 }
 
+func caseInsensitiveContains(s, substr string) bool {
+	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
+	return strings.Contains(s, substr)
+}
+
+func caseInsensitiveContainsTimedOut(s string) bool {
+	return caseInsensitiveContains(s, "Timed out") || caseInsensitiveContains(s, "timedout")
+}
+
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
@@ -777,7 +786,7 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 	err = s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
 	if err == nil {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String())})
-	} else if strings.Contains(err.Error(), "Timed out") {
+	} else if caseInsensitiveContainsTimedOut(err.Error()) {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("In progress TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
 	} else {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
