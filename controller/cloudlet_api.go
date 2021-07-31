@@ -1890,7 +1890,7 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
 		if result.errString == "" {
 			numPassed++
-		} else if strings.Contains(result.errString, "Timed out") {
+		} else if caseInsensitiveContainsTimedOut(result.errString) {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Update cloudlet is in progress: %s - %s Please use 'cloudlet show' to check current status", k, result.errString)})
 			numInProgress++
 		} else {
