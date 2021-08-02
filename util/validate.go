@@ -29,17 +29,17 @@ const maxHostnameLength = 63
 var regionMatch = regexp.MustCompile(`^\w+$`)
 
 // walk through the map of names and values and validate the values
-// return key for the first invalid name(value) we found, or empty stirng
-func ValidateNames(names map[string]string) string {
+// return an error about which key had invalid value
+func ValidateNames(names map[string]string) error {
 	if names == nil {
-		return ""
+		return nil
 	}
 	for k, v := range names {
 		if v != "" && !ValidName(v) {
-			return k
+			return fmt.Errorf("invalid %s", k)
 		}
 	}
-	return ""
+	return nil
 }
 
 func ValidName(name string) bool {
