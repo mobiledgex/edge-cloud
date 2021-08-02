@@ -101,6 +101,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.tlsClientIssuer = tlsClientIssuer
 	s.CloudletPoolLookup = opts.cloudletPoolLookup
 	s.CloudletLookup = opts.cloudletLookup
+	s.unitTestMode = opts.unitTestMode
 
 	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
@@ -226,6 +227,7 @@ type NodeOptions struct {
 	parentSpan         string
 	cloudletPoolLookup CloudletPoolLookup
 	cloudletLookup     CloudletLookup
+	unitTestMode       bool
 }
 
 type CloudletInPoolFunc func(region, key edgeproto.CloudletKey) bool
@@ -270,6 +272,10 @@ func WithCloudletPoolLookup(cloudletPoolLookup CloudletPoolLookup) NodeOp {
 
 func WithCloudletLookup(cloudletLookup CloudletLookup) NodeOp {
 	return func(opts *NodeOptions) { opts.cloudletLookup = cloudletLookup }
+}
+
+func WithUnitTestMode() NodeOp {
+	return func(opts *NodeOptions) { opts.unitTestMode = true }
 }
 
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {

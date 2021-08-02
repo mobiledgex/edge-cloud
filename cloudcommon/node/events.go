@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	fmt "fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -459,10 +460,12 @@ func (s *NodeMgr) searchEvents(ctx context.Context, searchType string, search *E
 	defer res.Body.Close()
 
 	log.SpanLog(ctx, log.DebugLevelEvents, "event search response", "res", res)
-
 	resp := SearchResp{}
 	err = json.NewDecoder(res.Body).Decode(&resp)
 	if err != nil {
+		if s.unitTestMode && err == io.EOF {
+			return []EventData{}, nil
+		}
 		return nil, err
 	}
 
