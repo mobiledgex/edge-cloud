@@ -1908,6 +1908,7 @@ var AlertPolicyData = []edgeproto.AlertPolicy{
 		MemUtilizationLimit:  70,
 		DiskUtilizationLimit: 70,
 		Severity:             "warning",
+		Description:          "Sample description",
 		TriggerTime:          edgeproto.Duration(30 * time.Second),
 	},
 	edgeproto.AlertPolicy{ // Warning alert with Active Connections
