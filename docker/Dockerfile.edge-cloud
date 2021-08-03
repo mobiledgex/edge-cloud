@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.3
 #
 # docker build -t mobiledgex/edge-cloud -f Dockerfile.edge-cloud .
 # docker run -it --rm mobiledgex/edge-cloud 
@@ -43,16 +44,16 @@ WORKDIR /go/src/github.com/mobiledgex
 COPY . .
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
-RUN make
+RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make
 
 # Buld the docs
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 COPY --from=swagger /swagger /go/bin/swagger
-RUN make doc
+RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make doc
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
-RUN make doc
-RUN make external-doc
-RUN make -C d-match-engine/dme-proto external-swagger
+RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make doc
+RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make external-doc
+RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make -C d-match-engine/dme-proto external-swagger
 
 FROM $REGISTRY/edge-cloud-base-image:v1.2.4.1-hf3-52-gb43c6ad1
 
