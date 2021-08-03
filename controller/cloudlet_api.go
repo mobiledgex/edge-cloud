@@ -410,6 +410,15 @@ func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, 
 	return nil
 }
 
+func caseInsensitiveContains(s, substr string) bool {
+	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
+	return strings.Contains(s, substr)
+}
+
+func caseInsensitiveContainsTimedOut(s string) bool {
+	return caseInsensitiveContains(s, "Timed out") || caseInsensitiveContains(s, "timedout")
+}
+
 func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_CreateCloudletServer) (reterr error) {
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
@@ -777,6 +786,8 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 	err = s.WaitForTrustPolicyState(ctx, ckey, targetState, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateTrustPolicyTimeout.TimeDuration())
 	if err == nil {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Successful TrustPolicy: %s Update for Cloudlet: %s", policyName, ckey.String())})
+	} else if caseInsensitiveContainsTimedOut(err.Error()) {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("In progress TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
 	} else {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed TrustPolicy: %s Update for Cloudlet: %s -- %v", policyName, ckey.String(), err.Error())})
 	}
@@ -1872,20 +1883,29 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 	numPassed := 0
 	numFailed := 0
 	numTotal := 0
+	numInProgress := 0
 	for k, r := range updateResults {
 		numTotal++
 		result := <-r
 		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
 		if result.errString == "" {
 			numPassed++
+		} else if caseInsensitiveContainsTimedOut(result.errString) {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Update cloudlet is in progress: %s - %s Please use 'cloudlet show' to check current status", k, result.errString)})
+			numInProgress++
 		} else {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Failed to update cloudlet: %s - %s", k, result.errString)})
 			numFailed++
 		}
 	}
-	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d Failed: %d", numTotal, numPassed, numFailed)})
+	cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Processed: %d Cloudlets.  Passed: %d InProgress: %d Failed: %d", numTotal, numPassed, numInProgress, numFailed)})
 	if numPassed == 0 {
-		return fmt.Errorf("Failed to update trust policy on any cloudlets")
+		if numInProgress == 0 {
+			return fmt.Errorf("Failed to update trust policy on any cloudlets")
+		}
+		// If numInProgress is nonzero, there is still at least one cloudlet still doing the update which may eventually succeed.
+		// If we return an error here, the UpdateTrustPolicy API itself will fail, and the trust policy in etcd will be reverted to the pre-update state.
+		// This could cause an inconsistency, and so better to return nil error in this case. Fall through.
 	}
 	return nil
 }
