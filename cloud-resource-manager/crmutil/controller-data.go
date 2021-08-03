@@ -1343,10 +1343,6 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 	span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
 	ctx := log.ContextWithSpan(context.Background(), span)
 
-	threadTime := cd.settings.ResourceSnapshotThreadRefreshInterval.TimeDuration()
-	maxUpdateTime := cd.settings.ResourceSnapshotMaxUpdateInterval.TimeDuration()
-	log.SpanLog(ctx, log.DebugLevelApi, "CloudletResourceRefresh thread", "idel time", threadTime, "max time between updates", maxUpdateTime)
-
 	go func() {
 		done := false
 		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread starting", "cloudlet", cloudletInfo.Key, "at", now)
