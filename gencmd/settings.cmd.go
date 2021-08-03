@@ -234,6 +234,8 @@ var SettingsOptionalArgs = []string{
 	"alertpolicymintriggertime",
 	"disableratelimit",
 	"maxnumperipratelimiters",
+	"resourcesnapshotthreadrefreshinterval",
+	"resourcesnapshotmaxupdateinterval",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -276,6 +278,8 @@ var SettingsComments = map[string]string{
 	"alertpolicymintriggertime":                                        "Minimmum trigger time for alert policies",
 	"disableratelimit":                                                 "Disable rate limiting for APIs (default is false)",
 	"maxnumperipratelimiters":                                          "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
+	"resourcesnapshotthreadrefreshinterval":                            "ResourceSnapshot Refresh thread run interval",
+	"resourcesnapshotmaxupdateinterval":                                "ResourceSnapshot Refresh Max update interval",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

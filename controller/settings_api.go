@@ -134,6 +134,15 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			modified = true
 		}
 
+		if cur.ResourceSnapshotThreadRefreshInterval == 0 {
+			cur.ResourceSnapshotThreadRefreshInterval = edgeproto.GetDefaultSettings().ResourceSnapshotThreadRefreshInterval
+			modified = true
+		}
+		if cur.ResourceSnapshotMaxUpdateInterval == 0 {
+			cur.ResourceSnapshotMaxUpdateInterval = edgeproto.GetDefaultSettings().ResourceSnapshotMaxUpdateInterval
+			modified = true
+		}
+
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

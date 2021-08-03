@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -54,6 +55,7 @@ type ControllerData struct {
 	updateTrustPolicyKeyworkers tasks.KeyWorkers
 	vmActionRefMux              sync.Mutex
 	vmActionRefAction           int
+	finishInfraResourceThread   chan struct{}
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -1329,4 +1331,50 @@ func (cd *ControllerData) RefreshAppInstRuntime(ctx context.Context) {
 		}
 		return nil
 	})
+}
+
+var lastCloudletResRefreshTime time.Time
+
+func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeproto.CloudletInfo) {
+
+	cd.finishInfraResourceThread = make(chan struct{})
+	now := time.Now()
+	var count int
+	span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	threadTime := cd.settings.ResourceSnapshotThreadRefreshInterval.TimeDuration()
+	maxUpdateTime := cd.settings.ResourceSnapshotMaxUpdateInterval.TimeDuration()
+	log.SpanLog(ctx, log.DebugLevelApi, "CloudletResourceRefresh thread", "idel time", threadTime, "max time between updates", maxUpdateTime)
+
+	go func() {
+		done := false
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread starting", "cloudlet", cloudletInfo.Key, "at", now)
+		for !done {
+			select {
+			case <-time.After(cd.settings.ResourceSnapshotThreadRefreshInterval.TimeDuration()):
+				if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
+					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread", "cloudlet not yet ready", cloudletInfo.Key, "curState", cloudletInfo.State)
+					continue
+				}
+				// only refresh if time since laset refresh > max, set in vmResourceActionEnd
+				if time.Since(lastCloudletResRefreshTime) >= cd.settings.ResourceSnapshotMaxUpdateInterval.TimeDuration() {
+					count++
+					now = time.Now()
+					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread refreshing", "cloudlet", cloudletInfo.Key, "at", now, "count",
+						count, "ThreadIdle", cd.settings.ResourceSnapshotThreadRefreshInterval, "max refresh internal", cd.settings.ResourceSnapshotMaxUpdateInterval)
+					cd.vmResourceActionBegin()
+					cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
+				}
+			case <-cd.finishInfraResourceThread:
+				done = true
+				log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread finished", "cloudlet", cloudletInfo.Key)
+			}
+		}
+	}()
+}
+
+func (cd *ControllerData) FinishInfraResourceRefreshThread() {
+	close(cd.finishInfraResourceThread)
+
 }
