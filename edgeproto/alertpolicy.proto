@@ -42,6 +42,8 @@ message AlertPolicy {
   map <string, string> labels = 9;
   // Additional Annotations for extra information about the alert
   map <string, string> annotations = 10;
+  // Description of the alert policy
+  string description = 11;
   
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
