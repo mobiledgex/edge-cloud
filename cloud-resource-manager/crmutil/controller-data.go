@@ -1359,7 +1359,7 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 					count++
 					now = time.Now()
 					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread refreshing", "cloudlet", cloudletInfo.Key, "at", now, "count",
-						count, "ThreadIdle", cd.settings.ResourceSnapshotThreadRefreshInterval, "max refresh internal", cd.settings.ResourceSnapshotMaxUpdateInterval)
+						count, "ThreadIdle", cd.settings.ResourceSnapshotThreadRefreshInterval, "max refresh interval", cd.settings.ResourceSnapshotMaxUpdateInterval)
 					cd.vmResourceActionBegin()
 					cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
 				}
