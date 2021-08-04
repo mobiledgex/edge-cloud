@@ -216,9 +216,6 @@ func CloudletAndAppinstDownAlerts(ctx context.Context, in *edgeproto.CloudletInf
 func ClearCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
 	clearCloudletDownAlert(ctx, in)
 	clearCloudletDownAppinstAlerts(ctx, in)
-	alert := edgeproto.Alert{}
-	alert.Labels = cloudletInfoToAlertLabels(in)
-	alertApi.Delete(ctx, &alert, 0)
 }
 
 func clearCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
