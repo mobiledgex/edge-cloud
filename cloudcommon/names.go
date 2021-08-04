@@ -135,7 +135,7 @@ const MaxClusterNameLength = 40
 
 // Common cert name. Cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 const CertName = "envoyTlsCerts"
-const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+const EnvoyImageDigest = "sha256:483cf7ad513bbc4e36fd8684f41e35882308d232639594d28094327efd40458e"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
