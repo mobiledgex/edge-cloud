@@ -140,6 +140,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		run.Mode = "show"
 		run.AlertApi(nil, nil, &output)
 		util.PrintToYamlFile("show-alerts.yml", outputDir, output, true)
+		*retry = true
 	} else {
 		if apiFile == "" {
 			log.Println("Error: Cannot run controller APIs without API file")

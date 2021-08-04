@@ -44,4 +44,5 @@ tests:
   - includefile: update_move_cloudlet1.yml 
   - includefile: check_dme_nodes.yml
   - includefile: add_delete_add_appinst_restartCrm_delete_add_appinst.yml
+  - includefile: cloudlet_down_alerts.yml
   - includefile: stop_cleanup.yml

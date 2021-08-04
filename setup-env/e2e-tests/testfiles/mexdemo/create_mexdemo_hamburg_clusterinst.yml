@@ -1,8 +1,0 @@
-##
-##
-
-tests:
-
-- name: create provisioning
-  apifile: "{{datadir}}/mexdemo/appdata_mexdemo_hamburg_clusterinst.yml"
-  actions: [ctrlapi-create]

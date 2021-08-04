@@ -1,9 +1,0 @@
-##
-##
-description: Adds provisioning 
-
-tests:
-
-- name: create provisioning
-  apifile: "{{datadir}}/appdata_demo2.yml"
-  actions: [ctrlapi-create,ctrlapi-show]
