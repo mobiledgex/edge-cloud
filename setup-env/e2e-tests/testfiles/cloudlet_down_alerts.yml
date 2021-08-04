@@ -1,0 +1,57 @@
+##
+##
+description: stops crm
+
+tests:
+- name: create provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+
+- includefile: register_app1.yml
+
+- name: find cloudlet app1 near tmus1, expect tmus1
+  apifile: "{{datadir}}/find_cloudlet_near_tmus1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: stop crm on tmus1
+  actions: [stop-crm]
+  apifile: "{{datadir}}/tmus_cloudlet_1.yml"
+
+- name: sleep for 1 second to allow alerts and DME notification
+  actions: [sleep=1]
+
+- name: show alerts
+  actions: [ctrlapi-showalerts]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: '{{outputdir}}/show-alerts.yml'
+    yaml2: '{{datadir}}/show_tmus_cloudlet1_down_alerts.yml'
+    filetype: alerts
+
+
+- name: find cloudlet app1 near tmus1, expect tmus2
+  apifile: "{{datadir}}/find_cloudlet_near_tmus1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    filetype: findcloudlet
+
+- name: start crm on tmus1
+  actions: [start-crm]
+  apifile: "{{datadir}}/tmus_cloudlet_1.yml"
+
+
+- name: show alerts
+  actions: [ctrlapi-showalerts]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: '{{outputdir}}/show-alerts.yml'
+    yaml2: '{{datadir}}/show_tmus_cloudlet1_down_alerts.yml'
+    filetype: alerts
+
+

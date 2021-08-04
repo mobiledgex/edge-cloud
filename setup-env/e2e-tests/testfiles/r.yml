@@ -1,0 +1,4 @@
+tests:
+  - includefile: stop_cleanup.yml
+  - includefile: deploy_start.yml
+  - includefile: cloudlet_down_alerts.yml

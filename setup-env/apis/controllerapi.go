@@ -135,6 +135,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, apiFileVars, outputDir)
+	} else if api == "showalerts" {
+		output := []edgeproto.Alert{}
+		run.Mode = "show"
+		run.AlertApi(nil, nil, &output)
+		util.PrintToYamlFile("show-alerts.yml", outputDir, output, true)
 	} else {
 		if apiFile == "" {
 			log.Println("Error: Cannot run controller APIs without API file")
@@ -166,6 +171,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 			output := &testutil.AllDataStreamOut{}
 			testutil.RunAllDataStreamApis(run, &appData, output)
 			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
+
 		case "showfiltered":
 			output := &edgeproto.AllData{}
 			testutil.RunAllDataShowApis(run, &appData, output)

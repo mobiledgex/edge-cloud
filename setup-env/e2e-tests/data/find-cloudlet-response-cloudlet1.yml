@@ -1,15 +1,24 @@
-status: FindFound
-fqdn: smallcluster.tmus-cloud-1.tmus.localtest.net
+status: Found
+fqdn: shared.tmus-cloud-1.tmus.localtest.net
 ports:
 - proto: Tcp
   internalport: 80
   publicport: 80
 - proto: Tcp
+  internalport: 81
+  publicport: 81
+  tls: true
+- proto: Tcp
   internalport: 443
   publicport: 443
+- proto: Tcp
+  internalport: 444
+  publicport: 444
+  tls: true
 - proto: Udp
   internalport: 10002
   publicport: 10002
 cloudletlocation:
   latitude: 31
   longitude: -91
+edgeeventscookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjgwNDU4MzMsImlhdCI6MTYyODA0NTIzMywia2V5Ijp7ImNsdXN0ZXJvcmciOiJBY21lQXBwQ28iLCJjbHVzdGVybmFtZSI6IlNtYWxsQ2x1c3RlciIsImNsb3VkbGV0b3JnIjoidG11cyIsImNsb3VkbGV0bmFtZSI6InRtdXMtY2xvdWQtMSIsImxvY2F0aW9uIjp7ImxhdGl0dWRlIjozMS4xLCJsb25naXR1ZGUiOi05NS4xfSwia2lkIjoyfX0.2Y3k0C8TAcwcVo3PQFtNOeFs-8ZgccP57gzE7Bi_LBYTU905K4lrfowcU6IQqShFuTfqUrIxUokg6fq_y1MxBw
