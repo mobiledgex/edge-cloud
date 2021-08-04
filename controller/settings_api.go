@@ -133,7 +133,6 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.MaxNumPerIpRateLimiters = edgeproto.GetDefaultSettings().MaxNumPerIpRateLimiters
 			modified = true
 		}
-
 		if cur.ResourceSnapshotThreadRefreshInterval == 0 {
 			cur.ResourceSnapshotThreadRefreshInterval = edgeproto.GetDefaultSettings().ResourceSnapshotThreadRefreshInterval
 			modified = true
@@ -142,7 +141,6 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ResourceSnapshotMaxUpdateInterval = edgeproto.GetDefaultSettings().ResourceSnapshotMaxUpdateInterval
 			modified = true
 		}
-
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

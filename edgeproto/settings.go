@@ -138,6 +138,11 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			// no validation
 		case SettingsFieldMaxNumPerIpRateLimiters:
 			v.CheckGT(f, s.MaxNumPerIpRateLimiters, int64(0))
+		case SettingsFieldResourceSnapshotThreadRefreshInterval:
+			v.CheckGT(f, s.ResourceSnapshotThreadRefreshInterval, Duration(30*time.Second))
+		case SettingsFieldResourceSnapshotMaxUpdateInterval:
+			v.CheckGT(f, s.ResourceSnapshotMaxUpdateInterval, Duration(60*time.Second))
+
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry
@@ -200,6 +205,8 @@ func GetDefaultSettings() *Settings {
 	s.AlertPolicyMinTriggerTime = Duration(30 * time.Second)
 	s.DisableRateLimit = false
 	s.MaxNumPerIpRateLimiters = 10000
+	s.ResourceSnapshotThreadRefreshInterval = Duration(60 * time.Second)
+	s.ResourceSnapshotMaxUpdateInterval = Duration(120 * time.Second)
 	return &s
 }
 
