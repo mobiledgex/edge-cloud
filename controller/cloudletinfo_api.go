@@ -240,7 +240,6 @@ func clearCloudletDownAppinstAlerts(ctx context.Context, in *edgeproto.CloudletI
 	for _, k := range appInstKeys {
 		alert := edgeproto.Alert{}
 		alert.Labels = cloudletDownAppinstAlertLabels(&k)
-		// send an update
 		alertApi.Delete(ctx, &alert, 0)
 	}
 }
@@ -264,7 +263,6 @@ func cloudletDownAppinstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) 
 		alert.ActiveAt.Seconds = ts.Unix()
 		alert.ActiveAt.Nanos = int32(ts.Nanosecond())
 		alert.Labels = cloudletDownAppinstAlertLabels(&k)
-
 		alert.Annotations = make(map[string]string)
 		alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertAppInstDown
 		alert.Annotations[cloudcommon.AlertAnnotationDescription] = "AppInst down due to cloudlet offline"

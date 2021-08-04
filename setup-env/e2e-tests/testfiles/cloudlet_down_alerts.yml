@@ -18,7 +18,7 @@ tests:
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
-    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-tmus1.yml"
     filetype: findcloudlet
 
 - name: get appinstlist, expect 2 cloudlets
@@ -46,7 +46,7 @@ tests:
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
-    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-tmus2.yml"
     filetype: findcloudlet
 
 - name: get appinstlist, expect cloudlet 2 only
@@ -74,7 +74,7 @@ tests:
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
-    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-tmus1.yml"
     filetype: findcloudlet
 
 - name: get appinstlist, expect 2 cloudlets
@@ -85,3 +85,6 @@ tests:
      yaml2: "{{datadir}}/get_appinstlist_result_cloudlets12.yml"
      filetype: getappinstlist
 
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete]
