@@ -1937,6 +1937,31 @@ var AlertPolicyData = []edgeproto.AlertPolicy{
 			"testAnnotation2": "description2",
 		},
 	},
+	edgeproto.AlertPolicy{ // Warning alert with two triggers and no description
+		Key: edgeproto.AlertPolicyKey{
+			Name:         "testAlert4",
+			Organization: DevData[1],
+		},
+		CpuUtilizationLimit: 80,
+		MemUtilizationLimit: 80,
+		Severity:            "warning",
+		TriggerTime:         edgeproto.Duration(30 * time.Second),
+	},
+	edgeproto.AlertPolicy{ // Warning alert with two triggers description and title annotations
+		Key: edgeproto.AlertPolicyKey{
+			Name:         "testAlert5",
+			Organization: DevData[1],
+		},
+		CpuUtilizationLimit: 80,
+		MemUtilizationLimit: 80,
+		Severity:            "warning",
+		Description:         "Sample description",
+		TriggerTime:         edgeproto.Duration(30 * time.Second),
+		Annotations: map[string]string{
+			"title":       "CustomAlertName",
+			"description": "Custom Description",
+		},
+	},
 }
 
 func GetTimestamp(t time.Time) *types.Timestamp {
