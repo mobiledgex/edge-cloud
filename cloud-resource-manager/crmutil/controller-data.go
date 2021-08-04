@@ -282,6 +282,7 @@ func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *
 			cloudletInfo.ResourcesSnapshot = *resources
 		}
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		lastCloudletResRefreshTime = time.Now()
 	}
 }
 
