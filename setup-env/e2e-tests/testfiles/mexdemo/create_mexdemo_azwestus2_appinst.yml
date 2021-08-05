@@ -1,8 +1,0 @@
-##
-##
-
-tests:
-
-- name: create provisioning
-  apifile: "{{datadir}}/mexdemo/appdata_mexdemo_azwestus2_appinst.yml"
-  actions: [ctrlapi-create]

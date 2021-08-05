@@ -1,0 +1,4 @@
+cloudlets:
+- key:
+    organization: tmus
+    name: tmus-cloud-1

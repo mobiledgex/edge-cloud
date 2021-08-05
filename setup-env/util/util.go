@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -779,6 +780,22 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 		}
 		y1 = r1
 		y2 = r2
+	} else if fileType == "alerts" {
+		var a1 []edgeproto.Alert
+		var a2 []edgeproto.Alert
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
+		y1 = a1
+		y2 = a2
+		sort.Slice(a1, func(i, j int) bool {
+			return fmt.Sprint(a1[i].Labels) < fmt.Sprint(a1[j].Labels)
+		})
+		sort.Slice(a2, func(i, j int) bool {
+			return fmt.Sprint(a2[i].Labels) < fmt.Sprint(a2[j].Labels)
+		})
+		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
+		copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
+
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, yaml1Ops...)
 		err2 = ReadYamlFile(secondYamlFile, &y2, yaml2Ops...)
