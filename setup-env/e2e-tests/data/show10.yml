@@ -39,6 +39,7 @@ settings:
   alertpolicymintriggertime: 30s
   disableratelimit: true
   maxnumperipratelimiters: 10000
+  resourcesnapshotthreadinterval: 10m
 flavors:
 - key:
     name: x1.tiny
