@@ -39,7 +39,7 @@ settings:
   alertpolicymintriggertime: 30s
   disableratelimit: false
   maxnumperipratelimiters: 10000
-
+  resourcesnapshotthreadinterval: 10m
 flowratelimitsettings:
 - key:
     flowsettingsname: dmeglobalallreqs1

@@ -329,6 +329,10 @@ func main() {
 	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
 
+	log.SpanLog(ctx, log.DebugLevelInfra, "Starting Cloudlet resource refresh thread", "cloudlet", myCloudletInfo.Key)
+	controllerData.StartInfraResourceRefreshThread(&myCloudletInfo)
+	defer controllerData.FinishInfraResourceRefreshThread()
+
 	span.Finish()
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready

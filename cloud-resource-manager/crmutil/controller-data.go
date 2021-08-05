@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -54,6 +55,8 @@ type ControllerData struct {
 	updateTrustPolicyKeyworkers tasks.KeyWorkers
 	vmActionRefMux              sync.Mutex
 	vmActionRefAction           int
+	finishInfraResourceThread   chan struct{}
+	vmActionLastUpdate          time.Time
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -280,6 +283,7 @@ func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *
 			cloudletInfo.ResourcesSnapshot = *resources
 		}
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		cd.vmActionLastUpdate = time.Now()
 	}
 }
 
@@ -1329,4 +1333,40 @@ func (cd *ControllerData) RefreshAppInstRuntime(ctx context.Context) {
 		}
 		return nil
 	})
+}
+
+func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeproto.CloudletInfo) {
+
+	cd.finishInfraResourceThread = make(chan struct{})
+	var count int
+
+	go func() {
+		done := false
+		for !done {
+			select {
+			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
+				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
+				ctx := log.ContextWithSpan(context.Background(), span)
+
+				// Cloudlet creates can take many minutes, don't try and interrogate the platform resources before its ready.
+				if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
+					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread", "cloudlet not yet ready", cloudletInfo.Key, "curState", cloudletInfo.State)
+					continue
+				}
+				count++
+				log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread refreshing", "cloudlet", cloudletInfo.Key, "count",
+					count, "ThreadIdleTime", cd.settings.ResourceSnapshotThreadInterval)
+				cd.vmResourceActionBegin()
+				cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
+				span.Finish()
+			case <-cd.finishInfraResourceThread:
+				done = true
+			}
+		}
+	}()
+}
+
+func (cd *ControllerData) FinishInfraResourceRefreshThread() {
+	close(cd.finishInfraResourceThread)
+
 }
