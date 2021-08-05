@@ -1609,6 +1609,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if reservationFreed {
 		clusterInstReservationEvent(ctx, cloudcommon.FreeClusterEvent, in)
 	}
+	// clear all alerts for this appInst
+	alertApi.CleanupAppInstAlerts(ctx, &appInstKey)
 	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 	} else {
