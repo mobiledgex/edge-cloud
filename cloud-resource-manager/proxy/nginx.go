@@ -292,6 +292,7 @@ type UDPSpecDetail struct {
 	BackendIP        string
 	BackendPort      int32
 	ConcurrentConns  uint64
+	PktSize          int64
 }
 
 var nginxConf = `

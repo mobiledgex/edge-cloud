@@ -17,6 +17,7 @@ type PortSpec struct {
 	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
 	Tls     bool
 	Nginx   bool
+	PktSize int64
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {
@@ -113,6 +114,18 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 					return nil, fmt.Errorf("Invalid annotation \"nginx\" for %s ports", portSpec.Proto)
 				}
 				portSpec.Nginx = true
+			case "pktsize":
+				if portSpec.Proto != "udp" {
+					return nil, fmt.Errorf("Invalid annotation \"pktsize\" for %s ports, only valid for UDP protocol", portSpec.Proto)
+				}
+				pktSize, err := strconv.ParseInt(val, 10, 64)
+				if err != nil {
+					return nil, fmt.Errorf("unable to convert pkt size value: %s", val)
+				}
+				if pktSize < 1500 || pktSize > 50000 {
+					return nil, fmt.Errorf("Invalid pktsize, should be between range 1500 to 50000 (exclusive)")
+				}
+				portSpec.PktSize = pktSize
 			default:
 				return nil, fmt.Errorf("unrecognized annotation %s for port %s", key+"="+val, pp[1])
 			}
