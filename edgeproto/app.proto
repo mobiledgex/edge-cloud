@@ -301,6 +301,7 @@ service AppApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionView,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Add an AutoProvPolicy to the App
   rpc AddAppAutoProvPolicy(AppAutoProvPolicy) returns (Result) {
