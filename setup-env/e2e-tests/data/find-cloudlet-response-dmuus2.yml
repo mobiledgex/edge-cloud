@@ -1,0 +1,24 @@
+status: Found
+fqdn: smallcluster.dmuus-cloud-2.dmuus.localtest.net
+ports:
+- proto: Tcp
+  internalport: 80
+  publicport: 80
+- proto: Tcp
+  internalport: 81
+  publicport: 81
+  tls: true
+- proto: Tcp
+  internalport: 443
+  publicport: 443
+- proto: Tcp
+  internalport: 444
+  publicport: 444
+  tls: true
+- proto: Udp
+  internalport: 10002
+  publicport: 10002
+cloudletlocation:
+  latitude: 35
+  longitude: -95
+edgeeventscookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjgxMDEwNjksImlhdCI6MTYyODEwMDQ2OSwia2V5Ijp7ImNsdXN0ZXJvcmciOiJBY21lQXBwQ28iLCJjbHVzdGVybmFtZSI6IlNtYWxsQ2x1c3RlciIsImNsb3VkbGV0b3JnIjoidG11cyIsImNsb3VkbGV0bmFtZSI6InRtdXMtY2xvdWQtMiIsImxvY2F0aW9uIjp7ImxhdGl0dWRlIjozMS4xLCJsb25naXR1ZGUiOi05NS4xfSwia2lkIjoyfX0.mbZ8__BAUr2Je0F09XhaAToWRs0Vvxk-tjb55XC_DN-cOSQQVsi4LLV_IcwWZ7trdFhXm4q4zDsILWfWq76z_A

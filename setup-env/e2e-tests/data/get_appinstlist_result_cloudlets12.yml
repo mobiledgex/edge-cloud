@@ -1,0 +1,62 @@
+status: Success
+cloudlets:
+- carriername: dmuus
+  cloudletname: dmuus-cloud-1
+  gpslocation:
+    latitude: 31
+    longitude: -91
+  distance: 390.71280951425365
+  appinstances:
+  - appname: someapplication1
+    appvers: "1.0"
+    fqdn: shared.dmuus-cloud-1.dmuus.localtest.net
+    ports:
+    - proto: Tcp
+      internalport: 80
+      publicport: 80
+    - proto: Tcp
+      internalport: 443
+      publicport: 443
+    - proto: Udp
+      internalport: 10002
+      publicport: 10002
+    - proto: Tcp
+      internalport: 81
+      publicport: 81
+      tls: true
+    - proto: Tcp
+      internalport: 444
+      publicport: 444
+      tls: true
+    orgname: AcmeAppCo
+    edgeeventscookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjgwODU0NzMsImlhdCI6MTYyODA4NDg3Mywia2V5Ijp7ImNsdXN0ZXJvcmciOiJBY21lQXBwQ28iLCJjbHVzdGVybmFtZSI6IlNtYWxsQ2x1c3RlciIsImNsb3VkbGV0b3JnIjoidG11cyIsImNsb3VkbGV0bmFtZSI6InRtdXMtY2xvdWQtMSIsImxvY2F0aW9uIjp7ImxhdGl0dWRlIjozMS4xLCJsb25naXR1ZGUiOi05NS4xfSwia2lkIjoyfX0.zUSd0_U7t8rgRrzvdrZeIIkgQQIIBbGT4hfrAos_uT7M1MOsVGZKCdWjWGgZjVLXYTzYqW4X8w-p7WyEtuVLUw
+- carriername: dmuus
+  cloudletname: dmuus-cloud-2
+  gpslocation:
+    latitude: 35
+    longitude: -95
+  distance: 433.7602713621871
+  appinstances:
+  - appname: someapplication1
+    appvers: "1.0"
+    fqdn: smallcluster.dmuus-cloud-2.dmuus.localtest.net
+    ports:
+    - proto: Tcp
+      internalport: 80
+      publicport: 80
+    - proto: Tcp
+      internalport: 443
+      publicport: 443
+    - proto: Udp
+      internalport: 10002
+      publicport: 10002
+    - proto: Tcp
+      internalport: 81
+      publicport: 81
+      tls: true
+    - proto: Tcp
+      internalport: 444
+      publicport: 444
+      tls: true
+    orgname: AcmeAppCo
+    edgeeventscookie: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MjgwODU0NzMsImlhdCI6MTYyODA4NDg3Mywia2V5Ijp7ImNsdXN0ZXJvcmciOiJBY21lQXBwQ28iLCJjbHVzdGVybmFtZSI6IlNtYWxsQ2x1c3RlciIsImNsb3VkbGV0b3JnIjoidG11cyIsImNsb3VkbGV0bmFtZSI6InRtdXMtY2xvdWQtMiIsImxvY2F0aW9uIjp7ImxhdGl0dWRlIjozMS4xLCJsb25naXR1ZGUiOi05NS4xfSwia2lkIjoyfX0.r3Km3NWPNjx3imi_J50aOnDaFCoANmYdddPPnY5gPobqa60wCLqVkIpPpXI9C-rqsR5GAgq7bMf3CblxWkgbxw

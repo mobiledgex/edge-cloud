@@ -221,6 +221,32 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	}
 }
 
+func (s *AlertApi) CleanupAppInstAlerts(ctx context.Context, key *edgeproto.AppInstKey) {
+	log.SpanLog(ctx, log.DebugLevelApi, "CleanupAppInstAlerts", "key", key)
+
+	matches := []*edgeproto.Alert{}
+	s.cache.Mux.Lock()
+	labels := key.GetTags()
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		matched := true
+		for appLabelName, appLabelVal := range labels {
+			if val, found := val.Labels[appLabelName]; !found || val != appLabelVal {
+				matched = false
+				break
+			}
+		}
+		if matched {
+			matches = append(matches, val)
+		}
+	}
+	s.cache.Mux.Unlock()
+	for _, val := range matches {
+		s.sourceCache.Delete(ctx, val, 0)
+		s.store.Delete(ctx, val, s.sync.syncWait)
+	}
+}
+
 func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.ClusterInstKey) {
 	matches := []*edgeproto.Alert{}
 	s.cache.Mux.Lock()

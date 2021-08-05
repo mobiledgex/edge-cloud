@@ -275,6 +275,13 @@ func IsSideCarApp(app *edgeproto.App) bool {
 	return false
 }
 
+func GetSideCarAppFilter() *edgeproto.App {
+	return &edgeproto.App{
+		Key:    edgeproto.AppKey{Organization: OrganizationMobiledgeX},
+		DelOpt: edgeproto.DeleteType_AUTO_DELETE,
+	}
+}
+
 func Hostname() string {
 	hostname, err := os.Hostname()
 	if err != nil {
