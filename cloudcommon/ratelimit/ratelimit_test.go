@@ -276,7 +276,7 @@ func TestApiRateLimitMgr(t *testing.T) {
 						RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 					},
 				},
-				Settings: &edgeproto.MaxReqsSettings{
+				Settings: edgeproto.MaxReqsSettings{
 					MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
 					MaxRequests:      1,
 					Interval:         edgeproto.Duration(time.Second),
