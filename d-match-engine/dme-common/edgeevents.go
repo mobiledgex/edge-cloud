@@ -13,6 +13,7 @@ type EdgeEventsHandler interface {
 	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent))
 	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 	UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc)
+	UpdateClientCarrier(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, carrier string)
 	RemoveCloudletKey(ctx context.Context, cloudletKey edgeproto.CloudletKey)
 	RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	SendLatencyRequestEdgeEvent(ctx context.Context, appInstKey edgeproto.AppInstKey)
@@ -37,6 +38,11 @@ func (e *EmptyEdgeEventsHandler) RemoveClientKey(ctx context.Context, appInstKey
 
 func (e *EmptyEdgeEventsHandler) UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc) {
 	log.DebugLog(log.DebugLevelDmereq, "UpdateClientLastLocation not implemented for EmptyEdgeEventHandler. Returning")
+	return
+}
+
+func (e *EmptyEdgeEventsHandler) UpdateClientCarrier(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, carrier string) {
+	log.DebugLog(log.DebugLevelDmereq, "UpdateClientCarrier not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 

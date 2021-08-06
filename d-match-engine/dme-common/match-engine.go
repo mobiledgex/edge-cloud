@@ -1304,7 +1304,10 @@ loop:
 				updateDeviceInfoStats(ctx, appInstKey, deviceInfo, cupdate.GpsLocation, "event location update")
 				lastDeviceInfoDynamic = deviceInfoDynamic
 				if lastDeviceInfoDynamic != nil {
-					lastCarrier = lastDeviceInfoDynamic.CarrierName
+					if lastCarrier != lastDeviceInfoDynamic.CarrierName {
+						EEHandler.UpdateClientCarrier(ctx, *appInstKey, *sessionCookieKey, lastDeviceInfoDynamic.CarrierName)
+						lastCarrier = lastDeviceInfoDynamic.CarrierName
+					}
 				}
 			}
 			// Update last client location in plugin if different from lastLocation
