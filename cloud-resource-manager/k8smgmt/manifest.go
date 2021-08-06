@@ -42,7 +42,7 @@ func addEnvVars(ctx context.Context, template *v1.PodTemplateSpec, envVars []v1.
 	}
 }
 
-func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secretNames []string) {
+func addImagePullSecret(ctx context.Context, template *v1.PodTemplateSpec, secretNames []string, namespaces []string) {
 	for _, secretName := range secretNames {
 		found := false
 		for _, s := range template.Spec.ImagePullSecrets {
@@ -216,7 +216,8 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 		// Add labels for all the appKey data
 		addAppInstLabels(&template.ObjectMeta, app)
 		if imagePullSecrets != nil {
-			addImagePullSecret(ctx, template, imagePullSecrets)
+			namespaces := append(names.DeveloperDefinedNamespaces, DefaultNamespace)
+			addImagePullSecret(ctx, template, imagePullSecrets, namespaces)
 		}
 		if names.Namespace != "" && app.ServerlessConfig != nil {
 			err := addResourceLimits(ctx, template, app.ServerlessConfig)
