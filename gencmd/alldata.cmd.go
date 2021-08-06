@@ -1171,7 +1171,7 @@ var AllDataComments = map[string]string{
 	"flowratelimitsettings:#.key.ratelimitkey.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"flowratelimitsettings:#.settings.flowalgorithm":                                "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"flowratelimitsettings:#.settings.reqspersecond":                                "requests per second for flow rate limiting",
-	"flowratelimitsettings:#.settings.burstsize":                                    "burst size for flow rate limiting",
+	"flowratelimitsettings:#.settings.burstsize":                                    "burst size for flow rate limiting (required for TokenBucketAlgorithm)",
 	"maxreqsratelimitsettings:#.fields":                                             "Fields are used for the Update API to specify which fields to apply",
 	"maxreqsratelimitsettings:#.key.maxreqssettingsname":                            "Unique name for MaxReqsRateLimitSettings (there can be multiple MaxReqsSettings per RateLimitSettingsKey)",
 	"maxreqsratelimitsettings:#.key.ratelimitkey.apiname":                           "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",

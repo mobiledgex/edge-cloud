@@ -13,7 +13,7 @@ func (f *FlowSettings) Validate() error {
 		if f.ReqsPerSecond <= 0 {
 			return fmt.Errorf("Invalid ReqsPerSecond %f, must be greater than 0", f.ReqsPerSecond)
 		}
-		if f.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
+		if f.FlowAlgorithm == FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM {
 			if f.BurstSize <= 0 {
 				return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", f.BurstSize)
 			}

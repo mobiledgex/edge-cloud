@@ -105,8 +105,8 @@ func ShowRateLimitSettingss(c *cli.Command, data []edgeproto.RateLimitSettings, 
 
 var CreateFlowRateLimitSettingsCmd = &cli.Command{
 	Use:          "CreateFlowRateLimitSettings",
-	RequiredArgs: strings.Join(FlowRateLimitSettingsRequiredArgs, " "),
-	OptionalArgs: strings.Join(FlowRateLimitSettingsOptionalArgs, " "),
+	RequiredArgs: strings.Join(CreateFlowRateLimitSettingsRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateFlowRateLimitSettingsOptionalArgs, " "),
 	AliasArgs:    strings.Join(FlowRateLimitSettingsAliasArgs, " "),
 	SpecialArgs:  &FlowRateLimitSettingsSpecialArgs,
 	Comments:     FlowRateLimitSettingsComments,
@@ -353,8 +353,8 @@ func ShowFlowRateLimitSettingss(c *cli.Command, data []edgeproto.FlowRateLimitSe
 
 var CreateMaxReqsRateLimitSettingsCmd = &cli.Command{
 	Use:          "CreateMaxReqsRateLimitSettings",
-	RequiredArgs: strings.Join(MaxReqsRateLimitSettingsRequiredArgs, " "),
-	OptionalArgs: strings.Join(MaxReqsRateLimitSettingsOptionalArgs, " "),
+	RequiredArgs: strings.Join(CreateMaxReqsRateLimitSettingsRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateMaxReqsRateLimitSettingsOptionalArgs, " "),
 	AliasArgs:    strings.Join(MaxReqsRateLimitSettingsAliasArgs, " "),
 	SpecialArgs:  &MaxReqsRateLimitSettingsSpecialArgs,
 	Comments:     MaxReqsRateLimitSettingsComments,
@@ -621,7 +621,7 @@ var FlowSettingsAliasArgs = []string{}
 var FlowSettingsComments = map[string]string{
 	"flowalgorithm": "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"reqspersecond": "requests per second for flow rate limiting",
-	"burstsize":     "burst size for flow rate limiting",
+	"burstsize":     "burst size for flow rate limiting (required for TokenBucketAlgorithm)",
 }
 var FlowSettingsSpecialArgs = map[string]string{}
 var FlowRateLimitSettingsKeyRequiredArgs = []string{}
@@ -667,7 +667,7 @@ var FlowRateLimitSettingsComments = map[string]string{
 	"ratelimittarget":  "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"flowalgorithm":    "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"reqspersecond":    "requests per second for flow rate limiting",
-	"burstsize":        "burst size for flow rate limiting",
+	"burstsize":        "burst size for flow rate limiting (required for TokenBucketAlgorithm)",
 }
 var FlowRateLimitSettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -768,7 +768,7 @@ var RateLimitSettingsComments = map[string]string{
 	"key.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"flowsettings:#.value.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"flowsettings:#.value.reqspersecond":       "requests per second for flow rate limiting",
-	"flowsettings:#.value.burstsize":           "burst size for flow rate limiting",
+	"flowsettings:#.value.burstsize":           "burst size for flow rate limiting (required for TokenBucketAlgorithm)",
 	"maxreqssettings:#.value.maxreqsalgorithm": "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
 	"maxreqssettings:#.value.maxrequests":      "Maximum number of requests for the given Interval",
 	"maxreqssettings:#.value.interval":         "Time interval",
@@ -795,9 +795,30 @@ var RateLimitSettingsDataComments = map[string]string{
 	"settings:#.key.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"settings:#.flowsettings:#.value.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"settings:#.flowsettings:#.value.reqspersecond":       "requests per second for flow rate limiting",
-	"settings:#.flowsettings:#.value.burstsize":           "burst size for flow rate limiting",
+	"settings:#.flowsettings:#.value.burstsize":           "burst size for flow rate limiting (required for TokenBucketAlgorithm)",
 	"settings:#.maxreqssettings:#.value.maxreqsalgorithm": "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
 	"settings:#.maxreqssettings:#.value.maxrequests":      "Maximum number of requests for the given Interval",
 	"settings:#.maxreqssettings:#.value.interval":         "Time interval",
 }
 var RateLimitSettingsDataSpecialArgs = map[string]string{}
+var CreateFlowRateLimitSettingsRequiredArgs = []string{
+	"flowsettingsname",
+	"apiname",
+	"apiendpointtype",
+	"ratelimittarget",
+	"flowalgorithm",
+	"reqspersecond",
+}
+var CreateFlowRateLimitSettingsOptionalArgs = []string{
+	"burstsize",
+}
+var CreateMaxReqsRateLimitSettingsRequiredArgs = []string{
+	"maxreqssettingsname",
+	"apiname",
+	"apiendpointtype",
+	"ratelimittarget",
+	"maxreqsalgorithm",
+	"maxrequests",
+	"interval",
+}
+var CreateMaxReqsRateLimitSettingsOptionalArgs = []string{}
