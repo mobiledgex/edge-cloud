@@ -1339,12 +1339,17 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 
 	cd.finishInfraResourceThread = make(chan struct{})
 	var count int
-
+	var sleeptime time.Duration
 	go func() {
 		done := false
 		for !done {
+			// if the settings are not ready yet, use default.
+			sleeptime = cd.settings.ResourceSnapshotThreadInterval.TimeDuration()
+			if sleeptime == 0 {
+				sleeptime = edgeproto.GetDefaultSettings().ResourceSnapshotThreadInterval.TimeDuration()
+			}
 			select {
-			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
+			case <-time.After(sleeptime):
 				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
 				ctx := log.ContextWithSpan(context.Background(), span)
 
