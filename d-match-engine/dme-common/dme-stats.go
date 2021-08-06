@@ -313,6 +313,11 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		if token != "" {
 			tokdata, tokerr := GetClientDataFromToken(token)
 			if tokerr != nil {
+				if err != nil {
+					// err and tokerr will have the same cause, because GetClientDataFromToken is also called from PlatformFindCloudlet
+					// err has the correct status code
+					tokerr = err
+				}
 				return resp, tokerr
 			}
 			call.Key.AppKey = tokdata.AppKey
