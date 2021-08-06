@@ -794,7 +794,7 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 			return fmt.Sprint(a2[i].Labels) < fmt.Sprint(a2[j].Labels)
 		})
 		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
-		copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
+		copts = append(copts, edgeproto.IgnoreAlertFields("nocmp"))
 
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, yaml1Ops...)
