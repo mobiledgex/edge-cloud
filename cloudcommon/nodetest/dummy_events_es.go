@@ -67,7 +67,7 @@ func (s *DummyEventsES) Handle(req *http.Request) (*http.Response, error) {
 
 func (s *DummyEventsES) HandleIgnore(req *http.Request) (*http.Response, error) {
 	fmt.Printf("DummyEventsES ignoring request %s\n", req.URL.String())
-	return httpmock.NewStringResponse(200, ""), nil
+	return httpmock.NewStringResponse(200, `{"hits":{"total":{"value":0}}}`), nil
 }
 
 func (s *DummyEventsES) WaitLastEventMatches(matchFunc func(e *node.EventData) bool) bool {
