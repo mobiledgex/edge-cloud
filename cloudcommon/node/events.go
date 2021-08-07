@@ -459,12 +459,12 @@ func (s *NodeMgr) searchEvents(ctx context.Context, searchType string, search *E
 	defer res.Body.Close()
 
 	log.SpanLog(ctx, log.DebugLevelEvents, "event search response", "res", res)
+
 	resp := SearchResp{}
 	err = json.NewDecoder(res.Body).Decode(&resp)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("ASHCHECK", resp)
 
 	if resp.Hits.Total.Value == 0 || resp.Hits.Hits == nil {
 		return []EventData{}, nil
