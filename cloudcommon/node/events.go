@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	fmt "fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -463,11 +462,9 @@ func (s *NodeMgr) searchEvents(ctx context.Context, searchType string, search *E
 	resp := SearchResp{}
 	err = json.NewDecoder(res.Body).Decode(&resp)
 	if err != nil {
-		if s.unitTestMode && err == io.EOF {
-			return []EventData{}, nil
-		}
 		return nil, err
 	}
+	fmt.Println("ASHCHECK", resp)
 
 	if resp.Hits.Total.Value == 0 || resp.Hits.Hits == nil {
 		return []EventData{}, nil
