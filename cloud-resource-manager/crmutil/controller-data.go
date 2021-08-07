@@ -111,7 +111,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 
 	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
 	cd.updateTrustPolicyKeyworkers.Init("update-TrustPolicy", cd.UpdateTrustPolicy)
-
+	cd.settings = *edgeproto.GetDefaultSettings()
 	return cd
 }
 
@@ -1339,21 +1339,15 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 
 	cd.finishInfraResourceThread = make(chan struct{})
 	var count int
-	var sleeptime time.Duration
+
 	go func() {
 		done := false
 		for !done {
-			// if the settings are not ready yet, use default.
-			sleeptime = cd.settings.ResourceSnapshotThreadInterval.TimeDuration()
-			if sleeptime == 0 {
-				sleeptime = edgeproto.GetDefaultSettings().ResourceSnapshotThreadInterval.TimeDuration()
-			}
 			select {
-			case <-time.After(sleeptime):
+			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
 				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
 				ctx := log.ContextWithSpan(context.Background(), span)
-
-				// Cloudlet creates can take many minutes, don't try and interrogate the platform resources before its ready.
+				// Cloudlet creates can take many minutes, don't try and interrogate resources before platform is ready.
 				if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
 					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread", "cloudlet not yet ready", cloudletInfo.Key, "curState", cloudletInfo.State)
 					continue
