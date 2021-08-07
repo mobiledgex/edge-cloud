@@ -13,26 +13,27 @@ import (
 )
 
 type KubeNames struct {
-	AppName           string
-	AppVersion        string
-	AppOrg            string
-	HelmAppName       string
-	AppURI            string
-	AppImage          string
-	AppRevision       string
-	AppInstRevision   string
-	ClusterName       string
-	K8sNodeNameSuffix string
-	OperatorName      string
-	ServiceNames      []string
-	KconfName         string
-	KconfEnv          string
-	DeploymentType    string
-	ImagePullSecrets  []string
-	ImagePaths        []string
-	IsUriIPAddr       bool
-	Namespace         string
-	BaseKconfName     string
+	AppName                    string
+	AppVersion                 string
+	AppOrg                     string
+	HelmAppName                string
+	AppURI                     string
+	AppImage                   string
+	AppRevision                string
+	AppInstRevision            string
+	ClusterName                string
+	K8sNodeNameSuffix          string
+	OperatorName               string
+	ServiceNames               []string
+	DeveloperDefinedNamespaces []string // namespaces included by developer in manifest
+	KconfName                  string
+	KconfEnv                   string
+	DeploymentType             string
+	ImagePullSecrets           []string
+	ImagePaths                 []string
+	IsUriIPAddr                bool
+	Namespace                  string
+	BaseKconfName              string
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
@@ -142,6 +143,11 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 				template = &obj.Spec.Template
 			case *appsv1.StatefulSet:
 				template = &obj.Spec.Template
+			case *v1.Namespace:
+				// if this is not a multi tenant case, any additional namespaces are from a developer manifest
+				if kubeNames.Namespace == "" {
+					kubeNames.DeveloperDefinedNamespaces = append(kubeNames.DeveloperDefinedNamespaces, obj.Name)
+				}
 			}
 			if template == nil {
 				continue
