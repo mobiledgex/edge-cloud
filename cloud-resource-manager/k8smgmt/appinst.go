@@ -136,19 +136,23 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	for ii, _ := range objs {
 		for {
 			name = ""
+			namespace := DefaultNamespace
 			switch obj := objs[ii].(type) {
 			case *appsv1.Deployment:
 				name = obj.ObjectMeta.Name
+				namespace = obj.ObjectMeta.Namespace
 			case *appsv1.DaemonSet:
 				name = obj.ObjectMeta.Name
+				namespace = obj.ObjectMeta.Namespace
 			case *appsv1.StatefulSet:
 				name = obj.ObjectMeta.Name
+				namespace = obj.ObjectMeta.Namespace
 			}
 			if name == "" {
 				break
 			}
 			selector := fmt.Sprintf("%s=%s", MexAppLabel, name)
-			done, err := CheckPodsStatus(ctx, client, names.KconfEnv, DefaultNamespace, selector, waitFor, start)
+			done, err := CheckPodsStatus(ctx, client, names.KconfEnv, namespace, selector, waitFor, start)
 			if err != nil {
 				return err
 			}
@@ -174,6 +178,27 @@ func getConfigDirName(names *KubeNames) (string, string) {
 		dir += "." + names.Namespace
 	}
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
+}
+
+func CreateDeveloperDefinedNamespaces(ctx context.Context, client ssh.Client, names *KubeNames) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "CreateDeveloperDefinedNamespaces")
+	for _, n := range names.DeveloperDefinedNamespaces {
+		if n == DefaultNamespace {
+			continue
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "Creating Namespace", "name", n)
+		cmd := fmt.Sprintf("kubectl create namespace %s --kubeconfig=%s", n, names.KconfName)
+		out, err := client.Output(cmd)
+		if err != nil {
+			if strings.Contains(out, "AlreadyExists") {
+				log.SpanLog(ctx, log.DebugLevelInfra, "namespace already exists")
+			} else {
+				log.SpanLog(ctx, log.DebugLevelInfra, "kubectl create namespace failed", "out", string(out), "err", err)
+				return fmt.Errorf("kubectl create namespace failed - %v", err)
+			}
+		}
+	}
+	return nil
 }
 
 func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
