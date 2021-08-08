@@ -145,7 +145,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			"key", in.Key, "err", err)
 	}
 	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
-		ClearCloudletDownAlert(ctx, in)
+		ClearCloudletAndAppInstDownAlerts(ctx, in)
 		// Validate cloudlet resources and generate appropriate warnings
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
@@ -177,8 +177,16 @@ func cloudletInfoToAlertLabels(in *edgeproto.CloudletInfo) map[string]string {
 	return labels
 }
 
+func cloudletDownAppInstAlertLabels(appInstKey *edgeproto.AppInstKey) map[string]string {
+	labels := appInstKey.GetTags()
+	labels["alertname"] = cloudcommon.AlertAppInstDown
+	labels[cloudcommon.AlertHealthCheckStatus] = strconv.Itoa(int(dme.HealthCheck_HEALTH_CHECK_CLOUDLET_OFFLINE))
+	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopeApp
+	return labels
+}
+
 // Raise the alarm when the cloudlet goes down
-func CloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
+func fireCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alert := edgeproto.Alert{}
 	alert.State = "firing"
 	alert.ActiveAt = dme.Timestamp{}
@@ -193,10 +201,70 @@ func CloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alertApi.Update(ctx, &alert, 0)
 }
 
-func ClearCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
+func FireCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	fireCloudletDownAlert(ctx, in)
+	fireCloudletDownAppInstAlerts(ctx, in)
+}
+
+func ClearCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	clearCloudletDownAlert(ctx, in)
+	clearCloudletDownAppInstAlerts(ctx, in)
+}
+
+func clearCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alert := edgeproto.Alert{}
 	alert.Labels = cloudletInfoToAlertLabels(in)
 	alertApi.Delete(ctx, &alert, 0)
+}
+
+func clearCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	appInstFilter := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: in.Key}},
+	}
+	appInstKeys := make([]edgeproto.AppInstKey, 0)
+	appInstApi.cache.Show(&appInstFilter, func(obj *edgeproto.AppInst) error {
+		appInstKeys = append(appInstKeys, obj.Key)
+		return nil
+	})
+	for _, k := range appInstKeys {
+		alert := edgeproto.Alert{}
+		alert.Labels = cloudletDownAppInstAlertLabels(&k)
+		alertApi.Delete(ctx, &alert, 0)
+	}
+}
+
+func fireCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	appInstFilter := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: in.Key}},
+	}
+	appInstKeys := make([]edgeproto.AppInstKey, 0)
+	appInstApi.cache.Show(&appInstFilter, func(obj *edgeproto.AppInst) error {
+		appInstKeys = append(appInstKeys, obj.Key)
+		return nil
+	})
+	// exclude SideCar apps which are auto-deployed as part of the cluster
+	excludedAppFilter := cloudcommon.GetSideCarAppFilter()
+	excludedAppKeys := make(map[edgeproto.AppKey]bool, 0)
+	appApi.cache.Show(excludedAppFilter, func(obj *edgeproto.App) error {
+		excludedAppKeys[obj.Key] = true
+		return nil
+	})
+	for _, k := range appInstKeys {
+		if excluded := excludedAppKeys[k.AppKey]; excluded {
+			continue
+		}
+		alert := edgeproto.Alert{}
+		alert.State = "firing"
+		alert.ActiveAt = dme.Timestamp{}
+		ts := time.Now()
+		alert.ActiveAt.Seconds = ts.Unix()
+		alert.ActiveAt.Nanos = int32(ts.Nanosecond())
+		alert.Labels = cloudletDownAppInstAlertLabels(&k)
+		alert.Annotations = make(map[string]string)
+		alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertAppInstDown
+		alert.Annotations[cloudcommon.AlertAnnotationDescription] = "AppInst down due to cloudlet offline"
+		alertApi.Update(ctx, &alert, 0)
+	}
 }
 
 // Delete from notify just marks the cloudlet offline
@@ -266,7 +334,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 			// Send a cloudlet down alert if a cloudlet was ready
 			if cloudletReady {
-				CloudletDownAlert(ctx, &info)
+				FireCloudletAndAppInstDownAlerts(ctx, &info)
 			}
 		}
 	}
@@ -363,7 +431,7 @@ func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeprot
 		log.SpanLog(ctx, log.DebugLevelApi, "cleanup CloudletInfo failed", "err", err)
 	}
 	// clean up any associated alerts with this cloudlet
-	ClearCloudletDownAlert(ctx, &info)
+	ClearCloudletAndAppInstDownAlerts(ctx, &info)
 }
 
 func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState dme.MaintenanceState, timeout time.Duration, result *edgeproto.CloudletInfo) error {

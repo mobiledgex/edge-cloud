@@ -6,30 +6,30 @@ import (
 )
 
 var accessPorts = []string{
-	"tcp:123",                                // 0
-	"tcp:123:tls",                            // 1
-	"tcp:123:nginx",                          // 2
-	"tcp:0",                                  // 3
-	"tcp:65536",                              // 4
-	"tcp:-4",                                 // 5
-	"udp:0",                                  // 6
-	"udp:65536",                              // 7
-	"udp:-3",                                 // 8
-	"udp:20",                                 // 9
-	"tcp:10-19,udp:20-22",                    // 10
-	"udp:20-22,udp:23-25:nginx",              // 11
-	"tcp:1000-1999",                          // 12
-	"tcp:1000-2000",                          // 13
-	"udp:1000-1999",                          // 14
-	"udp:1000-2000",                          // 15
-	"udp:10000-19999",                        // 16
-	"udp:10000-20000",                        // 17
-	"accessports",                            // 18
-	"http:80",                                // 19
-	"udp:20-22,udp:23-25:nginx:pktsize=1600", // 20
-	"udp:23-25:pktsize=1",                    // 21
-	"udp:26:pktsize=50000",                   // 22
-	"tcp:20:pktsize=50000",                   // 23
+	"tcp:123",                   // 0
+	"tcp:123:tls",               // 1
+	"tcp:123:nginx",             // 2
+	"tcp:0",                     // 3
+	"tcp:65536",                 // 4
+	"tcp:-4",                    // 5
+	"udp:0",                     // 6
+	"udp:65536",                 // 7
+	"udp:-3",                    // 8
+	"udp:20",                    // 9
+	"tcp:10-19,udp:20-22",       // 10
+	"udp:20-22,udp:23-25:nginx", // 11
+	"tcp:1000-1999",             // 12
+	"tcp:1000-2000",             // 13
+	"udp:1000-1999",             // 14
+	"udp:1000-2000",             // 15
+	"udp:10000-19999",           // 16
+	"udp:10000-20000",           // 17
+	"accessports",               // 18
+	"http:80",                   // 19
+	"udp:20-22,udp:23-25:nginx:maxpktsize=1600", // 20
+	"udp:23-25:maxpktsize=1",                    // 21
+	"udp:26:maxpktsize=50000",                   // 22
+	"tcp:20:maxpktsize=50000",                   // 23
 }
 
 func TestParsePorts(t *testing.T) {
@@ -91,15 +91,15 @@ func TestParsePorts(t *testing.T) {
 			require.NotNil(t, err, "Only tcp and udp are recognized as valid protocols")
 		case 20:
 			require.Nil(t, err, "valid accessPorts input")
-			require.Equal(t, int64(0), ports[0].PktSize, "valid pkt size can be set for UDP")
-			require.Equal(t, int64(1600), ports[1].PktSize, "valid pkt size can be set for UDP")
+			require.Equal(t, int64(0), ports[0].MaxPktSize, "valid pkt size can be set for UDP")
+			require.Equal(t, int64(1600), ports[1].MaxPktSize, "valid pkt size can be set for UDP")
 		case 21:
-			require.NotNil(t, err, "Incorrect pktsize value")
+			require.NotNil(t, err, "Incorrect maxpktsize value")
 		case 22:
 			require.Nil(t, err, "valid accessPorts input")
-			require.Equal(t, int64(50000), ports[0].PktSize, "valid pkt size can be set for UDP")
+			require.Equal(t, int64(50000), ports[0].MaxPktSize, "valid pkt size can be set for UDP")
 		case 23:
-			require.NotNil(t, err, "pktsize not valid for tcp")
+			require.NotNil(t, err, "maxpktsize not valid for tcp")
 
 		}
 

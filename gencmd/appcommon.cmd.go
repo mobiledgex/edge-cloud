@@ -25,7 +25,7 @@ var AppPortOptionalArgs = []string{
 	"endport",
 	"tls",
 	"nginx",
-	"pktsize",
+	"maxpktsize",
 }
 var AppPortAliasArgs = []string{}
 var AppPortComments = map[string]string{
@@ -36,7 +36,7 @@ var AppPortComments = map[string]string{
 	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"tls":          "TLS termination for this port",
 	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
-	"pktsize":      "UDP datagram size (udp only)",
+	"maxpktsize":   "Maximum datagram size (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}
 var DeviceInfoStaticRequiredArgs = []string{}

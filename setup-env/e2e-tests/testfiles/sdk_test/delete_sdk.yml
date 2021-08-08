@@ -1,8 +1,0 @@
-##
-##
-
-tests:
-
-- name: delete provisioning
-  apifile: "{{datadir}}/sdk_test/appdata_sdk.yml"
-  actions: [ctrlapi-delete,ctrlapi-show]

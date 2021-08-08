@@ -306,6 +306,7 @@ var AlertPolicyOptionalArgs = []string{
 	"trigger-time",
 	"labels",
 	"annotations",
+	"description",
 }
 var AlertPolicyAliasArgs = []string{
 	"alert-org=key.organization",
@@ -327,6 +328,7 @@ var AlertPolicyComments = map[string]string{
 	"trigger-time":       "Duration for which alert interval is active",
 	"labels":             "Additional Labels, specify labels:empty=true to clear",
 	"annotations":        "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
+	"description":        "Description of the alert policy",
 }
 var AlertPolicySpecialArgs = map[string]string{
 	"annotations": "StringToString",
@@ -346,4 +348,5 @@ var CreateAlertPolicyOptionalArgs = []string{
 	"trigger-time",
 	"labels",
 	"annotations",
+	"description",
 }

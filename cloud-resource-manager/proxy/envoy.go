@@ -195,7 +195,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
-					PktSize:     p.PktSize,
+					MaxPktSize:  p.MaxPktSize,
 				}
 				udpconns, err := getUDPConcurrentConnections()
 				if err != nil {
@@ -286,10 +286,10 @@ static_resources:
         protocol: UDP
         address: {{.ListenIP}}
         port_value: {{.ListenPort}}
-    {{if ne .PktSize 0 -}}
+    {{if ne .MaxPktSize 0 -}}
     udp_listener_config:
       downstream_socket_config:
-        max_rx_datagram_size: {{.PktSize}}
+        max_rx_datagram_size: {{.MaxPktSize}}
     {{- end}}
     listener_filters:
       name: envoy.filters.udp_listener.udp_proxy
@@ -297,9 +297,9 @@ static_resources:
         '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
         stat_prefix: downstream{{.BackendPort}}
         cluster: udp_backend{{.BackendPort}}
-    {{if ne .PktSize 0 -}}
+    {{if ne .MaxPktSize 0 -}}
         upstream_socket_config:
-          max_rx_datagram_size: {{.PktSize}}
+          max_rx_datagram_size: {{.MaxPktSize}}
     {{- end}}
     reuse_port: true
   {{- end}}

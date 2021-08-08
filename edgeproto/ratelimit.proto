@@ -37,9 +37,9 @@ message FlowSettings {
   // Flow Rate Limit algorithm
   FlowRateLimitAlgorithm flow_algorithm = 1;
   // requests per second for flow rate limiting
-  double reqsPerSecond = 2;
-  // burst size for flow rate limiting
-  int64 burstSize = 3;
+  double reqs_per_second = 2;
+  // burst size for flow rate limiting (required for TokenBucketAlgorithm)
+  int64 burst_size = 3;
 }
 
 message FlowRateLimitSettingsKey {
@@ -143,6 +143,7 @@ service RateLimitSettingsApi {
       post: "/create/flowratelimitsettings"
       body: "*"
     };
+    option (protogen.method_also_required) = "Settings.FlowAlgorithm,Settings.ReqsPerSecond";
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
   // Update Flow RateLimit settings for an API endpoint and target
@@ -175,6 +176,7 @@ service RateLimitSettingsApi {
       post: "/create/maxreqsratelimitsettings"
       body: "*"
     };
+    option (protogen.method_also_required) = "Settings.MaxReqsAlgorithm,Settings.MaxRequests,Settings.Interval";
     option (protogen.mc2_api) = "ResourceConfig,ActionManage,";
   }
   // Update MaxReqs RateLimit settings for an API endpoint and target
