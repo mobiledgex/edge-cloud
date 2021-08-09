@@ -11,6 +11,12 @@ import (
 	ssh "github.com/mobiledgex/golang-ssh"
 )
 
+type NoScheduleMasterTaintAction string
+
+const NoScheduleMasterTaintAdd NoScheduleMasterTaintAction = "master-noschedule-taint-add"
+const NoScheduleMasterTaintRemove NoScheduleMasterTaintAction = "master-noschedule-taint-remove"
+const NoScheduleMasterTaintNone NoScheduleMasterTaintAction = "master-noschedule-taint-none"
+
 func DeleteNodes(ctx context.Context, client ssh.Client, kconfName string, nodes []string) error {
 	for _, node := range nodes {
 		cmd := fmt.Sprintf("KUBECONFIG=%s kubectl delete node %s", kconfName, node)
@@ -18,6 +24,39 @@ func DeleteNodes(ctx context.Context, client ssh.Client, kconfName string, nodes
 		out, err := client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("failed to delete k8s node, %s, %s, %v", cmd, out, err)
+		}
+	}
+	return nil
+}
+
+func SetMasterNoscheduleTaint(ctx context.Context, client ssh.Client, masterName string, kubeconfig string, action NoScheduleMasterTaintAction) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "SetMasterNoscheduleTaint", "masterName", masterName, "action", action)
+
+	var cmd string
+	if action == NoScheduleMasterTaintAdd {
+		log.SpanLog(ctx, log.DebugLevelInfra, "adding taint to master", "masterName", masterName)
+		cmd = fmt.Sprintf("kubectl taint nodes %s node-role.kubernetes.io/master=:NoSchedule --kubeconfig=%s", masterName, kubeconfig)
+		out, err := client.Output(cmd)
+		if err != nil {
+			if strings.Contains(out, "already has node-role.kubernetes.io/master") {
+				log.SpanLog(ctx, log.DebugLevelInfra, "master taint already present")
+			} else {
+				log.SpanLog(ctx, log.DebugLevelInfra, "error adding master taint", "out", out, "err", err)
+				return fmt.Errorf("Cannot add NoSchedule taint to master, %v", err)
+
+			}
+		}
+	} else if action == NoScheduleMasterTaintRemove {
+		log.SpanLog(ctx, log.DebugLevelInfra, "removing taint from master", "masterName", masterName)
+		cmd = fmt.Sprintf("kubectl taint nodes %s node-role.kubernetes.io/master:NoSchedule-  --kubeconfig=%s", masterName, kubeconfig)
+		out, err := client.Output(cmd)
+		if err != nil {
+			if strings.Contains(out, "not found") {
+				log.SpanLog(ctx, log.DebugLevelInfra, "master taint already gone")
+			} else {
+				log.SpanLog(ctx, log.DebugLevelInfra, "error removing master taint", "out", out, "err", err)
+				return fmt.Errorf("Cannot remove NoSchedule taint from master, %v", err)
+			}
 		}
 	}
 	return nil
