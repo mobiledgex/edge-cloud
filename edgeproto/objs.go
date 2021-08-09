@@ -659,11 +659,6 @@ func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
 	if s.MaxNodes > AutoScaleMaxNodes {
 		return fmt.Errorf("Max nodes cannot exceed %d", AutoScaleMaxNodes)
 	}
-	if s.MinNodes < 1 {
-		// Taint on master is not updated during UpdateClusterInst
-		// when going up/down from 0, so min supported is 1.
-		return errors.New("Min nodes cannot be less than 1")
-	}
 	if s.HasV0Config() && s.HasV1Config() {
 		return errors.New("The new target cpu/mem/active-connections can only be used once the old cpu threshold settings have been disabled (set to 0)")
 	}
