@@ -1050,13 +1050,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			if inbuf.Deployment != cloudcommon.DeploymentTypeKubernetes {
 				return fmt.Errorf("Cannot add auto scale policy to non-kubernetes ClusterInst")
 			}
-			if inbuf.NumNodes == 0 {
-				// this restriction is because we do not adjust
-				// the taints when switching from 1master/0nodes
-				// to 1master/Xnodes. This check can be removed
-				// if we fix the tainting.
-				return fmt.Errorf("Cannot add auto scale policy to master-only ClusterInst")
-			}
 		}
 
 		if err := checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Update); err != nil {
