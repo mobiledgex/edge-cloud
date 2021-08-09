@@ -10,13 +10,16 @@ var maxTcpPorts int = 1000
 var maxUdpPorts int = 10000
 var maxEnvoyUdpPorts int = 1000
 var MaxK8sUdpPorts int = 1000
+var minUDPPktSize int64 = 1500
+var maxUDPPktSize int64 = 50000
 
 type PortSpec struct {
-	Proto   string
-	Port    string
-	EndPort string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
-	Tls     bool
-	Nginx   bool
+	Proto      string
+	Port       string
+	EndPort    string // mfw XXX ? why two type and parse rtns for AppPort? (3 actually kube.go is another)
+	Tls        bool
+	Nginx      bool
+	MaxPktSize int64
 }
 
 func ParsePorts(accessPorts string) ([]PortSpec, error) {
@@ -113,6 +116,18 @@ func ParsePorts(accessPorts string) ([]PortSpec, error) {
 					return nil, fmt.Errorf("Invalid annotation \"nginx\" for %s ports", portSpec.Proto)
 				}
 				portSpec.Nginx = true
+			case "maxpktsize":
+				if portSpec.Proto != "udp" {
+					return nil, fmt.Errorf("Invalid annotation \"maxpktsize\" for %s ports, only valid for UDP protocol", portSpec.Proto)
+				}
+				maxPktSize, err := strconv.ParseInt(val, 10, 64)
+				if err != nil {
+					return nil, fmt.Errorf("unable to convert pkt size value: %s", val)
+				}
+				if maxPktSize < minUDPPktSize || maxPktSize > maxUDPPktSize {
+					return nil, fmt.Errorf("Invalid maxpktsize, should be between range %v to %v (exclusive)", minUDPPktSize, maxUDPPktSize)
+				}
+				portSpec.MaxPktSize = maxPktSize
 			default:
 				return nil, fmt.Errorf("unrecognized annotation %s for port %s", key+"="+val, pp[1])
 			}

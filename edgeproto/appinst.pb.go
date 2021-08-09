@@ -2464,6 +2464,7 @@ const AppInstFieldMappedPortsFqdnPrefix = "9.5"
 const AppInstFieldMappedPortsEndPort = "9.6"
 const AppInstFieldMappedPortsTls = "9.7"
 const AppInstFieldMappedPortsNginx = "9.8"
+const AppInstFieldMappedPortsMaxPktSize = "9.9"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldState = "14"
@@ -2526,6 +2527,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsEndPort,
 	AppInstFieldMappedPortsTls,
 	AppInstFieldMappedPortsNginx,
+	AppInstFieldMappedPortsMaxPktSize,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
 	AppInstFieldErrors,
@@ -2583,6 +2585,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsEndPort:                       struct{}{},
 	AppInstFieldMappedPortsTls:                           struct{}{},
 	AppInstFieldMappedPortsNginx:                         struct{}{},
+	AppInstFieldMappedPortsMaxPktSize:                    struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldState:                                    struct{}{},
 	AppInstFieldErrors:                                   struct{}{},
@@ -2640,6 +2643,7 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldMappedPortsEndPort:                       "Mapped Ports End Port",
 	AppInstFieldMappedPortsTls:                           "Mapped Ports Tls",
 	AppInstFieldMappedPortsNginx:                         "Mapped Ports Nginx",
+	AppInstFieldMappedPortsMaxPktSize:                    "Mapped Ports Max Pkt Size",
 	AppInstFieldFlavorName:                               "Flavor Name",
 	AppInstFieldState:                                    "State",
 	AppInstFieldErrors:                                   "Errors",
@@ -2793,6 +2797,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 			}
 			if m.MappedPorts[i0].Nginx != o.MappedPorts[i0].Nginx {
 				fields[AppInstFieldMappedPortsNginx] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+			if m.MappedPorts[i0].MaxPktSize != o.MappedPorts[i0].MaxPktSize {
+				fields[AppInstFieldMappedPortsMaxPktSize] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 		}

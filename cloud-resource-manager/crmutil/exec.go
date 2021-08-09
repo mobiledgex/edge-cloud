@@ -44,6 +44,78 @@ func (s *ExecReqHandler) RecvExecRequest(ctx context.Context, msg *edgeproto.Exe
 	}()
 }
 
+type EnvoyContainerVersion struct {
+	ContainerName string
+	EnvoyVersion  string
+	Error         string
+}
+
+type RootLBEnvoyVersion struct {
+	NodeType        string
+	NodeName        string
+	EnvoyContainers []EnvoyContainerVersion
+}
+
+func (cd *ControllerData) GetClusterEnvoyVersion(ctx context.Context, req *edgeproto.DebugRequest) string {
+	clusterInsts := []edgeproto.ClusterInst{}
+	cd.ClusterInstCache.Mux.Lock()
+	for _, v := range cd.ClusterInstCache.Objs {
+		clusterInsts = append(clusterInsts, *v.Obj)
+	}
+	cd.ClusterInstCache.Mux.Unlock()
+	nodes, err := cd.platform.ListCloudletMgmtNodes(ctx, clusterInsts, nil)
+	if err != nil {
+		return fmt.Sprintf("unable to get list of cluster nodes, %v", err)
+	}
+	if len(nodes) == 0 {
+		return fmt.Sprintf("no nodes found")
+	}
+	nodeVersions := []RootLBEnvoyVersion{}
+	for _, node := range nodes {
+		if !strings.Contains(node.Type, "rootlb") {
+			continue
+		}
+		client, err := cd.platform.GetNodePlatformClient(ctx, &node)
+		if err != nil {
+			return fmt.Sprintf("failed to get ssh client for node %s, %v", node.Name, err)
+		}
+		out, err := client.Output(`docker ps --format "{{.Names}}" --filter name="^envoy"`)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "failed to find envoy containers on rootlb", "rootlb", node, "err", err, "out", out)
+			return fmt.Sprintf("failed to find envoy containers on rootlb %s, %v", node.Name, err)
+		}
+		nodeVersion := RootLBEnvoyVersion{
+			NodeType: node.Type,
+			NodeName: node.Name,
+		}
+		for _, name := range strings.Split(out, "\n") {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			envoyContainerVers := EnvoyContainerVersion{
+				ContainerName: name,
+			}
+			out, err := client.Output(`docker exec -it %s envoy --version`)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "failed to find envoy container version on rootlb", "rootlb", node, "container", name, "err", err, "out", out)
+				envoyContainerVers.Error = err.Error()
+				nodeVersion.EnvoyContainers = append(nodeVersion.EnvoyContainers, envoyContainerVers)
+				continue
+			}
+			version := strings.TrimSpace(out)
+			envoyContainerVers.EnvoyVersion = version
+			nodeVersion.EnvoyContainers = append(nodeVersion.EnvoyContainers, envoyContainerVers)
+		}
+		nodeVersions = append(nodeVersions, nodeVersion)
+	}
+	out, err := json.Marshal(nodeVersions)
+	if err != nil {
+		return fmt.Sprintf("Failed to marshal node versions: %s, %v", string(out), err)
+	}
+	return string(out)
+}
+
 func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) (reterr error) {
 	var err error
 

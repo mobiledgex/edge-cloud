@@ -26,6 +26,10 @@ var accessPorts = []string{
 	"udp:10000-20000",           // 17
 	"accessports",               // 18
 	"http:80",                   // 19
+	"udp:20-22,udp:23-25:nginx:maxpktsize=1600", // 20
+	"udp:23-25:maxpktsize=1",                    // 21
+	"udp:26:maxpktsize=50000",                   // 22
+	"tcp:20:maxpktsize=50000",                   // 23
 }
 
 func TestParsePorts(t *testing.T) {
@@ -85,6 +89,18 @@ func TestParsePorts(t *testing.T) {
 			require.NotNil(t, err, "Incorrect accessports format")
 		case 19:
 			require.NotNil(t, err, "Only tcp and udp are recognized as valid protocols")
+		case 20:
+			require.Nil(t, err, "valid accessPorts input")
+			require.Equal(t, int64(0), ports[0].MaxPktSize, "valid pkt size can be set for UDP")
+			require.Equal(t, int64(1600), ports[1].MaxPktSize, "valid pkt size can be set for UDP")
+		case 21:
+			require.NotNil(t, err, "Incorrect maxpktsize value")
+		case 22:
+			require.Nil(t, err, "valid accessPorts input")
+			require.Equal(t, int64(50000), ports[0].MaxPktSize, "valid pkt size can be set for UDP")
+		case 23:
+			require.NotNil(t, err, "maxpktsize not valid for tcp")
+
 		}
 
 	}
