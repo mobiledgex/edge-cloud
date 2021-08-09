@@ -112,6 +112,10 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
 	cd.updateTrustPolicyKeyworkers.Init("update-TrustPolicy", cd.UpdateTrustPolicy)
 	cd.settings = *edgeproto.GetDefaultSettings()
+
+	// debug functions
+	nodeMgr.Debug.AddDebugFunc("envoyversioncmd", cd.GetClusterEnvoyVersion)
+
 	return cd
 }
 

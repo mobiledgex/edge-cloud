@@ -746,6 +746,7 @@ var FindCloudletReplyOptionalArgs = []string{
 	"ports:#.endport",
 	"ports:#.tls",
 	"ports:#.nginx",
+	"ports:#.maxpktsize",
 	"cloudletlocation.latitude",
 	"cloudletlocation.longitude",
 	"cloudletlocation.horizontalaccuracy",
@@ -770,6 +771,7 @@ var FindCloudletReplyComments = map[string]string{
 	"ports:#.endport":                     "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"ports:#.tls":                         "TLS termination for this port",
 	"ports:#.nginx":                       "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"ports:#.maxpktsize":                  "Maximum datagram size (udp only)",
 	"cloudletlocation.latitude":           "latitude in WGS 84 coordinates",
 	"cloudletlocation.longitude":          "longitude in WGS 84 coordinates",
 	"cloudletlocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",
@@ -942,6 +944,7 @@ var AppinstanceOptionalArgs = []string{
 	"ports:#.endport",
 	"ports:#.tls",
 	"ports:#.nginx",
+	"ports:#.maxpktsize",
 	"orgname",
 	"edgeeventscookie",
 }
@@ -957,6 +960,7 @@ var AppinstanceComments = map[string]string{
 	"ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"ports:#.tls":          "TLS termination for this port",
 	"ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"ports:#.maxpktsize":   "Maximum datagram size (udp only)",
 	"orgname":              "App Organization Name",
 	"edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 }
@@ -985,6 +989,7 @@ var CloudletLocationOptionalArgs = []string{
 	"appinstances:#.ports:#.endport",
 	"appinstances:#.ports:#.tls",
 	"appinstances:#.ports:#.nginx",
+	"appinstances:#.ports:#.maxpktsize",
 	"appinstances:#.orgname",
 	"appinstances:#.edgeeventscookie",
 }
@@ -1010,6 +1015,7 @@ var CloudletLocationComments = map[string]string{
 	"appinstances:#.ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"appinstances:#.ports:#.maxpktsize":   "Maximum datagram size (udp only)",
 	"appinstances:#.orgname":              "App Organization Name",
 	"appinstances:#.edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 }
@@ -1040,6 +1046,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets:#.appinstances:#.ports:#.endport",
 	"cloudlets:#.appinstances:#.ports:#.tls",
 	"cloudlets:#.appinstances:#.ports:#.nginx",
+	"cloudlets:#.appinstances:#.ports:#.maxpktsize",
 	"cloudlets:#.appinstances:#.orgname",
 	"cloudlets:#.appinstances:#.edgeeventscookie",
 	"tags",
@@ -1068,6 +1075,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets:#.appinstances:#.ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"cloudlets:#.appinstances:#.ports:#.tls":          "TLS termination for this port",
 	"cloudlets:#.appinstances:#.ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"cloudlets:#.appinstances:#.ports:#.maxpktsize":   "Maximum datagram size (udp only)",
 	"cloudlets:#.appinstances:#.orgname":              "App Organization Name",
 	"cloudlets:#.appinstances:#.edgeeventscookie":     "Session Cookie for specific EdgeEvents for specific AppInst",
 	"tags": "_(optional)_ Vendor specific data",
@@ -1181,6 +1189,7 @@ var AppOfficialFqdnReplyOptionalArgs = []string{
 	"ports:#.endport",
 	"ports:#.tls",
 	"ports:#.nginx",
+	"ports:#.maxpktsize",
 	"tags",
 }
 var AppOfficialFqdnReplyAliasArgs = []string{}
@@ -1196,6 +1205,7 @@ var AppOfficialFqdnReplyComments = map[string]string{
 	"ports:#.endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"ports:#.tls":          "TLS termination for this port",
 	"ports:#.nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"ports:#.maxpktsize":   "Maximum datagram size (udp only)",
 	"tags":                 "_(optional)_ Vendor specific data",
 }
 var AppOfficialFqdnReplySpecialArgs = map[string]string{
@@ -1485,6 +1495,7 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.ports:#.endport",
 	"newcloudlet.ports:#.tls",
 	"newcloudlet.ports:#.nginx",
+	"newcloudlet.ports:#.maxpktsize",
 	"newcloudlet.cloudletlocation.latitude",
 	"newcloudlet.cloudletlocation.longitude",
 	"newcloudlet.cloudletlocation.horizontalaccuracy",
@@ -1521,6 +1532,7 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.ports:#.endport":                     "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"newcloudlet.ports:#.tls":                         "TLS termination for this port",
 	"newcloudlet.ports:#.nginx":                       "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"newcloudlet.ports:#.maxpktsize":                  "Maximum datagram size (udp only)",
 	"newcloudlet.cloudletlocation.latitude":           "latitude in WGS 84 coordinates",
 	"newcloudlet.cloudletlocation.longitude":          "longitude in WGS 84 coordinates",
 	"newcloudlet.cloudletlocation.horizontalaccuracy": "horizontal accuracy (radius in meters)",

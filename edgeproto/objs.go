@@ -909,6 +909,7 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 			EndPort:      int32(endport),
 			Tls:          portSpec.Tls,
 			Nginx:        portSpec.Nginx,
+			MaxPktSize:   portSpec.MaxPktSize,
 		}
 
 		appports = append(appports, p)

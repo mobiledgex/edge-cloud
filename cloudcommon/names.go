@@ -135,7 +135,7 @@ const MaxClusterNameLength = 40
 
 // Common cert name. Cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 const CertName = "envoyTlsCerts"
-const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+const EnvoyImageDigest = "sha256:2b07bb8dd35c2a4bb273652b62e85b0bd27d12da94fa11061a9c365d4352e7f9"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only platos's Enabling layer is included.

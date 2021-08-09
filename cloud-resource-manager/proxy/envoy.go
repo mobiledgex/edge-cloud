@@ -195,6 +195,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 					ListenIP:    listenIP,
 					BackendIP:   backendIP,
 					BackendPort: internalPort,
+					MaxPktSize:  p.MaxPktSize,
 				}
 				udpconns, err := getUDPConcurrentConnections()
 				if err != nil {
@@ -250,12 +251,14 @@ static_resources:
     filter_chains:
     - filters:
       - name: envoy.filters.network.tcp_proxy
-        config:
+        typed_config:
+          '@type': type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
           stat_prefix: ingress_tcp
           cluster: backend{{.BackendPort}}
           access_log:
             - name: envoy.access_loggers.file
-              config:
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.access_loggers.file.v3.FileAccessLog
                 path: /tmp/access.log
                 json_format: {
                   "start_time": "%START_TIME%",
@@ -283,12 +286,21 @@ static_resources:
         protocol: UDP
         address: {{.ListenIP}}
         port_value: {{.ListenPort}}
+    {{if ne .MaxPktSize 0 -}}
+    udp_listener_config:
+      downstream_socket_config:
+        max_rx_datagram_size: {{.MaxPktSize}}
+    {{- end}}
     listener_filters:
       name: envoy.filters.udp_listener.udp_proxy
       typed_config:
         '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
         stat_prefix: downstream{{.BackendPort}}
         cluster: udp_backend{{.BackendPort}}
+    {{if ne .MaxPktSize 0 -}}
+        upstream_socket_config:
+          max_rx_datagram_size: {{.MaxPktSize}}
+    {{- end}}
     reuse_port: true
   {{- end}}
   clusters:
@@ -300,10 +312,15 @@ static_resources:
         thresholds:
             max_connections: {{.ConcurrentConns}}
     lb_policy: round_robin
-    hosts:
-    - socket_address:
-        address: {{.BackendIP}}
-        port_value: {{.BackendPort}}
+    load_assignment:
+      cluster_name: backend{{.BackendPort}}
+      endpoints:
+        lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: {{.BackendIP}}
+                port_value: {{.BackendPort}}
     {{if .HealthCheck -}}
     health_checks:
       - timeout: 1s
