@@ -40,6 +40,7 @@ message FlowSettings {
   double reqs_per_second = 2;
   // burst size for flow rate limiting (required for TokenBucketAlgorithm)
   int64 burst_size = 3;
+  option (protogen.generate_matches) = true;
 }
 
 message FlowRateLimitSettingsKey {
@@ -59,7 +60,7 @@ message FlowRateLimitSettings {
   // Unique identifier key
   FlowRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
   // FlowSettings
-  FlowSettings settings = 3;
+  FlowSettings settings = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_streamout) = true;
@@ -76,6 +77,7 @@ message MaxReqsSettings {
   int64 max_requests = 2;
   // Time interval
   int64 interval = 3 [(gogoproto.casttype) = "Duration"];
+  option (protogen.generate_matches) = true;
 }
 
 message MaxReqsRateLimitSettingsKey {
@@ -94,7 +96,7 @@ message MaxReqsRateLimitSettings {
   // Unique identifier key
   MaxReqsRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
   // MaxReqsSettings
-  MaxReqsSettings settings = 3;
+  MaxReqsSettings settings = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_streamout) = true;
@@ -126,6 +128,8 @@ message RateLimitSettings {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_matches) = true;
+  option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiname=Key.ApiName";
+  option (protogen.noconfig) = "FlowSettings,MaxReqsSettings";
 }
 
 service RateLimitSettingsApi {
