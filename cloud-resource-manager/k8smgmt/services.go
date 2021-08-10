@@ -27,7 +27,7 @@ func GetServices(ctx context.Context, client ssh.Client, names *KubeNames) ([]v1
 		}
 		return svcs.Items, nil
 	}
-	cmd := fmt.Sprintf("%s kubectl get svc -o json", names.KconfEnv)
+	cmd := fmt.Sprintf("%s kubectl get svc -o json -A", names.KconfEnv)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("can not get list of services: %s, %s, %v", cmd, out, err)
