@@ -402,7 +402,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		podName = parts[1]
 		containerName = parts[2]
 	} else {
-		return "", fmt.Errorf("invalid containerID, expected to be of format namespace/<PodName>/<ContainerName>")
+		return "", fmt.Errorf("invalid containerID, expected to be of format <namespace>/<PodName>/<ContainerName>")
 	}
 	names, err := GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
