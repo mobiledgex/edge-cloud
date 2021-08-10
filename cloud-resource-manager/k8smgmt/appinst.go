@@ -136,7 +136,7 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	for ii, _ := range objs {
 		for {
 			name = ""
-			namespace := DefaultNamespace
+			namespace := ""
 			switch obj := objs[ii].(type) {
 			case *appsv1.Deployment:
 				name = obj.ObjectMeta.Name
@@ -150,6 +150,9 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 			}
 			if name == "" {
 				break
+			}
+			if namespace == "" {
+				namespace = DefaultNamespace
 			}
 			selector := fmt.Sprintf("%s=%s", MexAppLabel, name)
 			done, err := CheckPodsStatus(ctx, client, names.KconfEnv, namespace, selector, waitFor, start)
@@ -332,21 +335,28 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 	var name string
 	for ii, _ := range objs {
 		name = ""
+		namespace := ""
 		switch obj := objs[ii].(type) {
 		case *appsv1.Deployment:
 			name = obj.ObjectMeta.Name
+			namespace = obj.ObjectMeta.Namespace
 		case *appsv1.DaemonSet:
 			name = obj.ObjectMeta.Name
+			namespace = obj.ObjectMeta.Namespace
 		case *appsv1.StatefulSet:
 			name = obj.ObjectMeta.Name
+			namespace = obj.ObjectMeta.Namespace
 		}
 		if name == "" {
 			continue
 		}
+		if namespace == "" {
+			namespace = DefaultNamespace
+		}
 		// Returns list of pods and its containers in the format: "<PodName>/<ContainerName>"
-		cmd := fmt.Sprintf("%s kubectl get pods -o json --sort-by=.metadata.name --selector=%s=%s "+
+		cmd := fmt.Sprintf("%s kubectl get pods -n %s -o json --sort-by=.metadata.name --selector=%s=%s "+
 			"| jq -r '.items[] | .metadata.name as $podName | .spec.containers[] | "+
-			"($podName+\"/\"+.name)'", names.KconfEnv, MexAppLabel, name)
+			"($podName+\"/\"+.name)'", names.KconfEnv, namespace, MexAppLabel, name)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
@@ -356,7 +366,7 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 			if strings.TrimSpace(line) == "" {
 				continue
 			}
-			rt.ContainerIds = append(rt.ContainerIds, strings.TrimSpace(line))
+			rt.ContainerIds = append(rt.ContainerIds, namespace+"/"+strings.TrimSpace(line))
 		}
 	}
 
@@ -364,6 +374,8 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 }
 
 func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetContainerCommand", "app", app, "containerId", req.ContainerId)
+
 	// If no container specified, pick the first one in the AppInst.
 	// Note that some deployments may not require a container id.
 	if req.ContainerId == "" {
@@ -375,6 +387,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 	}
 	podName := ""
 	containerName := ""
+	namespace := DefaultNamespace
 	parts := strings.Split(req.ContainerId, "/")
 	if len(parts) == 1 {
 		// old way
@@ -383,8 +396,13 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		// new way
 		podName = parts[0]
 		containerName = parts[1]
+	} else if len(parts) == 3 {
+		// namespace also included
+		namespace = parts[0]
+		podName = parts[1]
+		containerName = parts[2]
 	} else {
-		return "", fmt.Errorf("invalid containerID, expected to be of format <PodName>/<ContainerName>")
+		return "", fmt.Errorf("invalid containerID, expected to be of format <namespace>/<PodName>/<ContainerName>")
 	}
 	names, err := GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
@@ -395,12 +413,12 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		if containerName != "" {
 			containerCmd = fmt.Sprintf("-c %s ", containerName)
 		}
-		cmdStr := fmt.Sprintf("%s kubectl exec -it %s%s -- %s",
-			names.KconfEnv, containerCmd, podName, req.Cmd.Command)
+		cmdStr := fmt.Sprintf("%s kubectl exec -n %s -it %s%s -- %s",
+			names.KconfEnv, namespace, containerCmd, podName, req.Cmd.Command)
 		return cmdStr, nil
 	}
 	if req.Log != nil {
-		cmdStr := fmt.Sprintf("%s kubectl logs ", names.KconfEnv)
+		cmdStr := fmt.Sprintf("%s kubectl logs -n %s ", names.KconfEnv, namespace)
 		if req.Log.Since != "" {
 			_, perr := time.ParseDuration(req.Log.Since)
 			if perr == nil {
