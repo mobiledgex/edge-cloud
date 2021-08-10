@@ -218,28 +218,6 @@ func (s *Xind) GetAppInstRuntime(ctx context.Context, clusterInst *edgeproto.Clu
 	return k8smgmt.GetAppInstRuntime(ctx, client, names, app, appInst)
 }
 
-func (s *Xind) patchXindSevice(ctx context.Context, kubeNames *k8smgmt.KubeNames, ipaddr string) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "Patch XIND service", "kubeNames", kubeNames, "ipaddr", ipaddr)
-
-	client, err := s.GetClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	for _, serviceName := range kubeNames.ServiceNames {
-
-		cmd := fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, kubeNames.KconfEnv, serviceName, ipaddr)
-		out, err := client.Output(cmd)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "patch svc failed",
-				"servicename", serviceName, "out", out, "err", err)
-			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
-		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "patched externalIPs on service", "service", serviceName, "externalIPs", ipaddr)
-	}
-	return nil
-}
-
 func (s *Xind) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
 	return k8smgmt.GetContainerCommand(ctx, clusterInst, app, appInst, req)
 }
@@ -278,7 +256,11 @@ func (s *Xind) patchServiceIp(ctx context.Context, clusterInst *edgeproto.Cluste
 			continue
 		}
 		serviceName := svc.ObjectMeta.Name
-		cmd := fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, names.KconfEnv, serviceName, ipaddr)
+		namespace := svc.ObjectMeta.Namespace
+		if namespace == "" {
+			namespace = k8smgmt.DefaultNamespace
+		}
+		cmd := fmt.Sprintf(`%s kubectl patch svc %s -n %s -p '{"spec":{"externalIPs":["%s"]}}'`, names.KconfEnv, serviceName, namespace, ipaddr)
 		out, err := client.Output(cmd)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "patch svc failed",

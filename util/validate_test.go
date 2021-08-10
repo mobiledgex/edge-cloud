@@ -185,10 +185,12 @@ func TestK8SContainerName(t *testing.T) {
 	validNames := []string{
 		"testapp-12334",
 		"testpod-123/testcontainer-1234",
+		"mynamespace123/container-abc123/pod123",
 	}
 	inValidNames := []string{
 		"testapp-12334; rm -rf .",
 		"testpod-123/testcontainer-1234 && rm -rf .",
+		"mynamespace123/container-abc123/pod && -rf",
 	}
 	for _, name := range validNames {
 		err := ValidK8SContainerName(name)
