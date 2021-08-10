@@ -747,25 +747,20 @@ var RateLimitSettingsKeyComments = map[string]string{
 }
 var RateLimitSettingsKeySpecialArgs = map[string]string{}
 var RateLimitSettingsRequiredArgs = []string{
-	"key.apiname",
-	"key.apiendpointtype",
-	"key.ratelimittarget",
+	"apiname",
+	"apiendpointtype",
+	"ratelimittarget",
 }
-var RateLimitSettingsOptionalArgs = []string{
-	"flowsettings:#.key",
-	"flowsettings:#.value.flowalgorithm",
-	"flowsettings:#.value.reqspersecond",
-	"flowsettings:#.value.burstsize",
-	"maxreqssettings:#.key",
-	"maxreqssettings:#.value.maxreqsalgorithm",
-	"maxreqssettings:#.value.maxrequests",
-	"maxreqssettings:#.value.interval",
+var RateLimitSettingsOptionalArgs = []string{}
+var RateLimitSettingsAliasArgs = []string{
+	"apiname=key.apiname",
+	"apiendpointtype=key.apiendpointtype",
+	"ratelimittarget=key.ratelimittarget",
 }
-var RateLimitSettingsAliasArgs = []string{}
 var RateLimitSettingsComments = map[string]string{
-	"key.apiname":                              "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
-	"key.apiendpointtype":                      "API Endpoint type, one of UnknownApiEndpointType, Dme",
-	"key.ratelimittarget":                      "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
+	"apiname":                                  "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",
+	"apiendpointtype":                          "API Endpoint type, one of UnknownApiEndpointType, Dme",
+	"ratelimittarget":                          "Target to rate limit, one of UnknownTarget, AllRequests, PerIp, PerUser",
 	"flowsettings:#.value.flowalgorithm":       "Flow Rate Limit algorithm, one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm",
 	"flowsettings:#.value.reqspersecond":       "requests per second for flow rate limiting",
 	"flowsettings:#.value.burstsize":           "burst size for flow rate limiting (required for TokenBucketAlgorithm)",
