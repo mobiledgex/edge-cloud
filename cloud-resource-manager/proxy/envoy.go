@@ -272,7 +272,7 @@ static_resources:
       transport_socket:
         name: "envoy.transport_sockets.tls"
         typed_config:
-	  '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
           common_tls_context:
             tls_certificate_sds_secret_configs:
                 name: envoy.transport_sockets.tls.context
@@ -361,7 +361,7 @@ admin:
 
 var sdsYaml = `
 resources:
-- "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret"
+- '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
   name: envoy.transport_sockets.tls.context
   tls_certificate:
     certificate_chain:
