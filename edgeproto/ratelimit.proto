@@ -85,6 +85,7 @@ message MaxReqsRateLimitSettingsKey {
   string max_reqs_settings_name = 1 [(protogen.keytag) = "maxreqssettingsname"];
   // Key that identifies api and rate limit target for settings
   RateLimitSettingsKey rate_limit_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
