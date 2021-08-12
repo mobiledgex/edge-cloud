@@ -96,7 +96,7 @@ func (cd *ControllerData) GetClusterEnvoyVersion(ctx context.Context, req *edgep
 			envoyContainerVers := EnvoyContainerVersion{
 				ContainerName: name,
 			}
-			out, err := client.Output(fmt.Sprintf("docker exec -it %s envoy --version", name))
+			out, err := client.Output(fmt.Sprintf("docker exec %s envoy --version", name))
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "failed to find envoy container version on rootlb", "rootlb", node, "container", name, "err", err, "out", out)
 				envoyContainerVers.Error = err.Error()
