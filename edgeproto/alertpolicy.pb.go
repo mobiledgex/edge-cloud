@@ -90,7 +90,7 @@ type AlertPolicy struct {
 	ActiveConnLimit uint32 `protobuf:"varint,6,opt,name=active_conn_limit,json=activeConnLimit,proto3" json:"active_conn_limit,omitempty"`
 	// Alert severity level - one of "info", "warning", "error"
 	Severity string `protobuf:"bytes,7,opt,name=severity,proto3" json:"severity,omitempty"`
-	// Duration for which alert interval is active(max 72 hours)
+	// Duration for which alert interval is active (max 72 hours)
 	TriggerTime Duration `protobuf:"varint,8,opt,name=trigger_time,json=triggerTime,proto3,casttype=Duration" json:"trigger_time,omitempty"`
 	// Additional Labels
 	Labels map[string]string `protobuf:"bytes,9,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
