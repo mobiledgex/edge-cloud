@@ -10,66 +10,49 @@ import (
 
 // Struct with information used to create Continuous Query
 type ContinuousQuerySettings struct {
-	Measurement               string
-	AggregationFunctions      map[string]string // maps new field name to an aggregation function
-	NewDbName                 string
-	CollectionInterval        time.Duration
-	RetentionPolicyName       string
-	NewRetentionPolicyCreated <-chan *RetentionPolicyCreationResult // channel that receives results of creation of new default retention policy
+	Measurement          string
+	AggregationFunctions map[string]string // maps new field name to an aggregation function
+	CollectionInterval   time.Duration
+	RetentionPolicyTime  time.Duration
 }
 
-// Result of Continuous Query creation
-type ContinuousQueryCreationResult struct {
-	Err            error
-	CqName         string
-	CqTime         time.Duration
-	NewMeasurement string
-}
-
-// Parameters: continuous query name, currDbName, appended list of op("field"), newmeasurementname, currmeasurement, time interval
+// Parameters: continuous query name, destinationDbName, appended list of op("field"), newmeasurementname, originmeasurement, time interval
 var ContinuousQueryTemplate = "CREATE CONTINUOUS QUERY \"%s\" ON \"%s\" " +
 	"BEGIN SELECT %s " +
 	"INTO %s FROM \"%s\" " +
 	"GROUP BY time(%s),* END"
 
-// Adds a continuous query to current db once db is created
-// Call before Start()
-// rpdone is the channel returned from AddRetentionPolicy
-// Continuous query will be created once current db has been created and the corresponding retention policy for rpdone has been created
-func (q *InfluxQ) AddContinuousQuery(cq *ContinuousQuerySettings, numReceivers int) <-chan *ContinuousQueryCreationResult {
-	if numReceivers < 1 {
-		numReceivers = 1
+func CreateContinuousQuery(origin *InfluxQ, dest *InfluxQ, cq *ContinuousQuerySettings) error {
+	// make sure db is running
+	if origin.done {
+		return fmt.Errorf("continuous query creation failed - %s db client finished", origin.dbName)
 	}
-	done := make(chan *ContinuousQueryCreationResult, numReceivers)
-	q.continuousQuerySettings[cq] = done
-	return done
-}
 
-// Create a continuous query
-func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *ContinuousQueryCreationResult {
-	res := &ContinuousQueryCreationResult{}
-	if q.done {
-		res.Err = fmt.Errorf("continuous query creation failed - %s db client finished", q.dbName)
-		return res
-	}
-	if !q.dbcreated {
-		res.Err = fmt.Errorf("continuous query creation failed - %s db not created yet", q.dbName)
-		return res
-	}
-	if cq.NewRetentionPolicyCreated != nil {
-		select {
-		case rpRes := <-cq.NewRetentionPolicyCreated:
-			if rpRes.Err != nil {
-				res.Err = fmt.Errorf("continuous query requires specific retention policy - error creating retention policy: %s", rpRes.Err)
-				return res
-			} else {
-				cq.RetentionPolicyName = rpRes.RpName
-			}
-		case <-time.After(5 * time.Second):
-			res.Err = fmt.Errorf("continuous query requires specific retention policy - retention policy timed out on creation")
-			return res
+	// make sure db has been created before moving on
+	numTries := 3
+	for i := 1; i <= numTries; i++ {
+		if origin.dbcreated {
+			break
 		}
+		if i == numTries {
+			return fmt.Errorf("continuous query creation failed - %s db not created yet", origin.dbName)
+		}
+		time.Sleep(time.Second)
 	}
+
+	// create retention policy if specified
+	var rpName string
+	if cq.RetentionPolicyTime == 0 { // use default retention policy
+		rpName = getDefaultRetentionPolicyName(dest.dbName)
+	} else {
+		err := dest.CreateRetentionPolicy(cq.RetentionPolicyTime, NonDefaultRetentionPolicy)
+		if err != nil {
+			return fmt.Errorf("continuous query createion failed - unable to create retention policy for continuous qyer, error is %s", err.Error())
+		}
+		rpName = getNonDefaultRetentionPolicyName(dest.dbName, cq.RetentionPolicyTime)
+	}
+
+	// create continuous query with created retention
 	selectors := ""
 	firstIter := true
 	for newfield, aggfunction := range cq.AggregationFunctions {
@@ -82,31 +65,36 @@ func (q *InfluxQ) CreateContinuousQuery(cq *ContinuousQuerySettings) *Continuous
 		selectors += fmt.Sprintf(layout, aggfunction, newfield)
 	}
 	newMeasurementName := cloudcommon.CreateInfluxMeasurementName(cq.Measurement, cq.CollectionInterval)
-	fullyQualifiedMeasurementName := fmt.Sprintf("\"%s\".\"%s\".\"%s\"", cq.NewDbName, cq.RetentionPolicyName, newMeasurementName)
+	fullyQualifiedMeasurementName := fmt.Sprintf("\"%s\".\"%s\".\"%s\"", dest.dbName, rpName, newMeasurementName)
 	cqName := newMeasurementName
-	res.CqName = cqName
-	res.CqTime = cq.CollectionInterval
-	res.NewMeasurement = fullyQualifiedMeasurementName
-	query := fmt.Sprintf(ContinuousQueryTemplate, cqName, q.dbName, selectors, fullyQualifiedMeasurementName, cq.Measurement, cq.CollectionInterval.String())
-	_, err := q.QueryDB(query)
-	if err != nil {
+	query := fmt.Sprintf(ContinuousQueryTemplate, cqName, origin.dbName, selectors, fullyQualifiedMeasurementName, cq.Measurement, cq.CollectionInterval.String())
+	if _, err := origin.QueryDB(query); err != nil {
 		log.DebugLog(log.DebugLevelMetrics,
 			"error trying to downsample", "err", err)
-		res.Err = err
-		return res
+		return err
 	}
-	return res
+	origin.continuousQueries[cqName] = struct{}{}
+	return nil
 }
 
 // Parameters: continuous query name and DbName
-var DropContinuousQueryTemplate = "DROP CONTINUOUS QUERY \"%s\" ON \"%s\" "
+var DropContinuousQueryTemplate = "DROP CONTINUOUS QUERY \"%s\" ON \"%s\""
 
 // Drop ContinuousQuery
-func (q *InfluxQ) DropContinuousQuery(cq *ContinuousQuerySettings) error {
-	cqName := cloudcommon.CreateInfluxMeasurementName(cq.Measurement, cq.CollectionInterval)
-	query := fmt.Sprintf(DropContinuousQueryTemplate, cqName, q.dbName)
-	_, err := q.QueryDB(query)
-	return err
+func DropContinuousQuery(origin *InfluxQ, dest *InfluxQ, measurement string, interval time.Duration, retention time.Duration) error {
+	// drop old retention policy
+	if err := dest.DropRetentionPolicy(getNonDefaultRetentionPolicyName(dest.dbName, retention)); err != nil {
+		return err
+	}
+
+	// drop old cq
+	cqName := cloudcommon.CreateInfluxMeasurementName(measurement, interval)
+	query := fmt.Sprintf(DropContinuousQueryTemplate, cqName, origin.dbName)
+	if _, err := origin.QueryDB(query); err != nil {
+		return err
+	}
+	delete(origin.continuousQueries, cqName)
+	return nil
 }
 
 // Aggregation functions for EdgeEvents latency stats continuous queries
@@ -124,14 +112,12 @@ var LatencyAggregationFunctions = map[string]string{
 	"numsamples": "sum(\"numsamples\")",
 }
 
-func CreateLatencyContinuousQuerySettings(collectionInterval time.Duration, newDbName string, rpDone <-chan *RetentionPolicyCreationResult) *ContinuousQuerySettings {
+func CreateLatencyContinuousQuerySettings(collectionInterval time.Duration, retention time.Duration) *ContinuousQuerySettings {
 	return &ContinuousQuerySettings{
-		Measurement:               cloudcommon.LatencyMetric,
-		AggregationFunctions:      LatencyAggregationFunctions,
-		NewDbName:                 newDbName,
-		CollectionInterval:        collectionInterval,
-		RetentionPolicyName:       getDefaultRetentionPolicyName(newDbName),
-		NewRetentionPolicyCreated: rpDone,
+		Measurement:          cloudcommon.LatencyMetric,
+		AggregationFunctions: LatencyAggregationFunctions,
+		CollectionInterval:   collectionInterval,
+		RetentionPolicyTime:  retention,
 	}
 }
 
@@ -140,13 +126,11 @@ var DeviceInfoAggregationFunctions = map[string]string{
 	"numsessions": "sum(\"numsessions\")",
 }
 
-func CreateDeviceInfoContinuousQuerySettings(collectionInterval time.Duration, newDbName string, rpDone <-chan *RetentionPolicyCreationResult) *ContinuousQuerySettings {
+func CreateDeviceInfoContinuousQuerySettings(collectionInterval time.Duration, retention time.Duration) *ContinuousQuerySettings {
 	return &ContinuousQuerySettings{
-		Measurement:               cloudcommon.DeviceMetric,
-		AggregationFunctions:      DeviceInfoAggregationFunctions,
-		NewDbName:                 newDbName,
-		CollectionInterval:        collectionInterval,
-		RetentionPolicyName:       getDefaultRetentionPolicyName(newDbName),
-		NewRetentionPolicyCreated: rpDone,
+		Measurement:          cloudcommon.DeviceMetric,
+		AggregationFunctions: DeviceInfoAggregationFunctions,
+		CollectionInterval:   collectionInterval,
+		RetentionPolicyTime:  retention,
 	}
 }

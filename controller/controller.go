@@ -263,7 +263,6 @@ func startServices() error {
 
 	// downsampled metrics influx
 	downsampledMetricsInfluxQ := influxq.NewInfluxQ(cloudcommon.DownsampledMetricsDbName, influxAuth.User, influxAuth.Pass)
-	done := downsampledMetricsInfluxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration(), len(settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals)*2)
 	err = downsampledMetricsInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
@@ -273,11 +272,14 @@ func startServices() error {
 
 	// metrics influx
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
-	influxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration(), 0)
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
+	}
+	err = influxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration(), DefaultRetentionPolicy)
+	if err != nil {
+		return fmt.Errorf("Failed to update default retention policy for metrics influx db, error is %s", err.Error())
 	}
 	services.influxQ = influxQ
 
@@ -292,7 +294,31 @@ func startServices() error {
 
 	// persistent stats influx
 	edgeEventsInfluxQ := influxq.NewInfluxQ(cloudcommon.EdgeEventsMetricsDbName, influxAuth.User, influxAuth.Pass)
-	edgeEventsInfluxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration(), 0)
+	err = edgeEventsInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	err = edgeEventsInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration(), DefaultRetentionPolicy)
+	if err != nil {
+		return fmt.Errorf("Failed to update default retention policy for edgeevents metrics influx db, error is %s", err.Error())
+	}
+	services.edgeEventsInfluxQ = edgeEventsInfluxQ
+
+	// cloudlet resources influx
+	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
+	err = cloudletResourcesInfluxQ.Start(*influxAddr)
+	if err != nil {
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
+	}
+	err = cloudletResourcesInfluxQ.AddRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration(), DefaultRetentionPolicy)
+	if err != nil {
+		return fmt.Errorf("Failed to update default retention policy for cloudlet resources influx db, error is %s", err.Error())
+	}
+	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
+
+	// create continuous queries for edgeevents metrics
 	for _, collectioninterval := range settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
 		interval := collectioninterval.Interval
 		latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, done)
@@ -300,22 +326,6 @@ func startServices() error {
 		deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, done)
 		edgeEventsInfluxQ.AddContinuousQuery(deviceCqSettings, 0)
 	}
-	err = edgeEventsInfluxQ.Start(*influxAddr)
-	if err != nil {
-		return fmt.Errorf("Failed to start influx queue address %s, %v",
-			*influxAddr, err)
-	}
-	services.edgeEventsInfluxQ = edgeEventsInfluxQ
-
-	// cloudlet resources influx
-	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
-	cloudletResourcesInfluxQ.AddDefaultRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration(), 0)
-	err = cloudletResourcesInfluxQ.Start(*influxAddr)
-	if err != nil {
-		return fmt.Errorf("Failed to start influx queue address %s, %v",
-			*influxAddr, err)
-	}
-	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
 
 	InitNotify(influxQ, edgeEventsInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {

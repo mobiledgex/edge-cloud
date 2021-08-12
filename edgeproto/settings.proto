@@ -75,7 +75,7 @@ message Settings {
   int64 location_tile_side_length_km = 29;
   // List of collection intervals for Continuous Queries for EdgeEvents metrics
   repeated CollectionInterval edge_events_metrics_continuous_queries_collection_intervals = 30;
-  // Default retention policy for downsampled influx db (duration)
+  // Default retention policy for downsampled influx db (duration) // TODO: DEPRECATE
   int64 influx_db_downsampled_metrics_retention = 31 [(gogoproto.casttype) = "Duration"];
   // Default retention policy for edgeevents metrics influx db (duration)
   int64 influx_db_edge_events_metrics_retention = 32 [(gogoproto.casttype) = "Duration"];
