@@ -36,7 +36,7 @@ message AlertPolicy {
   uint32 active_conn_limit = 6;
   // Alert severity level - one of "info", "warning", "error"
   string severity = 7;
-  // Duration for which alert interval is active
+  // Duration for which alert interval is active(max 72 hours)
   int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
   // Additional Labels
   map <string, string> labels = 9;
