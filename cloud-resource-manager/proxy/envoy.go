@@ -298,10 +298,10 @@ static_resources:
         '@type': type.googleapis.com/envoy.extensions.filters.udp.udp_proxy.v3.UdpProxyConfig
         stat_prefix: downstream{{.BackendPort}}
         cluster: udp_backend{{.BackendPort}}
-    {{if ne .MaxPktSize 0 -}}
+        {{if ne .MaxPktSize 0 -}}
         upstream_socket_config:
           max_rx_datagram_size: {{.MaxPktSize}}
-    {{- end}}
+        {{- end}}
     reuse_port: true
   {{- end}}
   clusters:
