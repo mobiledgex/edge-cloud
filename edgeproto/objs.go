@@ -1242,6 +1242,10 @@ func (a *AlertPolicy) Validate(fields map[string]struct{}) error {
 	if a.DiskUtilizationLimit > 100 {
 		return errors.New("Disk utilization limit is percent. Valid values 1-100%")
 	}
+	// reasonable max trigger time check - should not be >24h
+	if a.TriggerTime > Duration(72*time.Hour) {
+		return errors.New("Trigger duration should not exceed 72 hours")
+	}
 	return nil
 }
 

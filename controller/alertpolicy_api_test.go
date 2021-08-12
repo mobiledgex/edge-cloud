@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -76,6 +77,12 @@ func TestAlertPolicyApi(t *testing.T) {
 	userAlert.TriggerTime = 0
 	_, err = userAlertApi.CreateAlertPolicy(ctx, &userAlert)
 	require.NotNil(t, err, "Trigger Time should be at least 30s")
+
+	// Create user alert with trigger time, that's invalid
+	userAlert = testutil.AlertPolicyData[0]
+	userAlert.TriggerTime = edgeproto.Duration(80 * time.Hour)
+	_, err = userAlertApi.CreateAlertPolicy(ctx, &userAlert)
+	require.NotNil(t, err, "Trigger Time cannot exceed 3 days")
 
 	// Delete non-existent user alert
 	userAlert = testutil.AlertPolicyData[0]

@@ -325,7 +325,7 @@ var AlertPolicyComments = map[string]string{
 	"disk-utilization":   "container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100",
 	"active-connections": "Active Connections alert threshold. Valid values 1-4294967295",
 	"severity":           "Alert severity level - one of info, warning, error",
-	"trigger-time":       "Duration for which alert interval is active",
+	"trigger-time":       "Duration for which alert interval is active(max 72 hours)",
 	"labels":             "Additional Labels, specify labels:empty=true to clear",
 	"annotations":        "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
 	"description":        "Description of the alert policy",
