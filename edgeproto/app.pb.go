@@ -337,8 +337,11 @@ type App struct {
 	// Image type (see ImageType)
 	ImageType ImageType `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
 	// Comma separated list of protocol:port pairs that the App listens on.
-	// Numerical values must be decimal format.
-	// i.e. tcp:80,udp:10002,http:443
+	// Ex: "tcp:80,udp:10002".
+	// Also supports additional configurations per port:
+	// (1) tls (tcp-only) - Enables TLS on specified port. Ex: "tcp:443:tls".
+	// (2) nginx (udp-only) - Use NGINX LB instead of envoy for specified port. Ex: "udp:10001:nginx".
+	// (3) maxpktsize (udp-only) - Configures maximum UDP datagram size allowed on port for both upstream/downstream traffic. Ex: "udp:10001:maxpktsize=8000".
 	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
 	// Default flavor for the App, which may be overridden by the AppInst
 	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor,proto3" json:"default_flavor"`
@@ -387,7 +390,7 @@ type App struct {
 	// Should be configured in case app does not always listen on these ports.
 	// "all" can be specified if no health check to be run for this app.
 	// Numerical values must be decimal format.
-	// i.e. tcp:80,udp:10002,http:443.
+	// i.e. tcp:80,udp:10002
 	SkipHcPorts string `protobuf:"bytes,34,opt,name=skip_hc_ports,json=skipHcPorts,proto3" json:"skip_hc_ports,omitempty"`
 	// Created at time
 	CreatedAt dme_proto.Timestamp `protobuf:"bytes,35,opt,name=created_at,json=createdAt,proto3" json:"created_at"`
