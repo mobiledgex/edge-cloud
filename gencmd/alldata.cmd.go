@@ -1162,7 +1162,7 @@ var AllDataComments = map[string]string{
 	"alertpolicies:#.diskutilizationlimit":                                          "container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100",
 	"alertpolicies:#.activeconnlimit":                                               "Active Connections alert threshold. Valid values 1-4294967295",
 	"alertpolicies:#.severity":                                                      "Alert severity level - one of info, warning, error",
-	"alertpolicies:#.triggertime":                                                   "Duration for which alert interval is active(max 72 hours)",
+	"alertpolicies:#.triggertime":                                                   "Duration for which alert interval is active (max 72 hours)",
 	"alertpolicies:#.labels":                                                        "Additional Labels",
 	"alertpolicies:#.annotations":                                                   "Additional Annotations for extra information about the alert",
 	"alertpolicies:#.description":                                                   "Description of the alert policy",
