@@ -143,8 +143,11 @@ message App {
   // Image type (see ImageType)
   ImageType image_type = 5;
   // Comma separated list of protocol:port pairs that the App listens on.
-  // Numerical values must be decimal format.
-  // i.e. tcp:80,udp:10002,http:443
+  // Ex: "tcp:80,udp:10002".
+  // Also supports additional configurations per port:
+  // (1) tls (tcp-only) - Enables TLS on specified port. Ex: "tcp:443:tls".
+  // (2) nginx (udp-only) - Use NGINX LB instead of envoy for specified port. Ex: "udp:10001:nginx".
+  // (3) maxpktsize (udp-only) - Configures maximum UDP datagram size allowed on port for both upstream/downstream traffic. Ex: "udp:10001:maxpktsize=8000".
   string access_ports = 7;
   // Default flavor for the App, which may be overridden by the AppInst
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
@@ -196,7 +199,7 @@ message App {
   // Should be configured in case app does not always listen on these ports.
   // "all" can be specified if no health check to be run for this app.
   // Numerical values must be decimal format.
-  // i.e. tcp:80,udp:10002,http:443.
+  // i.e. tcp:80,udp:10002
   string skip_hc_ports = 34;
   // Created at time
   distributed_match_engine.Timestamp created_at = 35 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];

@@ -181,6 +181,35 @@ func TestAppApi(t *testing.T) {
 	require.True(t, found, "VM app should still be in etcd after update")
 	require.Equal(t, testVmManifest, storedApp.DeploymentManifest, "Deployment manifest should not be affected by access port update")
 
+	// accessports with `maxpktsize`
+	app.Key.Name = "k8sapp"
+	app.Deployment = "kubernetes"
+	app.AccessPorts = "tcp:888,udp:1999:maxpktsize=1500"
+	app.DeploymentManifest = ""
+	app.Configs = nil
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
+	_, err = appApi.CreateApp(ctx, &app)
+	require.Nil(t, err, "Create app with maxpktsize")
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
+	app.AccessPorts = "tcp:888,tcp:1999:maxpktsize=1500"
+	// maxpktsize is not valid config for TCP port
+	_, err = appApi.CreateApp(ctx, &app)
+	require.NotNil(t, err, "Create app with maxpktsize fails")
+
+	app.Key.Name = "dockapp"
+	app.Deployment = "docker"
+	app.AccessPorts = "tcp:888,udp:1999:maxpktsize=1500"
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
+	_, err = appApi.CreateApp(ctx, &app)
+	require.Nil(t, err, "Create app with maxpktsize")
+	_, err = appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
+	app.AccessPorts = "tcp:888,udp:1999:maxpktsize=1500000"
+	// maxpktsize should be less than equal 50000
+	_, err = appApi.CreateApp(ctx, &app)
+	require.NotNil(t, err, "Create app with maxpktsize fails")
+
 	dummy.Stop()
 }
 
