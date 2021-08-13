@@ -26,11 +26,11 @@ message AlertPolicy {
   repeated string fields = 1;
   // Unique identifier key
   AlertPolicyKey key = 2 [(gogoproto.nullable) = false];
-  // container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
+  // Container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 cpu_utilization_limit = 3;
-  // container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
+  // Container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 mem_utilization_limit = 4;
-  // container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
+  // Container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 disk_utilization_limit = 5;
   // Active Connections alert threshold. Valid values 1-4294967295
   uint32 active_conn_limit = 6;
