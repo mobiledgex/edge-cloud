@@ -221,6 +221,8 @@ func IsValidDeploymentManifest(deploymentType, command, manifest string, ports [
 			// No need to test TLS or nginx as part of manifest
 			tp.Tls = false
 			tp.Nginx = false
+			// This config is specifically for envoy and hence not required for k8s validation
+			tp.MaxPktSize = 0
 			if _, found := objPorts[tp.String()]; found {
 				continue
 			}
