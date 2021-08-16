@@ -80,11 +80,11 @@ type AlertPolicy struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AlertPolicyKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
+	// Container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
 	CpuUtilizationLimit uint32 `protobuf:"varint,3,opt,name=cpu_utilization_limit,json=cpuUtilizationLimit,proto3" json:"cpu_utilization_limit,omitempty"`
-	// container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
+	// Container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
 	MemUtilizationLimit uint32 `protobuf:"varint,4,opt,name=mem_utilization_limit,json=memUtilizationLimit,proto3" json:"mem_utilization_limit,omitempty"`
-	// container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
+	// Container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
 	DiskUtilizationLimit uint32 `protobuf:"varint,5,opt,name=disk_utilization_limit,json=diskUtilizationLimit,proto3" json:"disk_utilization_limit,omitempty"`
 	// Active Connections alert threshold. Valid values 1-4294967295
 	ActiveConnLimit uint32 `protobuf:"varint,6,opt,name=active_conn_limit,json=activeConnLimit,proto3" json:"active_conn_limit,omitempty"`
