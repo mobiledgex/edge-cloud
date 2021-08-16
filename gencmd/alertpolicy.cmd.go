@@ -320,9 +320,9 @@ var AlertPolicyAliasArgs = []string{
 var AlertPolicyComments = map[string]string{
 	"alert-org":          "Name of the organization for the app that this alert can be applied to",
 	"name":               "Alert Policy name",
-	"cpu-utilization":    "container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100",
-	"mem-utilization":    "container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100",
-	"disk-utilization":   "container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100",
+	"cpu-utilization":    "Container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100",
+	"mem-utilization":    "Container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100",
+	"disk-utilization":   "Container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100",
 	"active-connections": "Active Connections alert threshold. Valid values 1-4294967295",
 	"severity":           "Alert severity level - one of info, warning, error",
 	"trigger-time":       "Duration for which alert interval is active (max 72 hours)",
