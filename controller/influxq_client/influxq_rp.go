@@ -11,9 +11,9 @@ import (
 type RetentionPolicyType int
 
 const (
-	DefaultRetentionPolicy RetentionPolicyType = iota
+	UnknownRetentionPolicy RetentionPolicyType = iota
+	DefaultRetentionPolicy
 	NonDefaultRetentionPolicy
-	UnknownRetentionPolicy
 )
 
 // Create a retention policy for db
