@@ -30,21 +30,19 @@ var InfluxQReconnectDelay time.Duration = time.Second
 var InfluxQReconnectAttempts = 5
 
 type InfluxQ struct {
-	dbName            string
-	user              string
-	password          string
-	client            client.Client
-	data              []*edgeproto.Metric
-	done              bool
-	dbcreated         bool
-	doPush            chan bool
-	retentionPolicies map[string]struct{}
-	continuousQueries map[string]struct{}
-	mux               sync.Mutex
-	wg                sync.WaitGroup
-	ErrBatch          uint64
-	ErrPoint          uint64
-	Qfull             uint64
+	dbName    string
+	user      string
+	password  string
+	client    client.Client
+	data      []*edgeproto.Metric
+	done      bool
+	dbcreated bool
+	doPush    chan bool
+	mux       sync.Mutex
+	wg        sync.WaitGroup
+	ErrBatch  uint64
+	ErrPoint  uint64
+	Qfull     uint64
 }
 
 func NewInfluxQ(DBName, username, password string) *InfluxQ {
@@ -54,8 +52,6 @@ func NewInfluxQ(DBName, username, password string) *InfluxQ {
 	q.doPush = make(chan bool, 1)
 	q.user = username
 	q.password = password
-	q.retentionPolicies = make(map[string]struct{})
-	q.continuousQueries = make(map[string]struct{})
 	return &q
 }
 

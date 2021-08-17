@@ -37,19 +37,15 @@ func CreateContinuousQuery(origin *InfluxQ, dest *InfluxQ, cq *ContinuousQuerySe
 		if i == numTries {
 			return fmt.Errorf("continuous query creation failed - %s db not created yet", origin.dbName)
 		}
-		time.Sleep(time.Second)
+		time.Sleep(10 * time.Millisecond)
 	}
 
-	// create retention policy if specified
-	var rpName string
-	if cq.RetentionPolicyTime == 0 { // use default retention policy
-		rpName = getDefaultRetentionPolicyName(dest.dbName)
-	} else {
+	// create retention policy if specified and non-default
+	if cq.RetentionPolicyTime != 0 { // create retention policy if rp is not 0
 		err := dest.CreateRetentionPolicy(cq.RetentionPolicyTime, NonDefaultRetentionPolicy)
 		if err != nil {
-			return fmt.Errorf("continuous query createion failed - unable to create retention policy for continuous qyer, error is %s", err.Error())
+			return fmt.Errorf("continuous query creation failed - unable to create retention policy for continuous query, error is %s", err.Error())
 		}
-		rpName = getNonDefaultRetentionPolicyName(dest.dbName, cq.RetentionPolicyTime)
 	}
 
 	// create continuous query with created retention
@@ -64,16 +60,14 @@ func CreateContinuousQuery(origin *InfluxQ, dest *InfluxQ, cq *ContinuousQuerySe
 		}
 		selectors += fmt.Sprintf(layout, aggfunction, newfield)
 	}
-	newMeasurementName := cloudcommon.CreateInfluxMeasurementName(cq.Measurement, cq.CollectionInterval)
-	fullyQualifiedMeasurementName := fmt.Sprintf("\"%s\".\"%s\".\"%s\"", dest.dbName, rpName, newMeasurementName)
-	cqName := newMeasurementName
+	fullyQualifiedMeasurementName := CreateInfluxFullyQualifiedMeasurementName(dest.dbName, cq.Measurement, cq.CollectionInterval, cq.RetentionPolicyTime)
+	cqName := CreateInfluxContinuousQueryName(cq.Measurement, cq.CollectionInterval)
 	query := fmt.Sprintf(ContinuousQueryTemplate, cqName, origin.dbName, selectors, fullyQualifiedMeasurementName, cq.Measurement, cq.CollectionInterval.String())
 	if _, err := origin.QueryDB(query); err != nil {
 		log.DebugLog(log.DebugLevelMetrics,
 			"error trying to downsample", "err", err)
 		return err
 	}
-	origin.continuousQueries[cqName] = struct{}{}
 	return nil
 }
 
@@ -83,17 +77,16 @@ var DropContinuousQueryTemplate = "DROP CONTINUOUS QUERY \"%s\" ON \"%s\""
 // Drop ContinuousQuery
 func DropContinuousQuery(origin *InfluxQ, dest *InfluxQ, measurement string, interval time.Duration, retention time.Duration) error {
 	// drop old retention policy
-	if err := dest.DropRetentionPolicy(getNonDefaultRetentionPolicyName(dest.dbName, retention)); err != nil {
+	if err := dest.DropRetentionPolicy(GetRetentionPolicyName(dest.dbName, retention, UnknownRetentionPolicy)); err != nil {
 		return err
 	}
 
 	// drop old cq
-	cqName := cloudcommon.CreateInfluxMeasurementName(measurement, interval)
+	cqName := CreateInfluxContinuousQueryName(measurement, interval)
 	query := fmt.Sprintf(DropContinuousQueryTemplate, cqName, origin.dbName)
 	if _, err := origin.QueryDB(query); err != nil {
 		return err
 	}
-	delete(origin.continuousQueries, cqName)
 	return nil
 }
 
@@ -133,4 +126,16 @@ func CreateDeviceInfoContinuousQuerySettings(collectionInterval time.Duration, r
 		CollectionInterval:   collectionInterval,
 		RetentionPolicyTime:  retention,
 	}
+}
+
+func CreateInfluxContinuousQueryName(measurement string, interval time.Duration) string {
+	return measurement + "-" + interval.String()
+}
+
+func CreateInfluxFullyQualifiedMeasurementName(dbName string, measurement string, interval time.Duration, retention time.Duration) string {
+	rpName := GetRetentionPolicyName(dbName, retention, UnknownRetentionPolicy)
+	if interval != 0 {
+		measurement = fmt.Sprintf("%s-%s", measurement, interval.String())
+	}
+	return fmt.Sprintf("%s.%s.\"%s\"", dbName, rpName, measurement)
 }

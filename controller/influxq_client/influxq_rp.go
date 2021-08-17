@@ -13,6 +13,7 @@ type RetentionPolicyType int
 const (
 	DefaultRetentionPolicy RetentionPolicyType = iota
 	NonDefaultRetentionPolicy
+	UnknownRetentionPolicy
 )
 
 // Create a retention policy for db
@@ -31,7 +32,7 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 		if i == numTries {
 			return fmt.Errorf("retention policy creation failed - %s db not created yet, ", q.dbName)
 		}
-		time.Sleep(time.Second)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	shard := time.Duration(24 * time.Hour)
@@ -39,12 +40,7 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 		shard = retentionTime
 	}
 	// generate retention policy name depending on if default rp or not
-	var rpName string
-	if rpType == DefaultRetentionPolicy {
-		rpName = getDefaultRetentionPolicyName(q.dbName)
-	} else {
-		rpName = getNonDefaultRetentionPolicyName(q.dbName, retentionTime)
-	}
+	rpName := GetRetentionPolicyName(q.dbName, retentionTime, rpType)
 
 	// create query to create rp
 	query := fmt.Sprintf("create retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s", rpName, q.dbName, retentionTime.String(), shard.String())
@@ -69,27 +65,25 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 			return err
 		}
 	}
-	q.retentionPolicies[rpName] = struct{}{}
 	return nil
 }
 
 // Parameters: retention policy name and DbName
 var DropRetentionPolicyTemplate = "DROP RETENTION POLICY \"%s\" ON \"%s\""
 
-// TODO: "Dropping a retention policy will permanently delete all measurements and data stored in the retention policy." - influxdb docs
+// Note: "Dropping a retention policy will permanently delete all measurements and data stored in the retention policy." - influxdb docs
 func (q *InfluxQ) DropRetentionPolicy(rpName string) error {
 	query := fmt.Sprintf(DropRetentionPolicyTemplate, rpName, q.dbName)
 	if _, err := q.QueryDB(query); err != nil {
 		return err
 	}
-	delete(q.retentionPolicies, rpName)
 	return nil
 }
 
-func getNonDefaultRetentionPolicyName(dbName string, rp time.Duration) string {
-	return fmt.Sprintf("%s_%s", dbName, rp.String())
-}
-
-func getDefaultRetentionPolicyName(dbName string) string {
-	return fmt.Sprintf("%s_default", dbName)
+func GetRetentionPolicyName(dbName string, retention time.Duration, rpType RetentionPolicyType) string {
+	if rpType == DefaultRetentionPolicy || retention == 0 { // if rpType is default or retention is 0, return default rp name
+		return fmt.Sprintf("%s_default", dbName)
+	} else {
+		return fmt.Sprintf("%s_%s", dbName, retention.String())
+	}
 }

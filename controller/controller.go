@@ -277,7 +277,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	err = influxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration(), DefaultRetentionPolicy)
+	err = influxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
 	if err != nil {
 		return fmt.Errorf("Failed to update default retention policy for metrics influx db, error is %s", err.Error())
 	}
@@ -299,7 +299,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	err = edgeEventsInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration(), DefaultRetentionPolicy)
+	err = edgeEventsInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
 	if err != nil {
 		return fmt.Errorf("Failed to update default retention policy for edgeevents metrics influx db, error is %s", err.Error())
 	}
@@ -312,7 +312,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	err = cloudletResourcesInfluxQ.AddRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration(), DefaultRetentionPolicy)
+	err = cloudletResourcesInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
 	if err != nil {
 		return fmt.Errorf("Failed to update default retention policy for cloudlet resources influx db, error is %s", err.Error())
 	}
@@ -320,11 +320,12 @@ func startServices() error {
 
 	// create continuous queries for edgeevents metrics
 	for _, collectioninterval := range settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-		interval := collectioninterval.Interval
-		latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, done)
-		edgeEventsInfluxQ.AddContinuousQuery(latencyCqSettings, 0)
-		deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, done)
-		edgeEventsInfluxQ.AddContinuousQuery(deviceCqSettings, 0)
+		interval := time.Duration(collectioninterval.Interval)
+		retention := time.Duration(collectioninterval.Retention)
+		latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(interval, retention)
+		influxq.CreateContinuousQuery(edgeEventsInfluxQ, downsampledMetricsInfluxQ, latencyCqSettings)
+		deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(interval, retention)
+		influxq.CreateContinuousQuery(edgeEventsInfluxQ, downsampledMetricsInfluxQ, deviceCqSettings)
 	}
 
 	InitNotify(influxQ, edgeEventsInfluxQ, &appInstClientApi)
