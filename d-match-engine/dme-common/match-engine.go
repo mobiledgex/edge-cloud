@@ -327,7 +327,7 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				}
 				go func(a *DmeAppInstState) {
 					EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-					EEHandler.RemoveAppInstKey(ctx, appInst.Key)
+					EEHandler.RemoveAppInst(ctx, appInst.Key)
 				}(appinstState)
 
 				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
@@ -391,7 +391,7 @@ func PruneAppInsts(ctx context.Context, appInsts map[edgeproto.AppInstKey]struct
 					}
 					go func(a *DmeAppInstState) {
 						EEHandler.SendAppInstStateEdgeEvent(ctx, a, key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-						EEHandler.RemoveAppInstKey(ctx, key)
+						EEHandler.RemoveAppInst(ctx, key)
 					}(appinstState)
 
 					delete(carr.Insts, key.ClusterInstKey)
@@ -431,7 +431,7 @@ func DeleteCloudletInfo(ctx context.Context, cloudletKey *edgeproto.CloudletKey)
 					}
 					go func(a *DmeAppInstState) {
 						EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+						EEHandler.RemoveCloudlet(ctx, clusterInstKey.CloudletKey)
 
 					}(appinstState)
 				}
@@ -469,7 +469,7 @@ func PruneCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]str
 					}
 					go func(a *DmeAppInstState) {
 						EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInstKey, dme.ServerEdgeEvent_EVENT_CLOUDLET_STATE)
-						EEHandler.RemoveCloudletKey(ctx, clusterInstKey.CloudletKey)
+						EEHandler.RemoveCloudlet(ctx, clusterInstKey.CloudletKey)
 					}(appinstState)
 
 				}
@@ -1208,9 +1208,9 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		}
 		updateDeviceInfoStats(ctx, appInstKey, deviceInfo, lastLocation, "event init connection")
 		// Add Client to edgeevents plugin
-		EEHandler.AddClientKey(ctx, *appInstKey, *sessionCookieKey, *lastLocation, lastCarrier, sendFunc)
+		EEHandler.AddClient(ctx, *appInstKey, *sessionCookieKey, *lastLocation, lastCarrier, sendFunc)
 		// Remove Client from edgeevents plugin when StreamEdgeEvent exits
-		defer EEHandler.RemoveClientKey(ctx, *appInstKey, *sessionCookieKey)
+		defer EEHandler.RemoveClient(ctx, *appInstKey, *sessionCookieKey)
 		// Send successful init response
 		initServerEdgeEvent := new(dme.ServerEdgeEvent)
 		initServerEdgeEvent.EventType = dme.ServerEdgeEvent_EVENT_INIT_CONNECTION
@@ -1317,6 +1317,7 @@ loop:
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
+			// TODO: THIS AFFECTS STATS AND AUTOPROV, BUT MIGHT NOT EVEN BE USED... (put a check for IsSameCluster in FindCloudlet + previous appinst parameter)
 			err = FindCloudlet(ctx, &appInstKey.AppKey, lastCarrier, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
