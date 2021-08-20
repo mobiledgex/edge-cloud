@@ -61,6 +61,7 @@ type TestApiClient interface {
 }
 
 type DummyServer struct {
+	CustomData
 	ShowDummyCount   int
 	CudNoop          bool
 	MidstreamFailChs map[string]chan bool
