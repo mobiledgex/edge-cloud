@@ -1214,6 +1214,13 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := StreamState_CamelValue["Stream"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(TrustPolicyExceptionState(0)):
+		if en, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VersionHash(0)):
 		if en, ok := VersionHash_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1226,38 +1233,40 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 }
 
 var ShowMethodNames = map[string]struct{}{
-	"ShowAlert":                     struct{}{},
-	"ShowAlertPolicy":               struct{}{},
-	"ShowSettings":                  struct{}{},
-	"ShowFlavor":                    struct{}{},
-	"ShowOperatorCode":              struct{}{},
-	"ShowResTagTable":               struct{}{},
-	"ShowApp":                       struct{}{},
-	"ShowCloudletsForAppDeployment": struct{}{},
-	"ShowGPUDriver":                 struct{}{},
-	"ShowCloudlet":                  struct{}{},
-	"ShowCloudletInfo":              struct{}{},
-	"ShowCloudletMetrics":           struct{}{},
-	"ShowCloudletPool":              struct{}{},
-	"ShowVMPool":                    struct{}{},
-	"ShowAutoScalePolicy":           struct{}{},
-	"ShowClusterInst":               struct{}{},
-	"ShowClusterInstInfo":           struct{}{},
-	"ShowAutoProvPolicy":            struct{}{},
-	"ShowTrustPolicy":               struct{}{},
-	"ShowAppInst":                   struct{}{},
-	"ShowAppInstInfo":               struct{}{},
-	"ShowAppInstMetrics":            struct{}{},
-	"ShowCloudletRefs":              struct{}{},
-	"ShowClusterRefs":               struct{}{},
-	"ShowAppInstRefs":               struct{}{},
-	"ShowRateLimitSettings":         struct{}{},
-	"ShowFlowRateLimitSettings":     struct{}{},
-	"ShowMaxReqsRateLimitSettings":  struct{}{},
-	"ShowController":                struct{}{},
-	"ShowNode":                      struct{}{},
-	"ShowDevice":                    struct{}{},
-	"ShowDeviceReport":              struct{}{},
+	"ShowAlert":                        struct{}{},
+	"ShowAlertPolicy":                  struct{}{},
+	"ShowSettings":                     struct{}{},
+	"ShowFlavor":                       struct{}{},
+	"ShowOperatorCode":                 struct{}{},
+	"ShowResTagTable":                  struct{}{},
+	"ShowAutoScalePolicy":              struct{}{},
+	"ShowTrustPolicy":                  struct{}{},
+	"ShowApp":                          struct{}{},
+	"ShowCloudletsForAppDeployment":    struct{}{},
+	"ShowGPUDriver":                    struct{}{},
+	"ShowCloudlet":                     struct{}{},
+	"ShowCloudletInfo":                 struct{}{},
+	"ShowCloudletMetrics":              struct{}{},
+	"ShowCloudletPool":                 struct{}{},
+	"ShowVMPool":                       struct{}{},
+	"ShowClusterInst":                  struct{}{},
+	"ShowClusterInstInfo":              struct{}{},
+	"ShowAutoProvPolicy":               struct{}{},
+	"ShowAppInst":                      struct{}{},
+	"ShowAppInstInfo":                  struct{}{},
+	"ShowAppInstMetrics":               struct{}{},
+	"ShowCloudletRefs":                 struct{}{},
+	"ShowClusterRefs":                  struct{}{},
+	"ShowAppInstRefs":                  struct{}{},
+	"ShowRateLimitSettings":            struct{}{},
+	"ShowFlowRateLimitSettings":        struct{}{},
+	"ShowMaxReqsRateLimitSettings":     struct{}{},
+	"ShowController":                   struct{}{},
+	"ShowNode":                         struct{}{},
+	"ShowDevice":                       struct{}{},
+	"ShowDeviceReport":                 struct{}{},
+	"ShowTrustPolicyException":         struct{}{},
+	"ShowTrustPolicyExceptionResponse": struct{}{},
 }
 
 func IsShow(cmd string) bool {
@@ -1288,6 +1297,7 @@ var AllKeyTags = []string{
 	"gpudriver",
 	"gpudriverorg",
 	"maxreqssettingsname",
+	"name",
 	"node",
 	"noderegion",
 	"nodetype",
@@ -1325,6 +1335,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"gpudriver":           struct{}{},
 	"gpudriverorg":        struct{}{},
 	"maxreqssettingsname": struct{}{},
+	"name":                struct{}{},
 	"node":                struct{}{},
 	"noderegion":          struct{}{},
 	"nodetype":            struct{}{},

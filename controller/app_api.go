@@ -66,26 +66,34 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	}
 }
 
-func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
+func CheckAppCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
 	if !app.Trusted {
 		return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), trustPolicy.Key.String())
 	}
+	// append the trust policy rules with the exception rules to get the total set of rules
+	allowedRules := trustPolicyExceptionApi.GetTrustPolicyExceptionRules(ckey, &app.Key)
+	for _, r := range trustPolicy.OutboundSecurityRules {
+		allowedRules = append(allowedRules, &r)
+	}
 	for _, r := range app.RequiredOutboundConnections {
 		policyMatchFound := false
-		ip := net.ParseIP(r.RemoteIp)
-		for _, outboundRule := range trustPolicy.OutboundSecurityRules {
+		_, appNet, err := net.ParseCIDR(r.RemoteCidr)
+		if err != nil {
+			return fmt.Errorf("Invalid remote CIDR in RequiredOutboundConnections: %s - %v", r.RemoteCidr, err)
+		}
+		for _, outboundRule := range allowedRules {
 			if strings.ToLower(r.Protocol) != strings.ToLower(outboundRule.Protocol) {
 				continue
 			}
-			_, remoteNet, err := net.ParseCIDR(outboundRule.RemoteCidr)
+			_, trustPolNet, err := net.ParseCIDR(outboundRule.RemoteCidr)
 			if err != nil {
 				return fmt.Errorf("Invalid remote CIDR in policy: %s - %v", outboundRule.RemoteCidr, err)
 			}
-			if !remoteNet.Contains(ip) {
+			if !cloudcommon.CidrContainsCidr(trustPolNet, appNet) {
 				continue
 			}
 			if strings.ToLower(r.Protocol) != "icmp" {
-				if r.Port < outboundRule.PortRangeMin || r.Port > outboundRule.PortRangeMax {
+				if r.PortRangeMin < outboundRule.PortRangeMin || r.PortRangeMax > outboundRule.PortRangeMax {
 					continue
 				}
 			}
@@ -93,7 +101,7 @@ func CheckAppCompatibleWithTrustPolicy(app *edgeproto.App, trustPolicy *edgeprot
 			break
 		}
 		if !policyMatchFound {
-			return fmt.Errorf("No outbound rule in policy to match required connection %s:%s:%d for App %s", r.Protocol, r.RemoteIp, r.Port, app.Key.GetKeyString())
+			return fmt.Errorf("No outbound rule in policy or exception to match required connection %s:%s:%d-%d for App %s", r.Protocol, r.RemoteCidr, r.PortRangeMin, r.PortRangeMax, app.Key.GetKeyString())
 		}
 	}
 	return nil
@@ -785,29 +793,8 @@ func validateAppConfigsForDeployment(ctx context.Context, configs []*edgeproto.C
 	return nil
 }
 
-func validateRequiredOutboundConnections(req []*edgeproto.RemoteConnection) error {
-	for _, r := range req {
-		proto := strings.ToLower(r.Protocol)
-		ip := net.ParseIP(r.RemoteIp)
-		if ip == nil {
-			return fmt.Errorf("Invalid remote IP: %v", r.RemoteIp)
-		}
-		switch proto {
-		case "icmp":
-			if r.Port != 0 {
-				return fmt.Errorf("Port must be 0 for icmp")
-			}
-		case "tcp":
-			fallthrough
-		case "udp":
-			if r.Port < 1 || r.Port > 65535 {
-				return fmt.Errorf("Remote port out of range: %d", r.Port)
-			}
-		default:
-			return fmt.Errorf("Invalid protocol specified for remote connection: %s", proto)
-		}
-	}
-	return nil
+func validateRequiredOutboundConnections(rules []edgeproto.SecurityRule) error {
+	return edgeproto.ValidateSecurityRules(rules)
 }
 
 func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error {

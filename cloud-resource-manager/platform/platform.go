@@ -38,18 +38,19 @@ type PlatformConfig struct {
 }
 
 type Caches struct {
-	SettingsCache         *edgeproto.SettingsCache
-	FlavorCache           *edgeproto.FlavorCache
-	TrustPolicyCache      *edgeproto.TrustPolicyCache
-	ClusterInstCache      *edgeproto.ClusterInstCache
-	AppInstCache          *edgeproto.AppInstCache
-	AppCache              *edgeproto.AppCache
-	ResTagTableCache      *edgeproto.ResTagTableCache
-	CloudletCache         *edgeproto.CloudletCache
-	CloudletInternalCache *edgeproto.CloudletInternalCache
-	VMPoolCache           *edgeproto.VMPoolCache
-	VMPoolInfoCache       *edgeproto.VMPoolInfoCache
-	GPUDriverCache        *edgeproto.GPUDriverCache
+	SettingsCache             *edgeproto.SettingsCache
+	FlavorCache               *edgeproto.FlavorCache
+	TrustPolicyCache          *edgeproto.TrustPolicyCache
+	TrustPolicyExceptionCache *edgeproto.TrustPolicyExceptionCache
+	ClusterInstCache          *edgeproto.ClusterInstCache
+	AppInstCache              *edgeproto.AppInstCache
+	AppCache                  *edgeproto.AppCache
+	ResTagTableCache          *edgeproto.ResTagTableCache
+	CloudletCache             *edgeproto.CloudletCache
+	CloudletInternalCache     *edgeproto.CloudletInternalCache
+	VMPoolCache               *edgeproto.VMPoolCache
+	VMPoolInfoCache           *edgeproto.VMPoolInfoCache
+	GPUDriverCache            *edgeproto.GPUDriverCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
@@ -139,6 +140,8 @@ type Platform interface {
 	GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, region string, vaultConfig *vault.Config, dataType string, arg []byte) (map[string]string, error)
 	// Update the cloudlet's Trust Policy
 	UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto.TrustPolicy) error
+
+	UpdateTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException) error
 	// Get restricted cloudlet create status
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get ssh clients of all root LBs

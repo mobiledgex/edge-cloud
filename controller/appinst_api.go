@@ -96,7 +96,7 @@ func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgepr
 		if !found {
 			return fmt.Errorf("App not found: %s", val.Key.AppKey.String())
 		}
-		err := CheckAppCompatibleWithTrustPolicy(app, TrustPolicy)
+		err := CheckAppCompatibleWithTrustPolicy(ckey, app, TrustPolicy)
 		if err != nil {
 			return err
 		}
@@ -690,7 +690,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !trustPolicyApi.store.STMGet(stm, &tpKey, &trustPolicy) {
 				return errors.New("Trust Policy for cloudlet not found")
 			}
-			err = CheckAppCompatibleWithTrustPolicy(&app, &trustPolicy)
+			err = CheckAppCompatibleWithTrustPolicy(&cloudlet.Key, &app, &trustPolicy)
 			if err != nil {
 				return fmt.Errorf("App is not compatible with cloudlet trust policy: %v", err)
 			}

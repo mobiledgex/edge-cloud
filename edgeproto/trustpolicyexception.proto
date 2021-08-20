@@ -6,7 +6,7 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "app.proto";
-import "cloudletpool.proto";
+import "cloudletkey.proto";
 import "trustpolicy.proto";
 
 
@@ -31,8 +31,8 @@ enum TrustPolicyExceptionState {
 message TrustPolicyExceptionKey {
   // App Key
   AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.keytag) = "appkey"];
-  // CloudletPool Key
-  CloudletPoolKey cloudlet_pool_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletpoolkey"];
+  // Cloudlet Key
+  CloudletKey cloudlet_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletkey"];
   string Name = 3 [(protogen.keytag) = "name"]; 
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
@@ -42,7 +42,7 @@ message TrustPolicyExceptionKey {
 message TrustPolicyException {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // Unique Key composed of App and CloudletPool key
+  // Unique Key composed of App and Cloudlet key
   TrustPolicyExceptionKey key = 2 [(gogoproto.nullable) = false];
   // List of outbound security rules for whitelisting traffic
   repeated SecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
@@ -54,12 +54,9 @@ message TrustPolicyException {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletPoolKey.Organization";
+  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization";
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
-
-
-
 
 service TrustPolicyExceptionApi {
 
@@ -84,9 +81,9 @@ service TrustPolicyExceptionApi {
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
   // Request a Trust Policy Exception to be approved, request made by App Developer Organization 
-  rpc RequestApprovalTrustPolicyException(TrustPolicyException) returns (stream Result) {
+  rpc RequestTrustPolicyException(TrustPolicyException) returns (stream Result) {
     option (google.api.http) = {
-      post: "/requestapproval/trustpolicyexception"
+      post: "/request/trustpolicyexception"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
@@ -94,26 +91,6 @@ service TrustPolicyExceptionApi {
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
 
-  // Approve a Trust Policy Exception, by Cloudlet Operator Organization 
-  rpc ApproveTrustPolicyException(TrustPolicyException) returns (stream Result) {
-    option (google.api.http) = {
-      post: "/approve/trustpolicyexception"
-      body: "*"
-    };
-    option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.CloudletPoolKey.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
-  }
-  // Reject a Trust Policy Exception, by Cloudlet Operator Organization 
-  rpc RejectTrustPolicyException(TrustPolicyException) returns (stream Result) {
-    option (google.api.http) = {
-      post: "/reject/trustpolicyexception"
-      body: "*"
-    };
-    option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.CloudletPoolKey.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
-  }
   // Delete a Trust policy exception, by App Developer Organization
   rpc DeleteTrustPolicyException(TrustPolicyException) returns (stream Result) {
     option (google.api.http) = {
@@ -130,6 +107,44 @@ service TrustPolicyExceptionApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionView,Key.AppKey.Organization";
-    option (protogen.mc2_custom_authz) = true;
+  }
+}
+
+message TrustPolicyExceptionResponse {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique Key composed of App and Cloudlet key
+  TrustPolicyExceptionKey key = 2 [(gogoproto.nullable) = false];
+  // State of the exception within the approval process
+  TrustPolicyExceptionState state = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;  
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization";
+  option (protogen.uses_org) = "key=AppKey.Organization";
+}
+
+service TrustPolicyExceptionApiResponse {
+  // Approve or reject a Trust Policy Exception, by Cloudlet Operator Organization 
+  rpc SendTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/response/trustpolicyexception"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletKey.Organization";
+  }
+  
+  // Show Trust Policies. Any fields specified will be used to filter results.
+  rpc ShowTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream TrustPolicyExceptionResponse) {
+    option (google.api.http) = {
+      post: "/show/trustpolicyexceptionresponse"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionView,Key.AppKey.Organization";
   }
 }

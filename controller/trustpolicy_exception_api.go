@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -15,10 +17,10 @@ type TrustPolicyExceptionApi struct {
 var trustPolicyExceptionApi = TrustPolicyExceptionApi{}
 
 func InitTrustPolicyExcptionApi(sync *Sync) {
-	trustPolicyApi.sync = sync
-	trustPolicyApi.store = edgeproto.NewTrustPolicyStore(sync.store)
-	edgeproto.InitTrustPolicyCache(&trustPolicyApi.cache)
-	sync.RegisterCache(&trustPolicyApi.cache)
+	trustPolicyExceptionApi.sync = sync
+	trustPolicyExceptionApi.store = edgeproto.NewTrustPolicyExceptionStore(sync.store)
+	edgeproto.InitTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
+	sync.RegisterCache(&trustPolicyExceptionApi.cache)
 }
 
 func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
@@ -35,6 +37,8 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.Trust
 	if err := in.Validate(nil); err != nil {
 		return err
 	}
+	// check if the app is trusted or not and the cloudlet has trustPolicy or not.
+	// if no for any of the above two then return error
 	_, err := s.store.Create(ctx, in, s.sync.syncWait)
 	return err
 
@@ -57,13 +61,14 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(in *edgeproto.Trust
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED || cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+			return fmt.Errorf("Not allowed to modify TrustPolicyException in state:%s", cur.State.String())
+		}
 		changed = cur.CopyInFields(in)
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
-		//if err := cloudletApi.ValidateCloudletsUsingTrustPolicy(ctx, &cur); err != nil {
-		//	return err
-		//}
+
 		if changed == 0 {
 			return nil
 		}
@@ -74,7 +79,6 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(in *edgeproto.Trust
 		return err
 	}
 	return nil
-	//return cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
 }
 
 func (s *TrustPolicyExceptionApi) DeleteTrustExceptionPolicy(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) error {
@@ -82,11 +86,22 @@ func (s *TrustPolicyExceptionApi) DeleteTrustExceptionPolicy(in *edgeproto.Trust
 	if !s.cache.HasKey(&in.Key) {
 		return in.Key.NotFoundError()
 	}
-	// look for cloudlets in any state
-	//if cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
-	//	return fmt.Errorf("Policy in use by Cloudlet")
-	//}
-	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
+
+	cur := edgeproto.TrustPolicyException{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED || cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+			return fmt.Errorf("Not allowed to delete TrustPolicyException in state:%s", cur.State.String())
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
 
@@ -98,22 +113,31 @@ func (s *TrustPolicyExceptionApi) ShowTrustPolicyException(in *edgeproto.TrustPo
 	return err
 }
 
-/*func (s *TrustPolicyExceptionApi) STMFind(stm concurrency.STM, name, appOrg, cloudletOrg string, polic *edgeproto.TrustPolicyException) error {
+func (s *TrustPolicyExceptionApi) STMFind(stm concurrency.STM, appName, appOrg, appVer, cloudletName, cloudletOrg string, policy *edgeproto.TrustPolicyException) error {
 	key := edgeproto.TrustPolicyExceptionKey{}
-	key.Name = name
-	key.Organization = org
+	key.AppKey.Organization = appOrg
+	key.AppKey.Name = appName
+	key.AppKey.Version = appVer
+	key.CloudletKey.Organization = cloudletOrg
+	key.CloudletKey.Name = cloudletName
+
 	if !s.store.STMGet(stm, &key, policy) {
-		return fmt.Errorf("TrustPolicy %s for organization %s not found", name, org)
+		return fmt.Errorf("TrustPolicyException for app %s version %s organization %s not found", appName, appVer, appOrg)
 	}
 	return nil
-}*/
+}
 
-func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(appKey *edgeproto.AppKey) []*edgeproto.SecurityRule {
+// Pass cloudletKey
+func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(ckey *edgeproto.CloudletKey, appKey *edgeproto.AppKey) []*edgeproto.SecurityRule {
 	var rules []*edgeproto.SecurityRule
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		pol := data.Obj
+		if ckey.Organization != pol.Key.CloudletKey.Organization || ckey.Name != pol.Key.CloudletKey.Name {
+			continue
+		}
+
 		if pol.Key.AppKey.Organization == appKey.Organization && pol.Key.AppKey.Name == appKey.Name && pol.Key.AppKey.Version == appKey.Version {
 			for _, r := range pol.OutboundSecurityRules {
 				rules = append(rules, &r)
