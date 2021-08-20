@@ -16,6 +16,8 @@ const (
 	NonDefaultRetentionPolicy
 )
 
+var CreateRetentionPolicyTemplate = "%s RETENTION POLICY %q ON %q duration %s replication 1 shard duration %s"
+
 // Create a retention policy for db
 func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType RetentionPolicyType) error {
 	// make sure db is running
@@ -24,15 +26,8 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 	}
 
 	// make sure db has been created before moving on
-	numTries := 3
-	for i := 1; i <= numTries; i++ {
-		if q.dbcreated {
-			break
-		}
-		if i == numTries {
-			return fmt.Errorf("retention policy creation failed - %s db not created yet, ", q.dbName)
-		}
-		time.Sleep(100 * time.Millisecond)
+	if err := q.WaitCreated(); err != nil {
+		return fmt.Errorf("retention policy creation failed - %s", err.Error())
 	}
 
 	shard := time.Duration(24 * time.Hour)
@@ -43,7 +38,7 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 	rpName := GetRetentionPolicyName(q.dbName, retentionTime, rpType)
 
 	// create query to create rp
-	query := fmt.Sprintf("create retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s", rpName, q.dbName, retentionTime.String(), shard.String())
+	query := fmt.Sprintf(CreateRetentionPolicyTemplate, "CREATE", rpName, q.dbName, retentionTime.String(), shard.String())
 	if rpType == DefaultRetentionPolicy {
 		query += " default"
 	}
@@ -55,7 +50,7 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 			return err
 		}
 		// if already exists alter policy instead
-		query = fmt.Sprintf("alter retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s", rpName, q.dbName, retentionTime.String(), shard.String())
+		query = fmt.Sprintf(CreateRetentionPolicyTemplate, "ALTER", rpName, q.dbName, retentionTime.String(), shard.String())
 		if rpType == DefaultRetentionPolicy {
 			query += " default"
 		}
@@ -69,7 +64,7 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 }
 
 // Parameters: retention policy name and DbName
-var DropRetentionPolicyTemplate = "DROP RETENTION POLICY \"%s\" ON \"%s\""
+var DropRetentionPolicyTemplate = "DROP RETENTION POLICY %q ON %q"
 
 // Note: "Dropping a retention policy will permanently delete all measurements and data stored in the retention policy." - influxdb docs
 func (q *InfluxQ) DropRetentionPolicy(rpName string) error {

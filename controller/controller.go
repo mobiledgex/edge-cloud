@@ -268,6 +268,10 @@ func startServices() error {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
+	err = downsampledMetricsInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
+	if err != nil {
+		return fmt.Errorf("Failed to update default retention policy for downsampled metrics influx db, error is %s", err.Error())
+	}
 	services.downsampledMetricsInfluxQ = downsampledMetricsInfluxQ
 
 	// metrics influx

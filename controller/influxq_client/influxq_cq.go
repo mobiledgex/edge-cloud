@@ -28,16 +28,9 @@ func CreateContinuousQuery(origin *InfluxQ, dest *InfluxQ, cq *ContinuousQuerySe
 		return fmt.Errorf("continuous query creation failed - %s db client finished", origin.dbName)
 	}
 
-	// make sure db has been created before moving on
-	numTries := 3
-	for i := 1; i <= numTries; i++ {
-		if origin.dbcreated {
-			break
-		}
-		if i == numTries {
-			return fmt.Errorf("continuous query creation failed - %s db not created yet", origin.dbName)
-		}
-		time.Sleep(10 * time.Millisecond)
+	// make sure db have been created before moving on (dest.WaitCreated() will be called when creating retention policy for dest InfluxQ instance)
+	if err := origin.WaitCreated(); err != nil {
+		return fmt.Errorf("continuous query creation failed - %s", err.Error())
 	}
 
 	// create retention policy if specified and non-default
@@ -137,5 +130,5 @@ func CreateInfluxFullyQualifiedMeasurementName(dbName string, measurement string
 	if interval != 0 {
 		measurement = fmt.Sprintf("%s-%s", measurement, interval.String())
 	}
-	return fmt.Sprintf("%s.%s.\"%s\"", dbName, rpName, measurement)
+	return fmt.Sprintf("%s.%s.%q", dbName, rpName, measurement)
 }

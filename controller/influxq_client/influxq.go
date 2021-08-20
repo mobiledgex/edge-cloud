@@ -219,3 +219,17 @@ func (q *InfluxQ) WaitConnected() bool {
 	}
 	return false
 }
+
+func (q *InfluxQ) WaitCreated() error {
+	numTries := 20
+	for i := 1; i <= numTries; i++ {
+		if q.dbcreated {
+			break
+		}
+		if i == numTries {
+			return fmt.Errorf("%s db not created yet", q.dbName)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return nil
+}
