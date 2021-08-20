@@ -186,17 +186,23 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	defer qd.Stop()
 	connected := qd.WaitConnected()
 	assert.True(t, connected, "connected downsampled db")
-	// Add a Continuous Query
+
+	// Update default retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
+	rpdef := time.Duration(1 * time.Hour)
+	err = qd.CreateRetentionPolicy(rpdef, influxq.DefaultRetentionPolicy)
+	// Check that retention policy has been created
+	assert.Nil(t, err)
+
+	// Create a Continuous Query (no retention policy, so will use default)
 	cqs := &influxq.ContinuousQuerySettings{
 		Measurement: "test-metric",
 		AggregationFunctions: map[string]string{
 			"val1": "sum(\"val1\")",
 		},
-		NewDbName:          cloudcommon.DownsampledMetricsDbName,
 		CollectionInterval: time.Duration(10 * time.Millisecond),
 	}
-	cqDone := q.CreateContinuousQuery(cqs)
-	assert.Nil(t, cqDone.Err, "create cq")
+	err = influxq.CreateContinuousQuery(q, qd, cqs)
+	assert.Nil(t, err, "create cq")
 	time.Sleep(1 * time.Second)
 	// Add some more data for continuous query to aggregate
 	for ii := 0; ii < 2; ii++ {
@@ -230,24 +236,23 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	assert.Nil(t, err, "select *")
 	assert.True(t, len(res[0].Series[0].Values) > 0, "num results")
 
-	// Add retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
-	rp := time.Duration(1 * time.Hour)
-	rpres := qd.UpdateDefaultRetentionPolicy(rp)
+	// Create non-default retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
+	rpnondef := time.Duration(2 * time.Hour)
+	err = qd.CreateRetentionPolicy(rpnondef, influxq.NonDefaultRetentionPolicy)
 	// Check that retention policy has been created
-	assert.Nil(t, rpres.Err)
-	assert.NotEqual(t, "", rpres.RpName)
-	// Add a Continuous Query on new rp
+	assert.Nil(t, err)
+
+	// Create a Continuous Query on new rp
 	cqs = &influxq.ContinuousQuerySettings{
 		Measurement: "test-metric",
 		AggregationFunctions: map[string]string{
 			"val2": "sum(\"val2\")",
 		},
-		NewDbName:           cloudcommon.DownsampledMetricsDbName,
 		CollectionInterval:  time.Duration(5 * time.Millisecond),
-		RetentionPolicyName: rpres.RpName,
+		RetentionPolicyTime: 2 * time.Hour,
 	}
-	cqDone = q.CreateContinuousQuery(cqs)
-	assert.Nil(t, cqDone.Err, "create cq")
+	err = influxq.CreateContinuousQuery(q, qd, cqs)
+	assert.Nil(t, err, "create cq")
 	time.Sleep(2 * time.Second)
 	// Add some more data for new continuous query to aggregate
 	for ii := 0; ii < 2; ii++ {
@@ -276,7 +281,8 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	}
 	// Check that new continuous query has aggregated data
 	time.Sleep(3 * time.Second)
-	query = fmt.Sprintf("select * from \"test-metric-5ms\"")
+	measurementName := influxq.CreateInfluxFullyQualifiedMeasurementName(cloudcommon.DownsampledMetricsDbName, "test-metric", 5*time.Millisecond, 2*time.Hour)
+	query = fmt.Sprintf("select * from %s", measurementName)
 	res, err = qd.QueryDB(query)
 	assert.Nil(t, err, "select *")
 	assert.True(t, len(res[0].Series[0].Values) > 0, "num results")

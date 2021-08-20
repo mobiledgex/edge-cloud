@@ -19,7 +19,7 @@ settings:
   cloudletmaintenancetimeout: 2s
   dmeapimetricscollectioninterval: 1s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 3s
+  edgeeventsmetricscollectioninterval: 1s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
