@@ -32,8 +32,11 @@ settings:
   influxdbdownsampledmetricsretention: 8760h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 24h0m0s
+    retention: 168h0m0s
   - interval: 168h0m0s
+    retention: 672h0m0s
   - interval: 672h0m0s
+    retention: 8064h0m0s
   clusterautoscaleaveragingdurationsec: 60
   clusterautoscaleretrydelay: 1m
   alertpolicymintriggertime: 30s

@@ -106,6 +106,8 @@ message Settings {
 message CollectionInterval {
   // Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)
   int64 interval = 1 [(gogoproto.casttype) = "Duration"];
+  // Retention duration for Influxdb interval (0 uses default retention policy)
+  int64 retention = 2 [(gogoproto.casttype) = "Duration"];
 }
 
 service SettingsApi {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,21 +30,19 @@ var InfluxQReconnectDelay time.Duration = time.Second
 var InfluxQReconnectAttempts = 5
 
 type InfluxQ struct {
-	dbName                  string
-	user                    string
-	password                string
-	client                  client.Client
-	data                    []*edgeproto.Metric
-	done                    bool
-	dbcreated               bool
-	doPush                  chan bool
-	retentionPolicies       map[time.Duration]chan<- *RetentionPolicyCreationResult
-	continuousQuerySettings map[*ContinuousQuerySettings]chan<- *ContinuousQueryCreationResult
-	mux                     sync.Mutex
-	wg                      sync.WaitGroup
-	ErrBatch                uint64
-	ErrPoint                uint64
-	Qfull                   uint64
+	dbName    string
+	user      string
+	password  string
+	client    client.Client
+	data      []*edgeproto.Metric
+	done      bool
+	dbcreated bool
+	doPush    chan bool
+	mux       sync.Mutex
+	wg        sync.WaitGroup
+	ErrBatch  uint64
+	ErrPoint  uint64
+	Qfull     uint64
 }
 
 func NewInfluxQ(DBName, username, password string) *InfluxQ {
@@ -55,8 +52,6 @@ func NewInfluxQ(DBName, username, password string) *InfluxQ {
 	q.doPush = make(chan bool, 1)
 	q.user = username
 	q.password = password
-	q.retentionPolicies = make(map[time.Duration]chan<- *RetentionPolicyCreationResult)
-	q.continuousQuerySettings = make(map[*ContinuousQuerySettings]chan<- *ContinuousQueryCreationResult)
 	return &q
 }
 
@@ -96,30 +91,6 @@ func (q *InfluxQ) RunPush() {
 				continue
 			} else {
 				q.dbcreated = true
-			}
-
-			// Create retention policies
-			for policy, done := range q.retentionPolicies {
-				res := q.UpdateDefaultRetentionPolicy(policy)
-				for i := 0; i < cap(done); i++ {
-					done <- res
-				}
-				if res.Err != nil {
-					log.DebugLog(log.DebugLevelMetrics, "create retention policy", "policy", policy, "err", res.Err)
-				}
-				close(done)
-			}
-
-			// Create continuous queries
-			for cqs, done := range q.continuousQuerySettings {
-				res := q.CreateContinuousQuery(cqs)
-				for i := 0; i < cap(done); i++ {
-					done <- res
-				}
-				if res.Err != nil {
-					log.DebugLog(log.DebugLevelMetrics, "create continuous query", "cq", cqs, "err", res.Err)
-				}
-				close(done)
 			}
 		}
 
@@ -249,65 +220,16 @@ func (q *InfluxQ) WaitConnected() bool {
 	return false
 }
 
-type RetentionPolicyCreationResult struct {
-	Err    error
-	RpName string
-	RpTime time.Duration
-}
-
-// Adds retention policy to current db once db is created
-// Call before Start()
-// numReceivers is the number of functions that need to wait for the retention policy to be created before proceeding
-// (eg. Continuous queries require a retention policy to already be created in the destination db)
-func (q *InfluxQ) AddDefaultRetentionPolicy(retentionTime time.Duration, numReceivers int) <-chan *RetentionPolicyCreationResult {
-	if numReceivers < 1 {
-		numReceivers = 1
-	}
-	done := make(chan *RetentionPolicyCreationResult, numReceivers)
-	q.retentionPolicies[retentionTime] = done
-	return done
-}
-
-// Update or create a retention policy when a new InfluxTimeSettings comes in
-func (q *InfluxQ) UpdateDefaultRetentionPolicy(retentionTime time.Duration) *RetentionPolicyCreationResult {
-	res := &RetentionPolicyCreationResult{}
-	if q.done {
-		res.Err = fmt.Errorf("retention policy creation failed - %s db finished", q.dbName)
-		return res
-	}
-	if !q.dbcreated {
-		res.Err = fmt.Errorf("retention policy creation failed - %s db not created yet, ", q.dbName)
-		return res
-	}
-	shard := time.Duration(24 * time.Hour)
-	if retentionTime < shard {
-		shard = retentionTime
-	}
-	rpName := getDefaultRetentionPolicyName(q.dbName)
-	res.RpName = rpName
-	res.RpTime = retentionTime
-	query := fmt.Sprintf("create retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s default", rpName, q.dbName, retentionTime.String(), shard.String())
-	_, err := q.QueryDB(query)
-	if err != nil {
-		if !strings.Contains(err.Error(), "already exists") {
-			log.DebugLog(log.DebugLevelMetrics,
-				"unable to create default policy", "err", err)
-			res.Err = err
-			return res
+func (q *InfluxQ) WaitCreated() error {
+	numTries := 20
+	for i := 1; i <= numTries; i++ {
+		if q.dbcreated {
+			break
 		}
-		// if already exists alter policy instead
-		query = fmt.Sprintf("alter retention policy \"%s\" ON \"%s\" duration %s replication 1 shard duration %s default", rpName, q.dbName, retentionTime.String(), shard.String())
-		_, err := q.QueryDB(query)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMetrics,
-				"unable to alter policy", "db", q.dbName, "err", err)
-			res.Err = err
-			return res
+		if i == numTries {
+			return fmt.Errorf("%s db not created yet", q.dbName)
 		}
+		time.Sleep(10 * time.Millisecond)
 	}
-	return res
-}
-
-func getDefaultRetentionPolicyName(dbName string) string {
-	return fmt.Sprintf("%s_default", dbName)
+	return nil
 }
