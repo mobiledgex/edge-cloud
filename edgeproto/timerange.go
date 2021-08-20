@@ -23,6 +23,10 @@ func (s *TimeRange) Resolve(defaultDuration time.Duration) error {
 		if s.StartAge == 0 {
 			// default duration
 			s.StartAge = Duration(defaultDuration)
+			// if only end time is specified, use that instead of "now"
+			if !s.EndTime.IsZero() {
+				now = s.EndTime
+			}
 		} else {
 			startName = "start age"
 		}
