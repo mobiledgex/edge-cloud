@@ -1248,6 +1248,17 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 				}
 				*outp = append(*outp, out)
 			}
+		case "getorganizationsoncloudlet":
+			out, err := r.client.GetOrganizationsOnCloudlet(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[][]edgeproto.Organization)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[][]edgeproto.Organization, but was %T", dataOut))
+				}
+				*outp = append(*outp, out)
+			}
 		case "revokeaccesskey":
 			out, err := r.client.RevokeAccessKey(r.ctx, obj)
 			if err != nil {
@@ -1980,6 +1991,41 @@ func (s *CliClient) ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.Cl
 	return output, err
 }
 
+type OrganizationStream interface {
+	Recv() (*edgeproto.Organization, error)
+}
+
+func OrganizationReadStream(stream OrganizationStream) ([]edgeproto.Organization, error) {
+	output := []edgeproto.Organization{}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return output, fmt.Errorf("read Organization stream failed, %v", err)
+		}
+		output = append(output, *obj)
+	}
+	return output, nil
+}
+
+func (s *ApiClient) GetOrganizationsOnCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.Organization, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	stream, err := api.GetOrganizationsOnCloudlet(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return OrganizationReadStream(stream)
+}
+
+func (s *CliClient) GetOrganizationsOnCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.Organization, error) {
+	output := []edgeproto.Organization{}
+	args := append(s.BaseArgs, "controller", "GetOrganizationsOnCloudlet")
+	err := wrapper.RunEdgectlObjs(args, in, &output, s.RunOps...)
+	return output, err
+}
+
 func (s *ApiClient) RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	return api.RevokeAccessKey(ctx, in)
@@ -2033,6 +2079,7 @@ type CloudletApiClient interface {
 	RemoveCloudletResMapping(ctx context.Context, in *edgeproto.CloudletResMap) (*edgeproto.Result, error)
 	FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error)
 	ShowFlavorsForCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.FlavorKey, error)
+	GetOrganizationsOnCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.Organization, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
