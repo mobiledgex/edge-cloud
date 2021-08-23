@@ -80,7 +80,7 @@ service TrustPolicyExceptionApi {
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
-  // Request a Trust Policy Exception to be approved, request made by App Developer Organization 
+  // Request a Trust Policy Exception, request made by App Developer Organization 
   rpc RequestTrustPolicyException(TrustPolicyException) returns (stream Result) {
     option (google.api.http) = {
       post: "/request/trustpolicyexception"
@@ -91,7 +91,7 @@ service TrustPolicyExceptionApi {
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
 
-  // Delete a Trust policy exception, by App Developer Organization
+  // Delete a Trust Policy Exception, by App Developer Organization
   rpc DeleteTrustPolicyException(TrustPolicyException) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/trustpolicyexception"
@@ -100,7 +100,7 @@ service TrustPolicyExceptionApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
   }
-  // Show Trust Policies. Any fields specified will be used to filter results.
+  // Show Trust Policy Exceptions. Any fields specified will be used to filter results.
   rpc ShowTrustPolicyException(TrustPolicyException) returns (stream TrustPolicyException) {
     option (google.api.http) = {
       post: "/show/trustpolicyexception"
@@ -127,11 +127,11 @@ message TrustPolicyExceptionResponse {
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
 
-service TrustPolicyExceptionApiResponse {
+service TrustPolicyExceptionResponseApi {
   // Approve or reject a Trust Policy Exception, by Cloudlet Operator Organization 
-  rpc SendTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+  rpc CreateTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
     option (google.api.http) = {
-      post: "/response/trustpolicyexception"
+      post: "/create/trustpolicyexceptionresponse"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
@@ -139,7 +139,28 @@ service TrustPolicyExceptionApiResponse {
     option (protogen.mc2_api_requires_org) = "Key.CloudletKey.Organization";
   }
   
-  // Show Trust Policies. Any fields specified will be used to filter results.
+  // Update a Trust Policy Exception response, by Cloudlet Operator Organization
+  rpc UpdateTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/update/trustpolicyexceptionresponse"
+      body: "*"
+    };
+     option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
+  }
+
+  // Delete a Trust Policy Exception response, by Cloudlet Operator Organization
+  rpc DeleteTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/delete/trustpolicyexceptionresponse"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
+  }
+
+  // Show Trust Policy Exception Response. Any fields specified will be used to filter results.
   rpc ShowTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream TrustPolicyExceptionResponse) {
     option (google.api.http) = {
       post: "/show/trustpolicyexceptionresponse"
