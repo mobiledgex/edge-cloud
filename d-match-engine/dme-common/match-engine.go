@@ -1361,7 +1361,6 @@ loop:
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
-			// TODO: THIS AFFECTS STATS AND AUTOPROV, BUT MIGHT NOT EVEN BE USED... (put a check for IsSameCluster in FindCloudlet + previous appinst parameter)
 			err = FindCloudlet(ctx, &appInstKey.AppKey, lastCarrier, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
