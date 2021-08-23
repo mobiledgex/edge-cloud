@@ -69,6 +69,7 @@ service CloudletPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Delete a CloudletPool
   rpc DeleteCloudletPool(CloudletPool) returns (Result) {
@@ -86,6 +87,7 @@ service CloudletPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Show CloudletPools
   rpc ShowCloudletPool(CloudletPool) returns (stream CloudletPool) {
@@ -102,6 +104,7 @@ service CloudletPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Remove a Cloudlet from a CloudletPool
   rpc RemoveCloudletPoolMember(CloudletPoolMember) returns (Result) {
