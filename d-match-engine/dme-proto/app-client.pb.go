@@ -1905,6 +1905,7 @@ type ServerEdgeEvent struct {
 	// Also sent on EVENT_CLOUDLET_STATE, if cloudlet_state != CLOUDLET_STATE_READY
 	// Also sent on EVENT_CLOUDLET_MAINTENANCE, if maintenance_state == UNDER_MAINTENANCE
 	// Also sent on EVENT_APPINST_HEALTH, if health_check != HEALTH_CHECK_OK && health_check != HEALTH_CHECK_UNKNOWN
+	// Also sent if a new closer appinst is created or if a previously down appinst is operational
 	NewCloudlet *FindCloudletReply `protobuf:"bytes,6,opt,name=new_cloudlet,json=newCloudlet,proto3" json:"new_cloudlet,omitempty"`
 	// Error message if event_type is EVENT_ERROR
 	ErrorMsg string `protobuf:"bytes,7,opt,name=error_msg,json=errorMsg,proto3" json:"error_msg,omitempty"`

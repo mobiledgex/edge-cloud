@@ -36,7 +36,7 @@ type DmeAppInst struct {
 	// Ip to connect o app inst in this cloudlet (XXX why is this needed?)
 	ip []byte
 	// Location of the cloudlet site (lat, long?)
-	location dme.Loc
+	Location dme.Loc
 	id       uint64
 	// Ports and L7 Paths
 	ports []dme.AppPort
@@ -246,7 +246,9 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	}
 	logMsg := "Updating app inst"
 	cl, foundAppInst := app.Carriers[carrierName].Insts[appInst.Key.ClusterInstKey]
+	sendAvailableAppInst := false
 	if !foundAppInst {
+		sendAvailableAppInst = true // if this is a new appinst, send msg to clients that are closer that this appinst is available
 		cl = new(DmeAppInst)
 		cl.virtualClusterInstKey = appInst.Key.ClusterInstKey
 		cl.clusterInstKey = *appInst.ClusterInstKey()
@@ -255,16 +257,22 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	}
 	// update existing app inst
 	cl.uri = appInst.Uri
-	cl.location = appInst.CloudletLoc
+	cl.Location = appInst.CloudletLoc
 	cl.ports = appInst.MappedPorts
 	cl.TrackedState = appInst.State
 	// Check if AppInstHealth has changed
-	if cl.AppInstHealth != appInst.HealthCheck {
+	if cl.AppInstHealth != appInst.HealthCheck && foundAppInst {
 		cl.AppInstHealth = appInst.HealthCheck
-		appinstState := &DmeAppInstState{
-			AppInstHealth: cl.AppInstHealth,
+		if cl.AppInstHealth == dme.HealthCheck_HEALTH_CHECK_OK {
+			// send msg to clients that are not on this appinst but are closer to this appinst that it is available
+			sendAvailableAppInst = true
+		} else {
+			// send msg to clients on this appinst that it is not available
+			appinstState := &DmeAppInstState{
+				AppInstHealth: cl.AppInstHealth,
+			}
+			go EEHandler.SendAppInstStateEdgeEvent(ctx, appinstState, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 		}
-		go EEHandler.SendAppInstStateEdgeEvent(ctx, appinstState, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 	}
 	// Check if Cloudlet states have changed
 	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
@@ -273,6 +281,10 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	} else {
 		cl.CloudletState = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+	}
+
+	if sendAvailableAppInst {
+		go EEHandler.SendAvailableAppInst(ctx, appInst.Key, cl)
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
@@ -334,8 +346,8 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
 					"appVersion", appkey.Version,
-					"latitude", cl.location.Latitude,
-					"longitude", cl.location.Longitude)
+					"latitude", cl.Location.Latitude,
+					"longitude", cl.Location.Longitude)
 			}
 			if len(app.Carriers[carrierName].Insts) == 0 {
 				delete(tbl.Apps[appkey].Carriers, carrierName)
@@ -568,22 +580,36 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		cloudlet.CloudletKey = in.Key
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
+	sendAvailableAppInst := false
 	// Check if CloudletMaintenance state has changed
-	if cloudlet.MaintenanceState != in.MaintenanceState {
+	if cloudlet.MaintenanceState != in.MaintenanceState && foundCloudlet {
 		cloudlet.MaintenanceState = in.MaintenanceState
-		appinstState := &DmeAppInstState{
-			MaintenanceState: cloudlet.MaintenanceState,
+		if cloudlet.MaintenanceState == dme.MaintenanceState_NORMAL_OPERATION {
+			// send msg to clients that are not on this cloudlet but are closer to this cloudlet that it is available
+			sendAvailableAppInst = true
+		} else {
+			// send msg to clients on this cloudlet that it is not available
+			appinstState := &DmeAppInstState{
+				MaintenanceState: cloudlet.MaintenanceState,
+			}
+			go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, appinstState, in.Key)
 		}
-		go EEHandler.SendCloudletMaintenanceStateEdgeEvent(ctx, appinstState, in.Key)
 	}
 	cloudlet.GpsLocation = in.Location
 
 	for _, app := range tbl.Apps {
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
-			for clusterInstKey, _ := range c.Insts {
+			for clusterInstKey, appinst := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &in.Key) {
 					c.Insts[clusterInstKey].MaintenanceState = in.MaintenanceState
+					if sendAvailableAppInst {
+						appinstkey := edgeproto.AppInstKey{
+							AppKey:         app.AppKey,
+							ClusterInstKey: clusterInstKey,
+						}
+						go EEHandler.SendAvailableAppInst(ctx, appinstkey, appinst)
+					}
 				}
 			}
 		}
@@ -605,22 +631,36 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		// object should've been added on receipt of cloudlet object from controller
 		return
 	}
+	sendAvailableAppInst := false
 	// Check if Cloudlet state has changed
 	if cloudlet.State != info.State {
 		cloudlet.State = info.State
-		appinstState := &DmeAppInstState{
-			CloudletState: cloudlet.State,
+		if cloudlet.State == dme.CloudletState_CLOUDLET_STATE_READY {
+			// send msg to clients that are not on this cloudlet but are closer to this cloudlet that it is available
+			sendAvailableAppInst = true
+		} else {
+			// send msg to clients on this cloudlet that it is not available
+			appinstState := &DmeAppInstState{
+				CloudletState: cloudlet.State,
+			}
+			go EEHandler.SendCloudletStateEdgeEvent(ctx, appinstState, info.Key)
 		}
-		go EEHandler.SendCloudletStateEdgeEvent(ctx, appinstState, info.Key)
 	}
 
 	for _, app := range tbl.Apps {
 		app.Lock()
 		if c, found := app.Carriers[carrier]; found {
-			for clusterInstKey, _ := range c.Insts {
+			for clusterInstKey, appinst := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
 					c.Insts[clusterInstKey].CloudletState = info.State
 					c.Insts[clusterInstKey].MaintenanceState = info.MaintenanceState
+					if sendAvailableAppInst {
+						appinstkey := edgeproto.AppInstKey{
+							AppKey:         app.AppKey,
+							ClusterInstKey: clusterInstKey,
+						}
+						go EEHandler.SendAvailableAppInst(ctx, appinstkey, appinst)
+					}
 				}
 			}
 		}
@@ -721,8 +761,8 @@ func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.
 			"rank", ii,
 			"app", key.Name,
 			"carrier", found.appInstCarrier,
-			"latitude", found.appInst.location.Latitude,
-			"longitude", found.appInst.location.Longitude,
+			"latitude", found.appInst.Location.Latitude,
+			"longitude", found.appInst.Location.Longitude,
 			"distance", found.distance,
 			"uri", found.appInst.uri,
 			"IP", ipaddr.String())
@@ -807,12 +847,12 @@ func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appI
 		return
 	}
 	for _, i := range appInsts.Insts {
-		d := DistanceBetween(*s.loc, i.location) + s.padDistance(carrier)
+		d := DistanceBetween(*s.loc, i.Location) + s.padDistance(carrier)
 		usable := IsAppInstUsable(i)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "found cloudlet at",
 			"carrier", carrier,
-			"latitude", i.location.Latitude,
-			"longitude", i.location.Longitude,
+			"latitude", i.Location.Latitude,
+			"longitude", i.Location.Longitude,
 			"this-dist", d,
 			"usable", usable)
 		if !usable {
@@ -969,6 +1009,20 @@ func updateContextWithCloudletDetails(ctx context.Context, cloudlet, carrier str
 	}
 }
 
+// Helper function that creates a FindCloudletReply from a DmeAppInst struct
+func ConstructFindCloudletReplyFromDmeAppInst(ctx context.Context, appinst *DmeAppInst, clientloc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration time.Duration) {
+	mreply.Fqdn = appinst.uri
+	mreply.Status = dme.FindCloudletReply_FIND_FOUND
+	mreply.CloudletLocation = &appinst.Location
+	mreply.Ports = copyPorts(appinst.ports)
+	// Create EdgeEventsCookieKey
+	key := CreateEdgeEventsCookieKey(appinst, *clientloc)
+	// Generate edgeEventsCookie
+	ctx = NewEdgeEventsCookieContext(ctx, key)
+	eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
+	mreply.EdgeEventsCookie = eecookie
+}
+
 func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration time.Duration) error {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
@@ -984,19 +1038,9 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 	list := findBestForCarrier(ctx, carrier, appkey, loc, 1)
 	if len(list) > 0 {
 		best := list[0]
-		mreply.Fqdn = best.appInst.uri
-		mreply.Status = dme.FindCloudletReply_FIND_FOUND
-		*mreply.CloudletLocation = best.appInst.location
-		mreply.Ports = copyPorts(best.appInst.ports)
-		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
-		// Create EdgeEventsCookieKey
-		key := CreateEdgeEventsCookieKey(best.appInst, *loc)
-		// Generate edgeEventsCookie
-		ctx = NewEdgeEventsCookieContext(ctx, key)
-		eecookie, _ := GenerateEdgeEventsCookie(key, ctx, edgeEventsCookieExpiration)
-		mreply.EdgeEventsCookie = eecookie
-
+		ConstructFindCloudletReplyFromDmeAppInst(ctx, best.appInst, loc, mreply, edgeEventsCookieExpiration)
 		// Update Context variable if passed
+		cloudlet := best.appInst.clusterInstKey.CloudletKey.Name
 		updateContextWithCloudletDetails(ctx, cloudlet, best.appInstCarrier)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "Fqdn", mreply.Fqdn, "distance", best.distance)
 	} else {
@@ -1100,7 +1144,7 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 		if !exists {
 			cloc = new(dme.CloudletLocation)
 
-			cloc.GpsLocation = &found.appInst.location
+			cloc.GpsLocation = &found.appInst.Location
 			cloc.CarrierName = found.appInst.clusterInstKey.CloudletKey.Organization
 			cloc.CloudletName = found.appInst.clusterInstKey.CloudletKey.Name
 			cloc.Distance = found.distance
@@ -1429,8 +1473,8 @@ func ListAppinstTbl(ctx context.Context) {
 					"Name", app.AppKey.Name,
 					"carrier", cname,
 					"Ver", app.AppKey.Version,
-					"Latitude", inst.location.Latitude,
-					"Longitude", inst.location.Longitude)
+					"Latitude", inst.Location.Latitude,
+					"Longitude", inst.Location.Longitude)
 			}
 		}
 	}
