@@ -50,6 +50,17 @@ func (s *DummyServer) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 	return &edgeproto.CloudletResourceQuotaProps{}, nil
 }
 
+func (s *DummyServer) GetOrganizationsOnCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletApi_GetOrganizationsOnCloudletServer) error {
+	orgs := s.OrgsOnCloudlet[*in]
+	for _, org := range orgs {
+		eorg := edgeproto.Organization{
+			Name: org,
+		}
+		cb.Send(&eorg)
+	}
+	return nil
+}
+
 // minimal bits not currently generated for flavorkey.proto to stream flavorKey objs
 // for ShowFlavorsForCloudlet cli
 type ShowFlavorsForCloudlet struct {

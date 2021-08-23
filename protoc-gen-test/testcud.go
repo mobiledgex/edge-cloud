@@ -891,6 +891,7 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 
 func (t *TestCud) genDummyServer() {
 	t.P("type DummyServer struct {")
+	t.P("CustomData")
 
 	for _, file := range t.Generator.Request.ProtoFile {
 		for _, desc := range file.MessageType {
