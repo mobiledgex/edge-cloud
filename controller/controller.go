@@ -566,7 +566,9 @@ func stopServices() {
 	if services.downsampledMetricsInfluxQ != nil {
 		services.downsampledMetricsInfluxQ.Stop()
 	}
-	syncLeaseData.Stop()
+	if syncLeaseData.stop != nil {
+		syncLeaseData.Stop()
+	}
 	if services.sync != nil {
 		services.sync.Done()
 	}
