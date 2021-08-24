@@ -128,7 +128,7 @@ func buildPortsMapFromString(portsString string) (map[string]struct{}, error) {
 	return portMap, nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, backendIP, metricIP string, ports []dme.AppPort, skipHcPorts string) (bool, error) {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, defaultBackendIP, metricIP string, ports []dme.AppPort, skipHcPorts string) (bool, error) {
 	var skipHcAll = false
 	var skipHcPortsMap map[string]struct{}
 	var err error
@@ -164,6 +164,13 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 		// So we create one spec per port when there is a port range in use
 		internalPort := p.InternalPort
 		for pubPort := p.PublicPort; pubPort <= endPort; pubPort++ {
+			serviceBackendIP := p.LoadBalancerServiceIp
+			if serviceBackendIP == "" {
+				if defaultBackendIP == "" {
+					return false, fmt.Errorf("No load balancer IP and no default backend IP provided")
+				}
+				serviceBackendIP = defaultBackendIP
+			}
 			switch p.Proto {
 			// only support tcp for now
 			case dme.LProto_L_PROTO_TCP:
@@ -172,7 +179,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 				tcpPort := TCPSpecDetail{
 					ListenPort:  pubPort,
 					ListenIP:    listenIP,
-					BackendIP:   backendIP,
+					BackendIP:   serviceBackendIP,
 					BackendPort: internalPort,
 					UseTLS:      p.Tls,
 					HealthCheck: !skipHcAll && !skipHealthCheck,
@@ -193,7 +200,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 				udpPort := UDPSpecDetail{
 					ListenPort:  pubPort,
 					ListenIP:    listenIP,
-					BackendIP:   backendIP,
+					BackendIP:   serviceBackendIP,
 					BackendPort: internalPort,
 					MaxPktSize:  p.MaxPktSize,
 				}

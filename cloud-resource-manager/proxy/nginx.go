@@ -197,7 +197,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client ssh.Client, confname, name, listenIP, backendIP string, ports []dme.AppPort, usesTLS bool) error {
+func createNginxConf(ctx context.Context, client ssh.Client, confname, name, listenIP, defaultBackendIP string, ports []dme.AppPort, usesTLS bool) error {
 	spec := ProxySpec{
 		Name:        name,
 		UsesTLS:     usesTLS,
@@ -212,13 +212,20 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 		return err
 	}
 	for _, p := range ports {
+		serviceBackendIP := p.LoadBalancerServiceIp
+		if serviceBackendIP == "" {
+			if defaultBackendIP == "" {
+				return fmt.Errorf("No load balancer IP and no default backend IP provided")
+			}
+			serviceBackendIP = defaultBackendIP
+		}
 		if p.Proto == dme.LProto_L_PROTO_UDP {
 			if !p.Nginx { // use envoy
 				continue
 			}
 			udpPort := UDPSpecDetail{
 				ListenIP:        listenIP,
-				BackendIP:       backendIP,
+				BackendIP:       serviceBackendIP,
 				BackendPort:     p.InternalPort,
 				ConcurrentConns: udpconns,
 			}

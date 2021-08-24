@@ -25,6 +25,9 @@ const DefaultNamespace string = "default"
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
 
+// max time waiting for a load balancer ip
+var maxLoadBalancerIPWait = 2 * time.Minute
+
 // How long to wait on create if there are no resources
 var createWaitNoResources = 10 * time.Second
 
@@ -173,6 +176,64 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 		}
 	}
 	return nil
+}
+
+func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, names *KubeNames, appinst *edgeproto.AppInst) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "PopulateAppInstLoadBalancerIps", "appInst", appinst.Key.String(), "maxLoadBalancerIPWait", maxLoadBalancerIPWait)
+	start := time.Now()
+	for {
+		services, err := GetServices(ctx, client, names)
+		if err != nil {
+			return err
+		}
+		portToLbIp := make(map[string]string)
+		for _, s := range services {
+			lbip := ""
+			for _, ing := range s.Status.LoadBalancer.Ingress {
+				if strings.Contains(ing.IP, "pending") || ing.IP == "" {
+					continue
+				}
+				lbip = ing.IP
+				break
+			}
+			ports := s.Spec.Ports
+			for _, p := range ports {
+				proto := p.Protocol
+				port := p.Port
+				portString := fmt.Sprintf("%s:%d", strings.ToLower(string(proto)), port)
+				portToLbIp[portString] = lbip
+			}
+		}
+		allPortsHaveIp := true
+		// see if all services have an LB IP and update
+		for i, mappedPort := range appinst.MappedPorts {
+			lproto, err := edgeproto.LProtoStr(mappedPort.Proto)
+			if err != nil {
+				return err
+			}
+			portString := fmt.Sprintf("%s:%d", lproto, mappedPort.PublicPort)
+			lbip, ok := portToLbIp[portString]
+			if ok {
+				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip)
+				appinst.MappedPorts[i].LoadBalancerServiceIp = lbip
+			} else {
+				log.SpanLog(ctx, log.DebugLevelInfra, "did not find load balancer ip for port", "portString", portString)
+				allPortsHaveIp = false
+			}
+		}
+		if allPortsHaveIp {
+			log.SpanLog(ctx, log.DebugLevelInfra, "All ports successfully got external IPS")
+			return nil
+		} else {
+			elapsed := time.Since(start)
+			if elapsed >= (maxLoadBalancerIPWait) {
+				log.SpanLog(ctx, log.DebugLevelInfra, "AppInst service lbip wait timed out", "appInst", appinst.Key.String())
+				return fmt.Errorf("Timed out waiting for Load Balancer IPs for appinst")
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "Not all ports have external IPs, wait and try again")
+			time.Sleep(time.Second * 1)
+		}
+	}
 }
 
 func getConfigDirName(names *KubeNames) (string, string) {
