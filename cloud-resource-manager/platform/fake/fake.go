@@ -489,6 +489,10 @@ func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.Cl
 	return &pc.LocalClient{}, nil
 }
 
+func (s *Platform) GetSSHClient(ctx context.Context, addr string) (ssh.Client, error) {
+	return &pc.LocalClient{}, nil
+}
+
 func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst, vmAppInsts []edgeproto.AppInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{
 		edgeproto.CloudletMgmtNode{
@@ -642,6 +646,10 @@ func (s *Platform) GetRestrictedCloudletStatus(ctx context.Context, cloudlet *ed
 
 func (s *Platform) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
 	return nil, nil
+}
+
+func (s *Platform) GetRootLBAddrs(ctx context.Context) (string, map[string]string, error) {
+	return "", nil, nil
 }
 
 func (s *Platform) GetVersionProperties() map[string]string {

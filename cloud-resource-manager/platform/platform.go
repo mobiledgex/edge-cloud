@@ -143,6 +143,10 @@ type Platform interface {
 	GetRestrictedCloudletStatus(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
 	// Get ssh clients of all root LBs
 	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
+	// Get addresses of all root LBs
+	GetRootLBAddrs(ctx context.Context) (string, map[string]string, error)
+	// Get ssh client based on addr
+	GetSSHClient(ctx context.Context, addr string) (ssh.Client, error)
 	// Get RootLB Flavor
 	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
 }

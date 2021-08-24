@@ -303,22 +303,15 @@ func main() {
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key, *appDNSRoot)
 		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
-		rootlb, err := platform.GetClusterPlatformClient(
-			ctx,
-			&edgeproto.ClusterInst{
-				IpAccess: edgeproto.IpAccess_IP_ACCESS_SHARED,
-			},
-			cloudcommon.ClientTypeRootLB,
-		)
 		if err == nil {
-			lbClients, err := platform.GetRootLBClients(ctx)
+			sharedLBAddr, lbAddrs, err := platform.GetRootLBAddrs(ctx)
 			if err != nil {
-				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
+				log.FatalLog("Failed to get rootLB addrs", "key", myCloudletInfo.Key, "err", err)
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
-			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
+			proxycerts.Init(ctx, platform, lbAddrs, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
 			pfType := pf.GetType(cloudlet.PlatformType.String())
-			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
+			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, sharedLBAddr, *commercialCerts)
 		}
 		tlsSpan.Finish()
 	}()

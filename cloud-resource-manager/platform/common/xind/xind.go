@@ -84,6 +84,10 @@ func (s *Xind) GetNodePlatformClient(ctx context.Context, node *edgeproto.Cloudl
 	return s.GetClient(ctx)
 }
 
+func (s *Xind) GetSSHClient(ctx context.Context, addr string) (ssh.Client, error) {
+	return s.GetClient(ctx)
+}
+
 func (s *Xind) GetClient(ctx context.Context) (ssh.Client, error) {
 	// TODO: add support for remote infra
 	return &pc.LocalClient{
@@ -105,6 +109,10 @@ func (s *Xind) GetAccessData(ctx context.Context, cloudlet *edgeproto.Cloudlet, 
 
 func (s *Xind) GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error) {
 	return nil, nil
+}
+
+func (s *Xind) GetRootLBAddrs(ctx context.Context) (string, map[string]string, error) {
+	return "", nil, nil
 }
 
 func (s *Xind) GetVersionProperties() map[string]string {
