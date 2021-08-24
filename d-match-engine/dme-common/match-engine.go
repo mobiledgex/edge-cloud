@@ -284,7 +284,7 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	}
 
 	if sendAvailableAppInst {
-		go EEHandler.SendAvailableAppInst(ctx, appInst.Key, cl)
+		go EEHandler.SendAvailableAppInst(ctx, appInst.Key, cl, carrierName)
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmedb, logMsg,
@@ -608,7 +608,7 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 							AppKey:         app.AppKey,
 							ClusterInstKey: clusterInstKey,
 						}
-						go EEHandler.SendAvailableAppInst(ctx, appinstkey, appinst)
+						go EEHandler.SendAvailableAppInst(ctx, appinstkey, appinst, carrier)
 					}
 				}
 			}
@@ -659,7 +659,7 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 							AppKey:         app.AppKey,
 							ClusterInstKey: clusterInstKey,
 						}
-						go EEHandler.SendAvailableAppInst(ctx, appinstkey, appinst)
+						go EEHandler.SendAvailableAppInst(ctx, appinstkey, appinst, carrier)
 					}
 				}
 			}
@@ -816,8 +816,8 @@ func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.
 	return search.results
 }
 
-func (s *searchAppInst) searchCarrier(carrier string) bool {
-	if s.reqCarrier == "" {
+func SearchCarrier(reqCarrier string, carrier string) bool {
+	if reqCarrier == "" {
 		// search all carriers
 		return true
 	}
@@ -827,7 +827,7 @@ func (s *searchAppInst) searchCarrier(carrier string) bool {
 	}
 	// later on we may have carrier groups or other logic,
 	// but for now it's just 1-to-1.
-	return s.reqCarrier == carrier
+	return reqCarrier == carrier
 }
 
 func (s *searchAppInst) padDistance(carrier string) float64 {
@@ -843,7 +843,7 @@ func (s *searchAppInst) padDistance(carrier string) float64 {
 }
 
 func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appInsts *DmeAppInsts) {
-	if !s.searchCarrier(carrier) {
+	if !SearchCarrier(s.reqCarrier, carrier) {
 		return
 	}
 	for _, i := range appInsts.Insts {
@@ -915,7 +915,7 @@ func (s *searchAppInst) veryClose(f1, f2 *foundAppInst) bool {
 }
 
 func (s *searchAppInst) searchPolicy(ctx context.Context, key *edgeproto.AppKey, potential *policySearch, carrier string, list []*edgeproto.AutoProvCloudlet) {
-	if !s.searchCarrier(carrier) {
+	if !SearchCarrier(s.reqCarrier, carrier) {
 		return
 	}
 	log.SpanLog(ctx, log.DebugLevelDmereq, "search AutoProvPolicy list", "policy", potential.policy.Name, "carrier", carrier, "list", list)
