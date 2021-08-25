@@ -299,6 +299,8 @@ func SetupTLSCerts(ctx context.Context, key *edgeproto.CloudletKey, name string,
 		return
 	}
 	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
+	DedicatedMux.Lock()
+	defer DedicatedMux.Unlock()
 	err = writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
 	if err != nil {
 		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", name)
