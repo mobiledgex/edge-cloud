@@ -106,18 +106,20 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 	}
 	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
 	getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
-	// refresh every 30 days
-	for {
-		select {
-		case <-time.After(30 * 24 * time.Hour):
-			go getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+	go func() {
+		// refresh every 30 days
+		for {
+			select {
+			case <-time.After(30 * 24 * time.Hour):
+				lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+				getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+				lbCertsSpan.Finish()
+			}
 		}
-	}
+	}()
 }
 
 func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
-	lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-	defer lbCertsSpan.Finish()
 	var err error
 	tls := access.TLSCert{}
 	if commercialCerts {
