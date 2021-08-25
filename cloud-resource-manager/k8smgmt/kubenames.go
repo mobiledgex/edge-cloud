@@ -32,8 +32,18 @@ type KubeNames struct {
 	ImagePullSecrets           []string
 	ImagePaths                 []string
 	IsUriIPAddr                bool
-	Namespace                  string
+	MultitenantNamespace       string // for apps launched in a multi-tenant cluster
+	VirtualClusterNamespace    string // for virtual clusters created independently from apps
 	BaseKconfName              string
+}
+
+type KubeNamesOp func(k *KubeNames) error
+
+func WithVirtualClusterNamespace(namespace string) KubeNamesOp {
+	return func(kn *KubeNames) error {
+		kn.VirtualClusterNamespace = namespace
+		return nil
+	}
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
@@ -87,7 +97,7 @@ func GetNormalizedClusterName(clusterInst *edgeproto.ClusterInst) string {
 }
 
 // GetKubeNames udpates kubeNames with normalized strings for the included clusterinst, app, and appisnt
-func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*KubeNames, error) {
+func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, opts ...KubeNamesOp) (*KubeNames, error) {
 	if clusterInst == nil {
 		return nil, fmt.Errorf("nil cluster inst")
 	}
@@ -98,6 +108,11 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		return nil, fmt.Errorf("nil app inst")
 	}
 	kubeNames := KubeNames{}
+	for _, op := range opts {
+		if err := op(&kubeNames); err != nil {
+			return nil, err
+		}
+	}
 	kubeNames.ClusterName = GetNormalizedClusterName(clusterInst)
 	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(&clusterInst.Key)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
@@ -113,10 +128,10 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.KconfName = GetKconfName(clusterInst)
 	// if clusterInst is multi-tenant and AppInst is specified, use namespaced config
 	if clusterInst.MultiTenant && appInst.Key.AppKey.Name != "" && !cloudcommon.IsSideCarApp(app) {
-		kubeNames.Namespace = GetNamespace(&appInst.Key)
+		kubeNames.MultitenantNamespace = GetNamespace(&appInst.Key)
 		kubeNames.BaseKconfName = kubeNames.KconfName
 		baseName := strings.TrimSuffix(kubeNames.KconfName, ".kubeconfig")
-		kubeNames.KconfName = fmt.Sprintf("%s.%s.kubeconfig", baseName, kubeNames.Namespace)
+		kubeNames.KconfName = fmt.Sprintf("%s.%s.kubeconfig", baseName, kubeNames.MultitenantNamespace)
 	}
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
 	kubeNames.DeploymentType = app.Deployment
@@ -145,7 +160,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 				template = &obj.Spec.Template
 			case *v1.Namespace:
 				// if this is not a multi tenant case, any additional namespaces are from a developer manifest
-				if kubeNames.Namespace == "" {
+				if kubeNames.MultitenantNamespace == "" {
 					kubeNames.DeveloperDefinedNamespaces = append(kubeNames.DeveloperDefinedNamespaces, obj.Name)
 				}
 			}

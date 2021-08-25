@@ -40,9 +40,6 @@ var podStateReg = regexp.MustCompile(podStateRegString)
 func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {
 	done := false
 	log.SpanLog(ctx, log.DebugLevelInfra, "check pods status", "namespace", namespace, "selector", selector)
-	if namespace == "" {
-		namespace = DefaultNamespace
-	}
 	cmd := fmt.Sprintf("%s kubectl get pods --no-headers -n %s --selector=%s", kConfEnv, namespace, selector)
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -155,7 +152,13 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 				break
 			}
 			if namespace == "" {
-				namespace = DefaultNamespace
+				if names.MultitenantNamespace != "" {
+					namespace = names.MultitenantNamespace
+				} else if names.VirtualClusterNamespace != "" {
+					namespace = names.VirtualClusterNamespace
+				} else {
+					namespace = DefaultNamespace
+				}
 			}
 			selector := fmt.Sprintf("%s=%s", MexAppLabel, name)
 			done, err := CheckPodsStatus(ctx, client, names.KconfEnv, namespace, selector, waitFor, start)
@@ -238,8 +241,8 @@ func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, name
 
 func getConfigDirName(names *KubeNames) (string, string) {
 	dir := names.ClusterName
-	if names.Namespace != "" {
-		dir += "." + names.Namespace
+	if names.MultitenantNamespace != "" {
+		dir += "." + names.MultitenantNamespace
 	}
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
@@ -266,7 +269,7 @@ func CreateDeveloperDefinedNamespaces(ctx context.Context, client ssh.Client, na
 }
 
 func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
-	if action == createManifest && names.Namespace != "" {
+	if action == createManifest && names.MultitenantNamespace != "" {
 		err := CreateNamespace(ctx, client, names)
 		if err != nil {
 			return err
@@ -277,7 +280,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 	if err != nil {
 		return err
 	}
-	if names.Namespace != "" {
+	if names.MultitenantNamespace != "" {
 		// Mulit-tenant cluster, add network policy
 		np, err := GetNetworkPolicy(ctx, app, appInst, names)
 		if err != nil {
@@ -316,7 +319,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 	// to use "--all" for old stuff until those old configs eventually
 	// get removed naturally over time.
 	selector := "--all"
-	if names.Namespace != "" {
+	if names.MultitenantNamespace != "" {
 		selector = fmt.Sprintf("-l %s=%s", ConfigLabel, getConfigLabel(names))
 	}
 	cmd := fmt.Sprintf("%s kubectl apply -f %s --prune %s", names.KconfEnv, configDir, selector)
@@ -376,7 +379,7 @@ func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app
 	if err != nil {
 		return err
 	}
-	if names.Namespace != "" {
+	if names.MultitenantNamespace != "" {
 		// clean up namespace
 		if err = DeleteNamespace(ctx, client, names); err != nil {
 			return err
@@ -412,7 +415,13 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 			continue
 		}
 		if namespace == "" {
-			namespace = DefaultNamespace
+			if names.MultitenantNamespace != "" {
+				namespace = names.MultitenantNamespace
+			} else if names.VirtualClusterNamespace != "" {
+				namespace = names.VirtualClusterNamespace
+			} else {
+				namespace = DefaultNamespace
+			}
 		}
 		// Returns list of pods and its containers in the format: "<PodName>/<ContainerName>"
 		cmd := fmt.Sprintf("%s kubectl get pods -n %s -o json --sort-by=.metadata.name --selector=%s=%s "+
@@ -511,19 +520,19 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 var namespaceTemplate = template.Must(template.New("namespace").Parse(`apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.Namespace}}
+  name: {{.MultitenantNamespace}}
   labels:
-    name: {{.Namespace}}
+    name: {{.MultitenantNamespace}}
 `))
 
 func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "creating namespace", "name", names.Namespace)
+	log.SpanLog(ctx, log.DebugLevelInfra, "creating namespace", "name", names.MultitenantNamespace)
 	buf := bytes.Buffer{}
 	err := namespaceTemplate.Execute(&buf, names)
 	if err != nil {
 		return err
 	}
-	file := names.Namespace + ".yaml"
+	file := names.MultitenantNamespace + ".yaml"
 	err = pc.WriteFile(client, file, buf.String(), "namespace", pc.NoSudo)
 	if err != nil {
 		return err
@@ -540,7 +549,7 @@ func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 		return fmt.Errorf("Failed to create new kubeconfig: %v", err)
 	}
 	// set the new kubeconfig to use the namespace
-	cmd = fmt.Sprintf("KUBECONFIG=%s kubectl config set-context --current --namespace=%s", names.KconfName, names.Namespace)
+	cmd = fmt.Sprintf("KUBECONFIG=%s kubectl config set-context --current --namespace=%s", names.KconfName, names.MultitenantNamespace)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("Error in setting new namespace context: %s - %v", out, err)
@@ -549,8 +558,8 @@ func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 }
 
 func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespace", "name", names.Namespace)
-	cmd := fmt.Sprintf("kubectl delete namespace %s --kubeconfig=%s", names.Namespace, names.BaseKconfName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespace", "name", names.MultitenantNamespace)
+	cmd := fmt.Sprintf("kubectl delete namespace %s --kubeconfig=%s", names.MultitenantNamespace, names.BaseKconfName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		if !strings.Contains(out, "not found") {

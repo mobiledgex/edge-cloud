@@ -2465,6 +2465,7 @@ const AppInstFieldMappedPortsEndPort = "9.6"
 const AppInstFieldMappedPortsTls = "9.7"
 const AppInstFieldMappedPortsNginx = "9.8"
 const AppInstFieldMappedPortsMaxPktSize = "9.9"
+const AppInstFieldMappedPortsLoadBalancerServiceIp = "9.10"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldState = "14"
@@ -2528,6 +2529,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsTls,
 	AppInstFieldMappedPortsNginx,
 	AppInstFieldMappedPortsMaxPktSize,
+	AppInstFieldMappedPortsLoadBalancerServiceIp,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
 	AppInstFieldErrors,
@@ -2586,6 +2588,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsTls:                           struct{}{},
 	AppInstFieldMappedPortsNginx:                         struct{}{},
 	AppInstFieldMappedPortsMaxPktSize:                    struct{}{},
+	AppInstFieldMappedPortsLoadBalancerServiceIp:         struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldState:                                    struct{}{},
 	AppInstFieldErrors:                                   struct{}{},
@@ -2644,6 +2647,7 @@ var AppInstAllFieldsStringMap = map[string]string{
 	AppInstFieldMappedPortsTls:                           "Mapped Ports Tls",
 	AppInstFieldMappedPortsNginx:                         "Mapped Ports Nginx",
 	AppInstFieldMappedPortsMaxPktSize:                    "Mapped Ports Max Pkt Size",
+	AppInstFieldMappedPortsLoadBalancerServiceIp:         "Mapped Ports Load Balancer Service Ip",
 	AppInstFieldFlavorName:                               "Flavor Name",
 	AppInstFieldState:                                    "State",
 	AppInstFieldErrors:                                   "Errors",
@@ -2801,6 +2805,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 			}
 			if m.MappedPorts[i0].MaxPktSize != o.MappedPorts[i0].MaxPktSize {
 				fields[AppInstFieldMappedPortsMaxPktSize] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+			if m.MappedPorts[i0].LoadBalancerServiceIp != o.MappedPorts[i0].LoadBalancerServiceIp {
+				fields[AppInstFieldMappedPortsLoadBalancerServiceIp] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 		}
