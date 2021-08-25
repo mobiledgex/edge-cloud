@@ -190,7 +190,9 @@ func (s *NodeMgr) Finish() {
 	if s.accessApiConn != nil {
 		s.accessApiConn.Close()
 	}
-	close(s.esEventsDone)
+	if s.ESClient != nil {
+		close(s.esEventsDone)
+	}
 	log.FinishTracer()
 }
 

@@ -16,6 +16,14 @@ const (
 	Delete
 )
 
+type CustomData struct {
+	OrgsOnCloudlet map[edgeproto.CloudletKey][]string
+}
+
+func (s *CustomData) Init() {
+	s.OrgsOnCloudlet = make(map[edgeproto.CloudletKey][]string)
+}
+
 func (s *DummyServer) SetDummyObjs(ctx context.Context, a Action, tag string, num int) {
 	for ii := 0; ii < num; ii++ {
 		name := fmt.Sprintf("%s%d", tag, ii)

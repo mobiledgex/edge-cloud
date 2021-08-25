@@ -1482,6 +1482,87 @@ func ShowFlavorsForCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *
 	}
 }
 
+var GetOrganizationsOnCloudletCmd = &cli.Command{
+	Use:          "GetOrganizationsOnCloudlet",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.Organization{},
+	Run:          runGetOrganizationsOnCloudlet,
+}
+
+func runGetOrganizationsOnCloudlet(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetOrganizationsOnCloudlet(c, obj)
+}
+
+func GetOrganizationsOnCloudlet(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.GetOrganizationsOnCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetOrganizationsOnCloudlet failed: %s", errstr)
+	}
+
+	objs := make([]*edgeproto.Organization, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("GetOrganizationsOnCloudlet recv failed: %s", errstr)
+		}
+		if cli.OutputStream {
+			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+			continue
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetOrganizationsOnCloudlets(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetOrganizationsOnCloudlet %v\n", data[ii])
+		myerr := GetOrganizationsOnCloudlet(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var RevokeAccessKeyCmd = &cli.Command{
 	Use:          "RevokeAccessKey",
 	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
@@ -1686,6 +1767,7 @@ var CloudletApiCmds = []*cobra.Command{
 	RemoveCloudletResMappingCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
 	ShowFlavorsForCloudletCmd.GenCmd(),
+	GetOrganizationsOnCloudletCmd.GenCmd(),
 	RevokeAccessKeyCmd.GenCmd(),
 	GenerateAccessKeyCmd.GenCmd(),
 	PlatformDeleteCloudletCmd.GenCmd(),
