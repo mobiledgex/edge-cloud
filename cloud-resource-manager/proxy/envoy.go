@@ -180,8 +180,8 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 		}
 		// Currently there is no (known) way to put a port range within Envoy.
 		// So we create one spec per port when there is a port range in use
+		internalPort := p.InternalPort
 		for pubPort := p.PublicPort; pubPort <= endPort; pubPort++ {
-			internalPort := p.InternalPort
 			serviceBackendIP, err := getBackendIpToUse(ctx, appInst, &p, defaultBackendIP)
 			if err != nil {
 				return false, err
