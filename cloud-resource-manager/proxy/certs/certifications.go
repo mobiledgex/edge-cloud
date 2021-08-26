@@ -128,10 +128,11 @@ func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commo
 		err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
 	}
 	if err == nil {
-		client, err := platform.GetNodePlatformClient(ctx, &edgeproto.CloudletMgmtNode{Type: "sharedrootlb"})
+		client, err := platform.GetNodePlatformClient(ctx, &edgeproto.CloudletMgmtNode{Type: cloudcommon.CloudletNodeSharedRootLB})
 		if err == nil {
 			err = writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
 			if err != nil {
+				err = fmt.Errorf("write cert to rootLB failed: %v", err)
 				nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", commonName)
 			}
 		} else {
@@ -151,6 +152,7 @@ func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commo
 				}
 				err = writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
 				if err != nil {
+					err = fmt.Errorf("write cert to rootLB failed: %v", err)
 					nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", lbName)
 				}
 			}
