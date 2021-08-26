@@ -16,7 +16,7 @@ type TrustPolicyExceptionApi struct {
 
 var trustPolicyExceptionApi = TrustPolicyExceptionApi{}
 
-func InitTrustPolicyExcptionApi(sync *Sync) {
+func InitTrustPolicyExceptionApi(sync *Sync) {
 	trustPolicyExceptionApi.sync = sync
 	trustPolicyExceptionApi.store = edgeproto.NewTrustPolicyExceptionStore(sync.store)
 	edgeproto.InitTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
@@ -185,6 +185,15 @@ type TrustPolicyExceptionResponseApi struct {
 	sync  *Sync
 	store edgeproto.TrustPolicyExceptionResponseStore
 	cache edgeproto.TrustPolicyExceptionResponseCache
+}
+
+var trustPolicyExceptionResponseApi = TrustPolicyExceptionResponseApi{}
+
+func InitTrustPolicyExceptionResponseApi(sync *Sync) {
+	trustPolicyExceptionResponseApi.sync = sync
+	trustPolicyExceptionResponseApi.store = edgeproto.NewTrustPolicyExceptionResponseStore(sync.store)
+	edgeproto.InitTrustPolicyExceptionResponseCache(&trustPolicyExceptionResponseApi.cache)
+	sync.RegisterCache(&trustPolicyExceptionResponseApi.cache)
 }
 
 func (s *TrustPolicyExceptionResponseApi) CreateTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_CreateTrustPolicyExceptionResponseServer) error {

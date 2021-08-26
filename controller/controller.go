@@ -426,6 +426,8 @@ func startServices() error {
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
+	edgeproto.RegisterTrustPolicyExceptionApiServer(server, &trustPolicyExceptionApi)
+	edgeproto.RegisterTrustPolicyExceptionResponseApiServer(server, &trustPolicyExceptionResponseApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
@@ -466,6 +468,8 @@ func startServices() error {
 			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterTrustPolicyApiHandler,
+			edgeproto.RegisterTrustPolicyExceptionApiHandler,
+			edgeproto.RegisterTrustPolicyExceptionResponseApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterRateLimitSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
@@ -615,6 +619,8 @@ func InitApis(sync *Sync) {
 	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
 	InitTrustPolicyApi(sync)
+	InitTrustPolicyExceptionApi(sync)
+	InitTrustPolicyExceptionResponseApi(sync)
 	InitSettingsApi(sync)
 	InitRateLimitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
@@ -637,7 +643,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
 	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
-
+	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionResponseCache(&trustPolicyExceptionResponseApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
