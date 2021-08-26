@@ -209,6 +209,9 @@ func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, name
 				lbip = ing.IP
 				break
 			}
+			if lbip == "" {
+				continue
+			}
 			ports := s.Spec.Ports
 			for _, p := range ports {
 				portString := LbServicePortToString(&p)
