@@ -15,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const WaitDeleted string = "WaitDeleted"
@@ -36,6 +37,13 @@ var createManifest = "create"
 
 var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
 var podStateReg = regexp.MustCompile(podStateRegString)
+
+// LbServicePortToString must have the same format as edgeproto.AppInternalPortToString
+func LbServicePortToString(p *v1.ServicePort) string {
+	proto := p.Protocol
+	port := p.Port
+	return fmt.Sprintf("%s:%d", strings.ToLower(string(proto)), port)
+}
 
 func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {
 	done := false
@@ -70,6 +78,8 @@ func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace
 			case "Pending":
 				fallthrough
 			case "ContainerCreating":
+				fallthrough
+			case "CreateContainerConfigError": // this can be a transient state for some deployments
 				log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
 			case "Terminating":
 				log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
@@ -86,7 +96,7 @@ func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace
 					cmd := fmt.Sprintf("%s kubectl describe pod -n %s --selector=%s", kConfEnv, namespace, selector)
 					out, derr := client.Output(cmd)
 					if derr == nil {
-						return done, fmt.Errorf("Run container failed: %s", out)
+						return done, fmt.Errorf("Run container failed, pod state: %s - %s", podState, out)
 					}
 					return done, fmt.Errorf("Pod is unexpected state: %s", podState)
 				}
@@ -183,13 +193,13 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 
 func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, names *KubeNames, appinst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "PopulateAppInstLoadBalancerIps", "appInst", appinst.Key.String(), "maxLoadBalancerIPWait", maxLoadBalancerIPWait)
+	appinst.InternalPortToLbIp = make(map[string]string)
 	start := time.Now()
 	for {
 		services, err := GetServices(ctx, client, names)
 		if err != nil {
 			return err
 		}
-		portToLbIp := make(map[string]string)
 		for _, s := range services {
 			lbip := ""
 			for _, ing := range s.Status.LoadBalancer.Ingress {
@@ -201,24 +211,21 @@ func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, name
 			}
 			ports := s.Spec.Ports
 			for _, p := range ports {
-				proto := p.Protocol
-				port := p.Port
-				portString := fmt.Sprintf("%s:%d", strings.ToLower(string(proto)), port)
-				portToLbIp[portString] = lbip
+				portString := LbServicePortToString(&p)
+				appinst.InternalPortToLbIp[portString] = lbip
 			}
 		}
 		allPortsHaveIp := true
 		// see if all services have an LB IP and update
-		for i, mappedPort := range appinst.MappedPorts {
-			lproto, err := edgeproto.LProtoStr(mappedPort.Proto)
+		for _, mappedPort := range appinst.MappedPorts {
+			portString, err := edgeproto.AppInternalPortToString(&mappedPort)
 			if err != nil {
 				return err
 			}
-			portString := fmt.Sprintf("%s:%d", lproto, mappedPort.PublicPort)
-			lbip, ok := portToLbIp[portString]
+			lbip, ok := appinst.InternalPortToLbIp[portString]
 			if ok {
 				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip)
-				appinst.MappedPorts[i].LoadBalancerServiceIp = lbip
+				appinst.InternalPortToLbIp[portString] = lbip
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "did not find load balancer ip for port", "portString", portString)
 				allPortsHaveIp = false

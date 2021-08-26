@@ -26,19 +26,17 @@ var AppPortOptionalArgs = []string{
 	"tls",
 	"nginx",
 	"maxpktsize",
-	"loadbalancerserviceip",
 }
 var AppPortAliasArgs = []string{}
 var AppPortComments = map[string]string{
-	"proto":                 "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
-	"internalport":          "Container port",
-	"publicport":            "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
-	"fqdnprefix":            "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
-	"endport":               "A non-zero end port indicates a port range from internal port to end port, inclusive.",
-	"tls":                   "TLS termination for this port",
-	"nginx":                 "use nginx proxy for this port if you really need a transparent proxy (udp only)",
-	"maxpktsize":            "Maximum datagram size (udp only)",
-	"loadbalancerserviceip": "Load balancer service IP",
+	"proto":        "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
+	"internalport": "Container port",
+	"publicport":   "Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)",
+	"fqdnprefix":   "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
+	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
+	"tls":          "TLS termination for this port",
+	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"maxpktsize":   "Maximum datagram size (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}
 var DeviceInfoStaticRequiredArgs = []string{}

@@ -856,6 +856,14 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
 
+func AppInternalPortToString(port *dme.AppPort) (string, error) {
+	lproto, err := LProtoStr(port.Proto)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%d", lproto, port.InternalPort), nil
+}
+
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	appports := make([]dme.AppPort, 0)
 	if ports == "" {
