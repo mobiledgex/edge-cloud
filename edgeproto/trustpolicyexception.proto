@@ -33,6 +33,7 @@ message TrustPolicyExceptionKey {
   AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.keytag) = "appkey"];
   // Cloudlet Key
   CloudletKey cloudlet_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletkey"];
+  // TrustPolicyExceptionKey name
   string Name = 3 [(protogen.keytag) = "name"]; 
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
@@ -48,13 +49,14 @@ message TrustPolicyException {
   repeated SecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
   // State of the exception within the approval process
   TrustPolicyExceptionState state = 4;
+  option (protogen.noconfig) = "State";
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;  
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization";
+  option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudlet-org=Key.CloudletKey.Organization,cloudlet-name=Key.CloudletKey.Name";
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
 

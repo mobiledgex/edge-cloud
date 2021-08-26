@@ -1216,6 +1216,7 @@ var AllDataComments = map[string]string{
 	"trustpolicyexceptions:#.key.appkey.version":                                    "App version",
 	"trustpolicyexceptions:#.key.cloudletkey.organization":                          "Organization of the cloudlet site",
 	"trustpolicyexceptions:#.key.cloudletkey.name":                                  "Name of the cloudlet",
+	"trustpolicyexceptions:#.key.name":                                              "TrustPolicyExceptionKey name",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol":                      "tcp, udp, icmp",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin":                  "TCP or UDP port range start",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax":                  "TCP or UDP port range end",
@@ -1227,6 +1228,7 @@ var AllDataComments = map[string]string{
 	"trustpolicyexceptionresponses:#.key.appkey.version":                            "App version",
 	"trustpolicyexceptionresponses:#.key.cloudletkey.organization":                  "Organization of the cloudlet site",
 	"trustpolicyexceptionresponses:#.key.cloudletkey.name":                          "Name of the cloudlet",
+	"trustpolicyexceptionresponses:#.key.name":                                      "TrustPolicyExceptionKey name",
 	"trustpolicyexceptionresponses:#.state":                                         "State of the exception within the approval process, one of Unknown, Created, ApprovalRequested, Active, Rejected",
 }
 var AllDataSpecialArgs = map[string]string{

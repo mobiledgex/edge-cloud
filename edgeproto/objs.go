@@ -724,10 +724,10 @@ func ValidateSecurityRules(rules []SecurityRule) error {
 			}
 		} else {
 			if r.PortRangeMin < minPort || r.PortRangeMin > maxPort {
-				return fmt.Errorf("Invalid min port range: %d", r.PortRangeMin)
+				return fmt.Errorf("Invalid min port: %d", r.PortRangeMin)
 			}
 			if r.PortRangeMax > maxPort {
-				return fmt.Errorf("Invalid max port range: %d", r.PortRangeMax)
+				return fmt.Errorf("Invalid max port: %d", r.PortRangeMax)
 			}
 			if r.PortRangeMin > r.PortRangeMax {
 				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", r.PortRangeMin, r.PortRangeMax)

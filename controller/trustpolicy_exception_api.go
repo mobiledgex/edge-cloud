@@ -37,8 +37,7 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.Trust
 	if err := in.Validate(nil); err != nil {
 		return err
 	}
-	// check if the app is trusted or not and the cloudlet has trustPolicy or not.
-	// if no for any of the above two then return error
+
 	_, err := s.store.Create(ctx, in, s.sync.syncWait)
 	return err
 
@@ -99,7 +98,10 @@ func (s *TrustPolicyExceptionApi) RequestTrustPolicyException(in *edgeproto.Trus
 		} else {
 			cur.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
 		}
-		changed = cur.CopyInFields(in)
+
+		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", cur.State)
+		changed = 1
+		//changed = cur.CopyInFields(in) // FIXME FIXME
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
