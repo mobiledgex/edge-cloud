@@ -311,12 +311,8 @@ func main() {
 			cloudcommon.ClientTypeRootLB,
 		)
 		if err == nil {
-			lbClients, err := platform.GetRootLBClients(ctx)
-			if err != nil {
-				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
-			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
-			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
+			proxycerts.Init(ctx, platform, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
 			pfType := pf.GetType(cloudlet.PlatformType.String())
 			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
 		}
