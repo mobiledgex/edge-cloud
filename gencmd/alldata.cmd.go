@@ -292,6 +292,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.MaxReqsRateLimitSettings); i0++ {
 	}
+	for i0 := 0; i0 < len(in.TrustPolicyExceptions); i0++ {
+		for i1 := 0; i1 < len(in.TrustPolicyExceptions[i0].OutboundSecurityRules); i1++ {
+		}
+	}
+	for i0 := 0; i0 < len(in.TrustPolicyExceptionResponses); i0++ {
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -773,6 +779,26 @@ var AllDataOptionalArgs = []string{
 	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm",
 	"maxreqsratelimitsettings:#.settings.maxrequests",
 	"maxreqsratelimitsettings:#.settings.interval",
+	"trustpolicyexceptions:#.fields",
+	"trustpolicyexceptions:#.key.appkey.organization",
+	"trustpolicyexceptions:#.key.appkey.name",
+	"trustpolicyexceptions:#.key.appkey.version",
+	"trustpolicyexceptions:#.key.cloudletkey.organization",
+	"trustpolicyexceptions:#.key.cloudletkey.name",
+	"trustpolicyexceptions:#.key.name",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr",
+	"trustpolicyexceptions:#.state",
+	"trustpolicyexceptionresponses:#.fields",
+	"trustpolicyexceptionresponses:#.key.appkey.organization",
+	"trustpolicyexceptionresponses:#.key.appkey.name",
+	"trustpolicyexceptionresponses:#.key.appkey.version",
+	"trustpolicyexceptionresponses:#.key.cloudletkey.organization",
+	"trustpolicyexceptionresponses:#.key.cloudletkey.name",
+	"trustpolicyexceptionresponses:#.key.name",
+	"trustpolicyexceptionresponses:#.state",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -1184,6 +1210,24 @@ var AllDataComments = map[string]string{
 	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm":                          "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
 	"maxreqsratelimitsettings:#.settings.maxrequests":                               "Maximum number of requests for the given Interval",
 	"maxreqsratelimitsettings:#.settings.interval":                                  "Time interval",
+	"trustpolicyexceptions:#.fields":                                                "Fields are used for the Update API to specify which fields to apply",
+	"trustpolicyexceptions:#.key.appkey.organization":                               "App developer organization",
+	"trustpolicyexceptions:#.key.appkey.name":                                       "App name",
+	"trustpolicyexceptions:#.key.appkey.version":                                    "App version",
+	"trustpolicyexceptions:#.key.cloudletkey.organization":                          "Organization of the cloudlet site",
+	"trustpolicyexceptions:#.key.cloudletkey.name":                                  "Name of the cloudlet",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol":                      "tcp, udp, icmp",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin":                  "TCP or UDP port range start",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax":                  "TCP or UDP port range end",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr":                    "remote CIDR X.X.X.X/X",
+	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, Created, ApprovalRequested, Active, Rejected",
+	"trustpolicyexceptionresponses:#.fields":                                        "Fields are used for the Update API to specify which fields to apply",
+	"trustpolicyexceptionresponses:#.key.appkey.organization":                       "App developer organization",
+	"trustpolicyexceptionresponses:#.key.appkey.name":                               "App name",
+	"trustpolicyexceptionresponses:#.key.appkey.version":                            "App version",
+	"trustpolicyexceptionresponses:#.key.cloudletkey.organization":                  "Organization of the cloudlet site",
+	"trustpolicyexceptionresponses:#.key.cloudletkey.name":                          "Name of the cloudlet",
+	"trustpolicyexceptionresponses:#.state":                                         "State of the exception within the approval process, one of Unknown, Created, ApprovalRequested, Active, Rejected",
 }
 var AllDataSpecialArgs = map[string]string{
 	"alertpolicies:#.annotations":             "StringToString",
@@ -1226,6 +1270,8 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
 	"trustpolicies:#.fields":                  "StringArray",
+	"trustpolicyexceptionresponses:#.fields":  "StringArray",
+	"trustpolicyexceptions:#.fields":          "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 	"vmpools:#.status.msgs":                   "StringArray",

@@ -1183,6 +1183,13 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := VMAction_CamelValue["VmAction"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(TrustPolicyExceptionState(0)):
+		if en, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PowerState(0)):
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1212,13 +1219,6 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 			return en, nil
 		}
 		if en, ok := StreamState_CamelValue["Stream"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-	case reflect.TypeOf(TrustPolicyExceptionState(0)):
-		if en, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(VersionHash(0)):
@@ -1252,6 +1252,8 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowClusterInst":                  struct{}{},
 	"ShowClusterInstInfo":              struct{}{},
 	"ShowAutoProvPolicy":               struct{}{},
+	"ShowTrustPolicyException":         struct{}{},
+	"ShowTrustPolicyExceptionResponse": struct{}{},
 	"ShowAppInst":                      struct{}{},
 	"ShowAppInstInfo":                  struct{}{},
 	"ShowAppInstMetrics":               struct{}{},
@@ -1265,8 +1267,6 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowNode":                         struct{}{},
 	"ShowDevice":                       struct{}{},
 	"ShowDeviceReport":                 struct{}{},
-	"ShowTrustPolicyException":         struct{}{},
-	"ShowTrustPolicyExceptionResponse": struct{}{},
 }
 
 func IsShow(cmd string) bool {
