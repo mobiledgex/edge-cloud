@@ -49,6 +49,10 @@ var VMTypeClusterMaster = "cluster-master"
 var VMTypeClusterK8sNode = "cluster-k8s-node"
 var VMTypeClusterDockerNode = "cluster-docker-node"
 
+// cloudlet node names
+var CloudletNodeSharedRootLB = "sharedrootlb"
+var CloudletNodeDedicatedRootLB = "dedicatedrootlb"
+
 const AutoClusterPrefix = "autocluster"
 const ReservableClusterPrefix = "reservable"
 const ReserveClusterEvent = "Reserve ClusterInst"
