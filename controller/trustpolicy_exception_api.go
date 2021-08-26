@@ -23,7 +23,7 @@ func InitTrustPolicyExcptionApi(sync *Sync) {
 	sync.RegisterCache(&trustPolicyExceptionApi.cache)
 }
 
-func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
+func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_CreateTrustPolicyExceptionServer) error {
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
 
@@ -81,7 +81,42 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(in *edgeproto.Trust
 	return nil
 }
 
-func (s *TrustPolicyExceptionApi) DeleteTrustExceptionPolicy(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) error {
+func (s *TrustPolicyExceptionApi) RequestTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_RequestTrustPolicyExceptionServer) error {
+	ctx := cb.Context()
+	cur := edgeproto.TrustPolicyException{}
+	changed := 0
+
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+			return nil
+		}
+		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
+			// Just a hack for now. FIXME FIXME
+			cur.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+		} else {
+			cur.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
+		}
+		changed = cur.CopyInFields(in)
+		if err := cur.Validate(nil); err != nil {
+			return err
+		}
+
+		if changed == 0 {
+			return nil
+		}
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *TrustPolicyExceptionApi) DeleteTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_DeleteTrustPolicyExceptionServer) error {
 	ctx := cb.Context()
 	if !s.cache.HasKey(&in.Key) {
 		return in.Key.NotFoundError()
@@ -104,7 +139,6 @@ func (s *TrustPolicyExceptionApi) DeleteTrustExceptionPolicy(in *edgeproto.Trust
 	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
-
 func (s *TrustPolicyExceptionApi) ShowTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_ShowTrustPolicyExceptionServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.TrustPolicyException) error {
 		err := cb.Send(obj)
@@ -145,4 +179,26 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(ckey *edgeproto.C
 		}
 	}
 	return rules
+}
+
+type TrustPolicyExceptionResponseApi struct {
+	sync  *Sync
+	store edgeproto.TrustPolicyExceptionResponseStore
+	cache edgeproto.TrustPolicyExceptionResponseCache
+}
+
+func (s *TrustPolicyExceptionResponseApi) CreateTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_CreateTrustPolicyExceptionResponseServer) error {
+	return nil
+}
+
+func (s *TrustPolicyExceptionResponseApi) UpdateTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_UpdateTrustPolicyExceptionResponseServer) error {
+	return nil
+}
+
+func (s *TrustPolicyExceptionResponseApi) DeleteTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_DeleteTrustPolicyExceptionResponseServer) error {
+	return nil
+}
+
+func (s *TrustPolicyExceptionResponseApi) ShowTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_ShowTrustPolicyExceptionResponseServer) error {
+	return nil
 }
