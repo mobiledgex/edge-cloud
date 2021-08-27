@@ -38,11 +38,10 @@ var createManifest = "create"
 var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
 var podStateReg = regexp.MustCompile(podStateRegString)
 
-// LbServicePortToString must have the same format as edgeproto.AppInternalPortToString
 func LbServicePortToString(p *v1.ServicePort) string {
 	proto := p.Protocol
 	port := p.Port
-	return fmt.Sprintf("%s:%d", strings.ToLower(string(proto)), port)
+	return edgeproto.ProtoPortToString(string(proto), port)
 }
 
 func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {

@@ -856,12 +856,17 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
 
+// ProtoPortToString ensures consistent formatting
+func ProtoPortToString(proto string, port int32) string {
+	return fmt.Sprintf("%s:%d", strings.ToLower(proto), port)
+}
+
 func AppInternalPortToString(port *dme.AppPort) (string, error) {
 	lproto, err := LProtoStr(port.Proto)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%s:%d", lproto, port.InternalPort), nil
+	return ProtoPortToString(lproto, port.InternalPort), nil
 }
 
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
