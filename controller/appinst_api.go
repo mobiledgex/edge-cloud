@@ -845,6 +845,17 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 	}()
 
+	var cloudlet edgeproto.Cloudlet
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
+			return errors.New("Specified Cloudlet not found")
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
 	if autocluster {
 		// auto-create cluster inst
 		clusterInst.Key = *in.ClusterInstKey()
@@ -870,6 +881,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 			clusterInst.NumMasters = 1
 			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
+			if cloudlet.PlatformType == edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL {
+				// bare metal k8s clusters are virtual and have no nodes
+				clusterInst.NumNodes = 0
+			}
 		}
 		clusterInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 		createStart := time.Now()
@@ -910,10 +925,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		// cache location of cloudlet in app inst
-		var cloudlet edgeproto.Cloudlet
-		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-			return errors.New("Specified Cloudlet not found")
-		}
 		in.CloudletLoc = cloudlet.Location
 
 		var app edgeproto.App
