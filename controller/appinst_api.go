@@ -876,6 +876,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
 			if cloudletPlatformType == edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL {
 				// bare metal k8s clusters are virtual and have no nodes
+				log.SpanLog(ctx, log.DebugLevelApi, "Setting num nodes to 0 for k8s baremetal virtual cluster")
 				clusterInst.NumNodes = 0
 			}
 		}
