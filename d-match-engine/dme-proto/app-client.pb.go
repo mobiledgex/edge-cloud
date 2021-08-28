@@ -1892,19 +1892,20 @@ var xxx_messageInfo_ClientEdgeEvent proto.InternalMessageInfo
 // Message from DME to SDK
 type ServerEdgeEvent struct {
 	EventType ServerEdgeEvent_ServerEventType `protobuf:"varint,1,opt,name=event_type,json=eventType,proto3,enum=distributed_match_engine.ServerEdgeEvent_ServerEventType" json:"event_type,omitempty"`
-	// Cloudlet state information
+	// Cloudlet state information if cloudlet state is not CLOUDLET_STATE_READY
 	CloudletState CloudletState `protobuf:"varint,2,opt,name=cloudlet_state,json=cloudletState,proto3,enum=distributed_match_engine.CloudletState" json:"cloudlet_state,omitempty"`
-	// Cloudlet maintenance state information
+	// Cloudlet maintenance state information if maintenance state is not NORMAL_OPERATION
 	MaintenanceState MaintenanceState `protobuf:"varint,3,opt,name=maintenance_state,json=maintenanceState,proto3,enum=distributed_match_engine.MaintenanceState" json:"maintenance_state,omitempty"`
-	// AppInst health state information
+	// AppInst health state information if health check is not HEALTH_CHECK_OK
 	HealthCheck HealthCheck `protobuf:"varint,4,opt,name=health_check,json=healthCheck,proto3,enum=distributed_match_engine.HealthCheck" json:"health_check,omitempty"`
 	// Summarized RTT Latency stats from samples provided from client if event_type is EVENT_LATENCY
 	Statistics *Statistics `protobuf:"bytes,5,opt,name=statistics,proto3" json:"statistics,omitempty"`
 	//
 	// New and closer cloudlet if event_type is EVENT_CLOUDLET_UPDATE.
-	// Also sent on EVENT_CLOUDLET_STATE, if cloudlet_state != CLOUDLET_STATE_READY
-	// Also sent on EVENT_CLOUDLET_MAINTENANCE, if maintenance_state == UNDER_MAINTENANCE
-	// Also sent on EVENT_APPINST_HEALTH, if health_check != HEALTH_CHECK_OK && health_check != HEALTH_CHECK_UNKNOWN
+	// (EVENT_CLOUDLET_UPDATE occurs if the client is closer to a different cloudlet, or a new closer appinst is created, or a previously down appinst/cloudlet that is closest to the client is now operational)
+	// Also sent on EVENT_CLOUDLET_STATE if another cloudlet is available
+	// Also sent on EVENT_CLOUDLET_MAINTENANCE, if another cloudlet is available and maintenance_state == UNDER_MAINTENANCE
+	// Also sent on EVENT_APPINST_HEALTH, if another cloudlet is available and health_check != HEALTH_CHECK_UNKNOWN
 	NewCloudlet *FindCloudletReply `protobuf:"bytes,6,opt,name=new_cloudlet,json=newCloudlet,proto3" json:"new_cloudlet,omitempty"`
 	// Error message if event_type is EVENT_ERROR
 	ErrorMsg string `protobuf:"bytes,7,opt,name=error_msg,json=errorMsg,proto3" json:"error_msg,omitempty"`
