@@ -54,7 +54,7 @@ func (s *Xind) CreateAppInstNoPatch(ctx context.Context, clusterInst *edgeproto.
 			proxyName,
 			cloudcommon.IPAddrAllInterfaces,
 			masterIP,
-			appInst.MappedPorts,
+			appInst,
 			app.SkipHcPorts,
 			proxy.WithDockerNetwork(network),
 			proxy.WithDockerPublishPorts())
