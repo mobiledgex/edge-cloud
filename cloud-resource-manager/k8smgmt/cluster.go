@@ -106,7 +106,7 @@ func ClearCluster(ctx context.Context, client ssh.Client, clusterInst *edgeproto
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "cleaning config for namespace", "namespace", str)
 		nsNames := *names
-		nsNames.Namespace = str
+		nsNames.MultitenantNamespace = str
 		configDir, _ := getConfigDirName(&nsNames)
 		err = ClearClusterConfig(ctx, client, configDir, str, names.KconfEnv)
 		if err != nil {

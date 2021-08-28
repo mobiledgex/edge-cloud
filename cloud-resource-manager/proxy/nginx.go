@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
 )
@@ -104,15 +105,15 @@ func getNginxContainerName(name string) string {
 	return "nginx" + name
 }
 
-func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, ports []dme.AppPort, skipHcPorts string, ops ...Op) error {
+func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, destIP string, appInst *edgeproto.AppInst, skipHcPorts string, ops ...Op) error {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "CreateNginxProxy", "listenIP", listenIP, "destIP", destIP)
 	containerName := getNginxContainerName(name)
 
 	// check to see whether nginx or envoy is needed (or both)
-	envoyNeeded, nginxNeeded := CheckProtocols(name, ports)
+	envoyNeeded, nginxNeeded := CheckProtocols(name, appInst.MappedPorts)
 	if envoyNeeded {
-		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, ports, skipHcPorts, ops...)
+		err := CreateEnvoyProxy(ctx, client, name, listenIP, destIP, appInst, skipHcPorts, ops...)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "CreateEnvoyProxy failed ", "err", err)
 			return fmt.Errorf("Create Envoy Proxy failed, %v", err)
@@ -121,7 +122,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	if !nginxNeeded {
 		return nil
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", ports)
+	log.SpanLog(ctx, log.DebugLevelInfra, "create nginx", "name", name, "listenIP", listenIP, "destIP", destIP, "ports", appInst.MappedPorts)
 	opts := Options{}
 	opts.Apply(ops)
 
@@ -162,14 +163,14 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
-	err = createNginxConf(ctx, client, nconfName, name, listenIP, destIP, ports, usesTLS)
+	err = createNginxConf(ctx, client, nconfName, name, listenIP, destIP, appInst, usesTLS)
 	if err != nil {
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
 
 	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", containerName}
 	if opts.DockerPublishPorts {
-		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(ports, dockermgmt.UsePublicPortInContainer, dockermgmt.NginxProxy, listenIP)...)
+		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(appInst.MappedPorts, dockermgmt.UsePublicPortInContainer, dockermgmt.NginxProxy, listenIP)...)
 	}
 	if opts.DockerNetwork != "" {
 		// For dind, we use the network which the dind cluster is on.
@@ -197,7 +198,7 @@ func CreateNginxProxy(ctx context.Context, client ssh.Client, name, listenIP, de
 	return nil
 }
 
-func createNginxConf(ctx context.Context, client ssh.Client, confname, name, listenIP, backendIP string, ports []dme.AppPort, usesTLS bool) error {
+func createNginxConf(ctx context.Context, client ssh.Client, confname, name, listenIP, defaultBackendIP string, appInst *edgeproto.AppInst, usesTLS bool) error {
 	spec := ProxySpec{
 		Name:        name,
 		UsesTLS:     usesTLS,
@@ -211,14 +212,18 @@ func createNginxConf(ctx context.Context, client ssh.Client, confname, name, lis
 	if err != nil {
 		return err
 	}
-	for _, p := range ports {
+	for _, p := range appInst.MappedPorts {
+		serviceBackendIP, err := getBackendIpToUse(ctx, appInst, &p, defaultBackendIP)
+		if err != nil {
+			return err
+		}
 		if p.Proto == dme.LProto_L_PROTO_UDP {
 			if !p.Nginx { // use envoy
 				continue
 			}
 			udpPort := UDPSpecDetail{
 				ListenIP:        listenIP,
-				BackendIP:       backendIP,
+				BackendIP:       serviceBackendIP,
 				BackendPort:     p.InternalPort,
 				ConcurrentConns: udpconns,
 			}

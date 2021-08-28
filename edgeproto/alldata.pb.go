@@ -948,6 +948,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.UpdatedAt")
 	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.InternalPortToLbIp")
+	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "VmPools.Vms.UpdatedAt")
 	}
