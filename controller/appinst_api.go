@@ -446,6 +446,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	realClusterName := in.RealClusterName
 	var cloudletFeatures *platform.Features
 	cloudletCompatibilityVersion := uint32(0)
+	var cloudletPlatformType edgeproto.PlatformType
+	var cloudletLoc dme.Loc
 
 	defer func() {
 		if reterr != nil {
@@ -487,6 +489,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		cloudletPlatformType = cloudlet.PlatformType
+		cloudletLoc = cloudlet.Location
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &info) {
 			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.ClusterInstKey.CloudletKey)
@@ -870,6 +874,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 			clusterInst.NumMasters = 1
 			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
+			if cloudletPlatformType == edgeproto.PlatformType_PLATFORM_TYPE_K8S_BARE_METAL {
+				// bare metal k8s clusters are virtual and have no nodes
+				log.SpanLog(ctx, log.DebugLevelApi, "Setting num nodes to 0 for k8s baremetal virtual cluster")
+				clusterInst.NumNodes = 0
+			}
 		}
 		clusterInst.Liveness = edgeproto.Liveness_LIVENESS_DYNAMIC
 		createStart := time.Now()
@@ -910,11 +919,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		// cache location of cloudlet in app inst
-		var cloudlet edgeproto.Cloudlet
-		if !cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
-			return errors.New("Specified Cloudlet not found")
-		}
-		in.CloudletLoc = cloudlet.Location
+		in.CloudletLoc = cloudletLoc
 
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
@@ -1017,7 +1022,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			if isIPAllocatedPerService(ctx, cloudlet.PlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
+			if isIPAllocatedPerService(ctx, cloudletPlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
 				//dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii, _ := range ports {
@@ -1040,7 +1045,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if len(ports) > 0 {
 			in.MappedPorts = ports
-			if isIPAllocatedPerService(ctx, cloudlet.PlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
+			if isIPAllocatedPerService(ctx, cloudletPlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
 				setPortFQDNPrefixes(in, &app)
 			}
 		}
