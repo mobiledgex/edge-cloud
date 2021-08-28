@@ -10,12 +10,13 @@ import (
 
 type EdgeEventsHandler interface {
 	GetVersionProperties() map[string]string
-	AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent))
-	RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
+	AddClient(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent))
+	RemoveClient(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey)
 	UpdateClientLastLocation(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc)
 	UpdateClientCarrier(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, carrier string)
-	RemoveCloudletKey(ctx context.Context, cloudletKey edgeproto.CloudletKey)
-	RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey)
+	RemoveCloudlet(ctx context.Context, cloudletKey edgeproto.CloudletKey)
+	SendAvailableAppInst(ctx context.Context, app *DmeApp, newAppInstKey edgeproto.AppInstKey, newAppInst *DmeAppInst, newAppInstCarrier string)
+	RemoveAppInst(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	SendLatencyRequestEdgeEvent(ctx context.Context, appInstKey edgeproto.AppInstKey)
 	ProcessLatencySamples(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, samples []*dme.Sample) (*dme.Statistics, error)
 	SendAppInstStateEdgeEvent(ctx context.Context, appinstState *DmeAppInstState, appInstKey edgeproto.AppInstKey, eventType dme.ServerEdgeEvent_ServerEventType)
@@ -26,13 +27,13 @@ type EdgeEventsHandler interface {
 
 type EmptyEdgeEventsHandler struct{}
 
-func (e *EmptyEdgeEventsHandler) AddClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent)) {
-	log.DebugLog(log.DebugLevelDmereq, "AddClientKey not implemented for EmptyEdgeEventHandler. Returning")
+func (e *EmptyEdgeEventsHandler) AddClient(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey, lastLoc dme.Loc, carrier string, sendFunc func(event *dme.ServerEdgeEvent)) {
+	log.DebugLog(log.DebugLevelDmereq, "AddClient not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
-func (e *EmptyEdgeEventsHandler) RemoveClientKey(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey) {
-	log.DebugLog(log.DebugLevelDmereq, "RemoveClientKey not implemented for EmptyEdgeEventHandler. Returning")
+func (e *EmptyEdgeEventsHandler) RemoveClient(ctx context.Context, appInstKey edgeproto.AppInstKey, cookieKey CookieKey) {
+	log.DebugLog(log.DebugLevelDmereq, "RemoveClient not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
@@ -46,13 +47,18 @@ func (e *EmptyEdgeEventsHandler) UpdateClientCarrier(ctx context.Context, appIns
 	return
 }
 
-func (e *EmptyEdgeEventsHandler) RemoveCloudletKey(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
-	log.DebugLog(log.DebugLevelDmereq, "RemoveCloudletKey not implemented for EmptyEdgeEventHandler. Returning")
+func (e *EmptyEdgeEventsHandler) RemoveCloudlet(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
+	log.DebugLog(log.DebugLevelDmereq, "RemoveCloudlet not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
-func (e *EmptyEdgeEventsHandler) RemoveAppInstKey(ctx context.Context, appInstKey edgeproto.AppInstKey) {
-	log.DebugLog(log.DebugLevelDmereq, "RemoveAppInstKey not implemented for EmptyEdgeEventHandler. Returning")
+func (e *EmptyEdgeEventsHandler) SendAvailableAppInst(ctx context.Context, app *DmeApp, newAppInstKey edgeproto.AppInstKey, newAppInst *DmeAppInst, newAppInstCarrier string) {
+	log.DebugLog(log.DebugLevelDmereq, "SendAvailableAppInst not implemented for EmptyEdgeEventHandler. Returning")
+	return
+}
+
+func (e *EmptyEdgeEventsHandler) RemoveAppInst(ctx context.Context, appInstKey edgeproto.AppInstKey) {
+	log.DebugLog(log.DebugLevelDmereq, "RemoveAppInst not implemented for EmptyEdgeEventHandler. Returning")
 	return
 }
 
