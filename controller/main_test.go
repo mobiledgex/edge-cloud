@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/controller/influxq_client/influxq_testutil"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -191,6 +192,11 @@ func TestEdgeCloudBug26(t *testing.T) {
 	testinit()
 	*localEtcd = true
 	*initLocalEtcd = true
+
+	addr := "127.0.0.1:8086"
+	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
+		defer p.StopLocal()
+	}
 
 	err := startServices()
 	require.Nil(t, err, "start")
