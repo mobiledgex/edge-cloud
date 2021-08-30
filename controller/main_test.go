@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"flag"
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/controller/influxq_client/influxq_testutil"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -38,22 +37,12 @@ func TestController(t *testing.T) {
 	leaseTimeoutSec = 3
 	syncLeaseDataRetry = 0
 
-	// start influxd if not already running
 	addr := "127.0.0.1:8086"
-	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
-	if err != nil {
-		p := process.Influx{}
-		p.Common.Name = "influx-test"
-		p.HttpAddr = addr
-		p.DataDir = "/var/tmp/.influxdb"
-		// start influx
-		err = p.StartLocal("/var/tmp/influxdb.log",
-			process.WithCleanStartup())
-		require.Nil(t, err, "start InfluxDB server")
+	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
 		defer p.StopLocal()
 	}
 
-	err = startServices()
+	err := startServices()
 	require.Nil(t, err, "start")
 	defer stopServices()
 
@@ -208,6 +197,11 @@ func TestEdgeCloudBug26(t *testing.T) {
 	testinit()
 	*localEtcd = true
 	*initLocalEtcd = true
+
+	addr := "127.0.0.1:8086"
+	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
+		defer p.StopLocal()
+	}
 
 	err := startServices()
 	require.Nil(t, err, "start")
