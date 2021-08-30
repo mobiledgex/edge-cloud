@@ -283,7 +283,7 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
 	}
 
-	if sendAvailableAppInst {
+	if sendAvailableAppInst && IsAppInstUsable(cl) {
 		go EEHandler.SendAvailableAppInst(ctx, app, appInst.Key, cl, carrierName)
 	}
 
@@ -603,7 +603,7 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 			for clusterInstKey, appinst := range c.Insts {
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &in.Key) {
 					c.Insts[clusterInstKey].MaintenanceState = in.MaintenanceState
-					if sendAvailableAppInst {
+					if sendAvailableAppInst && IsAppInstUsable(appinst) {
 						appinstkey := edgeproto.AppInstKey{
 							AppKey:         app.AppKey,
 							ClusterInstKey: clusterInstKey,
@@ -654,7 +654,7 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
 					c.Insts[clusterInstKey].CloudletState = info.State
 					c.Insts[clusterInstKey].MaintenanceState = info.MaintenanceState
-					if sendAvailableAppInst {
+					if sendAvailableAppInst && IsAppInstUsable(appinst) {
 						appinstkey := edgeproto.AppInstKey{
 							AppKey:         app.AppKey,
 							ClusterInstKey: clusterInstKey,
