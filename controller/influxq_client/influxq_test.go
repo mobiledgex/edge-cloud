@@ -1,19 +1,17 @@
-package influxq_test
+package influxq
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
+	"github.com/mobiledgex/edge-cloud/controller/influxq_client/influxq_testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,26 +24,16 @@ func TestInfluxQ(t *testing.T) {
 
 	addr := "127.0.0.1:8086"
 	// lower the interval so we don't have to wait so long
-	influxq.InfluxQPushInterval = 10 * time.Millisecond
-	influxq.InfluxQReconnectDelay = 10 * time.Millisecond
+	InfluxQPushInterval = 10 * time.Millisecond
+	InfluxQReconnectDelay = 10 * time.Millisecond
 	ctx := log.StartTestSpan(context.Background())
 
-	// start influxd if not already running
-	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
-	if err != nil {
-		p := process.Influx{}
-		p.Common.Name = "influx-test"
-		p.HttpAddr = addr
-		p.DataDir = "/var/tmp/.influxdb"
-		// start influx
-		err = p.StartLocal("/var/tmp/influxdb.log",
-			process.WithCleanStartup())
-		require.Nil(t, err, "start InfluxDB server")
+	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
 		defer p.StopLocal()
 	}
 
-	q := influxq.NewInfluxQ("metrics", "", "")
-	err = q.Start("http://" + addr)
+	q := NewInfluxQ("metrics", "", "")
+	err := q.Start("http://" + addr)
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
 
@@ -94,7 +82,7 @@ func TestInfluxQ(t *testing.T) {
 	}
 
 	// wait for metrics to get pushed to db
-	time.Sleep(2 * influxq.InfluxQPushInterval)
+	time.Sleep(2 * InfluxQPushInterval)
 	assert.Equal(t, uint64(0), q.ErrBatch, "batch errors")
 	assert.Equal(t, uint64(0), q.ErrPoint, "point errors")
 	assert.Equal(t, uint64(0), q.Qfull, "Qfulls")
@@ -139,7 +127,7 @@ func TestInfluxQ(t *testing.T) {
 }
 
 // Test pushing auto prov counts to influxdb and reading back.
-func testAutoProvCounts(t *testing.T, ctx context.Context, q *influxq.InfluxQ) {
+func testAutoProvCounts(t *testing.T, ctx context.Context, q *InfluxQ) {
 	_, err := q.QueryDB(fmt.Sprintf(`DROP SERIES FROM "%s"`, cloudcommon.AutoProvMeasurement))
 	require.Nil(t, err, "clear test metrics")
 
@@ -170,16 +158,16 @@ func testAutoProvCounts(t *testing.T, ctx context.Context, q *influxq.InfluxQ) {
 	require.Equal(t, 1, len(res[0].Series))
 	row := res[0].Series[0]
 	require.Equal(t, 1, len(row.Values))
-	apCheck, dmeid, tsCheck, err := influxq.ParseAutoProvCount(row.Columns, row.Values[0])
+	apCheck, dmeid, tsCheck, err := ParseAutoProvCount(row.Columns, row.Values[0])
 	require.Nil(t, err, "parse auto prov counts")
 	require.Equal(t, msg.DmeNodeName, dmeid, "check dmeid")
 	require.Equal(t, ts, tsCheck, "check timestmap")
 	require.Equal(t, ap, *apCheck, "check auto prov stats")
 }
 
-func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q *influxq.InfluxQ, addr string) {
+func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q *InfluxQ, addr string) {
 	// Create Downsampled DB
-	qd := influxq.NewInfluxQ(cloudcommon.DownsampledMetricsDbName, "", "")
+	qd := NewInfluxQ(cloudcommon.DownsampledMetricsDbName, "", "")
 	// Start downsample db
 	err := qd.Start("http://" + addr)
 	require.Nil(t, err, "new influx q")
@@ -189,19 +177,19 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 
 	// Update default retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
 	rpdef := time.Duration(1 * time.Hour)
-	err = qd.CreateRetentionPolicy(rpdef, influxq.DefaultRetentionPolicy)
+	err = qd.CreateRetentionPolicy(rpdef, DefaultRetentionPolicy)
 	// Check that retention policy has been created
 	assert.Nil(t, err)
 
 	// Create a Continuous Query (no retention policy, so will use default)
-	cqs := &influxq.ContinuousQuerySettings{
+	cqs := &ContinuousQuerySettings{
 		Measurement: "test-metric",
 		AggregationFunctions: map[string]string{
 			"val1": "sum(\"val1\")",
 		},
 		CollectionInterval: time.Duration(10 * time.Millisecond),
 	}
-	err = influxq.CreateContinuousQuery(q, qd, cqs)
+	err = CreateContinuousQuery(q, qd, cqs)
 	assert.Nil(t, err, "create cq")
 	time.Sleep(1 * time.Second)
 	// Add some more data for continuous query to aggregate
@@ -238,12 +226,12 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 
 	// Create non-default retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
 	rpnondef := time.Duration(2 * time.Hour)
-	err = qd.CreateRetentionPolicy(rpnondef, influxq.NonDefaultRetentionPolicy)
+	err = qd.CreateRetentionPolicy(rpnondef, NonDefaultRetentionPolicy)
 	// Check that retention policy has been created
 	assert.Nil(t, err)
 
 	// Create a Continuous Query on new rp
-	cqs = &influxq.ContinuousQuerySettings{
+	cqs = &ContinuousQuerySettings{
 		Measurement: "test-metric",
 		AggregationFunctions: map[string]string{
 			"val2": "sum(\"val2\")",
@@ -251,7 +239,7 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 		CollectionInterval:  time.Duration(5 * time.Millisecond),
 		RetentionPolicyTime: 2 * time.Hour,
 	}
-	err = influxq.CreateContinuousQuery(q, qd, cqs)
+	err = CreateContinuousQuery(q, qd, cqs)
 	assert.Nil(t, err, "create cq")
 	time.Sleep(2 * time.Second)
 	// Add some more data for new continuous query to aggregate
@@ -281,7 +269,7 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	}
 	// Check that new continuous query has aggregated data
 	time.Sleep(3 * time.Second)
-	measurementName := influxq.CreateInfluxFullyQualifiedMeasurementName(cloudcommon.DownsampledMetricsDbName, "test-metric", 5*time.Millisecond, 2*time.Hour)
+	measurementName := CreateInfluxFullyQualifiedMeasurementName(cloudcommon.DownsampledMetricsDbName, "test-metric", 5*time.Millisecond, 2*time.Hour)
 	query = fmt.Sprintf("select * from %s", measurementName)
 	res, err = qd.QueryDB(query)
 	assert.Nil(t, err, "select *")
