@@ -2,6 +2,7 @@ package influxq
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -69,9 +70,12 @@ var DropContinuousQueryTemplate = "DROP CONTINUOUS QUERY \"%s\" ON \"%s\""
 
 // Drop ContinuousQuery
 func DropContinuousQuery(origin *InfluxQ, dest *InfluxQ, measurement string, interval time.Duration, retention time.Duration) error {
-	// drop old retention policy
-	if err := dest.DropRetentionPolicy(GetRetentionPolicyName(dest.dbName, retention, UnknownRetentionPolicy)); err != nil {
-		return err
+	// drop old retention policy if not default
+	rpName := GetRetentionPolicyName(dest.dbName, retention, UnknownRetentionPolicy)
+	if !strings.Contains(rpName, "default") {
+		if err := dest.DropRetentionPolicy(rpName); err != nil {
+			return err
+		}
 	}
 
 	// drop old cq
