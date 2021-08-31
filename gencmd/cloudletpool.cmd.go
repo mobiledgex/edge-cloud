@@ -296,8 +296,8 @@ func ShowCloudletPools(c *cli.Command, data []edgeproto.CloudletPool, err *error
 
 var AddCloudletPoolMemberCmd = &cli.Command{
 	Use:          "AddCloudletPoolMember",
-	RequiredArgs: strings.Join(CloudletPoolMemberRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletPoolMemberOptionalArgs, " "),
+	RequiredArgs: strings.Join(AddCloudletPoolMemberRequiredArgs, " "),
+	OptionalArgs: strings.Join(AddCloudletPoolMemberOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
 	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
 	Comments:     CloudletPoolMemberComments,
@@ -353,8 +353,8 @@ func AddCloudletPoolMembers(c *cli.Command, data []edgeproto.CloudletPoolMember,
 
 var RemoveCloudletPoolMemberCmd = &cli.Command{
 	Use:          "RemoveCloudletPoolMember",
-	RequiredArgs: strings.Join(CloudletPoolMemberRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletPoolMemberOptionalArgs, " "),
+	RequiredArgs: strings.Join(RemoveCloudletPoolMemberRequiredArgs, " "),
+	OptionalArgs: strings.Join(RemoveCloudletPoolMemberOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletPoolMemberAliasArgs, " "),
 	SpecialArgs:  &CloudletPoolMemberSpecialArgs,
 	Comments:     CloudletPoolMemberComments,
@@ -464,6 +464,18 @@ var CloudletPoolMemberAliasArgs = []string{
 var CloudletPoolMemberComments = map[string]string{
 	"org":      "Name of the organization this pool belongs to",
 	"pool":     "CloudletPool Name",
-	"cloudlet": "Cloudlet key",
+	"cloudlet": "Cloudlet name",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}
+var AddCloudletPoolMemberRequiredArgs = []string{
+	"org",
+	"pool",
+	"cloudlet",
+}
+var AddCloudletPoolMemberOptionalArgs = []string{}
+var RemoveCloudletPoolMemberRequiredArgs = []string{
+	"org",
+	"pool",
+	"cloudlet",
+}
+var RemoveCloudletPoolMemberOptionalArgs = []string{}
