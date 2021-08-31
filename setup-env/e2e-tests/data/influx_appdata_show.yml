@@ -182,7 +182,7 @@ apps:
   imagepath: https://charts.helm.sh/stable:stable/nfs-client-provisioner
   imagetype: Helm
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   annotations: version=1.2.8
   deployment: helm
   configs:
@@ -208,7 +208,7 @@ apps:
   trusted: true
   accesstype: LoadBalancer
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   annotations: version=9.4.10
   deployment: helm
   accesstype: LoadBalancer

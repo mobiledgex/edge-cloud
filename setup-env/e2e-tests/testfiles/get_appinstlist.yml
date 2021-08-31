@@ -4,6 +4,9 @@ description: adds dataset with 10 appinstlist and 2 apps. Does get appinstlist f
 
 tests:
 
+- name: stop cluster-svc instances
+  actions: [stop=cluster-svc1, stop=cluster-svc2]
+
 - name: create and verify provisioning 10 appinstlist 
   actions: [ctrlapi-create,ctrlapi-show]
   apifile: "{{datadir}}/appdata_10.yml"
@@ -52,4 +55,5 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
-
+- name: start cluster-svc instances
+  actions: [start=cluster-svc1, start=cluster-svc2]
