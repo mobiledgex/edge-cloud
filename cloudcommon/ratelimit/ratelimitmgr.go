@@ -33,11 +33,10 @@ func NewRateLimitManager(disableRateLimit bool, maxNumPerIpRateLimiters int, max
 }
 
 // Initialize an ApiEndpointLimiter struct for the specified API. This is called for each API during the initialization of the node (ie. in dme-main.go)
-func (r *RateLimitManager) CreateApiEndpointLimiter(allRequestsRateLimitSettings *edgeproto.RateLimitSettings, perIpRateLimitSettings *edgeproto.RateLimitSettings, perUserRateLimitSettings *edgeproto.RateLimitSettings) {
+func (r *RateLimitManager) CreateApiEndpointLimiter(api string, allRequestsRateLimitSettings *edgeproto.RateLimitSettings, perIpRateLimitSettings *edgeproto.RateLimitSettings, perUserRateLimitSettings *edgeproto.RateLimitSettings) {
 	r.Lock()
 	defer r.Unlock()
 	// Create ApiEndpointRateLimitSettings which includes limit settings for allrequests, perip, and/or peruser
-	api := allRequestsRateLimitSettings.Key.ApiName
 	apiEndpointRateLimitSettings := &apiEndpointRateLimitSettings{
 		AllRequestsRateLimitSettings: allRequestsRateLimitSettings,
 		PerIpRateLimitSettings:       perIpRateLimitSettings,
