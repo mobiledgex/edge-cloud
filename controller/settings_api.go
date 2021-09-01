@@ -208,11 +208,17 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 				if err != nil {
 					return err
 				}
-			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				newCqs = true
-			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval {
+			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals || field == edgeproto.SettingsFieldEdgeEventsMetricsCollectionInterval {
+				// make sure cq intervals are all greater than the collection interval
+				for _, cq := range cur.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+					if cq.Interval <= cur.EdgeEventsMetricsCollectionInterval {
+						return fmt.Errorf("All EdgeEvents continuous query collection intervals must be greater than the EdgeEventsMetricsCollectionInterval")
+					}
+				}
 				newCqs = true
 			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsRetention {
+				newCqs = true
+			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval {
 				newCqs = true
 			}
 		}
