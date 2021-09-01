@@ -25,6 +25,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
 	InitApis(sync)
@@ -66,6 +67,11 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	require.Equal(t, 2, len(policy.Cloudlets))
 	require.Equal(t, pc2.CloudletKey, policy.Cloudlets[1].Key)
 
+	// delete cloudlet should fail if it is used by policy
+	err = cloudletApi.DeleteCloudlet(&testutil.CloudletData[1], testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err)
+	require.Equal(t, `Cloudlet in use by AutoProvPolicy {"organization":"AtlanticInc","name":"auto-prov-policy"}`, err.Error())
+
 	// remove cloudlet from policy
 	_, err = autoProvPolicyApi.RemoveAutoProvPolicyCloudlet(ctx, &pc)
 	require.Nil(t, err, "remove auto prov policy cloudlet")
@@ -96,7 +102,6 @@ func TestAutoProvPolicyApi(t *testing.T) {
 
 	addRemoveAutoProvPolicy(t, ctx)
 	testApiChecks(t, ctx)
-	dummy.Stop()
 }
 
 func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
