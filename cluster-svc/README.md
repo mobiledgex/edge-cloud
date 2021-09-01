@@ -17,8 +17,6 @@ Usage of cluster-svc:
     	address to connect to (default "127.0.0.1:55001")
   -d string
     	comma separated list of [etcd api notify dmedb dmereq locapi mexos metrics upgrade]
-  -flavor string
-    	App flavor for cluster-svc applications (default "x1.medium")
   -notifyAddrs string
     	Comma separated list of controller notify listener addresses (default "127.0.0.1:50001")
   -prometheus-ports string

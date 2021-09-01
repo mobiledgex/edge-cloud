@@ -35,7 +35,6 @@ var ctrlAddr = flag.String("ctrlAddrs", "127.0.0.1:55001", "address to connect t
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var externalPorts = flag.String("prometheus-ports", "tcp:9090", "ports to expose in form \"tcp:123,udp:123\"")
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
-var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 var upgradeInstances = flag.Bool("updateAll", false, "Upgrade all Instances of Prometheus operator")
 var pluginRequired = flag.Bool("pluginRequired", false, "Require plugin")
 var hostname = flag.String("hostname", "", "Unique hostname")
@@ -435,7 +434,7 @@ func isClusterPrometheusAlert(alert *edgeproto.AlertPolicy) bool {
 // create an appInst as a cluster-svc
 func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, platformApp *edgeproto.App) error {
 	//update flavor
-	platformApp.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
+	platformApp.DefaultFlavor = edgeproto.FlavorKey{Name: clusterInst.Flavor.Name}
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithUnaryInterceptor(log.UnaryClientTraceGrpc), grpc.WithStreamInterceptor(log.StreamClientTraceGrpc))
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
