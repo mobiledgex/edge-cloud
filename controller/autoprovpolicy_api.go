@@ -491,3 +491,19 @@ func autoProvAppInstOnline(ctx context.Context, stm concurrency.STM, key *edgepr
 	}
 	return cloudcommon.AutoProvAppInstOnline(&appInst, &cloudletInfo, &cloudlet), nil
 }
+
+func (s *AutoProvPolicyApi) UsesCloudlet(key *edgeproto.CloudletKey) []edgeproto.PolicyKey {
+	policyKeys := []edgeproto.PolicyKey{}
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for policyKey, data := range s.cache.Objs {
+		policy := data.Obj
+		for _, autoProvCloudlet := range policy.Cloudlets {
+			if autoProvCloudlet.Key.Matches(key) {
+				policyKeys = append(policyKeys, policyKey)
+				break
+			}
+		}
+	}
+	return policyKeys
+}
