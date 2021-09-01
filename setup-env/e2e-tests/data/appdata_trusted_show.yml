@@ -320,7 +320,7 @@ apps:
   imagetype: Helm
   accessports: tcp:9090
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   annotations: version=9.4.10
   deployment: helm
   delopt: AutoDelete
