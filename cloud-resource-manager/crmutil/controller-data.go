@@ -515,14 +515,18 @@ func (cd *ControllerData) addTrustPolicyExceptionRules(ctx context.Context, appI
 	var err error
 	err = nil
 
+	log.SpanLog(ctx, log.DebugLevelInfra, "addTrustPolicyExceptionRules() TrustPolicyException")
+
 	for key, data := range cd.TrustPolicyExceptionCache.Objs {
+		TrustPolicyException = data.Obj
+		log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", tpeKey, " key:", key)
+
 		if key.CloudletKey.Name != tpeKey.CloudletKey.Name || key.CloudletKey.Organization != tpeKey.CloudletKey.Organization {
 			continue
 		}
 		if key.AppKey.Organization != tpeKey.AppKey.Organization || key.AppKey.Name != tpeKey.AppKey.Name || key.AppKey.Version != tpeKey.AppKey.Version {
 			continue
 		}
-		TrustPolicyException = data.Obj
 
 		log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", *TrustPolicyException)
 

@@ -1269,13 +1269,6 @@ func (s *TrustPolicy) Validate(fields map[string]struct{}) error {
 	return ValidateSecurityRules(s.OutboundSecurityRules)
 }
 
-// func (s *TrustPolicyException) Validate(fields map[string]struct{}) error {
-// 	if err := s.GetKey().ValidateKey(); err != nil {
-// 		return err
-// 	}
-// 	return ValidateSecurityRules(s.OutboundSecurityRules)
-// }
-
 func (key *TrustPolicyExceptionKey) ValidateKey() error {
 	if err := key.AppKey.ValidateKey(); err != nil {
 		errstring := err.Error()

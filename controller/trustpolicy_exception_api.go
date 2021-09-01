@@ -38,7 +38,15 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.Trust
 		return err
 	}
 
-	_, err := s.store.Create(ctx, in, s.sync.syncWait)
+	cur := edgeproto.TrustPolicyException{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.ExistsError()
+		}
+		return nil
+	})
+
+	_, err = s.store.Create(ctx, in, s.sync.syncWait)
 	return err
 
 }
@@ -110,6 +118,12 @@ func (s *TrustPolicyExceptionApi) RequestTrustPolicyException(in *edgeproto.Trus
 			return nil
 		}
 		s.store.STMPut(stm, &cur)
+
+		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+			// If App is already deployed and TrustPolicyException is created later, we should automatically program the TrustPolicyException rules
+
+		}
+
 		return nil
 	})
 	if err != nil {
