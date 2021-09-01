@@ -206,6 +206,7 @@ var AppData = []edgeproto.App{
 			Vcpus: 0.2,
 			Ram:   10,
 		},
+		InternalPorts: true,
 	},
 	edgeproto.App{ // 10
 		Key: edgeproto.AppKey{
