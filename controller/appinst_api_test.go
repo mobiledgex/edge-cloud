@@ -312,6 +312,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 
 	testAppFlavorRequest(t, ctx, commonApi, responder)
+	testDeprecatedSharedRootLBFQDN(t, ctx)
 
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
@@ -603,6 +604,61 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 		cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 	}
 	insertCloudletInfo(ctx, cloudletInfos)
+}
+
+func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context) {
+	// downgrade cloudlets to older crm compatibility version
+	cloudletInfos := []edgeproto.CloudletInfo{}
+	for _, info := range testutil.CloudletInfoData {
+		info.CompatibilityVersion = 0
+		cloudletInfos = append(cloudletInfos, info)
+	}
+	insertCloudletInfo(ctx, cloudletInfos)
+
+	// create appInst with internalports set to true, this means
+	// that this appInst will not need access from external network
+	appInstData := testutil.AppInstData[9]
+	err := appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Create appinst: %v", appInstData.Key)
+
+	show := testutil.ShowAppInst{}
+	show.Init()
+	filter := edgeproto.AppInst{}
+	filter.Key = appInstData.Key
+
+	// For older version of CRM, URI should exist
+	err = appInstApi.ShowAppInst(&filter, &show)
+	require.Nil(t, err, "show app inst data")
+	require.True(t, len(show.Data) == 1, "matches app inst")
+	for _, appInstOut := range show.Data {
+		require.True(t, appInstOut.Uri != "", "app URI exists")
+	}
+
+	// delete appinst
+	err = appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Delete appinst: %v", appInstData.Key)
+
+	// restore CRM version
+	for ii := range cloudletInfos {
+		cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
+	}
+	insertCloudletInfo(ctx, cloudletInfos)
+
+	// create appinst again
+	err = appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Create appinst: %v", appInstData.Key)
+
+	// For newer version of CRM, URI should not exist
+	err = appInstApi.ShowAppInst(&filter, &show)
+	require.Nil(t, err, "show app inst data")
+	require.True(t, len(show.Data) == 1, "matches app inst")
+	for _, appInstOut := range show.Data {
+		require.True(t, appInstOut.Uri == "", "app URI doesn't exist")
+	}
+
+	// final cleanup: delete appinst
+	err = appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Delete appinst: %v", appInstData.Key)
 }
 
 func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {
