@@ -1037,8 +1037,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		if app.InternalPorts || len(ports) == 0 {
-			// no external access to AppInst, no need for URI
-			in.Uri = ""
+			// older CRMs require app URI regardless of external access to AppInst
+			if cloudletCompatibilityVersion >= cloudcommon.CRMCompatibilitySharedRootLBFQDN {
+				// no external access to AppInst, no need for URI
+				in.Uri = ""
+			}
 		}
 		if err := cloudcommon.CheckFQDNLengths("", in.Uri); err != nil {
 			return err
