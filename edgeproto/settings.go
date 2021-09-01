@@ -122,14 +122,12 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			// no validation
 		case SettingsFieldEdgeEventsMetricsCollectionInterval:
 			v.CheckGT(f, s.EdgeEventsMetricsCollectionInterval, dur0)
-			fallthrough // make sure continuous queries are all less than this interval
 		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals:
 			for _, val := range s.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				v.CheckGT(f, val.Interval, dur0)
-				v.CheckGTE(f, val.Retention, dur0)
-				if val.Interval <= s.EdgeEventsMetricsCollectionInterval {
-					return fmt.Errorf("All EdgeEvents continuous query collection intervals must be greater than the EdgeEventsMetricsCollectionInterval")
+				if v.CheckGT(f, val.Interval, dur0); v.err != nil {
+					break
 				}
+				v.CheckGTE(f, val.Retention, dur0)
 			}
 		case SettingsFieldInfluxDbEdgeEventsMetricsRetention:
 			// no validation
