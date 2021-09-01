@@ -114,7 +114,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.settings = *edgeproto.GetDefaultSettings()
 
 	// debug functions
-	nodeMgr.Debug.AddDebugFunc("envoyversioncmd", cd.GetClusterEnvoyVersion)
+	nodeMgr.Debug.AddDebugFunc(GetEnvoyVersionCmd, cd.GetClusterEnvoyVersion)
 
 	return cd
 }

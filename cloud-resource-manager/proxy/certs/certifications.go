@@ -78,6 +78,7 @@ var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
 var accessApi *accessapi.ControllerClient
 var platform pf.Platform
+var getRootLBCertsTrigger chan bool
 
 func Init(ctx context.Context, inPlatform pf.Platform, inAccessApi *accessapi.ControllerClient) {
 	accessApi = inAccessApi
@@ -111,10 +112,11 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 		for {
 			select {
 			case <-time.After(30 * 24 * time.Hour):
-				lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-				getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
-				lbCertsSpan.Finish()
+			case <-getRootLBCertsTrigger:
 			}
+			lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+			lbCertsSpan.Finish()
 		}
 	}()
 }
@@ -308,5 +310,12 @@ func SetupTLSCerts(ctx context.Context, key *edgeproto.CloudletKey, name string,
 	err = writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
 	if err != nil {
 		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", name)
+	}
+}
+
+func TriggerRootLBCertsRefresh() {
+	select {
+	case getRootLBCertsTrigger <- true:
+	default:
 	}
 }

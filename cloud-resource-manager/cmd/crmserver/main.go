@@ -315,6 +315,11 @@ func main() {
 			proxycerts.Init(ctx, platform, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
 			pfType := pf.GetType(cloudlet.PlatformType.String())
 			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
+			// setup debug func to trigger refresh of rootlb certs
+			nodeMgr.Debug.AddDebugFunc(crmutil.RefreshRootLBCerts, func(ctx context.Context, req *edgeproto.DebugRequest) string {
+				proxycerts.TriggerRootLBCertsRefresh()
+				return "triggered refresh of rootlb certs"
+			})
 		}
 		tlsSpan.Finish()
 	}()
