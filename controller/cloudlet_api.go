@@ -1309,6 +1309,15 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	autoProvPolicies := autoProvPolicyApi.UsesCloudlet(&in.Key)
+	if len(autoProvPolicies) > 0 {
+		strs := []string{}
+		for _, key := range autoProvPolicies {
+			strs = append(strs, key.GetKeyString())
+		}
+		return fmt.Errorf("Cloudlet in use by AutoProvPolicy %s", strings.Join(strs, ", "))
+	}
+
 	var prevState edgeproto.TrackedState
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
