@@ -58,7 +58,6 @@ func InitClusterInstApi(sync *Sync) {
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
 	clusterInstApi.cleanupWorkers.Init("ClusterInst-cleanup", clusterInstApi.cleanupClusterInst)
-	go clusterInstApi.cleanupThread()
 }
 
 func (s *ClusterInstApi) HasKey(key *edgeproto.ClusterInstKey) bool {
