@@ -11,8 +11,14 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+const (
+	GetEnvoyVersionCmd = "get-cluster-envoy-version"
+	RefreshRootLBCerts = "refresh-rootlb-certs"
+	CRMCmd             = "crmcmd"
+)
+
 func InitDebug(nodeMgr *node.NodeMgr) {
-	nodeMgr.Debug.AddDebugFunc("crmcmd", runCrmCmd)
+	nodeMgr.Debug.AddDebugFunc(CRMCmd, runCrmCmd)
 }
 
 func runCrmCmd(ctx context.Context, req *edgeproto.DebugRequest) string {
