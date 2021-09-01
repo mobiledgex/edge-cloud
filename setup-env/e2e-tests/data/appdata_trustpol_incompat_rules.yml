@@ -18,6 +18,7 @@ settings:
   influxdbmetricsretention: 2h
   cloudletmaintenancetimeout: 2s
   influxdbdownsampledmetricsretention: 8760h0m0s
+  edgeeventsmetricscollectioninterval: 1s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
   disableratelimit: true
