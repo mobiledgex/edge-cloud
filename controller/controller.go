@@ -245,6 +245,8 @@ func startServices() error {
 	if err != nil {
 		return fmt.Errorf("Failed to init settings, %v", err)
 	}
+	// cleanup thread must start after settings are loaded
+	go clusterInstApi.cleanupThread()
 
 	err = rateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
 	if err != nil {
