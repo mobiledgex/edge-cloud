@@ -57,7 +57,7 @@ func TestStreamObjApi(t *testing.T) {
 
 	// ensure that streamObj is cleaned up after removal of parent object
 	exists := true
-	cloudlet := testutil.CloudletData[0]
+	cloudlet := testutil.CloudletData()[0]
 	clStreamKey := edgeproto.GetStreamKeyFromCloudletKey(&cloudlet.Key)
 	err := cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, "create cloudlet")
