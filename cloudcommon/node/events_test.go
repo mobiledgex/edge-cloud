@@ -91,7 +91,6 @@ func TestEvents(t *testing.T) {
 	kmsgs := []*EventData{}
 	getKmsg := func(val []byte) error {
 		event := EventData{}
-		fmt.Printf("kafka event: \n%s\n", string(val))
 		err := yaml.Unmarshal(val, &event)
 		if err != nil {
 			return err
