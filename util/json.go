@@ -4,15 +4,23 @@ import (
 	"encoding/json"
 )
 
-// Same as `json.Number`, but ignores empty strings
-// Empty strings fail for `json.Number`
-type CustomJsonNumber json.Number
+// EmptyStringJsonNumber behaves like JsonNumber for valid numbers,
+// but treats the empty string differently. JsonNumber marshals out the empty
+// string as 0, but this marshals it out as the empty string. JsonNumber will fail
+// to unmarshal the empty string, but this will allow it.
+// This allows the field to distinguish between an unspecified value (the empty string)
+// and a zero value.
+type EmptyStringJsonNumber json.Number
 
-func (s CustomJsonNumber) MarshalJSON() ([]byte, error) {
+func (s EmptyStringJsonNumber) MarshalJSON() ([]byte, error) {
+	if string(s) == "" {
+		return json.Marshal("")
+	}
 	return json.Marshal(s)
+
 }
 
-func (s *CustomJsonNumber) UnmarshalJSON(b []byte) error {
+func (s *EmptyStringJsonNumber) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil && str == "" {
@@ -21,7 +29,7 @@ func (s *CustomJsonNumber) UnmarshalJSON(b []byte) error {
 	var val json.Number
 	err = json.Unmarshal(b, &val)
 	if err == nil {
-		*s = CustomJsonNumber(val)
+		*s = EmptyStringJsonNumber(val)
 		return nil
 	}
 	return err

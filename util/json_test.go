@@ -7,7 +7,7 @@ import (
 )
 
 type TestObj struct {
-	Field1 CustomJsonNumber `json:"field-1"`
+	Field1 EmptyStringJsonNumber `json:"field-1"`
 }
 
 func TestJson(t *testing.T) {
