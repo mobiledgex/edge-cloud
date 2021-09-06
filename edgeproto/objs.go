@@ -1274,7 +1274,7 @@ func (key *TrustPolicyExceptionKey) ValidateKey() error {
 		errstring := err.Error()
 		return fmt.Errorf("Invalid AppKey in TrustPolicyExceptionKey, " + errstring)
 	}
-	if err := key.CloudletKey.ValidateKey(); err != nil {
+	if err := key.CloudletPoolKey.ValidateKey(); err != nil {
 		errstring := err.Error()
 		return fmt.Errorf("Invalid CloudletKey in TrustPolicyExceptionKey, " + errstring)
 	}

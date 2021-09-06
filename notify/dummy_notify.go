@@ -31,6 +31,7 @@ type DummyHandler struct {
 	AutoProvPolicyCache       edgeproto.AutoProvPolicyCache
 	TrustPolicyCache          edgeproto.TrustPolicyCache
 	TrustPolicyExceptionCache edgeproto.TrustPolicyExceptionCache
+	CloudletPoolCache         edgeproto.CloudletPoolCache
 	DeviceCache               edgeproto.DeviceCache
 	frClusterInsts            edgeproto.FreeReservableClusterInstCache
 	SettingsCache             edgeproto.SettingsCache
@@ -56,6 +57,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
 	edgeproto.InitTrustPolicyCache(&h.TrustPolicyCache)
 	edgeproto.InitTrustPolicyExceptionCache(&h.TrustPolicyExceptionCache)
+	edgeproto.InitCloudletPoolCache(&h.CloudletPoolCache)
 	edgeproto.InitDeviceCache(&h.DeviceCache)
 	h.frClusterInsts.Init()
 	return h
@@ -68,6 +70,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendGPUDriverCache(&s.GPUDriverCache)
 	mgr.RegisterSendTrustPolicyCache(&s.TrustPolicyCache)
 	mgr.RegisterSendTrustPolicyExceptionCache(&s.TrustPolicyExceptionCache)
+	mgr.RegisterSendCloudletPoolCache(&s.CloudletPoolCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)

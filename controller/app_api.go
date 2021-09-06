@@ -70,8 +70,20 @@ func CheckAppCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, app *edgepro
 	if !app.Trusted {
 		return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), trustPolicy.Key.String())
 	}
-	// append the trust policy rules with the exception rules to get the total set of rules
-	allowedRules := trustPolicyExceptionApi.GetTrustPolicyExceptionRules(ckey, &app.Key)
+
+	allowedRules := []*edgeproto.SecurityRule{}
+	list, err := cloudletPoolApi.GetCloudletPoolKeysForCloudletKey(ckey)
+	if err == nil {
+		for _, cloudletPoolKey := range list {
+			rules := trustPolicyExceptionApi.GetTrustPolicyExceptionRules(&cloudletPoolKey, &app.Key)
+			log.DebugLog(log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() GetTrustPolicyExceptionRules returned", "rules", rules)
+
+			allowedRules = append(allowedRules, rules...)
+		}
+	} else {
+		log.DebugLog(log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() returned", "err", err)
+	}
+	// Combine the trustPolicy rules with the trustPolicyException rules.
 	for _, r := range trustPolicy.OutboundSecurityRules {
 		allowedRules = append(allowedRules, &r)
 	}

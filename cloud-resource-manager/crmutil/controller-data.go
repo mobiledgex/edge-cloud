@@ -35,6 +35,7 @@ type ControllerData struct {
 	ClusterInstInfoCache        edgeproto.ClusterInstInfoCache
 	TrustPolicyCache            edgeproto.TrustPolicyCache
 	TrustPolicyExceptionCache   edgeproto.TrustPolicyExceptionCache
+	CloudletPoolCache           *edgeproto.CloudletPoolCache
 	AutoProvPolicyCache         edgeproto.AutoProvPolicyCache
 	AutoScalePolicyCache        edgeproto.AutoScalePolicyCache
 	AlertCache                  edgeproto.AlertCache
@@ -79,6 +80,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletInternalCache(&cd.CloudletInternalCache)
 	cd.CloudletCache = nodeMgr.CloudletLookup.GetCloudletCache(node.NoRegion)
+	cd.CloudletPoolCache = nodeMgr.CloudletPoolLookup.GetCloudletPoolCache(node.NoRegion)
 	edgeproto.InitVMPoolCache(&cd.VMPoolCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
@@ -89,6 +91,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitAlertCache(&cd.AlertCache)
 	edgeproto.InitTrustPolicyCache(&cd.TrustPolicyCache)
 	edgeproto.InitTrustPolicyExceptionCache(&cd.TrustPolicyExceptionCache)
+	edgeproto.InitCloudletPoolCache(cd.CloudletPoolCache)
 	edgeproto.InitAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	edgeproto.InitAutoScalePolicyCache(&cd.AutoScalePolicyCache)
 	edgeproto.InitSettingsCache(&cd.SettingsCache)
@@ -108,7 +111,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 
 	cd.TrustPolicyExceptionCache.SetUpdatedCb(cd.trustPolicyExceptionChanged)
-
+	cd.CloudletPoolCache.SetUpdatedCb(cd.cloudletPoolChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 
@@ -496,15 +499,13 @@ func (cd *ControllerData) clusterInstDeleted(ctx context.Context, old *edgeproto
 	cd.ClusterInstInfoCache.Delete(ctx, &info, 0)
 }
 
-func (cd *ControllerData) addTrustPolicyExceptionRules(ctx context.Context, appInst *edgeproto.AppInst) error {
-
-	cloudletKey := &appInst.Key.ClusterInstKey.CloudletKey
+func (cd *ControllerData) addTrustPolicyExceptionRuleForCloudletPoolKey(ctx context.Context, appInst *edgeproto.AppInst, cloudletPoolKey edgeproto.CloudletPoolKey) error {
 
 	// Find TrustPolicyException for this appInst and this cloudletKey
 	tpeKey := edgeproto.TrustPolicyExceptionKey{
-		AppKey:      appInst.Key.AppKey,
-		CloudletKey: *cloudletKey,
-		Name:        "",
+		AppKey:          appInst.Key.AppKey,
+		CloudletPoolKey: cloudletPoolKey,
+		Name:            "",
 	}
 
 	var TrustPolicyException *edgeproto.TrustPolicyException
@@ -519,16 +520,16 @@ func (cd *ControllerData) addTrustPolicyExceptionRules(ctx context.Context, appI
 
 	for key, data := range cd.TrustPolicyExceptionCache.Objs {
 		TrustPolicyException = data.Obj
-		log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", tpeKey, " key:", key)
+		log.SpanLog(ctx, log.DebugLevelInfra, "Checking TrustPolicyException", "TrustPolicyException", tpeKey, " key:", key)
 
-		if key.CloudletKey.Name != tpeKey.CloudletKey.Name || key.CloudletKey.Organization != tpeKey.CloudletKey.Organization {
+		if key.CloudletPoolKey.Name != tpeKey.CloudletPoolKey.Name || key.CloudletPoolKey.Organization != tpeKey.CloudletPoolKey.Organization {
 			continue
 		}
 		if key.AppKey.Organization != tpeKey.AppKey.Organization || key.AppKey.Name != tpeKey.AppKey.Name || key.AppKey.Version != tpeKey.AppKey.Version {
 			continue
 		}
 
-		log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", *TrustPolicyException)
+		log.SpanLog(ctx, log.DebugLevelInfra, "matched TrustPolicyException", "TrustPolicyException", *TrustPolicyException)
 
 		err = cd.platform.UpdateTrustPolicyException(ctx, TrustPolicyException)
 
@@ -537,6 +538,49 @@ func (cd *ControllerData) addTrustPolicyExceptionRules(ctx context.Context, appI
 			log.SpanLog(ctx, log.DebugLevelInfra, "can't update app's TrustPolicyException", "error", errstr, "key", appInst.Key)
 		}
 		// Continue or return err ? // ASK_JIM
+	}
+	return err
+}
+
+func (cd *ControllerData) getCloudletPoolKeysForCloudletKey(in *edgeproto.CloudletKey) ([]edgeproto.CloudletPoolKey, error) {
+	var cloudletPoolKeys []edgeproto.CloudletPoolKey
+	cd.CloudletPoolCache.Mux.Lock()
+	defer cd.CloudletPoolCache.Mux.Unlock()
+	found := false
+
+	log.DebugLog(log.DebugLevelApi, "getCloudletPoolKeysForCloudletKey()", "len(CloudletPoolCache.Objs):", len(cd.CloudletPoolCache.Objs), "CloudletKey:", in)
+
+	for _, data := range cd.CloudletPoolCache.Objs {
+		if in.Organization != data.Obj.Key.Organization {
+			continue
+		}
+		for _, cname := range data.Obj.Cloudlets {
+			if cname == in.Name {
+				cloudletPoolKeys = append(cloudletPoolKeys, data.Obj.Key)
+				found = true
+				log.DebugLog(log.DebugLevelApi, "getCloudletPoolKeysForCloudletKey() found ", "CloudletPoolCache key:", data.Obj.Key)
+			}
+		}
+	}
+	if found == false {
+		return cloudletPoolKeys, fmt.Errorf("No cloudletPool found")
+	}
+	return cloudletPoolKeys, nil
+}
+
+func (cd *ControllerData) addTrustPolicyExceptionRules(ctx context.Context, appInst *edgeproto.AppInst) error {
+
+	cloudletKey := appInst.Key.ClusterInstKey.CloudletKey
+
+	list, err := cd.getCloudletPoolKeysForCloudletKey(&cloudletKey)
+
+	if err == nil {
+		for _, cloudletPoolKey := range list {
+			log.DebugLog(log.DebugLevelApi, "addTrustPolicyExceptionRules() checking cloudletPoolKey", "cloudletPoolKey", cloudletPoolKey)
+			cd.addTrustPolicyExceptionRuleForCloudletPoolKey(ctx, appInst, cloudletPoolKey)
+		}
+	} else {
+		log.DebugLog(log.DebugLevelApi, "addTrustPolicyExceptionRules() no cloudletPoolKeys", "err", err)
 	}
 
 	return err
@@ -927,9 +971,11 @@ func (cd *ControllerData) notifyControllerConnect() {
 }
 
 func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *edgeproto.TrustPolicyException, new *edgeproto.TrustPolicyException) {
-	// Not clear what needs to be done here.
 	log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionChanged", "trustPolicyException", new)
+}
 
+func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeproto.CloudletPool, new *edgeproto.CloudletPool) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "CloudletPoolChanged", "CloudletPool:", new)
 }
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {

@@ -191,6 +191,7 @@ func main() {
 			FlavorCache:               &controllerData.FlavorCache,
 			TrustPolicyCache:          &controllerData.TrustPolicyCache,
 			TrustPolicyExceptionCache: &controllerData.TrustPolicyExceptionCache,
+			CloudletPoolCache:         controllerData.CloudletPoolCache,
 			ClusterInstCache:          &controllerData.ClusterInstCache,
 			AppCache:                  &controllerData.AppCache,
 			AppInstCache:              &controllerData.AppInstCache,

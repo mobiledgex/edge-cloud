@@ -6,7 +6,7 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "app.proto";
-import "cloudletkey.proto";
+import "cloudletpool.proto";
 import "trustpolicy.proto";
 
 
@@ -31,8 +31,8 @@ enum TrustPolicyExceptionState {
 message TrustPolicyExceptionKey {
   // App Key
   AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.keytag) = "appkey"];
-  // Cloudlet Key
-  CloudletKey cloudlet_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletkey"];
+  // CloudletPool Key
+  CloudletPoolKey cloudlet_pool_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletpoolkey"];
   // TrustPolicyExceptionKey name
   string Name = 3 [(protogen.keytag) = "name"]; 
   option (protogen.generate_matches) = true;
@@ -43,7 +43,7 @@ message TrustPolicyExceptionKey {
 message TrustPolicyException {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // Unique Key composed of App and Cloudlet key
+  // Unique Key composed of App and CloudletPool key
   TrustPolicyExceptionKey key = 2 [(gogoproto.nullable) = false];
   // List of outbound security rules for whitelisting traffic
   repeated SecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
@@ -56,7 +56,7 @@ message TrustPolicyException {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudlet-org=Key.CloudletKey.Organization,cloudlet-name=Key.CloudletKey.Name";
+  option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
 
@@ -125,7 +125,7 @@ message TrustPolicyExceptionResponse {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization";
+  option (protogen.alias) = "name=Key.Name,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
 
@@ -137,8 +137,8 @@ service TrustPolicyExceptionResponseApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.CloudletKey.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletPoolKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
   }
   
   // Update a Trust Policy Exception response, by Cloudlet Operator Organization

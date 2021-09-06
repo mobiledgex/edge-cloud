@@ -178,3 +178,25 @@ func (s *CloudletPoolApi) cloudletDeleted(ctx context.Context, key *edgeproto.Cl
 		}
 	}
 }
+
+func (s *CloudletPoolApi) GetCloudletPoolKeysForCloudletKey(in *edgeproto.CloudletKey) ([]edgeproto.CloudletPoolKey, error) {
+	var cloudletPoolKeys []edgeproto.CloudletPoolKey
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	found := false
+	for _, data := range s.cache.Objs {
+		if in.Organization != data.Obj.Key.Organization {
+			continue
+		}
+		for _, cname := range data.Obj.Cloudlets {
+			if cname == in.Name {
+				cloudletPoolKeys = append(cloudletPoolKeys, data.Obj.Key)
+				found = true
+			}
+		}
+	}
+	if found == false {
+		return cloudletPoolKeys, fmt.Errorf("No cloudletPool found")
+	}
+	return cloudletPoolKeys, nil
+}

@@ -644,6 +644,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
 	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionResponseCache(&trustPolicyExceptionResponseApi.cache)
+	notify.ServerMgrOne.RegisterSendCloudletPoolCache(cloudletPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)

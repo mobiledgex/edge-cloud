@@ -42,6 +42,7 @@ type Caches struct {
 	FlavorCache               *edgeproto.FlavorCache
 	TrustPolicyCache          *edgeproto.TrustPolicyCache
 	TrustPolicyExceptionCache *edgeproto.TrustPolicyExceptionCache
+	CloudletPoolCache         *edgeproto.CloudletPoolCache
 	ClusterInstCache          *edgeproto.ClusterInstCache
 	AppInstCache              *edgeproto.AppInstCache
 	AppCache                  *edgeproto.AppCache

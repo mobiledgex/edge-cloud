@@ -163,13 +163,13 @@ func (s *TrustPolicyExceptionApi) ShowTrustPolicyException(in *edgeproto.TrustPo
 	return err
 }
 
-func (s *TrustPolicyExceptionApi) STMFind(stm concurrency.STM, appName, appOrg, appVer, cloudletName, cloudletOrg string, policy *edgeproto.TrustPolicyException) error {
+func (s *TrustPolicyExceptionApi) STMFind(stm concurrency.STM, appName, appOrg, appVer, cloudletPoolName, cloudletPoolOrg string, policy *edgeproto.TrustPolicyException) error {
 	key := edgeproto.TrustPolicyExceptionKey{}
 	key.AppKey.Organization = appOrg
 	key.AppKey.Name = appName
 	key.AppKey.Version = appVer
-	key.CloudletKey.Organization = cloudletOrg
-	key.CloudletKey.Name = cloudletName
+	key.CloudletPoolKey.Organization = cloudletPoolOrg
+	key.CloudletPoolKey.Name = cloudletPoolName
 
 	if !s.store.STMGet(stm, &key, policy) {
 		return fmt.Errorf("TrustPolicyException for app %s version %s organization %s not found", appName, appVer, appOrg)
@@ -177,14 +177,13 @@ func (s *TrustPolicyExceptionApi) STMFind(stm concurrency.STM, appName, appOrg, 
 	return nil
 }
 
-// Pass cloudletKey
-func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(ckey *edgeproto.CloudletKey, appKey *edgeproto.AppKey) []*edgeproto.SecurityRule {
+func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(ckey *edgeproto.CloudletPoolKey, appKey *edgeproto.AppKey) []*edgeproto.SecurityRule {
 	var rules []*edgeproto.SecurityRule
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		pol := data.Obj
-		if ckey.Organization != pol.Key.CloudletKey.Organization || ckey.Name != pol.Key.CloudletKey.Name {
+		if ckey.Organization != pol.Key.CloudletPoolKey.Organization || ckey.Name != pol.Key.CloudletPoolKey.Name {
 			continue
 		}
 
