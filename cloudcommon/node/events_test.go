@@ -6,11 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Shopify/sarama"
+	"github.com/Shopify/sarama/mocks"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
 )
 
 func TestEvents(t *testing.T) {
@@ -40,7 +42,8 @@ func TestEvents(t *testing.T) {
 
 	// events rely on nodeMgr
 	nodeMgr := NodeMgr{}
-	ctx, _, err := nodeMgr.Init(NodeTypeController, "", WithRegion("unit-test"),
+	region := "unit-test"
+	ctx, _, err := nodeMgr.Init(NodeTypeController, "", WithRegion(region),
 		WithESUrls("http://localhost:9200"))
 	require.Nil(t, err)
 	defer nodeMgr.Finish()
@@ -51,25 +54,71 @@ func TestEvents(t *testing.T) {
 
 	org := "devOrg"
 	operOrg := "operOrg"
+	cloudlet1Name := "cloudlet1"
 	keyTags := map[string]string{
 		edgeproto.AppKeyTagName:                 "myapp",
 		edgeproto.AppKeyTagOrganization:         org,
 		edgeproto.AppKeyTagVersion:              "1.0",
-		edgeproto.CloudletKeyTagName:            "cloudlet1",
+		edgeproto.CloudletKeyTagName:            cloudlet1Name,
 		edgeproto.CloudletKeyTagOrganization:    operOrg,
 		edgeproto.ClusterKeyTagName:             "testclust",
 		edgeproto.ClusterInstKeyTagOrganization: "MobiledgeX",
 	}
 	keyTags2 := map[string]string{
-		edgeproto.CloudletKeyTagName:         "cloudlet1",
+		edgeproto.CloudletKeyTagName:         cloudlet1Name,
 		edgeproto.CloudletKeyTagOrganization: operOrg,
 	}
+
+	// add a mock kafka producer so we can capture kafka events
+	// note this only captures events for cloudlet1, not cloudlet2,
+	// and not appinsts except when the cloudlet is a private cloudlet.
+	producerConfig := sarama.NewConfig()
+	producerConfig.Producer.Return.Successes = true
+	producerConfig.Producer.Return.Errors = true
+	kafkaProducer := mocks.NewAsyncProducer(t, producerConfig)
+	prod := producer{
+		producer: kafkaProducer,
+	}
+	cloudletKey := edgeproto.CloudletKey{
+		Organization: operOrg,
+		Name:         cloudlet1Name,
+	}
+	producerLock.Lock()
+	producers[cloudletKey] = prod
+	producerLock.Unlock()
+	defer kafkaProducer.Close()
+	// kafka msg checks
+	kmsgs := []*EventData{}
+	getKmsg := func(val []byte) error {
+		event := EventData{}
+		err := yaml.Unmarshal(val, &event)
+		if err != nil {
+			return err
+		}
+		// delete tags that are non-deterministic
+		delete(event.Mtags, "traceid")
+		delete(event.Mtags, "spanid")
+		delete(event.Mtags, "lineno")
+		delete(event.Mtags, "hostname")
+		kmsgs = append(kmsgs, &event)
+		return nil
+	}
+
 	// create events
 	ts = ts.Add(time.Minute)
 	nodeMgr.EventAtTime(ctx, "test start", NoOrg, "event", nil, nil, ts)
 
 	ts = ts.Add(time.Minute)
+	kafkaProducer.ExpectInputWithCheckerFunctionAndSucceed(getKmsg) // operator event
 	nodeMgr.EventAtTime(ctx, "cloudlet online", operOrg, "event", keyTags2, nil, ts)
+	expKmsg1 := &EventData{
+		Name:      "cloudlet online",
+		Org:       []string{operOrg},
+		Type:      EventType,
+		Region:    region,
+		Timestamp: ts,
+		Mtags:     keyTags2,
+	}
 
 	ts = ts.Add(time.Minute)
 	nodeMgr.EventAtTime(ctx, "create AppInst", org, "event", keyTags, nil, ts)
@@ -87,21 +136,26 @@ func TestEvents(t *testing.T) {
 			Organization: operOrg,
 			Name:         "pool1",
 		},
-		Cloudlets: []string{"cloudlet1"},
+		Cloudlets: []string{cloudlet1Name},
 	}
 	nodeMgr.CloudletPoolLookup.GetCloudletPoolCache(NoRegion).Update(ctx, &pool, 0)
-	cloudletKey := edgeproto.CloudletKey{
-		Organization: operOrg,
-		Name:         "cloudlet1",
-	}
 	cpc, ok := nodeMgr.CloudletPoolLookup.(*CloudletPoolCache)
 	require.True(t, ok)
 	require.True(t, cpc.PoolsByCloudlet.HasRef(cloudletKey))
 
 	// event with two allowed orgs, developer and operator due to CloudletPool
 	ts = ts.Add(time.Minute)
-	keyTags[edgeproto.CloudletKeyTagName] = "cloudlet1"
+	keyTags[edgeproto.CloudletKeyTagName] = cloudlet1Name
+	kafkaProducer.ExpectInputWithCheckerFunctionAndSucceed(getKmsg) // private cloudlet event
 	nodeMgr.EventAtTime(ctx, "update AppInst", org, "event", keyTags, nil, ts)
+	expKmsg2 := &EventData{
+		Name:      "update AppInst",
+		Org:       []string{org, operOrg},
+		Type:      EventType,
+		Region:    region,
+		Timestamp: ts,
+		Mtags:     keyTags,
+	}
 
 	//
 	// ---------------------------------------------------
@@ -180,7 +234,7 @@ func TestEvents(t *testing.T) {
 			aggr(operOrg, 2),
 		},
 		Types:   []AggrVal{aggr("event", 7)},
-		Regions: []AggrVal{aggr("unit-test", 7)},
+		Regions: []AggrVal{aggr(region, 7)},
 		TagKeys: []AggrVal{
 			aggr("hostname", 7),
 			aggr("lineno", 7),
@@ -217,7 +271,7 @@ func TestEvents(t *testing.T) {
 			aggr(operOrg, 1),
 		},
 		Types:   []AggrVal{aggr("event", 4)},
-		Regions: []AggrVal{aggr("unit-test", 4)},
+		Regions: []AggrVal{aggr(region, 4)},
 		TagKeys: []AggrVal{
 			aggr(edgeproto.AppKeyTagName, 4),
 			aggr(edgeproto.AppKeyTagOrganization, 4),
@@ -250,7 +304,7 @@ func TestEvents(t *testing.T) {
 			aggr(org, 1),
 		},
 		Types:   []AggrVal{aggr("event", 2)},
-		Regions: []AggrVal{aggr("unit-test", 2)},
+		Regions: []AggrVal{aggr(region, 2)},
 		TagKeys: []AggrVal{
 			aggr(edgeproto.CloudletKeyTagName, 2),
 			aggr(edgeproto.CloudletKeyTagOrganization, 2),
@@ -508,7 +562,7 @@ func TestEvents(t *testing.T) {
 	es = search
 	es.Match.Tags = map[string]string{
 		edgeproto.AppKeyTagName:      "myapp",
-		edgeproto.CloudletKeyTagName: "cloudlet1",
+		edgeproto.CloudletKeyTagName: cloudlet1Name,
 	}
 	events, err = nodeMgr.ShowEvents(ctx, &es)
 	require.Nil(t, err)
@@ -641,7 +695,7 @@ func TestEvents(t *testing.T) {
 	es.Match.Names = []string{"*create*"}
 	es.Match.Tags = map[string]string{
 		edgeproto.AppKeyTagName:      "myapp",
-		edgeproto.CloudletKeyTagName: "cloudlet1",
+		edgeproto.CloudletKeyTagName: cloudlet1Name,
 	}
 	events, err = nodeMgr.FindEvents(ctx, &es)
 	require.Nil(t, err)
@@ -738,6 +792,16 @@ func TestEvents(t *testing.T) {
 	}
 	_, err = nodeMgr.ShowEvents(ctx, &es)
 	require.NotNil(t, err)
+
+	//
+	// ---------------------------------------------------
+	// Check kafka events
+	// ---------------------------------------------------
+	//
+
+	require.Equal(t, 2, len(kmsgs))
+	require.Equal(t, expKmsg1, kmsgs[0])
+	require.Equal(t, expKmsg2, kmsgs[1])
 }
 
 func waitEvents(t *testing.T, nm *NodeMgr, num uint64) {
