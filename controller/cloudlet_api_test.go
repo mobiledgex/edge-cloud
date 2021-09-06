@@ -154,17 +154,18 @@ func TestCloudletApi(t *testing.T) {
 	defer nodeMgr.Finish()
 
 	// create flavors
+	cloudletData := testutil.CloudletData()
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverTest(t, "cud", &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletTest(t, "cud", &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletTest(t, "cud", &cloudletApi, cloudletData)
 
 	// test invalid location values
-	clbad := testutil.CloudletData[0]
+	clbad := cloudletData[0]
 	clbad.Key.Name = "bad loc"
 	testBadLat(t, ctx, &clbad, []float64{90.1, -90.1, -1323213, 1232334}, "create")
 	testBadLong(t, ctx, &clbad, []float64{180.1, -180.1, -1323213, 1232334}, "create")
 
-	clbad = testutil.CloudletData[0]
+	clbad = cloudletData[0]
 	clbad.Key.Name = "test num dyn ips"
 	err = cloudletApi.CreateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
@@ -173,7 +174,7 @@ func TestCloudletApi(t *testing.T) {
 	err = cloudletApi.UpdateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 
-	cl := testutil.CloudletData[1]
+	cl := cloudletData[1]
 	cl.Key.Name = "test invalid lat-long"
 	err = cloudletApi.CreateCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
@@ -290,10 +291,11 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	defer services.accessKeyGrpcServer.Stop()
 
 	crm_notifyaddr := "127.0.0.1:0"
-	cloudlet := testutil.CloudletData[2]
+	cloudlet := testutil.CloudletData()[2]
 	cloudlet.ContainerVersion = crm_v1
 	cloudlet.Key.Name = "testcloudletstates"
 	cloudlet.NotifySrvAddr = crm_notifyaddr
+	cloudlet.CrmOverride = edgeproto.CRMOverride_NO_OVERRIDE
 	pfConfig, err := getPlatformConfig(ctx, &cloudlet)
 	require.Nil(t, err, "get platform config")
 	pfConfig.EnvVar["E2ETEST_TLS"] = "true"
@@ -376,7 +378,7 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 
 func testManualBringup(t *testing.T, ctx context.Context) {
 	var err error
-	cloudlet := testutil.CloudletData[2]
+	cloudlet := testutil.CloudletData()[2]
 	cloudlet.Key.Name = "crmmanualbringup"
 	cloudlet.ContainerVersion = crm_v1
 	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
@@ -852,7 +854,7 @@ func TestShowFlavorsForCloudlet(t *testing.T) {
 	fmt.Printf("\n\nSetup complete start creating test cloudlets from test_data\n\n")
 
 	// Use a  clouldet with no ResourceTagMap
-	cld := testutil.CloudletData[1]
+	cld := testutil.CloudletData()[1]
 	err := cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
@@ -900,7 +902,7 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	// test data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 
 	// without a responder, clusterInst create waits forever

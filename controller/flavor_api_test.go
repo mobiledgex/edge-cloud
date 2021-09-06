@@ -47,7 +47,7 @@ func testMasterFlavor(t *testing.T, ctx context.Context) {
 
 	// ensure the master node default flavor is created, using the default value
 	// of settings.MasterNodeFlavor
-	cl := testutil.CloudletData[1]
+	cl := testutil.CloudletData()[1]
 	var cli edgeproto.CloudletInfo = testutil.CloudletInfoData[0]
 	settings := settingsApi.Get()
 	masterFlavor := edgeproto.Flavor{}
