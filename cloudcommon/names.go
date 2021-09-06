@@ -177,6 +177,11 @@ func GetRootLBFQDNOld(key *edgeproto.CloudletKey, domain string) string {
 	return GetCloudletBaseFQDN(key, domain)
 }
 
+// Wildcard cert for all LBs both shared and dedicated
+func GetRootLBFQDNWildcard(key *edgeproto.CloudletKey, domain string) string {
+	return "*." + GetCloudletBaseFQDN(key, domain)
+}
+
 // GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
 // for clusters using "dedicated" IP access.
 func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
