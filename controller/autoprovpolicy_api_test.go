@@ -37,15 +37,16 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	InfluxUsageUnitTestSetup(t)
 	defer InfluxUsageUnitTestStop()
 
+	cloudletData := testutil.CloudletData()
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, cloudletData)
 
 	// test adding cloudlet to policy
 	pc := edgeproto.AutoProvPolicyCloudlet{}
 	pc.Key = testutil.AutoProvPolicyData[0].Key
-	pc.CloudletKey = testutil.CloudletData[0].Key
+	pc.CloudletKey = cloudletData[0].Key
 
 	_, err := autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
 	require.Nil(t, err, "add auto prov policy cloudlet")
@@ -58,7 +59,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	// test adding another cloudlet to policy
 	pc2 := edgeproto.AutoProvPolicyCloudlet{}
 	pc2.Key = testutil.AutoProvPolicyData[0].Key
-	pc2.CloudletKey = testutil.CloudletData[1].Key
+	pc2.CloudletKey = cloudletData[1].Key
 
 	_, err = autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc2)
 	require.Nil(t, err, "add auto prov policy cloudlet")
@@ -68,7 +69,8 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	require.Equal(t, pc2.CloudletKey, policy.Cloudlets[1].Key)
 
 	// delete cloudlet should fail if it is used by policy
-	err = cloudletApi.DeleteCloudlet(&testutil.CloudletData[1], testutil.NewCudStreamoutCloudlet(ctx))
+	deleteCloudlet := cloudletData[1]
+	err = cloudletApi.DeleteCloudlet(&deleteCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 	require.Equal(t, `Cloudlet in use by AutoProvPolicy {"organization":"AtlanticInc","name":"auto-prov-policy"}`, err.Error())
 
