@@ -195,7 +195,6 @@ func TestCRM(t *testing.T) {
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
-	defer ctrlMgr.Stop()
 	// handle access API
 	keyServer := node.NewAccessKeyServer(&ctrlHandler.CloudletCache, "")
 	accessKeyGrpcServer := node.AccessKeyGrpcServer{}
@@ -253,6 +252,7 @@ func TestCRM(t *testing.T) {
 		close(sigChan)
 		// wait until main is done so it can clean up properly
 		<-mainDone
+		ctrlMgr.Stop()
 	}()
 
 	notifyClient.WaitForConnect(1)
