@@ -238,6 +238,19 @@ func TestFlavorInfoUpdate(t *testing.T) {
 			require.Equal(t, true, flavor.Deprecated, "not deprecated")
 		}
 	}
+
+	// Now test flavor re-mapping
+	// GetVMSpec() on our infra flavor that would match our flavor.tiny2 if were not deprecated.
+	fm := edgeproto.FlavorMatch{
+		Key:        cloudletInfo.Key,
+		FlavorName: testutil.FlavorData[0].Key.Name,
+	}
+	match, err := cloudletApi.FindFlavorMatch(ctx, &fm)
+	require.Nil(t, err, "FindFlavorMatch")
+	require.NotEqual(t, match.FlavorName, "flavor.tiny2")
+	// we've successfully matched the next available flavor,
+	require.Equal(t, match.FlavorName, "flavor.small")
+
 	// Verify our test generated the desired Alert
 	alertFound := false
 	for k, _ := range alertApi.cache.Objs {
@@ -255,6 +268,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 			curFlavs = curFlavs[:len(curFlavs)-1]
 		}
 	}
+
 	cloudletInfo.Flavors = curFlavs
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
 

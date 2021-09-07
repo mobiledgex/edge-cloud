@@ -341,7 +341,10 @@ func GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.C
 		return flavorList[i].Disk < flavorList[j].Disk
 	})
 	for _, flavor := range flavorList {
-
+		// has the infra flavor been deleted?
+		if flavor.Deprecated {
+			continue
+		}
 		if flavor.Vcpus < nodeflavor.Vcpus {
 			continue
 		}
