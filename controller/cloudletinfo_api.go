@@ -508,7 +508,6 @@ func (cd *CloudletInfoApi) findFlavorDeltas(ctx context.Context, flavorMap, newF
 				for _, flavor := range deletedFlavors {
 					delete(flavorMap, flavor.Name)
 				}
-
 			}
 		}
 		for key, _ := range newFlavorMap {
@@ -638,7 +637,6 @@ func (s *CloudletInfoApi) HandleInfraFlavorDeltas(ctx context.Context, in *edgep
 			alertApi.cache.Update(ctx, &alert, 0)
 			alertApi.Update(ctx, &alert, 0)
 		}
-
 	}
 	return in.Flavors
 }
