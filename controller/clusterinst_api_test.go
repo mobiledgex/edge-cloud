@@ -48,9 +48,10 @@ func TestClusterInstApi(t *testing.T) {
 	}
 
 	// create support data
+	cloudletData := testutil.CloudletData()
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, cloudletData)
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
@@ -167,7 +168,7 @@ func TestClusterInstApi(t *testing.T) {
 	// Create appInst with autocluster should fail as cluster create
 	// responder is set to fail. But post failure, clusterInst object
 	// created internally should be cleaned up
-	targetCloudletKey := testutil.CloudletData[1].Key
+	targetCloudletKey := cloudletData[1].Key
 	targetApp := testutil.AppData[11]
 	testReservableClusterInstExists := func(cloudletKey edgeproto.CloudletKey) {
 		foundCluster := false
@@ -331,7 +332,7 @@ func testReservableClusterInst(t *testing.T, ctx context.Context, api *testutil.
 	// Cannot create VM with autocluster
 	appinstBad := edgeproto.AppInst{}
 	appinstBad.Key.AppKey = testutil.AppData[12].Key
-	appinstBad.Key.ClusterInstKey.CloudletKey = testutil.CloudletData[0].Key
+	appinstBad.Key.ClusterInstKey.CloudletKey = testutil.CloudletData()[0].Key
 	appinstBad.Key.ClusterInstKey.ClusterKey.Name = "autoclusterBad"
 	appinstBad.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
 	err = appInstApi.CreateAppInst(&appinstBad, streamOut)
@@ -640,7 +641,8 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 	require.Nil(t, err)
 
 	// get resource usage before clusterInst creation
-	oldResUsage := getMetricCounts(t, ctx, &testutil.CloudletData[0])
+	cloudletData := testutil.CloudletData()
+	oldResUsage := getMetricCounts(t, ctx, &cloudletData[0])
 
 	// create clusterInst1
 	clusterInstObj := testutil.ClusterInstData[0]
@@ -649,10 +651,10 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 	err = clusterInstApi.CreateClusterInst(&clusterInstObj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create cluster inst with gpu flavor")
 	// validate clusterinst resource metrics
-	validateClusterInstMetrics(t, ctx, &testutil.CloudletData[0], &clusterInstObj, oldResUsage)
+	validateClusterInstMetrics(t, ctx, &cloudletData[0], &clusterInstObj, oldResUsage)
 
 	// get resource usage before clusterInst creation
-	oldResUsage = getMetricCounts(t, ctx, &testutil.CloudletData[0])
+	oldResUsage = getMetricCounts(t, ctx, &cloudletData[0])
 
 	// create clusterInst2
 	clusterInstObj2 := testutil.ClusterInstData[0]
@@ -660,13 +662,13 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 	err = clusterInstApi.CreateClusterInst(&clusterInstObj2, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create cluster inst")
 	// validate clusterinst resource metrics
-	validateClusterInstMetrics(t, ctx, &testutil.CloudletData[0], &clusterInstObj2, oldResUsage)
+	validateClusterInstMetrics(t, ctx, &cloudletData[0], &clusterInstObj2, oldResUsage)
 
 	// delete clusterInst2
 	err = clusterInstApi.DeleteClusterInst(&clusterInstObj2, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "delete cluster inst")
 	// validate clusterinst resource metrics post deletion
-	delResUsage := getMetricCounts(t, ctx, &testutil.CloudletData[0])
+	delResUsage := getMetricCounts(t, ctx, &cloudletData[0])
 	require.Equal(t, oldResUsage.ramUsed, delResUsage.ramUsed, "ram used is same as old value")
 	require.Equal(t, oldResUsage.vcpusUsed, delResUsage.vcpusUsed, "vcpus used is same as old value")
 	require.Equal(t, oldResUsage.gpusUsed, delResUsage.gpusUsed, "gpus used is same as old value")
@@ -678,13 +680,13 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 	}
 
 	// get resource usage before clusterInst creation
-	oldResUsage = getMetricCounts(t, ctx, &testutil.CloudletData[0])
+	oldResUsage = getMetricCounts(t, ctx, &cloudletData[0])
 
 	// create clusterInst2 again
 	err = clusterInstApi.CreateClusterInst(&clusterInstObj2, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create cluster inst")
 	// validate clusterinst resource metrics
-	validateClusterInstMetrics(t, ctx, &testutil.CloudletData[0], &clusterInstObj2, oldResUsage)
+	validateClusterInstMetrics(t, ctx, &cloudletData[0], &clusterInstObj2, oldResUsage)
 
 	appInstObj := testutil.AppInstData[0]
 	appInstObj.Key.ClusterInstKey = *clusterInstObj.Key.Virtual("")
@@ -896,7 +898,7 @@ func TestDefaultMTCluster(t *testing.T) {
 
 	testutil.InternalFlavorTest(t, "cud", &flavorApi, testutil.FlavorData)
 
-	cloudlet := testutil.CloudletData[0]
+	cloudlet := testutil.CloudletData()[0]
 	cloudlet.EnableDefaultServerlessCluster = true
 	cloudlet.GpuConfig = edgeproto.GPUConfig{}
 	cloudletInfo := testutil.CloudletInfoData[0]
@@ -945,7 +947,8 @@ func waitDefaultMTClust(t *testing.T, cloudletKey edgeproto.CloudletKey, present
 }
 
 func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
-	vgpuCloudlet := testutil.CloudletData[0]
+	cloudletData := testutil.CloudletData()
+	vgpuCloudlet := cloudletData[0]
 	vgpuCloudlet.Key.Name = "VGPUCloudlet"
 	vgpuCloudlet.GpuConfig.Driver = testutil.GPUDriverData[3].Key
 	vgpuCloudlet.ResTagMap["gpu"] = &testutil.Restblkeys[0]
@@ -961,7 +964,7 @@ func testClusterInstGPUFlavor(t *testing.T, ctx context.Context) {
 	obj.Flavor = testutil.FlavorData[4].Key // GPU Passthrough flavor
 
 	// Deploy GPU cluster on non-GPU cloudlet, should fail
-	obj.Key.CloudletKey = testutil.CloudletData[1].Key
+	obj.Key.CloudletKey = cloudletData[1].Key
 	err = clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "create cluster inst with gpu flavor on vgpu cloudlet fails")
 	require.Contains(t, err.Error(), "doesn't support GPU")

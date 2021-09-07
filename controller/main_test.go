@@ -89,12 +89,13 @@ func TestController(t *testing.T) {
 		require.Nil(t, err)
 	}
 
+	cloudletData := testutil.CloudletData()
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
 	testutil.ClientAutoProvPolicyTest(t, "cud", autoProvPolicyClient, testutil.AutoProvPolicyData)
 	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientGPUDriverTest(t, "cud", gpuDriverClient, testutil.GPUDriverData)
-	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
+	testutil.ClientCloudletTest(t, "cud", cloudletClient, cloudletData)
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))
 
@@ -121,7 +122,7 @@ func TestController(t *testing.T) {
 	testKeepAliveRecovery(t, ctx)
 
 	// test that delete checks disallow deletes of dependent objects
-	stream, err := cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
+	stream, err := cloudletClient.DeleteCloudlet(ctx, &cloudletData[0])
 	err = testutil.CloudletReadResultStream(stream, err)
 	require.NotNil(t, err)
 	_, err = appClient.DeleteApp(ctx, &testutil.AppData[0])
@@ -158,7 +159,7 @@ func TestController(t *testing.T) {
 		obj.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
 		crmNotify.CloudletInfoCache.Update(ctx, &obj, 0)
 	}
-	for _, obj := range testutil.CloudletData {
+	for _, obj := range cloudletData {
 		stream, err := cloudletClient.DeleteCloudlet(ctx, &obj)
 		err = testutil.CloudletReadResultStream(stream, err)
 		require.Nil(t, err)

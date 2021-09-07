@@ -86,8 +86,9 @@ func TestNotifyTree(t *testing.T) {
 		testutil.AppInstData[ii].State = edgeproto.TrackedState_CREATE_REQUESTED
 		top.handler.AppInstCache.Update(ctx, &testutil.AppInstData[ii], 0)
 	}
-	top.handler.CloudletCache.Update(ctx, &testutil.CloudletData[0], 0)
-	top.handler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 0)
+	cloudletData := testutil.CloudletData()
+	top.handler.CloudletCache.Update(ctx, &cloudletData[0], 0)
+	top.handler.CloudletCache.Update(ctx, &cloudletData[1], 0)
 	// dmes should get all app insts but no cloudlets
 	for _, n := range dmes {
 		checkClientCache(t, n, 0, 0, len(testutil.AppInstData), 0)
@@ -187,8 +188,8 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.FlavorCache.Delete(ctx, &testutil.FlavorData[0], 0)
 	top.handler.FlavorCache.Delete(ctx, &testutil.FlavorData[1], 0)
 	top.handler.FlavorCache.Delete(ctx, &testutil.FlavorData[2], 0)
-	top.handler.CloudletCache.Delete(ctx, &testutil.CloudletData[0], 0)
-	top.handler.CloudletCache.Delete(ctx, &testutil.CloudletData[1], 0)
+	top.handler.CloudletCache.Delete(ctx, &cloudletData[0], 0)
+	top.handler.CloudletCache.Delete(ctx, &cloudletData[1], 0)
 	checkClientCache(t, mid2, 0, 0, 0, 0)
 	checkClientCache(t, low21, 0, 0, 0, 0)
 	checkClientCache(t, low22, 0, 0, 0, 0)

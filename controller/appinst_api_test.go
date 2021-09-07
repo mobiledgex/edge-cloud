@@ -112,7 +112,7 @@ func TestAppInstApi(t *testing.T) {
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
@@ -350,7 +350,7 @@ func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testuti
 
 	// update cloudlet and check that app insts are updated
 	updater2 := edgeproto.Cloudlet{}
-	updater2.Key = testutil.CloudletData[0].Key
+	updater2.Key = testutil.CloudletData()[0].Key
 	newLat := 52.84583
 	updater2.Location.Latitude = newLat
 	updater2.Fields = make([]string, 0)
@@ -360,7 +360,7 @@ func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testuti
 
 	show.Init()
 	filter = edgeproto.AppInst{}
-	filter.Key.ClusterInstKey.CloudletKey = testutil.CloudletData[0].Key
+	filter.Key.ClusterInstKey.CloudletKey = testutil.CloudletData()[0].Key
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	require.Nil(t, err, "show app inst data")
 	for _, inst := range show.Data {
@@ -407,7 +407,7 @@ func TestAutoClusterInst(t *testing.T) {
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
@@ -724,7 +724,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 				ClusterKey: edgeproto.ClusterKey{
 					Name: util.K8SSanitize(cloudcommon.AutoClusterPrefix + "override-clust"),
 				},
-				CloudletKey:  testutil.CloudletData[1].Key,
+				CloudletKey:  testutil.CloudletData()[1].Key,
 				Organization: cloudcommon.OrganizationMobiledgeX,
 			},
 		},
