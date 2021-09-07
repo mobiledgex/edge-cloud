@@ -12,6 +12,8 @@ import (
 	_ "github.com/gogo/googleapis/google/api"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
@@ -1202,6 +1204,21 @@ func (m *StreamObj) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func IgnoreStreamObjFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskName")
+	}
+	return cmpopts.IgnoreFields(StreamObj{}, names...)
 }
 
 var StreamStateStrings = []string{

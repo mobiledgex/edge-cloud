@@ -98,6 +98,12 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 		in.NotifyId = 0
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Status.TaskNumber = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskName = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.Uri = ""
 	}
 }

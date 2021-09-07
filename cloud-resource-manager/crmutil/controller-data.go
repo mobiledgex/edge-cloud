@@ -57,6 +57,7 @@ type ControllerData struct {
 	vmActionRefAction           int
 	finishInfraResourceThread   chan struct{}
 	vmActionLastUpdate          time.Time
+	finishFlavorRefreshThread   chan struct{}
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -1372,4 +1373,39 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 	close(cd.finishInfraResourceThread)
 
+}
+
+func (cd *ControllerData) StartFlavorUpdateThread(cloudletInfo *edgeproto.CloudletInfo, testmode bool) {
+	cd.finishFlavorRefreshThread = make(chan struct{})
+	var interval = cd.settings.FlavorRefreshThreadInterval
+	if testmode {
+		interval = edgeproto.Duration(time.Second * 1)
+	}
+	go func() {
+		done := false
+		for !done {
+			select {
+			case <-time.After(interval.TimeDuration()):
+				span := log.StartSpan(log.DebugLevelApi, "FlavorResourceRefresh thread")
+				ctx := log.ContextWithSpan(context.Background(), span)
+				if !testmode {
+					log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh", "testmode", cloudletInfo, "interval:", interval)
+				}
+				err := cd.GatherCloudletInfo(ctx, cloudletInfo)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh error gathering current cloudlet info", "cloudlet", cloudletInfo.Key, "error:", err)
+					continue
+				}
+				if !testmode {
+					span.Finish()
+				}
+			case <-cd.finishFlavorRefreshThread:
+				done = true
+			}
+		}
+	}()
+}
+
+func (cd *ControllerData) FinishFlavorRefreshThread() {
+	close(cd.finishFlavorRefreshThread)
 }

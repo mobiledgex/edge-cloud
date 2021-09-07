@@ -4,6 +4,7 @@ syntax = "proto3";
 package edgeproto;
 
 import "gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -149,9 +150,9 @@ enum CRMOverride {
 // Steps are work items within a task. Within the clusterinst and appinst objects this
 // is converted to a string
 message StatusInfo{
-  uint32 task_number = 1;
+  uint32 task_number = 1 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];;
   uint32 max_tasks = 2;
-  string task_name = 3;
+  string task_name = 3 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];;
   string step_name = 4;
   uint32 msg_count = 5;
   repeated string msgs = 6;

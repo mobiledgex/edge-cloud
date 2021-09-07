@@ -781,6 +781,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.Status")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.Status.TaskName")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.State")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -826,6 +832,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "CloudletInfos.Status")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "CloudletInfos.Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "CloudletInfos.Status.TaskName")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.TrustPolicyState")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -854,6 +866,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.Status")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "ClusterInsts.Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "ClusterInsts.Status.TaskName")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.ExternalVolumeSize")
@@ -919,6 +937,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "AppInstances.Status")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AppInstances.Status.TaskName")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.Revision")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -959,6 +983,12 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "VmPools.Errors")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "VmPools.Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "VmPools.Status.TaskName")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "VmPools.CrmOverride")

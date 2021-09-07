@@ -279,6 +279,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.VmPools[i0].Errors = nil
 		}
 		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].Status.TaskNumber = 0
+		}
+		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].Status.TaskName = ""
+		}
+		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].CrmOverride = 0
 		}
 	}
@@ -342,6 +348,7 @@ var AllDataOptionalArgs = []string{
 	"settings.disableratelimit",
 	"settings.maxnumperipratelimiters",
 	"settings.resourcesnapshotthreadinterval",
+	"settings.flavorrefreshthreadinterval",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -462,6 +469,7 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.flavors:#.ram",
 	"cloudletinfos:#.flavors:#.disk",
 	"cloudletinfos:#.flavors:#.propmap",
+	"cloudletinfos:#.flavors:#.deprecated",
 	"cloudletinfos:#.status.tasknumber",
 	"cloudletinfos:#.status.maxtasks",
 	"cloudletinfos:#.status.taskname",
@@ -722,6 +730,7 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.vms:#.flavor.ram",
 	"vmpools:#.vms:#.flavor.disk",
 	"vmpools:#.vms:#.flavor.propmap",
+	"vmpools:#.vms:#.flavor.deprecated",
 	"vmpools:#.state",
 	"vmpools:#.errors",
 	"vmpools:#.status.tasknumber",
@@ -823,6 +832,7 @@ var AllDataComments = map[string]string{
 	"settings.disableratelimit":                                                     "Disable rate limiting for APIs (default is false)",
 	"settings.maxnumperipratelimiters":                                              "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
 	"settings.resourcesnapshotthreadinterval":                                       "ResourceSnapshot Refresh thread run interval",
+	"settings.flavorrefreshthreadinterval":                                          "Flavor refresh thread cadence",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",
@@ -929,6 +939,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.flavors:#.ram":                                                 "Ram in MB on the Cloudlet",
 	"cloudletinfos:#.flavors:#.disk":                                                "Amount of disk in GB on the Cloudlet",
 	"cloudletinfos:#.flavors:#.propmap":                                             "OS Flavor Properties, if any",
+	"cloudletinfos:#.flavors:#.deprecated":                                          "Set if this infra flavor gets deleted during runtime while in use",
 	"cloudletinfos:#.containerversion":                                              "Cloudlet container version",
 	"cloudletinfos:#.osimages:#.name":                                               "image name",
 	"cloudletinfos:#.osimages:#.tags":                                               "optional tags present on image",
@@ -1141,6 +1152,7 @@ var AllDataComments = map[string]string{
 	"vmpools:#.vms:#.flavor.ram":                                                    "Ram in MB on the Cloudlet",
 	"vmpools:#.vms:#.flavor.disk":                                                   "Amount of disk in GB on the Cloudlet",
 	"vmpools:#.vms:#.flavor.propmap":                                                "OS Flavor Properties, if any",
+	"vmpools:#.vms:#.flavor.deprecated":                                             "Set if this infra flavor gets deleted during runtime while in use",
 	"vmpools:#.state":                                                               "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                                              "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",

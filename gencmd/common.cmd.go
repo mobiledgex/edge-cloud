@@ -7,7 +7,11 @@ import (
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
+	"github.com/mobiledgex/edge-cloud/cli"
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	_ "github.com/mobiledgex/edge-cloud/protogen"
 	math "math"
+	"strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -16,6 +20,22 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func StatusInfoHideTags(in *edgeproto.StatusInfo) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.TaskNumber = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.TaskName = ""
+	}
+}
+
 var StatusInfoRequiredArgs = []string{}
 var StatusInfoOptionalArgs = []string{
 	"tasknumber",

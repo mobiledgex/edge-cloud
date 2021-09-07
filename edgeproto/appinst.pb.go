@@ -4187,6 +4187,12 @@ func IgnoreAppInstFields(taglist string) cmp.Option {
 		names = append(names, "Status")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskName")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "Revision")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -5268,6 +5274,12 @@ func IgnoreAppInstInfoFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "NotifyId")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskName")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Uri")

@@ -137,6 +137,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ResourceSnapshotThreadInterval = edgeproto.GetDefaultSettings().ResourceSnapshotThreadInterval
 			modified = true
 		}
+		if cur.FlavorRefreshThreadInterval == 0 {
+			cur.FlavorRefreshThreadInterval = edgeproto.GetDefaultSettings().FlavorRefreshThreadInterval
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

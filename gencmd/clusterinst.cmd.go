@@ -93,6 +93,12 @@ func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskNumber = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskName = ""
+	}
 	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
 		}

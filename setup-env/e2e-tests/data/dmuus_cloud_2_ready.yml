@@ -56,3 +56,5 @@ cloudletinfos:
     - clusterkey:
         name: SmallCluster
       organization: AcmeAppCo
+trustpolicystate: NotPresent
+compatibilityversion: 2OD
