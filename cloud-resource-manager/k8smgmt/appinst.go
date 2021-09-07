@@ -190,32 +190,42 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	return nil
 }
 
+func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *KubeNames, portMap map[string]string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap", "names", names)
+
+	services, err := GetServices(ctx, client, names)
+	if err != nil {
+		return err
+	}
+	for _, s := range services {
+		lbip := ""
+		for _, ing := range s.Status.LoadBalancer.Ingress {
+			if strings.Contains(ing.IP, "pending") || ing.IP == "" {
+				continue
+			}
+			lbip = ing.IP
+			break
+		}
+		if lbip == "" {
+			continue
+		}
+		ports := s.Spec.Ports
+		for _, p := range ports {
+			portString := LbServicePortToString(&p)
+			portMap[portString] = lbip
+		}
+	}
+	return nil
+}
+
 func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, names *KubeNames, appinst *edgeproto.AppInst) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "PopulateAppInstLoadBalancerIps", "appInst", appinst.Key.String(), "maxLoadBalancerIPWait", maxLoadBalancerIPWait)
 	appinst.InternalPortToLbIp = make(map[string]string)
 	start := time.Now()
 	for {
-		services, err := GetServices(ctx, client, names)
+		err := UpdateLoadBalancerPortMap(ctx, client, names, appinst.InternalPortToLbIp)
 		if err != nil {
 			return err
-		}
-		for _, s := range services {
-			lbip := ""
-			for _, ing := range s.Status.LoadBalancer.Ingress {
-				if strings.Contains(ing.IP, "pending") || ing.IP == "" {
-					continue
-				}
-				lbip = ing.IP
-				break
-			}
-			if lbip == "" {
-				continue
-			}
-			ports := s.Spec.Ports
-			for _, p := range ports {
-				portString := LbServicePortToString(&p)
-				appinst.InternalPortToLbIp[portString] = lbip
-			}
 		}
 		allPortsHaveIp := true
 		// see if all services have an LB IP and update

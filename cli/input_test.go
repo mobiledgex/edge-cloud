@@ -285,7 +285,7 @@ func TestConversion(t *testing.T) {
 	for _, app := range testutil.AppData {
 		testConversion(t, input, &app, &edgeproto.App{}, &edgeproto.App{}, nil)
 	}
-	for _, cloudlet := range testutil.CloudletData {
+	for _, cloudlet := range testutil.CloudletData() {
 		// we don't support handling complex maps yet
 		cloudlet.ResTagMap = nil
 		testConversion(t, input, &cloudlet, &edgeproto.Cloudlet{}, &edgeproto.Cloudlet{}, nil)

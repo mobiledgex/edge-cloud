@@ -434,7 +434,7 @@ func addDmeApiRateLimitSettings(ctx context.Context, apiName string) {
 	perIpRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_IP, settingsMap)
 	perUserRateLimitSettings := getDmeApiRateLimitSettings(apiName, edgeproto.RateLimitTarget_PER_USER, settingsMap)
 	// Add apiendpoint limiter to RateLimitMgrs
-	dmecommon.RateLimitMgr.CreateApiEndpointLimiter(allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings)
+	dmecommon.RateLimitMgr.CreateApiEndpointLimiter(apiName, allRequestsRateLimitSettings, perIpRateLimitSettings, perUserRateLimitSettings)
 }
 
 // Helper function that generates a RateLimitSettings struct for specified api and target
