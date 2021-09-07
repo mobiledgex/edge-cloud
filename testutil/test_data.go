@@ -926,6 +926,12 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				Disk:    uint64(20),
 				PropMap: map[string]string{"resources": "VGPU=1"},
 			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.doNotUse",
+				Vcpus: uint64(4),
+				Ram:   uint64(4096),
+				Disk:  uint64(20),
+			},
 		},
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{
 			Info: []edgeproto.InfraResource{

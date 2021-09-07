@@ -61,6 +61,12 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 		in.Errors = nil
 	}
 	if _, found := tags["nocmp"]; found {
+		in.Status.TaskNumber = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskName = ""
+	}
+	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
 }
@@ -102,6 +108,12 @@ func VMPoolInfoHideTags(in *edgeproto.VMPoolInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskNumber = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskName = ""
 	}
 }
 
@@ -505,6 +517,7 @@ var VMOptionalArgs = []string{
 	"flavor.ram",
 	"flavor.disk",
 	"flavor.propmap",
+	"flavor.deprecated",
 }
 var VMAliasArgs = []string{}
 var VMComments = map[string]string{
@@ -521,6 +534,7 @@ var VMComments = map[string]string{
 	"flavor.ram":         "Ram in MB on the Cloudlet",
 	"flavor.disk":        "Amount of disk in GB on the Cloudlet",
 	"flavor.propmap":     "OS Flavor Properties, if any",
+	"flavor.deprecated":  "Set if this infra flavor gets deleted during runtime while in use",
 }
 var VMSpecialArgs = map[string]string{
 	"flavor.propmap": "StringToString",
@@ -570,6 +584,7 @@ var VMPoolComments = map[string]string{
 	"vms:#.flavor.ram":         "Ram in MB on the Cloudlet",
 	"vms:#.flavor.disk":        "Amount of disk in GB on the Cloudlet",
 	"vms:#.flavor.propmap":     "OS Flavor Properties, if any, specify vms:#.flavor.propmap:empty=true to clear",
+	"vms:#.flavor.deprecated":  "Set if this infra flavor gets deleted during runtime while in use",
 	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool, specify errors:empty=true to clear",
 	"crmoverride":              "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
@@ -610,6 +625,7 @@ var VMPoolMemberComments = map[string]string{
 	"vm.flavor.ram":         "Ram in MB on the Cloudlet",
 	"vm.flavor.disk":        "Amount of disk in GB on the Cloudlet",
 	"vm.flavor.propmap":     "OS Flavor Properties, if any",
+	"vm.flavor.deprecated":  "Set if this infra flavor gets deleted during runtime while in use",
 	"crmoverride":           "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 }
 var VMPoolMemberSpecialArgs = map[string]string{
@@ -662,6 +678,7 @@ var VMPoolInfoOptionalArgs = []string{
 	"vms:#.flavor.ram",
 	"vms:#.flavor.disk",
 	"vms:#.flavor.propmap",
+	"vms:#.flavor.deprecated",
 	"state",
 	"errors",
 	"status.tasknumber",
@@ -693,6 +710,7 @@ var VMPoolInfoComments = map[string]string{
 	"vms:#.flavor.ram":         "Ram in MB on the Cloudlet",
 	"vms:#.flavor.disk":        "Amount of disk in GB on the Cloudlet",
 	"vms:#.flavor.propmap":     "OS Flavor Properties, if any",
+	"vms:#.flavor.deprecated":  "Set if this infra flavor gets deleted during runtime while in use",
 	"state":                    "Current state of the VM pool on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool",
 }

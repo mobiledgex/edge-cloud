@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -229,27 +228,16 @@ func TestCRM(t *testing.T) {
 	cdata.CrmAccessPublicKey = accessKey.PublicPEM
 	ctrlHandler.CloudletCache.Update(ctx, &cdata, 0)
 	ctrlMgr.Start("ctrl", notifyAddr, nil)
-
-	os.Args = append(os.Args, "-cloudletKey")
-	os.Args = append(os.Args, string(bytes))
-	os.Args = append(os.Args, "-notifyAddrs")
-	os.Args = append(os.Args, notifyAddr)
-	os.Args = append(os.Args, "--accessApiAddr", accessKeyGrpcServer.ApiAddr())
-	os.Args = append(os.Args, "--accessKeyFile", accessKeyFile)
+	defer ctrlMgr.Stop()
+	*cloudletKeyStr = string(bytes)
+	*notifyAddrs = notifyAddr
+	nodeMgr.AccessKeyClient.AccessApiAddr = accessKeyGrpcServer.ApiAddr()
+	nodeMgr.AccessKeyClient.AccessKeyFile = accessKeyFile
 	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
-	mainDone, err := startMain(t)
-	if err != nil {
-		close(sigChan)
-		require.Nil(t, err, "start main")
-		return
-	}
-	defer func() {
-		// closing the signal channel triggers main to exit
-		close(sigChan)
-		// wait until main is done so it can clean up properly
-		<-mainDone
-		ctrlMgr.Stop()
-	}()
+	*platformName = "PLATFORM_TYPE_FAKE"
+	err = startServices()
+	require.Nil(t, err, "start crm")
+	defer stopServices()
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}
@@ -284,7 +272,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
-	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
+	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
 
 	testVMPoolUpdates(t, ctx, &data.VmPools[0], ctrlHandler)
 

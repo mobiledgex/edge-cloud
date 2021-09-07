@@ -236,6 +236,7 @@ var SettingsOptionalArgs = []string{
 	"disableratelimit",
 	"maxnumperipratelimiters",
 	"resourcesnapshotthreadinterval",
+	"flavorrefreshthreadinterval",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -280,6 +281,7 @@ var SettingsComments = map[string]string{
 	"disableratelimit":                                                  "Disable rate limiting for APIs (default is false)",
 	"maxnumperipratelimiters":                                           "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
 	"resourcesnapshotthreadinterval":                                    "ResourceSnapshot Refresh thread run interval",
+	"flavorrefreshthreadinterval":                                       "Flavor refresh thread cadence",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

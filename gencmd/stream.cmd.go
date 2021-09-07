@@ -25,6 +25,22 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func StreamObjHideTags(in *edgeproto.StreamObj) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskNumber = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status.TaskName = ""
+	}
+}
+
 var StreamObjApiCmd edgeproto.StreamObjApiClient
 
 var StreamAppInstCmd = &cli.Command{

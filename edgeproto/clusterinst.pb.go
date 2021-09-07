@@ -3117,6 +3117,12 @@ func IgnoreClusterInstFields(taglist string) cmp.Option {
 		names = append(names, "Status")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskName")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "ExternalVolumeSize")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -4208,6 +4214,12 @@ func IgnoreClusterInstInfoFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "NotifyId")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskNumber")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Status.TaskName")
 	}
 	return cmpopts.IgnoreFields(ClusterInstInfo{}, names...)
 }
