@@ -208,7 +208,6 @@ func startServices() error {
 			}
 		case <-time.After(ControllerTimeout):
 			log.FatalLog("Timed out waiting for cloudlet cache from controller")
-			panic("Timed out waiting for cloudlet cache from controller")
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
@@ -250,7 +249,6 @@ func startServices() error {
 		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
-			panic("initPlatform Failed")
 		} else {
 			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
@@ -271,11 +269,9 @@ func startServices() error {
 				case <-controllerData.ControllerSyncDone:
 					if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
 						log.FatalLog("failed to get sync data from controller")
-						panic("Timed out waiting for sync data from controller")
 					}
 				case <-time.After(ControllerTimeout):
 					log.FatalLog("Timed out waiting for sync data from controller")
-					panic("Timed out waiting for sync data from controller")
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
 				myCloudletInfo.ControllerCacheReceived = true

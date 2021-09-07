@@ -246,11 +246,8 @@ func TestFlavorInfoUpdate(t *testing.T) {
 		}
 	}
 	require.True(t, alertFound, "failed to find infra flavor deleted alert")
-	// Now delete an infra flavor that is not being used, this should actually remove it
-	// An easy taraget would be one of the gpu infra-flavors
-	// Not so easy, on't use flavor.large-generic-gpu it messes with clusterInst tests
-	// Though it should be ok when I put it back in, but it is not. weird.
 
+	// Now delete an infra flavor that is not being used, this should actually remove it.
 	for ii, flavor := range curFlavs {
 		if flavor.Name == "flavor.doNotUse" {
 			curFlavs[ii] = curFlavs[len(curFlavs)-1]
@@ -271,10 +268,6 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	}
 	require.Equal(t, false, found, "Update failed")
 
-	// Now put what we've delelted here back, it's used elsewhere in clousterInstApiTest
-	//newFlavors = append(newFlavors, testutil.CloudletInfoData[0].Flavors[10])
-
-	// put stuff back the way we found it
 	cloudletInfo.Flavors = curFlavs
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
 	_, err = cloudletInfoApi.EvictCloudletInfo(ctx, &cloudletInfo)
