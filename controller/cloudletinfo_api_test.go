@@ -196,7 +196,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
 
 	// Inject the cloudletInfo test data for Update to fetch
 	cldInfo := testutil.CloudletInfoData[0]
