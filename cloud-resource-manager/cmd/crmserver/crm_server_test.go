@@ -35,6 +35,10 @@ cloudlets:
     driver:
       name: gpudriver1
       organization: DMUUS
+  restagmap:
+    gpu:
+      name: gpudriver1
+      organization: DMUUS
 
 flavors:
 - key:
@@ -266,16 +270,16 @@ func TestCRM(t *testing.T) {
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
-	notify.WaitFor(&controllerData.FlavorCache, 3)
+	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 3))
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
 	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
-	notify.WaitFor(&controllerData.ClusterInstCache, 2)
-	notify.WaitFor(&controllerData.AppInstCache, 2)
+	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 2))
+	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 2))
 	// ensure that only vmpool object associated with cloudlet is received
-	notify.WaitFor(&controllerData.VMPoolCache, 1)
+	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 1))
 	// ensure that only gpudriver object associated with cloudlet is received
-	notify.WaitFor(&controllerData.GPUDriverCache, 1)
+	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 1))
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
@@ -304,11 +308,11 @@ func TestCRM(t *testing.T) {
 	for ii := range data.Flavors {
 		ctrlHandler.FlavorCache.Delete(ctx, &data.Flavors[ii], 0)
 	}
-	notify.WaitFor(&controllerData.FlavorCache, 0)
-	notify.WaitFor(&controllerData.ClusterInstCache, 0)
-	notify.WaitFor(&controllerData.AppInstCache, 0)
-	notify.WaitFor(&controllerData.VMPoolCache, 0)
-	notify.WaitFor(&controllerData.GPUDriverCache, 0)
+	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 0))
+	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 0))
+	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 0))
+	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 0))
+	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 0))
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
 	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
