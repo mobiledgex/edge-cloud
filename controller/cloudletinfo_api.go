@@ -529,7 +529,8 @@ func (cd *CloudletInfoApi) findFlavorDeltas(ctx context.Context, flavorMap, newF
 		}
 	}
 	if len(flavorMap) != len(newFlavorMap) {
-		panic("unequal maps")
+		log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh delta internal error")
+		return addedFlavors, deletedFlavors, updatedFlavors
 	}
 	// assert maps len are equal
 	// Now check struct updates, deep equal on maps doesn't check beyond len and keys
@@ -555,8 +556,9 @@ func (s *CloudletInfoApi) HandleInfraFlavorDeltas(ctx context.Context, in *edgep
 	flavorMap := make(map[string]edgeproto.FlavorInfo)
 	newFlavorMap := make(map[string]edgeproto.FlavorInfo)
 	// recap logging only
-	oldFlavorCount := len(flavorMap)
-	newFlavorCount := len(newFlavorMap)
+	oldFlavorCount := len(curFlavors)
+	newFlavorCount := len(in.Flavors)
+
 	// whats in the db currently
 	for _, flavor := range curFlavors {
 		flavorMap[flavor.Name] = *flavor

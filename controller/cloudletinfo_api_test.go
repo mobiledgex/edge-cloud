@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -215,6 +216,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 
 	cloudletInfo := testutil.CloudletInfoData[0]
 	curFlavs := cloudletInfo.Flavors
+	require.Equal(t, 13, len(curFlavs), "test flavors modified")
 
 	// delete the infra-flavor that matches what our targetApp's meta-flavor is using
 	for ii, flavor := range curFlavs {
@@ -224,6 +226,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 			curFlavs = curFlavs[:len(curFlavs)-1]
 		}
 	}
+	require.Equal(t, 12, len(curFlavs), "curFlav len off")
 	// assign modified flavors back to our cloudletInfo that we're about to update,
 	// simulates what we want out of GatherCloudletInfo() done by crm's infra flavor update thread.
 	cloudletInfo.Flavors = curFlavs
@@ -233,6 +236,8 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	newFlavors := cloudletInfo.Flavors
 	// Since the infra-flavor was being used by our app, rather than being removed
 	// during the update, it was left in marked deprecated.
+	require.Equal(t, 13, len(newFlavors), "should be present but deprecated")
+
 	for _, flavor := range newFlavors {
 		if flavor.Name == "flavor.tiny2" {
 			require.Equal(t, true, flavor.Deprecated, "not deprecated")
@@ -250,7 +255,6 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	require.NotEqual(t, match.FlavorName, "flavor.tiny2")
 	// we've successfully matched the next available flavor,
 	require.Equal(t, match.FlavorName, "flavor.small")
-
 	// Verify our test generated the desired Alert
 	alertFound := false
 	for k, _ := range alertApi.cache.Objs {
@@ -259,7 +263,6 @@ func TestFlavorInfoUpdate(t *testing.T) {
 		}
 	}
 	require.True(t, alertFound, "failed to find infra flavor deleted alert")
-
 	// Now delete an infra flavor that is not being used, this should actually remove it.
 	for ii, flavor := range curFlavs {
 		if flavor.Name == "flavor.doNotUse" {
@@ -268,12 +271,23 @@ func TestFlavorInfoUpdate(t *testing.T) {
 			curFlavs = curFlavs[:len(curFlavs)-1]
 		}
 	}
-
+	require.Equal(t, 11, len(curFlavs), "curFlavs count off")
+	curFlavs = append(curFlavs, testutil.CloudletInfoData[0].Flavors[1])
+	// Observe no newly updated infra flavors come pre-deprecated, so if
+	// we see one, clear it before the next Update.
+	for _, flavor := range curFlavs {
+		if flavor.Deprecated {
+			fmt.Printf("\n\n\tcurFlavor %+v is predeprecated clearing\n\n", flavor)
+			flavor.Deprecated = false
+		}
+	}
 	cloudletInfo.Flavors = curFlavs
-	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+	require.Equal(t, 12, len(cloudletInfo.Flavors), "cloudlet flavors count off")
 
+	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
 	newFlavors = cloudletInfo.Flavors
-	require.Equal(t, 11, len(newFlavors), "Update failed")
+	require.Equal(t, 12, len(newFlavors), "Update failed")
+
 	var found bool
 	for _, infraFlavor := range newFlavors {
 		if infraFlavor.Name == "flavor.doNotUse" {
@@ -282,8 +296,25 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	}
 	require.Equal(t, false, found, "Update failed")
 
+	// Finally, present the now deprecated flavor.tiny2 back to curFlavors
+	// putting back in a flavor that was (mistakenly) deleted, or
+	// simply changing its size etc. The deprecated flavor should be cleared,
+	// and if the flavors values were changed, they will be applied
+
+	require.Equal(t, 12, len(curFlavs), "curFlavs")
+
 	cloudletInfo.Flavors = curFlavs
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
+
+	newFlavors = cloudletInfo.Flavors
+	require.Equal(t, 12, len(newFlavors), "Update failed")
+
+	for _, flavor := range newFlavors {
+		if flavor.Name == "flavor.tiny2" {
+			require.Equal(t, false, flavor.Deprecated, "Deprecated flag not cleared")
+		}
+	}
+
 	_, err = cloudletInfoApi.EvictCloudletInfo(ctx, &cloudletInfo)
 	require.Nil(t, err, "Evict")
 
