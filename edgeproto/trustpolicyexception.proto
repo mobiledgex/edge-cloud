@@ -125,7 +125,7 @@ message TrustPolicyExceptionResponse {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
+  option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
 
@@ -139,6 +139,7 @@ service TrustPolicyExceptionResponseApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletPoolKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
+    option (protogen.method_also_required) = "State";
   }
   
   // Update a Trust Policy Exception response, by Cloudlet Operator Organization
