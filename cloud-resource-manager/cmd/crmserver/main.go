@@ -339,8 +339,8 @@ func main() {
 		close(mainStarted)
 	}
 
-	<-sigChan
-	os.Exit(0)
+	sig := <-sigChan
+	fmt.Println(sig)
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
