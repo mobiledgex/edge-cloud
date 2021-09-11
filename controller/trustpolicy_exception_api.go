@@ -167,18 +167,11 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(ckey *edgeproto.C
 }
 
 type TrustPolicyExceptionResponseApi struct {
-	sync  *Sync
-	store edgeproto.TrustPolicyExceptionResponseStore
-	cache edgeproto.TrustPolicyExceptionResponseCache
 }
 
 var trustPolicyExceptionResponseApi = TrustPolicyExceptionResponseApi{}
 
 func InitTrustPolicyExceptionResponseApi(sync *Sync) {
-	trustPolicyExceptionResponseApi.sync = sync
-	trustPolicyExceptionResponseApi.store = edgeproto.NewTrustPolicyExceptionResponseStore(sync.store)
-	edgeproto.InitTrustPolicyExceptionResponseCache(&trustPolicyExceptionResponseApi.cache)
-	sync.RegisterCache(&trustPolicyExceptionResponseApi.cache)
 }
 
 func (s *TrustPolicyExceptionResponseApi) CreateTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_CreateTrustPolicyExceptionResponseServer) error {
