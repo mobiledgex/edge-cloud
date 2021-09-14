@@ -27,6 +27,14 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.Trust
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
 
+	cur := edgeproto.TrustPolicyException{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.ExistsError()
+		}
+		return nil
+	})
+
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
@@ -38,13 +46,8 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.Trust
 		return err
 	}
 
-	cur := edgeproto.TrustPolicyException{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.ExistsError()
-		}
-		return nil
-	})
+	in.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
+	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", in.State)
 
 	_, err = s.store.Create(ctx, in, s.sync.syncWait)
 	return err
@@ -52,66 +55,6 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(in *edgeproto.Trust
 }
 
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_UpdateTrustPolicyExceptionServer) error {
-	ctx := cb.Context()
-	cur := edgeproto.TrustPolicyException{}
-	changed := 0
-
-	// port range max is optional, set it to min if min is present but not max
-	for i, o := range in.OutboundSecurityRules {
-		if o.PortRangeMax == 0 {
-			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
-			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
-		}
-	}
-
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.NotFoundError()
-		}
-		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED || cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-			return fmt.Errorf("Not allowed to modify TrustPolicyException in state:%s", cur.State.String())
-		}
-		changed = cur.CopyInFields(in)
-		if err := cur.Validate(nil); err != nil {
-			return err
-		}
-
-		if changed == 0 {
-			return nil
-		}
-		s.store.STMPut(stm, &cur)
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *TrustPolicyExceptionApi) RequestTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_RequestTrustPolicyExceptionServer) error {
-	ctx := cb.Context()
-	cur := edgeproto.TrustPolicyException{}
-
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.NotFoundError()
-		}
-		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE || cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
-			return fmt.Errorf("Already in state:%s", cur.State.String())
-		}
-		cur.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
-		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", cur.State)
-		if err := cur.Validate(nil); err != nil {
-			return err
-		}
-
-		s.store.STMPut(stm, &cur)
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -120,22 +63,7 @@ func (s *TrustPolicyExceptionApi) DeleteTrustPolicyException(in *edgeproto.Trust
 	if !s.cache.HasKey(&in.Key) {
 		return in.Key.NotFoundError()
 	}
-
-	cur := edgeproto.TrustPolicyException{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.NotFoundError()
-		}
-		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED || cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-			return fmt.Errorf("Not allowed to delete TrustPolicyException in state:%s", cur.State.String())
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
+	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
 

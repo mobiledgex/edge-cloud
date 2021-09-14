@@ -111,6 +111,8 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 
 	cd.TrustPolicyExceptionCache.SetUpdatedCb(cd.trustPolicyExceptionChanged)
+	cd.TrustPolicyExceptionCache.SetDeletedCb(cd.trustPolicyExceptionDeleted)
+
 	cd.CloudletPoolCache.SetUpdatedCb(cd.cloudletPoolChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
@@ -971,7 +973,24 @@ func (cd *ControllerData) notifyControllerConnect() {
 }
 
 func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *edgeproto.TrustPolicyException, new *edgeproto.TrustPolicyException) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionChanged", "trustPolicyException", new)
+	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionChanged()", "trustPolicyException", new)
+}
+
+func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *edgeproto.TrustPolicyException) {
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionDeleted()", "TrustPolicyException:", old)
+	tpeKey := edgeproto.TrustPolicyException{Key: old.Key}
+
+	cd.TrustPolicyExceptionCache.Mux.Lock()
+	defer cd.TrustPolicyExceptionCache.Mux.Unlock()
+
+	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+		err := cd.platform.DeleteTrustPolicyException(ctx, old)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "can't delete TrustPolicyException", "error", err, "TPE", old)
+		}
+	}
+	cd.TrustPolicyExceptionCache.Delete(ctx, &tpeKey, 0)
 }
 
 func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeproto.CloudletPool, new *edgeproto.CloudletPool) {

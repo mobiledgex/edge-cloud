@@ -17,14 +17,12 @@ option (gogoproto.goproto_sizecache_all) = false;
 enum TrustPolicyExceptionState {
   // Unknown state
   TRUST_POLICY_EXCEPTION_STATE_UNKNOWN = 0;
-  // Created but not sent for approval
-  TRUST_POLICY_EXCEPTION_STATE_CREATED = 1;
-  // Awaiting approval
-  TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED = 2;
+  // Created, Awaiting approval
+  TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED = 1;
   // Approved by Operator and active
-  TRUST_POLICY_EXCEPTION_STATE_ACTIVE = 3;
+  TRUST_POLICY_EXCEPTION_STATE_ACTIVE = 2;
   // Rejected by Operator
-  TRUST_POLICY_EXCEPTION_STATE_REJECTED = 4;
+  TRUST_POLICY_EXCEPTION_STATE_REJECTED = 3;
 }
 
 
@@ -76,16 +74,6 @@ service TrustPolicyExceptionApi {
   rpc UpdateTrustPolicyException(TrustPolicyException) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/trustpolicyexception"
-      body: "*"
-    };
-    option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
-  }
-  // Request a Trust Policy Exception, request made by App Developer Organization 
-  rpc RequestTrustPolicyException(TrustPolicyException) returns (stream Result) {
-    option (google.api.http) = {
-      post: "/request/trustpolicyexception"
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;

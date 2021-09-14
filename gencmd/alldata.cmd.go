@@ -1221,7 +1221,7 @@ var AllDataComments = map[string]string{
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin":                  "TCP or UDP port range start",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax":                  "TCP or UDP port range end",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr":                    "remote CIDR X.X.X.X/X",
-	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, Created, ApprovalRequested, Active, Rejected",
+	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
 	"trustpolicyexceptionresponses:#.fields":                                        "Fields are used for the Update API to specify which fields to apply",
 	"trustpolicyexceptionresponses:#.key.appkey.organization":                       "App developer organization",
 	"trustpolicyexceptionresponses:#.key.appkey.name":                               "App name",
@@ -1229,7 +1229,7 @@ var AllDataComments = map[string]string{
 	"trustpolicyexceptionresponses:#.key.cloudletpoolkey.organization":              "Name of the organization this pool belongs to",
 	"trustpolicyexceptionresponses:#.key.cloudletpoolkey.name":                      "CloudletPool Name",
 	"trustpolicyexceptionresponses:#.key.name":                                      "TrustPolicyExceptionKey name",
-	"trustpolicyexceptionresponses:#.state":                                         "State of the exception within the approval process, one of Unknown, Created, ApprovalRequested, Active, Rejected",
+	"trustpolicyexceptionresponses:#.state":                                         "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
 }
 var AllDataSpecialArgs = map[string]string{
 	"alertpolicies:#.annotations":             "StringToString",
