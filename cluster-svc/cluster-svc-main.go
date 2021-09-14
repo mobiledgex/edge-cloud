@@ -243,6 +243,10 @@ func appInstCb(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppIn
 				"cluster", new.ClusterInstKey())
 			return
 		}
+		if cluster.MultiTenant {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Alert Policies on multi-tenant clusters are not yet supported")
+			return
+		}
 		if err := createMEXPromInst(ctx, dialOpts, &cluster, &app); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				cluster, "error", err.Error())
