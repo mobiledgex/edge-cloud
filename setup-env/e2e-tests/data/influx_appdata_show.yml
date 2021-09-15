@@ -27,7 +27,7 @@ settings:
   influxdbcloudletusagemetricsretention: 8760h0m0s
   appinstclientcleanupinterval: 24h
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 3s
+  edgeeventsmetricscollectioninterval: 1s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
@@ -37,6 +37,7 @@ settings:
   alertpolicymintriggertime: 30s
   disableratelimit: true
   maxnumperipratelimiters: 10000
+  resourcesnapshotthreadinterval: 10m
 flavors:
 - key:
     name: x1.tiny
@@ -181,7 +182,7 @@ apps:
   imagepath: https://charts.helm.sh/stable:stable/nfs-client-provisioner
   imagetype: Helm
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   annotations: version=1.2.8
   deployment: helm
   configs:
@@ -207,7 +208,7 @@ apps:
   trusted: true
   accesstype: LoadBalancer
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   annotations: version=9.4.10
   deployment: helm
   accesstype: LoadBalancer

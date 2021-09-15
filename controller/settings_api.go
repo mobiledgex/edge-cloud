@@ -133,7 +133,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.MaxNumPerIpRateLimiters = edgeproto.GetDefaultSettings().MaxNumPerIpRateLimiters
 			modified = true
 		}
-
+		if cur.ResourceSnapshotThreadInterval == 0 {
+			cur.ResourceSnapshotThreadInterval = edgeproto.GetDefaultSettings().ResourceSnapshotThreadInterval
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
@@ -183,29 +186,37 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbMetricsRetention {
 				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb retention policy", "timer", in.InfluxDbMetricsRetention)
-				res := services.influxQ.UpdateDefaultRetentionPolicy(in.InfluxDbMetricsRetention.TimeDuration())
-				if res.Err != nil {
-					return res.Err
+				err := services.influxQ.CreateRetentionPolicy(in.InfluxDbMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
+				if err != nil {
+					return err
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbCloudletUsageMetricsRetention {
 				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb cloudlet usage metrics retention policy", "timer", in.InfluxDbCloudletUsageMetricsRetention)
-				res := services.cloudletResourcesInfluxQ.UpdateDefaultRetentionPolicy(in.InfluxDbCloudletUsageMetricsRetention.TimeDuration())
-				if res.Err != nil {
-					return res.Err
+				err := services.cloudletResourcesInfluxQ.CreateRetentionPolicy(in.InfluxDbCloudletUsageMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
+				if err != nil {
+					return err
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbEdgeEventsMetricsRetention {
 				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb edge events metrics retention policy", "timer", in.InfluxDbEdgeEventsMetricsRetention)
-				res := services.edgeEventsInfluxQ.UpdateDefaultRetentionPolicy(in.InfluxDbEdgeEventsMetricsRetention.TimeDuration())
-				if res.Err != nil {
-					return res.Err
+				err := services.edgeEventsInfluxQ.CreateRetentionPolicy(in.InfluxDbEdgeEventsMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
+				if err != nil {
+					return err
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbDownsampledMetricsRetention {
 				log.SpanLog(ctx, log.DebugLevelApi, "update influxdb downsampled metrics retention policy", "timer", in.InfluxDbDownsampledMetricsRetention)
-				res := services.downsampledMetricsInfluxQ.UpdateDefaultRetentionPolicy(in.InfluxDbDownsampledMetricsRetention.TimeDuration())
-				if res.Err != nil {
-					return res.Err
+				err := services.downsampledMetricsInfluxQ.CreateRetentionPolicy(in.InfluxDbDownsampledMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
+				if err != nil {
+					return err
 				}
-			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals {
+			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals || field == edgeproto.SettingsFieldEdgeEventsMetricsCollectionInterval {
+				// make sure cq intervals are all greater than the collection interval
+				for _, cq := range cur.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+					if cq.Interval <= cur.EdgeEventsMetricsCollectionInterval {
+						return fmt.Errorf("All EdgeEvents continuous query collection intervals must be greater than the EdgeEventsMetricsCollectionInterval")
+					}
+				}
+				newCqs = true
+			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsRetention {
 				newCqs = true
 			} else if field == edgeproto.SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval {
 				newCqs = true
@@ -214,28 +225,28 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 		if newCqs {
 			// Drop old cqs
 			for _, collectioninterval := range oldSettings.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				interval := collectioninterval.Interval
-				latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-				if errl := services.edgeEventsInfluxQ.DropContinuousQuery(latencyCqSettings); errl != nil {
+				interval := time.Duration(collectioninterval.Interval)
+				retention := time.Duration(collectioninterval.Retention)
+				if errl := influxq.DropContinuousQuery(services.edgeEventsInfluxQ, services.downsampledMetricsInfluxQ, cloudcommon.LatencyMetric, interval, retention); errl != nil {
 					return errl
 				}
-				deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-				if errd := services.edgeEventsInfluxQ.DropContinuousQuery(deviceCqSettings); errd != nil {
+				if errd := influxq.DropContinuousQuery(services.edgeEventsInfluxQ, services.downsampledMetricsInfluxQ, cloudcommon.DeviceMetric, interval, retention); errd != nil {
 					return errd
 				}
 			}
 			// Create new cqs
 			for _, collectioninterval := range in.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				interval := collectioninterval.Interval
-				latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-				resl := services.edgeEventsInfluxQ.CreateContinuousQuery(latencyCqSettings)
-				if resl.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
-					return resl.Err
+				interval := time.Duration(collectioninterval.Interval)
+				retention := time.Duration(collectioninterval.Retention)
+				latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(interval, retention)
+				err := influxq.CreateContinuousQuery(services.edgeEventsInfluxQ, services.downsampledMetricsInfluxQ, latencyCqSettings)
+				if err != nil && !strings.Contains(err.Error(), "already exists") {
+					return err
 				}
-				deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(time.Duration(interval), cloudcommon.DownsampledMetricsDbName, nil)
-				resd := services.edgeEventsInfluxQ.CreateContinuousQuery(deviceCqSettings)
-				if resd.Err != nil && !strings.Contains(resl.Err.Error(), "already exists") {
-					return resd.Err
+				deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(interval, retention)
+				err = influxq.CreateContinuousQuery(services.edgeEventsInfluxQ, services.downsampledMetricsInfluxQ, deviceCqSettings)
+				if err != nil && !strings.Contains(err.Error(), "already exists") {
+					return err
 				}
 			}
 		}

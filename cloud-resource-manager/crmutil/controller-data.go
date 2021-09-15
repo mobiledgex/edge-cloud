@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -54,6 +55,8 @@ type ControllerData struct {
 	updateTrustPolicyKeyworkers tasks.KeyWorkers
 	vmActionRefMux              sync.Mutex
 	vmActionRefAction           int
+	finishInfraResourceThread   chan struct{}
+	vmActionLastUpdate          time.Time
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -108,6 +111,10 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 
 	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
 	cd.updateTrustPolicyKeyworkers.Init("update-TrustPolicy", cd.UpdateTrustPolicy)
+	cd.settings = *edgeproto.GetDefaultSettings()
+
+	// debug functions
+	nodeMgr.Debug.AddDebugFunc(GetEnvoyVersionCmd, cd.GetClusterEnvoyVersion)
 
 	return cd
 }
@@ -280,6 +287,7 @@ func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *
 			cloudletInfo.ResourcesSnapshot = *resources
 		}
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		cd.vmActionLastUpdate = time.Now()
 	}
 }
 
@@ -351,10 +359,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
-
-			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 			// Get cluster resources and report to controller.
+			updateClusterCacheCallback(edgeproto.UpdateTask, "Getting Cluster Infra Resources")
 			resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
@@ -365,6 +371,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err", err)
 				}
 			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
@@ -406,10 +414,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			return nil
 		})
-
-		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 		// Get cluster resources and report to controller.
+		updateClusterCacheCallback(edgeproto.UpdateTask, "Getting Cluster Infra Resources")
 		resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
@@ -420,6 +426,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err", err)
 			}
 		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
+		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
 		cd.vmResourceActionBegin()
@@ -1329,4 +1337,39 @@ func (cd *ControllerData) RefreshAppInstRuntime(ctx context.Context) {
 		}
 		return nil
 	})
+}
+
+func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeproto.CloudletInfo) {
+
+	cd.finishInfraResourceThread = make(chan struct{})
+	var count int
+
+	go func() {
+		done := false
+		for !done {
+			select {
+			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
+				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
+				ctx := log.ContextWithSpan(context.Background(), span)
+				// Cloudlet creates can take many minutes, don't try and interrogate resources before platform is ready.
+				if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
+					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread", "cloudlet not yet ready", cloudletInfo.Key, "curState", cloudletInfo.State)
+					continue
+				}
+				count++
+				log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread refreshing", "cloudlet", cloudletInfo.Key, "count",
+					count, "ThreadIdleTime", cd.settings.ResourceSnapshotThreadInterval)
+				cd.vmResourceActionBegin()
+				cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
+				span.Finish()
+			case <-cd.finishInfraResourceThread:
+				done = true
+			}
+		}
+	}()
+}
+
+func (cd *ControllerData) FinishInfraResourceRefreshThread() {
+	close(cd.finishInfraResourceThread)
+
 }

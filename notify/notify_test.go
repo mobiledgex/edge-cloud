@@ -165,13 +165,14 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler.GPUDriverCache.Update(ctx, &testutil.GPUDriverData[1], 0)
 	serverHandler.GPUDriverCache.Update(ctx, &testutil.GPUDriverData[2], 0)
 	// add vmpool for cloudlet
-	vmpoolCloudlet := testutil.CloudletData[0]
+	cloudletData := testutil.CloudletData()
+	vmpoolCloudlet := cloudletData[0]
 	vmpoolCloudlet.VmPool = testutil.VMPoolData[0].Key.Name
 	vmpoolCloudlet.GpuConfig = edgeproto.GPUConfig{
 		Driver: testutil.GPUDriverData[0].Key,
 	}
 	serverHandler.CloudletCache.Update(ctx, &vmpoolCloudlet, 6)
-	serverHandler.CloudletCache.Update(ctx, &testutil.CloudletData[1], 7)
+	serverHandler.CloudletCache.Update(ctx, &cloudletData[1], 7)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 8)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[1], 9)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[2], 10)
@@ -271,13 +272,13 @@ func TestNotifyBasic(t *testing.T) {
 		len(serverHandler.ClusterInstInfoCache.Objs),
 		"sent clusterInstInfo")
 
-	for _, cl := range testutil.CloudletData {
+	for _, cl := range cloudletData {
 		info := edgeproto.CloudletInfo{}
 		info.Key = cl.Key
 		crmHandler.CloudletInfoCache.Update(ctx, &info, 0)
 	}
-	serverHandler.WaitForCloudletInfo(len(testutil.CloudletData))
-	require.Equal(t, len(testutil.CloudletData),
+	serverHandler.WaitForCloudletInfo(len(cloudletData))
+	require.Equal(t, len(cloudletData),
 		len(serverHandler.CloudletInfoCache.Objs),
 		"sent cloudletInfo")
 

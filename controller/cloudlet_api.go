@@ -1309,6 +1309,15 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cctx.SetOverride(&in.CrmOverride)
 
+	autoProvPolicies := autoProvPolicyApi.UsesCloudlet(&in.Key)
+	if len(autoProvPolicies) > 0 {
+		strs := []string{}
+		for _, key := range autoProvPolicies {
+			strs = append(strs, key.GetKeyString())
+		}
+		return fmt.Errorf("Cloudlet in use by AutoProvPolicy %s", strings.Join(strs, ", "))
+	}
+
 	var prevState edgeproto.TrackedState
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
@@ -2186,6 +2195,33 @@ func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgep
 		}
 		cb.Send(&flavor)
 		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", in)
+	}
+	return nil
+}
+
+func (s *CloudletApi) GetOrganizationsOnCloudlet(in *edgeproto.CloudletKey, cb edgeproto.CloudletApi_GetOrganizationsOnCloudletServer) error {
+	orgs := make(map[string]struct{})
+	aiFilter := edgeproto.AppInst{}
+	aiFilter.Key.ClusterInstKey.CloudletKey = *in
+	appInstApi.cache.Show(&aiFilter, func(appInst *edgeproto.AppInst) error {
+		orgs[appInst.Key.AppKey.Organization] = struct{}{}
+		orgs[appInst.Key.ClusterInstKey.Organization] = struct{}{}
+		return nil
+	})
+	ciFilter := edgeproto.ClusterInst{}
+	ciFilter.Key.CloudletKey = *in
+	clusterInstApi.cache.Show(&ciFilter, func(clusterInst *edgeproto.ClusterInst) error {
+		orgs[clusterInst.Key.Organization] = struct{}{}
+		return nil
+	})
+	for name, _ := range orgs {
+		org := &edgeproto.Organization{
+			Name: name,
+		}
+		err := cb.Send(org)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -301,8 +301,7 @@ func main() {
 
 		// setup rootlb certs
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-		commonName := cloudcommon.GetRootLBFQDN(&myCloudletInfo.Key, *appDNSRoot)
-		dedicatedCommonName := "*." + commonName // wildcard so dont have to generate certs every time a dedicated cluster is started
+		wildcardName := cloudcommon.GetRootLBFQDNWildcard(&myCloudletInfo.Key, *appDNSRoot)
 		rootlb, err := platform.GetClusterPlatformClient(
 			ctx,
 			&edgeproto.ClusterInst{
@@ -311,14 +310,15 @@ func main() {
 			cloudcommon.ClientTypeRootLB,
 		)
 		if err == nil {
-			lbClients, err := platform.GetRootLBClients(ctx)
-			if err != nil {
-				log.FatalLog("Failed to get rootLB clients", "key", myCloudletInfo.Key, "err", err)
-			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
-			proxycerts.Init(ctx, lbClients, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
+			proxycerts.Init(ctx, platform, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
 			pfType := pf.GetType(cloudlet.PlatformType.String())
-			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, commonName, dedicatedCommonName, &nodeMgr, pfType, rootlb, *commercialCerts)
+			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, wildcardName, &nodeMgr, pfType, rootlb, *commercialCerts)
+			// setup debug func to trigger refresh of rootlb certs
+			nodeMgr.Debug.AddDebugFunc(crmutil.RefreshRootLBCerts, func(ctx context.Context, req *edgeproto.DebugRequest) string {
+				proxycerts.TriggerRootLBCertsRefresh()
+				return "triggered refresh of rootlb certs"
+			})
 		}
 		tlsSpan.Finish()
 	}()
@@ -329,14 +329,18 @@ func main() {
 	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
 
+	log.SpanLog(ctx, log.DebugLevelInfra, "Starting Cloudlet resource refresh thread", "cloudlet", myCloudletInfo.Key)
+	controllerData.StartInfraResourceRefreshThread(&myCloudletInfo)
+	defer controllerData.FinishInfraResourceRefreshThread()
+
 	span.Finish()
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
 		close(mainStarted)
 	}
 
-	<-sigChan
-	os.Exit(0)
+	sig := <-sigChan
+	fmt.Println(sig)
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*

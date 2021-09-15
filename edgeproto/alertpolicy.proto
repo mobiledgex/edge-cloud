@@ -26,22 +26,24 @@ message AlertPolicy {
   repeated string fields = 1;
   // Unique identifier key
   AlertPolicyKey key = 2 [(gogoproto.nullable) = false];
-  // container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
+  // Container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 cpu_utilization_limit = 3;
-  // container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
+  // Container or pod memory utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 mem_utilization_limit = 4;
-  // container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
+  // Container or pod disk utilization rate(percentage) across all nodes. Valid values 1-100
   uint32 disk_utilization_limit = 5;
   // Active Connections alert threshold. Valid values 1-4294967295
   uint32 active_conn_limit = 6;
   // Alert severity level - one of "info", "warning", "error"
   string severity = 7;
-  // Duration for which alert interval is active
+  // Duration for which alert interval is active (max 72 hours)
   int64 trigger_time = 8 [(gogoproto.casttype) = "Duration"];
   // Additional Labels
   map <string, string> labels = 9;
   // Additional Annotations for extra information about the alert
   map <string, string> annotations = 10;
+  // Description of the alert policy
+  string description = 11;
   
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

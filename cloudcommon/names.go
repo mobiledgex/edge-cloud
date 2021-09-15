@@ -8,7 +8,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -48,6 +47,10 @@ var VMTypePlatformClusterNode = "platform-cluster-node"
 var VMTypeClusterMaster = "cluster-master"
 var VMTypeClusterK8sNode = "cluster-k8s-node"
 var VMTypeClusterDockerNode = "cluster-docker-node"
+
+// cloudlet node names
+var CloudletNodeSharedRootLB = "sharedrootlb"
+var CloudletNodeDedicatedRootLB = "dedicatedrootlb"
 
 const AutoClusterPrefix = "autocluster"
 const ReservableClusterPrefix = "reservable"
@@ -135,7 +138,7 @@ const MaxClusterNameLength = 40
 
 // Common cert name. Cannot use common name as filename since envoy doesn't know if the app is dedicated or not
 const CertName = "envoyTlsCerts"
-const EnvoyImageDigest = "sha256:9bc06553ad6add6bfef1d8a1b04f09721415975e2507da0a2d5b914c066474df"
+const EnvoyImageDigest = "sha256:2b07bb8dd35c2a4bb273652b62e85b0bd27d12da94fa11061a9c365d4352e7f9"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
@@ -172,6 +175,11 @@ func GetRootLBFQDN(key *edgeproto.CloudletKey, domain string) string {
 // Old version of getting the shared root lb, does not match wildcard cert.
 func GetRootLBFQDNOld(key *edgeproto.CloudletKey, domain string) string {
 	return GetCloudletBaseFQDN(key, domain)
+}
+
+// Wildcard cert for all LBs both shared and dedicated
+func GetRootLBFQDNWildcard(key *edgeproto.CloudletKey, domain string) string {
+	return "*." + GetCloudletBaseFQDN(key, domain)
 }
 
 // GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
@@ -235,14 +243,6 @@ func CheckFQDNLengths(prefix, uri string) error {
 // For the DME and CRM that require a cloudlet key to be specified
 // at startup, this function parses the string argument.
 func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.CloudletKey) {
-	if standalone && *keystr == "" {
-		// Use fake cloudlet
-		*mykey = testutil.CloudletData[0].Key
-		bytes, _ := json.Marshal(mykey)
-		*keystr = string(bytes)
-		return
-	}
-
 	if *keystr == "" {
 		log.FatalLog("cloudletKey not specified")
 	}
@@ -273,6 +273,13 @@ func IsSideCarApp(app *edgeproto.App) bool {
 		return true
 	}
 	return false
+}
+
+func GetSideCarAppFilter() *edgeproto.App {
+	return &edgeproto.App{
+		Key:    edgeproto.AppKey{Organization: OrganizationMobiledgeX},
+		DelOpt: edgeproto.DeleteType_AUTO_DELETE,
+	}
 }
 
 func Hostname() string {

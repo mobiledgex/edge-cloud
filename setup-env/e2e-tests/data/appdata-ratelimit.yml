@@ -18,13 +18,14 @@ settings:
   cloudletmaintenancetimeout: 2s
   dmeapimetricscollectioninterval: 1s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 3s
+  edgeeventsmetricscollectioninterval: 1s
   influxdbedgeeventsmetricsretention: 672h0m0s
   influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
   disableratelimit: false
   maxnumperipratelimiters: 10000
+  resourcesnapshotthreadinterval: 10m
 flavors:
 - key:
     name: x1.tiny

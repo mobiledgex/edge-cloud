@@ -58,11 +58,11 @@ spec:
 `))
 
 func GetNetworkPolicy(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, names *KubeNames) (string, error) {
-	if names.Namespace == "" {
+	if names.MultitenantNamespace == "" {
 		return "", fmt.Errorf("NetworkPolicy only valid for namespaced instances")
 	}
 	args := networkPolicyArgs{}
-	args.Namespace = names.Namespace
+	args.Namespace = names.MultitenantNamespace
 	//args.ConfigLabelKey = ConfigLabel
 	//args.ConfigLabelVal = getConfigLabel(names)
 

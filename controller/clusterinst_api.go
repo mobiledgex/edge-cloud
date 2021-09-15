@@ -58,7 +58,6 @@ func InitClusterInstApi(sync *Sync) {
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
 	clusterInstApi.cleanupWorkers.Init("ClusterInst-cleanup", clusterInstApi.cleanupClusterInst)
-	go clusterInstApi.cleanupThread()
 }
 
 func (s *ClusterInstApi) HasKey(key *edgeproto.ClusterInstKey) bool {
@@ -1049,13 +1048,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if inbuf.AutoScalePolicy == "" && in.AutoScalePolicy != "" {
 			if inbuf.Deployment != cloudcommon.DeploymentTypeKubernetes {
 				return fmt.Errorf("Cannot add auto scale policy to non-kubernetes ClusterInst")
-			}
-			if inbuf.NumNodes == 0 {
-				// this restriction is because we do not adjust
-				// the taints when switching from 1master/0nodes
-				// to 1master/Xnodes. This check can be removed
-				// if we fix the tainting.
-				return fmt.Errorf("Cannot add auto scale policy to master-only ClusterInst")
 			}
 		}
 

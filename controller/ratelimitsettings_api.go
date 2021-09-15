@@ -65,7 +65,7 @@ func buildFlowRateLimitSettings(key edgeproto.RateLimitSettingsKey, name string,
 			FlowSettingsName: name,
 			RateLimitKey:     key,
 		},
-		Settings: f,
+		Settings: *f,
 	}
 }
 
@@ -75,7 +75,7 @@ func buildMaxReqsRateLimitSettings(key edgeproto.RateLimitSettingsKey, name stri
 			MaxReqsSettingsName: name,
 			RateLimitKey:        key,
 		},
-		Settings: m,
+		Settings: *m,
 	}
 }
 
@@ -138,7 +138,7 @@ func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msetti
 			}
 			settingsmap[key] = ratelimitsetting
 		}
-		ratelimitsetting.FlowSettings[fsetting.Key.FlowSettingsName] = fsetting.Settings
+		ratelimitsetting.FlowSettings[fsetting.Key.FlowSettingsName] = &fsetting.Settings
 	}
 
 	for _, msetting := range msettings {
@@ -152,7 +152,7 @@ func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msetti
 			}
 			settingsmap[key] = ratelimitsetting
 		}
-		ratelimitsetting.MaxReqsSettings[msetting.Key.MaxReqsSettingsName] = msetting.Settings
+		ratelimitsetting.MaxReqsSettings[msetting.Key.MaxReqsSettingsName] = &msetting.Settings
 	}
 
 	ratelimitsettings := make([]*edgeproto.RateLimitSettings, 0)

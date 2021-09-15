@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/mobiledgex/yaml/v2"
 )
 
 // Kafka credentials, put here to avoid import cyclee between node and accessapi
@@ -23,7 +24,7 @@ type KafkaCreds struct {
 }
 
 type producer struct {
-	producer *sarama.AsyncProducer
+	producer sarama.AsyncProducer
 	address  string
 }
 
@@ -107,36 +108,44 @@ func (s *NodeMgr) kafkaSend(ctx context.Context, event EventData, keyTags map[st
 	if !allowed {
 		return
 	}
+	// make copy since we're going to change the tags
+	eventCopy := event
+	eventCopy.TagsToMtags()
+	msgBytes, err := yaml.Marshal(&eventCopy)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelEvents, "marshal kafka event failed", "event", event, "err", err)
+		return
+	}
 
 	message := &sarama.ProducerMessage{
 		Topic:     topic,
-		Value:     sarama.StringEncoder(buildMessageBody(event)),
+		Value:     sarama.ByteEncoder(msgBytes),
 		Timestamp: event.Timestamp,
 	}
 	go s.sendMessage(ctx, producer.producer, message, &cloudletKey, region)
 }
 
-func (s *NodeMgr) sendMessage(ctx context.Context, producer *sarama.AsyncProducer, message *sarama.ProducerMessage, cloudletKey *edgeproto.CloudletKey, region string) {
-	(*producer).Input() <- message
+func (s *NodeMgr) sendMessage(ctx context.Context, producer sarama.AsyncProducer, message *sarama.ProducerMessage, cloudletKey *edgeproto.CloudletKey, region string) {
+	producer.Input() <- message
 	for {
 		select {
-		case <-(*producer).Errors():
+		case <-producer.Errors():
 			// repull the credentials from vault and try it again in case the creds got changed in an UpdateCloudlet
 			newProducer, err := s.newProducer(ctx, region, cloudletKey)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to create new producer", "cloudlet", cloudletKey, "error", err)
 				return
 			}
-			(*newProducer.producer).Input() <- message
+			newProducer.producer.Input() <- message
 			for {
 				select {
-				case err := <-(*newProducer.producer).Errors():
+				case err := <-newProducer.producer.Errors():
 					log.SpanLog(ctx, log.DebugLevelInfo, "Failed to send event to operator kafka cluster", "cloudletKey", cloudletKey, "message", message, "error", err)
-				case <-(*newProducer.producer).Successes():
+				case <-newProducer.producer.Successes():
 					return
 				}
 			}
-		case <-(*producer).Successes():
+		case <-producer.Successes():
 			return
 		}
 	}
@@ -190,14 +199,14 @@ func (s *NodeMgr) newProducer(ctx context.Context, region string, key *edgeproto
 		return producer{}, fmt.Errorf("Error creating producer: %v", err)
 	}
 	producer := producer{
-		producer: &newProducer,
+		producer: newProducer,
 		address:  kafkaCreds.Endpoint,
 	}
 	// close the current producer (if there is one) before putting in this one
 	producerLock.Lock()
 	oldProducer, ok := producers[*key]
 	if ok {
-		(*oldProducer.producer).AsyncClose()
+		oldProducer.producer.AsyncClose()
 	}
 	producers[*key] = producer
 	producerLock.Unlock()
@@ -209,19 +218,9 @@ func removeProducer(key *edgeproto.CloudletKey) {
 	defer producerLock.Unlock()
 	producer, ok := producers[*key]
 	if ok {
-		(*producer.producer).AsyncClose()
+		producer.producer.AsyncClose()
 	}
 	delete(producers, *key)
-}
-
-func buildMessageBody(event EventData) string {
-	message := event.Name
-	for _, tag := range event.Tags {
-		message = message + "\n"
-		message = message + tag.Key + ":" + tag.Value
-	}
-	message = message + "\n\n"
-	return message
 }
 
 func GetKafkaVaultPath(region, cloudletName, org string) string {

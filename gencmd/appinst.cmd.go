@@ -836,6 +836,7 @@ var AppInstComments = map[string]string{
 	"mappedports:#.endport":          "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"mappedports:#.tls":              "TLS termination for this port",
 	"mappedports:#.nginx":            "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"mappedports:#.maxpktsize":       "Maximum datagram size (udp only)",
 	"flavor":                         "Flavor name",
 	"state":                          "Current state of the AppInst on the Cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet, specify errors:empty=true to clear",
@@ -856,10 +857,12 @@ var AppInstComments = map[string]string{
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
 	"realclustername":                "Real ClusterInst name",
+	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
 	"fields":                   "StringArray",
+	"internalporttolbip":       "StringToString",
 	"runtimeinfo.containerids": "StringArray",
 	"status.msgs":              "StringArray",
 }

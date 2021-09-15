@@ -659,11 +659,6 @@ func (s *AutoScalePolicy) Validate(fields map[string]struct{}) error {
 	if s.MaxNodes > AutoScaleMaxNodes {
 		return fmt.Errorf("Max nodes cannot exceed %d", AutoScaleMaxNodes)
 	}
-	if s.MinNodes < 1 {
-		// Taint on master is not updated during UpdateClusterInst
-		// when going up/down from 0, so min supported is 1.
-		return errors.New("Min nodes cannot be less than 1")
-	}
 	if s.HasV0Config() && s.HasV1Config() {
 		return errors.New("The new target cpu/mem/active-connections can only be used once the old cpu threshold settings have been disabled (set to 0)")
 	}
@@ -887,6 +882,19 @@ func L4ProtoStr(proto dme.LProto) (string, error) {
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
 
+// ProtoPortToString ensures consistent formatting
+func ProtoPortToString(proto string, port int32) string {
+	return fmt.Sprintf("%s:%d", strings.ToLower(proto), port)
+}
+
+func AppInternalPortToString(port *dme.AppPort) (string, error) {
+	lproto, err := LProtoStr(port.Proto)
+	if err != nil {
+		return "", err
+	}
+	return ProtoPortToString(lproto, port.InternalPort), nil
+}
+
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	appports := make([]dme.AppPort, 0)
 	if ports == "" {
@@ -935,6 +943,7 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 			EndPort:      int32(endport),
 			Tls:          portSpec.Tls,
 			Nginx:        portSpec.Nginx,
+			MaxPktSize:   portSpec.MaxPktSize,
 		}
 
 		appports = append(appports, p)
@@ -1271,6 +1280,10 @@ func (a *AlertPolicy) Validate(fields map[string]struct{}) error {
 	// check Disk to be within 0-100 percent
 	if a.DiskUtilizationLimit > 100 {
 		return errors.New("Disk utilization limit is percent. Valid values 1-100%")
+	}
+	// reasonable max trigger time check - should not be >24h
+	if a.TriggerTime > Duration(72*time.Hour) {
+		return errors.New("Trigger duration should not exceed 72 hours")
 	}
 	return nil
 }

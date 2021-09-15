@@ -169,6 +169,16 @@ type AggrVal struct {
 	DocCount int    `json:"count,omitempty" yaml:"count,omitempty" mapstructure:"doc_count,omitempty"`
 }
 
+func (s *EventData) TagsToMtags() {
+	if len(s.Tags) > 0 {
+		s.Mtags = make(map[string]string)
+		for _, tag := range s.Tags {
+			s.Mtags[tag.Key] = tag.Value
+		}
+		s.Tags = nil
+	}
+}
+
 func (s *NodeMgr) initEvents(ctx context.Context, opts *NodeOptions) error {
 	s.esEvents = make([][]byte, 0)
 	s.esWriteSignal = make(chan bool, 1)
@@ -479,13 +489,7 @@ func (s *NodeMgr) searchEvents(ctx context.Context, searchType string, search *E
 		if s.unitTestMode {
 			log.SpanLog(ctx, log.DebugLevelInfo, "searchEvents result", "event", ed.Name, "score", hit.Score)
 		}
-		if len(ed.Tags) > 0 {
-			ed.Mtags = make(map[string]string)
-			for _, tag := range ed.Tags {
-				ed.Mtags[tag.Key] = tag.Value
-			}
-			ed.Tags = nil
-		}
+		ed.TagsToMtags()
 		out = append(out, ed)
 	}
 	return out, nil

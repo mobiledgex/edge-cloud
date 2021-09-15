@@ -11,6 +11,7 @@ import "result.proto";
 import "restagtable.proto";
 import "common.proto";
 import "infraresources.proto";
+import "org.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
@@ -627,9 +628,9 @@ service CloudletApi {
   // Add Optional Resource tag table
   rpc AddCloudletResMapping(CloudletResMap) returns (Result) {
     option (google.api.http) = {
-    post: "/addmapping/cloudlet"
-    body: "*"
-  };
+      post: "/addmapping/cloudlet"
+      body: "*"
+    };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
   // Add Optional Resource tag table
@@ -644,22 +645,30 @@ service CloudletApi {
   // Discover if flavor produces a matching platform flavor
   rpc FindFlavorMatch(FlavorMatch) returns (FlavorMatch) {
     option (google.api.http) = {
-    post: "/findmapping/cloudlet"
-    body: "*"
-  };
-  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+      post: "/findmapping/cloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
   }
-
   // Find all meta flavors viable on cloudlet
   rpc ShowFlavorsForCloudlet(CloudletKey) returns (stream FlavorKey) {
     option(google.api.http) = {
-    post: "/showmapping/cloudletflavors"
-    body: "*"
-  };
-  option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
-  option (protogen.mc2_custom_authz) = true;
-  option (protogen.non_standard_show) = true;
-  option (protogen.stream_out_incremental) = true;
+      post: "/showmapping/cloudletflavors"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,";
+    option (protogen.mc2_custom_authz) = true;
+    option (protogen.non_standard_show) = true;
+    option (protogen.stream_out_incremental) = true;
+  }
+  // Get organizations of ClusterInsts and AppInsts on cloudlet
+  rpc GetOrganizationsOnCloudlet(CloudletKey) returns (stream Organization) {
+    option(google.api.http) = {
+      post: "/get/cloudlet/organizations"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Organization";
+    option (protogen.stream_out_incremental) = true;
   }
 
   // Revoke crm access key

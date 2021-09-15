@@ -29,6 +29,7 @@ tests:
   - includefile: verify_loc.yml
   - includefile: verify_loc.yml
     api: rest
+  - includefile: cloudlet_down_alerts.yml
   - includefile: ctrl_restart.yml
     loops: 2
   - includefile: restarts_2ctrls.yml
