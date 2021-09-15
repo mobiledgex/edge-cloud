@@ -147,6 +147,7 @@ func (s *Platform) GetFeatures() *platform.Features {
 		SupportsTrustPolicy:        true,
 		CloudletServicesLocal:      true,
 		IsFake:                     true,
+		SupportsAdditionalNetworks: true,
 	}
 }
 

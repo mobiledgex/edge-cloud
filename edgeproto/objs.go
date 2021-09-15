@@ -776,6 +776,9 @@ func (s *Network) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
+	if s.ConnectionType == NetworkConnectionType_UNDEFINED {
+		return errors.New("Connection type invalid")
+	}
 	for _, route := range s.Routes {
 		_, _, err := net.ParseCIDR(route.DestinationCidr)
 		if err != nil {

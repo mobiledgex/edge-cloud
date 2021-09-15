@@ -384,6 +384,7 @@ var NetworkOptionalArgs = []string{
 	"routes:empty",
 	"routes:#.destinationcidr",
 	"routes:#.nexthopip",
+	"connectiontype",
 }
 var NetworkAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -393,9 +394,10 @@ var NetworkComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":             "Name of the organization for the cloudlet that this network can be provisioned on",
 	"name":                     "Network Name",
-	"routes:empty":             "list of routes, specify routes:empty=true to clear",
+	"routes:empty":             "List of routes, specify routes:empty=true to clear",
 	"routes:#.destinationcidr": "destination CIDR",
 	"routes:#.nexthopip":       "next hop IP",
+	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToNodes, ConnectToAll",
 }
 var NetworkSpecialArgs = map[string]string{
 	"fields": "StringArray",

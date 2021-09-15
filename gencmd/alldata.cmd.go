@@ -189,8 +189,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].ReservationEndedAt = distributed_match_engine.Timestamp{}
 		}
-		for i1 := 0; i1 < len(in.ClusterInsts[i0].Networks); i1++ {
-		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -367,6 +365,7 @@ var AllDataOptionalArgs = []string{
 	"networks:#.key.name",
 	"networks:#.routes:#.destinationcidr",
 	"networks:#.routes:#.nexthopip",
+	"networks:#.connectiontype",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -612,8 +611,7 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.reservationendedat.seconds",
 	"clusterinsts:#.reservationendedat.nanos",
 	"clusterinsts:#.multitenant",
-	"clusterinsts:#.networks:#.organization",
-	"clusterinsts:#.networks:#.name",
+	"clusterinsts:#.networks",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -854,6 +852,7 @@ var AllDataComments = map[string]string{
 	"networks:#.key.name":                                                           "Network Name",
 	"networks:#.routes:#.destinationcidr":                                           "destination CIDR",
 	"networks:#.routes:#.nexthopip":                                                 "next hop IP",
+	"networks:#.connectiontype":                                                     "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToNodes, ConnectToAll",
 	"cloudlets:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                                                  "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                                          "Name of the cloudlet",
@@ -1056,8 +1055,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.resources.vms:#.containers:#.clusterip":                         "IP within the CNI and is applicable to kubernetes only",
 	"clusterinsts:#.resources.vms:#.containers:#.restarts":                          "Restart count, applicable to kubernetes only",
 	"clusterinsts:#.multitenant":                                                    "Multi-tenant kubernetes cluster",
-	"clusterinsts:#.networks:#.organization":                                        "Name of the organization for the cloudlet that this network can be provisioned on",
-	"clusterinsts:#.networks:#.name":                                                "Network Name",
+	"clusterinsts:#.networks":                                                       "networks to connect to",
 	"apps:#.fields":                                                                 "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                                       "App developer organization",
 	"apps:#.key.name":                                                               "App name",
@@ -1238,6 +1236,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudlets:#.status.msgs":                 "StringArray",
 	"clusterinsts:#.errors":                   "StringArray",
 	"clusterinsts:#.fields":                   "StringArray",
+	"clusterinsts:#.networks":                 "StringArray",
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",

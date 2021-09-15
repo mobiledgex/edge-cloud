@@ -882,6 +882,16 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
+		for _, n := range in.Networks {
+			network := edgeproto.Network{}
+			networkKey := edgeproto.NetworkKey{
+				Name:         n,
+				Organization: in.Key.CloudletKey.Organization,
+			}
+			if !networkApi.store.STMGet(stm, &networkKey, &network) {
+				return fmt.Errorf("Network: %s not found", networkKey.String())
+			}
+		}
 
 		if in.Flavor.Name == "" {
 			return errors.New("No Flavor specified")

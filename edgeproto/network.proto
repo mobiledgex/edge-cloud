@@ -12,11 +12,23 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+enum NetworkConnectionType {
+  // Undefined
+  UNDEFINED = 0;
+  // Network connects to load balancer   
+  CONNECT_TO_LOAD_BALANCER = 1;
+  // Network connects to k8s and docker nodes
+  CONNECT_TO_NODES = 2;
+  // Network connects all VMs
+  CONNECT_TO_ALL = 3;
+}
+
 message Route {
   // destination CIDR
   string destination_cidr = 1;
   // next hop IP
-  string next_hop_ip = 2;  
+  string next_hop_ip = 2;
+  // 
 }
 
 message NetworkKey {
@@ -37,8 +49,10 @@ message Network {
   repeated string fields = 1;
   // Unique identifier key
   NetworkKey key = 2 [(gogoproto.nullable) = false];
-  // list of routes
+  // List of routes
   repeated Route routes = 3 [(gogoproto.nullable) = false];
+  // Network connection type
+  NetworkConnectionType connection_type = 4;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;  
@@ -60,7 +74,7 @@ service NetworkApi {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
-  // Delete a Trust policy
+  // Delete a Network
   rpc DeleteNetwork(Network) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/network"
@@ -69,7 +83,7 @@ service NetworkApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Update a Trust policy
+  // Update a Network
   rpc UpdateNetwork(Network) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/network"
@@ -85,6 +99,5 @@ service NetworkApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
-//    option (protogen.mc2_custom_authz) = true;
   }
 }
