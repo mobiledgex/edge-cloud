@@ -11,6 +11,7 @@ import "cluster.proto";
 import "cloudletkey.proto";
 import "common.proto";
 import "infraresources.proto";
+import "network.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
@@ -99,6 +100,8 @@ message ClusterInst {
   distributed_match_engine.Timestamp reservation_ended_at = 31 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Multi-tenant kubernetes cluster
   bool multi_tenant = 32;
+  // networks to connect to
+  repeated NetworkKey networks = 33;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

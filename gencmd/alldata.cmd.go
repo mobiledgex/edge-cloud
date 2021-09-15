@@ -42,6 +42,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
 		}
 	}
+	for i0 := 0; i0 < len(in.Networks); i0++ {
+		for i1 := 0; i1 < len(in.Networks[i0].Routes); i1++ {
+		}
+	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Errors = nil
@@ -184,6 +188,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].ReservationEndedAt = distributed_match_engine.Timestamp{}
+		}
+		for i1 := 0; i1 < len(in.ClusterInsts[i0].Networks); i1++ {
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -354,6 +360,11 @@ var AllDataOptionalArgs = []string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr",
+	"networks:#.fields",
+	"networks:#.key.organization",
+	"networks:#.key.name",
+	"networks:#.routes:#.destinationcidr",
+	"networks:#.routes:#.nexthopip",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -599,6 +610,8 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.reservationendedat.seconds",
 	"clusterinsts:#.reservationendedat.nanos",
 	"clusterinsts:#.multitenant",
+	"clusterinsts:#.networks:#.organization",
+	"clusterinsts:#.networks:#.name",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -829,6 +842,11 @@ var AllDataComments = map[string]string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin":                          "TCP or UDP port range start",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax":                          "TCP or UDP port range end",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr":                            "remote CIDR X.X.X.X/X",
+	"networks:#.fields":                                                             "Fields are used for the Update API to specify which fields to apply",
+	"networks:#.key.organization":                                                   "Name of the organization for the cloudlet that this network can be provisioned on",
+	"networks:#.key.name":                                                           "Network Name",
+	"networks:#.routes:#.destinationcidr":                                           "destination CIDR",
+	"networks:#.routes:#.nexthopip":                                                 "next hop IP",
 	"cloudlets:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                                                  "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                                          "Name of the cloudlet",
@@ -1031,6 +1049,8 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.resources.vms:#.containers:#.clusterip":                         "IP within the CNI and is applicable to kubernetes only",
 	"clusterinsts:#.resources.vms:#.containers:#.restarts":                          "Restart count, applicable to kubernetes only",
 	"clusterinsts:#.multitenant":                                                    "Multi-tenant kubernetes cluster",
+	"clusterinsts:#.networks:#.organization":                                        "Name of the organization for the cloudlet that this network can be provisioned on",
+	"clusterinsts:#.networks:#.name":                                                "Network Name",
 	"apps:#.fields":                                                                 "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                                       "App developer organization",
 	"apps:#.key.name":                                                               "App name",
@@ -1105,7 +1125,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.updatemultiple":                                                 "Allow multiple instances to be updated at once",
 	"appinstances:#.configs:#.kind":                                                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"appinstances:#.configs:#.config":                                               "Config file contents or URI reference",
-	"appinstances:#.healthcheck":                                                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok",
+	"appinstances:#.healthcheck":                                                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
 	"appinstances:#.privacypolicy":                                                  "Optional privacy policy name",
 	"appinstances:#.powerstate":                                                     "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
 	"appinstances:#.externalvolumesize":                                             "Size of external volume to be attached to nodes.  This is for the root partition",
@@ -1214,6 +1234,7 @@ var AllDataSpecialArgs = map[string]string{
 	"gpudrivers:#.fields":                     "StringArray",
 	"gpudrivers:#.properties":                 "StringToString",
 	"maxreqsratelimitsettings:#.fields":       "StringArray",
+	"networks:#.fields":                       "StringArray",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",

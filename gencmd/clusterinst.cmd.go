@@ -80,6 +80,8 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["timestamp"]; found {
 		in.ReservationEndedAt = distributed_match_engine.Timestamp{}
 	}
+	for i0 := 0; i0 < len(in.Networks); i0++ {
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -603,6 +605,9 @@ var ClusterInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"skipcrmcleanuponfailure",
 	"multitenant",
+	"networks:empty",
+	"networks:#.organization",
+	"networks:#.name",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -652,6 +657,9 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"multitenant":                            "Multi-tenant kubernetes cluster",
+	"networks:empty":                         "networks to connect to, specify networks:empty=true to clear",
+	"networks:#.organization":                "Name of the organization for the cloudlet that this network can be provisioned on",
+	"networks:#.name":                        "Network Name",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",
@@ -732,4 +740,7 @@ var UpdateClusterInstOptionalArgs = []string{
 	"autoscalepolicy",
 	"skipcrmcleanuponfailure",
 	"multitenant",
+	"networks:empty",
+	"networks:#.organization",
+	"networks:#.name",
 }

@@ -768,6 +768,32 @@ func (s *Device) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (key *NetworkKey) ValidateKey() error {
+	if !util.ValidName(key.Organization) {
+		return errors.New("Invalid cloudlet organization name")
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid network name")
+	}
+	return nil
+}
+func (s *Network) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	for _, route := range s.Routes {
+		_, _, err := net.ParseCIDR(route.DestinationCidr)
+		if err != nil {
+			return errors.New("Invalid route destination cidr")
+		}
+		ip := net.ParseIP(route.NextHopIp)
+		if ip == nil {
+			return errors.New("Invalid next hop")
+		}
+	}
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {

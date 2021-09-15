@@ -1,0 +1,90 @@
+// Network proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+message Route {
+  // destination CIDR
+  string destination_cidr = 1;
+  // next hop IP
+  string next_hop_ip = 2;  
+}
+
+message NetworkKey {
+  // Name of the organization for the cloudlet that this network can be provisioned on
+  string organization = 1 [(protogen.keytag) = "networkorg"];
+  // Network Name
+  string name = 2 [(protogen.keytag) = "network"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+
+// TrustPolicy defines security restrictions for cluster instances
+// nodes scaled up or down.
+message Network {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  NetworkKey key = 2 [(gogoproto.nullable) = false];
+  // list of routes
+  repeated Route routes = 3 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;  
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.uses_org) = "key=Organization";
+}
+
+service NetworkApi {
+  // Create a Network
+  rpc CreateNetwork(Network) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/create/network"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.Organization";
+  }
+  // Delete a Trust policy
+  rpc DeleteNetwork(Network) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/delete/network"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Update a Trust policy
+  rpc UpdateNetwork(Network) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/update/network"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Show Trust Policies. Any fields specified will be used to filter results.
+  rpc ShowNetwork(Network) returns (stream Network) {
+    option (google.api.http) = {
+      post: "/show/network"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+//    option (protogen.mc2_custom_authz) = true;
+  }
+}
