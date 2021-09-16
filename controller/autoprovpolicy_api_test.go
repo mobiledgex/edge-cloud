@@ -25,6 +25,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
 	InitApis(sync)
@@ -36,15 +37,16 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	InfluxUsageUnitTestSetup(t)
 	defer InfluxUsageUnitTestStop()
 
+	cloudletData := testutil.CloudletData()
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, cloudletData)
 
 	// test adding cloudlet to policy
 	pc := edgeproto.AutoProvPolicyCloudlet{}
 	pc.Key = testutil.AutoProvPolicyData[0].Key
-	pc.CloudletKey = testutil.CloudletData[0].Key
+	pc.CloudletKey = cloudletData[0].Key
 
 	_, err := autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
 	require.Nil(t, err, "add auto prov policy cloudlet")
@@ -57,7 +59,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	// test adding another cloudlet to policy
 	pc2 := edgeproto.AutoProvPolicyCloudlet{}
 	pc2.Key = testutil.AutoProvPolicyData[0].Key
-	pc2.CloudletKey = testutil.CloudletData[1].Key
+	pc2.CloudletKey = cloudletData[1].Key
 
 	_, err = autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc2)
 	require.Nil(t, err, "add auto prov policy cloudlet")
@@ -65,6 +67,12 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	require.True(t, found, "get auto prov policy %v", pc2.Key)
 	require.Equal(t, 2, len(policy.Cloudlets))
 	require.Equal(t, pc2.CloudletKey, policy.Cloudlets[1].Key)
+
+	// delete cloudlet should fail if it is used by policy
+	deleteCloudlet := cloudletData[1]
+	err = cloudletApi.DeleteCloudlet(&deleteCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err)
+	require.Equal(t, `Cloudlet in use by AutoProvPolicy {"organization":"NianticInc","name":"auto-prov-policy"}`, err.Error())
 
 	// remove cloudlet from policy
 	_, err = autoProvPolicyApi.RemoveAutoProvPolicyCloudlet(ctx, &pc)
@@ -96,7 +104,6 @@ func TestAutoProvPolicyApi(t *testing.T) {
 
 	addRemoveAutoProvPolicy(t, ctx)
 	testApiChecks(t, ctx)
-	dummy.Stop()
 }
 
 func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {

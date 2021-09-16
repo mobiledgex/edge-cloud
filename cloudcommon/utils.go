@@ -155,10 +155,6 @@ func Md5SumFile(filePath string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func CreateInfluxMeasurementName(measurement string, interval time.Duration) string {
-	return measurement + "-" + interval.String()
-}
-
 func DeleteFile(filePath string) error {
 	if err := os.Remove(filePath); !os.IsNotExist(err) {
 		return err

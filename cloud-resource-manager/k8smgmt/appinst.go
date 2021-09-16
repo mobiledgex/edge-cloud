@@ -15,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
 	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const WaitDeleted string = "WaitDeleted"
@@ -25,6 +26,9 @@ const DefaultNamespace string = "default"
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
 
+// max time waiting for a load balancer ip
+var maxLoadBalancerIPWait = 2 * time.Minute
+
 // How long to wait on create if there are no resources
 var createWaitNoResources = 10 * time.Second
 
@@ -34,12 +38,15 @@ var createManifest = "create"
 var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
 var podStateReg = regexp.MustCompile(podStateRegString)
 
+func LbServicePortToString(p *v1.ServicePort) string {
+	proto := p.Protocol
+	port := p.Port
+	return edgeproto.ProtoPortToString(string(proto), port)
+}
+
 func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {
 	done := false
 	log.SpanLog(ctx, log.DebugLevelInfra, "check pods status", "namespace", namespace, "selector", selector)
-	if namespace == "" {
-		namespace = DefaultNamespace
-	}
 	cmd := fmt.Sprintf("%s kubectl get pods --no-headers -n %s --selector=%s", kConfEnv, namespace, selector)
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -70,6 +77,8 @@ func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace
 			case "Pending":
 				fallthrough
 			case "ContainerCreating":
+				fallthrough
+			case "CreateContainerConfigError": // this can be a transient state for some deployments
 				log.SpanLog(ctx, log.DebugLevelInfra, "still waiting for pod", "podName", podName, "state", podState)
 			case "Terminating":
 				log.SpanLog(ctx, log.DebugLevelInfra, "pod is terminating", "podName", podName, "state", podState)
@@ -86,7 +95,7 @@ func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace
 					cmd := fmt.Sprintf("%s kubectl describe pod -n %s --selector=%s", kConfEnv, namespace, selector)
 					out, derr := client.Output(cmd)
 					if derr == nil {
-						return done, fmt.Errorf("Run container failed: %s", out)
+						return done, fmt.Errorf("Run container failed, pod state: %s - %s", podState, out)
 					}
 					return done, fmt.Errorf("Pod is unexpected state: %s", podState)
 				}
@@ -136,7 +145,7 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	for ii, _ := range objs {
 		for {
 			name = ""
-			namespace := DefaultNamespace
+			namespace := ""
 			switch obj := objs[ii].(type) {
 			case *appsv1.Deployment:
 				name = obj.ObjectMeta.Name
@@ -150,6 +159,15 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 			}
 			if name == "" {
 				break
+			}
+			if namespace == "" {
+				if names.MultitenantNamespace != "" {
+					namespace = names.MultitenantNamespace
+				} else if names.VirtualClusterNamespace != "" {
+					namespace = names.VirtualClusterNamespace
+				} else {
+					namespace = DefaultNamespace
+				}
 			}
 			selector := fmt.Sprintf("%s=%s", MexAppLabel, name)
 			done, err := CheckPodsStatus(ctx, client, names.KconfEnv, namespace, selector, waitFor, start)
@@ -172,10 +190,78 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 	return nil
 }
 
+func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *KubeNames, portMap map[string]string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap", "names", names)
+
+	services, err := GetServices(ctx, client, names)
+	if err != nil {
+		return err
+	}
+	for _, s := range services {
+		lbip := ""
+		for _, ing := range s.Status.LoadBalancer.Ingress {
+			if strings.Contains(ing.IP, "pending") || ing.IP == "" {
+				continue
+			}
+			lbip = ing.IP
+			break
+		}
+		if lbip == "" {
+			continue
+		}
+		ports := s.Spec.Ports
+		for _, p := range ports {
+			portString := LbServicePortToString(&p)
+			portMap[portString] = lbip
+		}
+	}
+	return nil
+}
+
+func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, names *KubeNames, appinst *edgeproto.AppInst) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "PopulateAppInstLoadBalancerIps", "appInst", appinst.Key.String(), "maxLoadBalancerIPWait", maxLoadBalancerIPWait)
+	appinst.InternalPortToLbIp = make(map[string]string)
+	start := time.Now()
+	for {
+		err := UpdateLoadBalancerPortMap(ctx, client, names, appinst.InternalPortToLbIp)
+		if err != nil {
+			return err
+		}
+		allPortsHaveIp := true
+		// see if all services have an LB IP and update
+		for _, mappedPort := range appinst.MappedPorts {
+			portString, err := edgeproto.AppInternalPortToString(&mappedPort)
+			if err != nil {
+				return err
+			}
+			lbip, ok := appinst.InternalPortToLbIp[portString]
+			if ok {
+				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip)
+				appinst.InternalPortToLbIp[portString] = lbip
+			} else {
+				log.SpanLog(ctx, log.DebugLevelInfra, "did not find load balancer ip for port", "portString", portString)
+				allPortsHaveIp = false
+			}
+		}
+		if allPortsHaveIp {
+			log.SpanLog(ctx, log.DebugLevelInfra, "All ports successfully got external IPS")
+			return nil
+		} else {
+			elapsed := time.Since(start)
+			if elapsed >= (maxLoadBalancerIPWait) {
+				log.SpanLog(ctx, log.DebugLevelInfra, "AppInst service lbip wait timed out", "appInst", appinst.Key.String())
+				return fmt.Errorf("Timed out waiting for Load Balancer IPs for appinst")
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "Not all ports have external IPs, wait and try again")
+			time.Sleep(time.Second * 1)
+		}
+	}
+}
+
 func getConfigDirName(names *KubeNames) (string, string) {
 	dir := names.ClusterName
-	if names.Namespace != "" {
-		dir += "." + names.Namespace
+	if names.MultitenantNamespace != "" {
+		dir += "." + names.MultitenantNamespace
 	}
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
@@ -202,7 +288,7 @@ func CreateDeveloperDefinedNamespaces(ctx context.Context, client ssh.Client, na
 }
 
 func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
-	if action == createManifest && names.Namespace != "" {
+	if action == createManifest && names.MultitenantNamespace != "" {
 		err := CreateNamespace(ctx, client, names)
 		if err != nil {
 			return err
@@ -213,7 +299,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 	if err != nil {
 		return err
 	}
-	if names.Namespace != "" {
+	if names.MultitenantNamespace != "" {
 		// Mulit-tenant cluster, add network policy
 		np, err := GetNetworkPolicy(ctx, app, appInst, names)
 		if err != nil {
@@ -252,7 +338,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 	// to use "--all" for old stuff until those old configs eventually
 	// get removed naturally over time.
 	selector := "--all"
-	if names.Namespace != "" {
+	if names.MultitenantNamespace != "" {
 		selector = fmt.Sprintf("-l %s=%s", ConfigLabel, getConfigLabel(names))
 	}
 	cmd := fmt.Sprintf("%s kubectl apply -f %s --prune %s", names.KconfEnv, configDir, selector)
@@ -312,7 +398,7 @@ func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app
 	if err != nil {
 		return err
 	}
-	if names.Namespace != "" {
+	if names.MultitenantNamespace != "" {
 		// clean up namespace
 		if err = DeleteNamespace(ctx, client, names); err != nil {
 			return err
@@ -332,21 +418,34 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 	var name string
 	for ii, _ := range objs {
 		name = ""
+		namespace := ""
 		switch obj := objs[ii].(type) {
 		case *appsv1.Deployment:
 			name = obj.ObjectMeta.Name
+			namespace = obj.ObjectMeta.Namespace
 		case *appsv1.DaemonSet:
 			name = obj.ObjectMeta.Name
+			namespace = obj.ObjectMeta.Namespace
 		case *appsv1.StatefulSet:
 			name = obj.ObjectMeta.Name
+			namespace = obj.ObjectMeta.Namespace
 		}
 		if name == "" {
 			continue
 		}
+		if namespace == "" {
+			if names.MultitenantNamespace != "" {
+				namespace = names.MultitenantNamespace
+			} else if names.VirtualClusterNamespace != "" {
+				namespace = names.VirtualClusterNamespace
+			} else {
+				namespace = DefaultNamespace
+			}
+		}
 		// Returns list of pods and its containers in the format: "<PodName>/<ContainerName>"
-		cmd := fmt.Sprintf("%s kubectl get pods -o json --sort-by=.metadata.name --selector=%s=%s "+
+		cmd := fmt.Sprintf("%s kubectl get pods -n %s -o json --sort-by=.metadata.name --selector=%s=%s "+
 			"| jq -r '.items[] | .metadata.name as $podName | .spec.containers[] | "+
-			"($podName+\"/\"+.name)'", names.KconfEnv, MexAppLabel, name)
+			"($podName+\"/\"+.name)'", names.KconfEnv, namespace, MexAppLabel, name)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
@@ -356,7 +455,7 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 			if strings.TrimSpace(line) == "" {
 				continue
 			}
-			rt.ContainerIds = append(rt.ContainerIds, strings.TrimSpace(line))
+			rt.ContainerIds = append(rt.ContainerIds, namespace+"/"+strings.TrimSpace(line))
 		}
 	}
 
@@ -364,6 +463,8 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 }
 
 func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetContainerCommand", "app", app, "containerId", req.ContainerId)
+
 	// If no container specified, pick the first one in the AppInst.
 	// Note that some deployments may not require a container id.
 	if req.ContainerId == "" {
@@ -375,6 +476,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 	}
 	podName := ""
 	containerName := ""
+	namespace := DefaultNamespace
 	parts := strings.Split(req.ContainerId, "/")
 	if len(parts) == 1 {
 		// old way
@@ -383,8 +485,13 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		// new way
 		podName = parts[0]
 		containerName = parts[1]
+	} else if len(parts) == 3 {
+		// namespace also included
+		namespace = parts[0]
+		podName = parts[1]
+		containerName = parts[2]
 	} else {
-		return "", fmt.Errorf("invalid containerID, expected to be of format <PodName>/<ContainerName>")
+		return "", fmt.Errorf("invalid containerID, expected to be of format <namespace>/<PodName>/<ContainerName>")
 	}
 	names, err := GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
@@ -395,12 +502,12 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		if containerName != "" {
 			containerCmd = fmt.Sprintf("-c %s ", containerName)
 		}
-		cmdStr := fmt.Sprintf("%s kubectl exec -it %s%s -- %s",
-			names.KconfEnv, containerCmd, podName, req.Cmd.Command)
+		cmdStr := fmt.Sprintf("%s kubectl exec -n %s -it %s%s -- %s",
+			names.KconfEnv, namespace, containerCmd, podName, req.Cmd.Command)
 		return cmdStr, nil
 	}
 	if req.Log != nil {
-		cmdStr := fmt.Sprintf("%s kubectl logs ", names.KconfEnv)
+		cmdStr := fmt.Sprintf("%s kubectl logs -n %s ", names.KconfEnv, namespace)
 		if req.Log.Since != "" {
 			_, perr := time.ParseDuration(req.Log.Since)
 			if perr == nil {
@@ -432,19 +539,19 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 var namespaceTemplate = template.Must(template.New("namespace").Parse(`apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.Namespace}}
+  name: {{.MultitenantNamespace}}
   labels:
-    name: {{.Namespace}}
+    name: {{.MultitenantNamespace}}
 `))
 
 func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "creating namespace", "name", names.Namespace)
+	log.SpanLog(ctx, log.DebugLevelInfra, "creating namespace", "name", names.MultitenantNamespace)
 	buf := bytes.Buffer{}
 	err := namespaceTemplate.Execute(&buf, names)
 	if err != nil {
 		return err
 	}
-	file := names.Namespace + ".yaml"
+	file := names.MultitenantNamespace + ".yaml"
 	err = pc.WriteFile(client, file, buf.String(), "namespace", pc.NoSudo)
 	if err != nil {
 		return err
@@ -461,7 +568,7 @@ func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 		return fmt.Errorf("Failed to create new kubeconfig: %v", err)
 	}
 	// set the new kubeconfig to use the namespace
-	cmd = fmt.Sprintf("KUBECONFIG=%s kubectl config set-context --current --namespace=%s", names.KconfName, names.Namespace)
+	cmd = fmt.Sprintf("KUBECONFIG=%s kubectl config set-context --current --namespace=%s", names.KconfName, names.MultitenantNamespace)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("Error in setting new namespace context: %s - %v", out, err)
@@ -470,8 +577,8 @@ func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 }
 
 func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespace", "name", names.Namespace)
-	cmd := fmt.Sprintf("kubectl delete namespace %s --kubeconfig=%s", names.Namespace, names.BaseKconfName)
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespace", "name", names.MultitenantNamespace)
+	cmd := fmt.Sprintf("kubectl delete namespace %s --kubeconfig=%s", names.MultitenantNamespace, names.BaseKconfName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		if !strings.Contains(out, "not found") {

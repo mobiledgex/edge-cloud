@@ -18,6 +18,7 @@ var (
 	ResourceVcpus       = "vCPUs"
 	ResourceGpus        = "GPUs"
 	ResourceExternalIPs = "External IPs"
+	ResourceDisk        = "Disk"
 
 	// Platform specific resources
 	ResourceInstances   = "Instances"

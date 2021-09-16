@@ -8,7 +8,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -48,6 +47,10 @@ var VMTypePlatformClusterNode = "platform-cluster-node"
 var VMTypeClusterMaster = "cluster-master"
 var VMTypeClusterK8sNode = "cluster-k8s-node"
 var VMTypeClusterDockerNode = "cluster-docker-node"
+
+// cloudlet node names
+var CloudletNodeSharedRootLB = "sharedrootlb"
+var CloudletNodeDedicatedRootLB = "dedicatedrootlb"
 
 const AutoClusterPrefix = "autocluster"
 const ReservableClusterPrefix = "reservable"
@@ -174,6 +177,11 @@ func GetRootLBFQDNOld(key *edgeproto.CloudletKey, domain string) string {
 	return GetCloudletBaseFQDN(key, domain)
 }
 
+// Wildcard cert for all LBs both shared and dedicated
+func GetRootLBFQDNWildcard(key *edgeproto.CloudletKey, domain string) string {
+	return "*." + GetCloudletBaseFQDN(key, domain)
+}
+
 // GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
 // for clusters using "dedicated" IP access.
 func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
@@ -235,14 +243,6 @@ func CheckFQDNLengths(prefix, uri string) error {
 // For the DME and CRM that require a cloudlet key to be specified
 // at startup, this function parses the string argument.
 func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.CloudletKey) {
-	if standalone && *keystr == "" {
-		// Use fake cloudlet
-		*mykey = testutil.CloudletData[0].Key
-		bytes, _ := json.Marshal(mykey)
-		*keystr = string(bytes)
-		return
-	}
-
 	if *keystr == "" {
 		log.FatalLog("cloudletKey not specified")
 	}

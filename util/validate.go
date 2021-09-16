@@ -229,8 +229,18 @@ func ValidK8SContainerName(name string) error {
 		if !ValidKubernetesName(parts[1]) {
 			return fmt.Errorf("Invalid kubernetes container name")
 		}
+	} else if len(parts) == 3 {
+		if !ValidKubernetesName(parts[0]) {
+			return fmt.Errorf("Invalid kubernetes namespace name")
+		}
+		if !ValidKubernetesName(parts[1]) {
+			return fmt.Errorf("Invalid kubernetes pod name")
+		}
+		if !ValidKubernetesName(parts[2]) {
+			return fmt.Errorf("Invalid kubernetes container name")
+		}
 	} else {
-		return fmt.Errorf("Invalid kubernetes container name, should be of format '<PodName>/<ContainerName>'")
+		return fmt.Errorf("Invalid kubernetes container name, should be of format '<namespace>/<PodName>/<ContainerName>'")
 	}
 	return nil
 }

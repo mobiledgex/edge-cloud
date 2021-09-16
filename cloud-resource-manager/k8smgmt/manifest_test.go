@@ -62,7 +62,7 @@ func TestEnvVars(t *testing.T) {
 	require.Equal(t, envVarsMf, remoteEnvVars)
 
 	// Test resource limit injection with namespace
-	names.Namespace = "app-ns"
+	names.MultitenantNamespace = "app-ns"
 	app.AllowServerless = true
 	app.ServerlessConfig = &edgeproto.ServerlessConfig{
 		Vcpus:       0.5,

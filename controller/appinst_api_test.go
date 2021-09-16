@@ -112,7 +112,7 @@ func TestAppInstApi(t *testing.T) {
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
@@ -312,6 +312,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 
 	testAppFlavorRequest(t, ctx, commonApi, responder)
+	testDeprecatedSharedRootLBFQDN(t, ctx)
 
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
@@ -349,7 +350,7 @@ func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testuti
 
 	// update cloudlet and check that app insts are updated
 	updater2 := edgeproto.Cloudlet{}
-	updater2.Key = testutil.CloudletData[0].Key
+	updater2.Key = testutil.CloudletData()[0].Key
 	newLat := 52.84583
 	updater2.Location.Latitude = newLat
 	updater2.Fields = make([]string, 0)
@@ -359,7 +360,7 @@ func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testuti
 
 	show.Init()
 	filter = edgeproto.AppInst{}
-	filter.Key.ClusterInstKey.CloudletKey = testutil.CloudletData[0].Key
+	filter.Key.ClusterInstKey.CloudletKey = testutil.CloudletData()[0].Key
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	require.Nil(t, err, "show app inst data")
 	for _, inst := range show.Data {
@@ -406,7 +407,7 @@ func TestAutoClusterInst(t *testing.T) {
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
@@ -605,6 +606,61 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 	insertCloudletInfo(ctx, cloudletInfos)
 }
 
+func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context) {
+	// downgrade cloudlets to older crm compatibility version
+	cloudletInfos := []edgeproto.CloudletInfo{}
+	for _, info := range testutil.CloudletInfoData {
+		info.CompatibilityVersion = 0
+		cloudletInfos = append(cloudletInfos, info)
+	}
+	insertCloudletInfo(ctx, cloudletInfos)
+
+	// create appInst with internalports set to true, this means
+	// that this appInst will not need access from external network
+	appInstData := testutil.AppInstData[9]
+	err := appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Create appinst: %v", appInstData.Key)
+
+	show := testutil.ShowAppInst{}
+	show.Init()
+	filter := edgeproto.AppInst{}
+	filter.Key = appInstData.Key
+
+	// For older version of CRM, URI should exist
+	err = appInstApi.ShowAppInst(&filter, &show)
+	require.Nil(t, err, "show app inst data")
+	require.True(t, len(show.Data) == 1, "matches app inst")
+	for _, appInstOut := range show.Data {
+		require.True(t, appInstOut.Uri != "", "app URI exists")
+	}
+
+	// delete appinst
+	err = appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Delete appinst: %v", appInstData.Key)
+
+	// restore CRM version
+	for ii := range cloudletInfos {
+		cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
+	}
+	insertCloudletInfo(ctx, cloudletInfos)
+
+	// create appinst again
+	err = appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Create appinst: %v", appInstData.Key)
+
+	// For newer version of CRM, URI should not exist
+	err = appInstApi.ShowAppInst(&filter, &show)
+	require.Nil(t, err, "show app inst data")
+	require.True(t, len(show.Data) == 1, "matches app inst")
+	for _, appInstOut := range show.Data {
+		require.True(t, appInstOut.Uri == "", "app URI doesn't exist")
+	}
+
+	// final cleanup: delete appinst
+	err = appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "Delete appinst: %v", appInstData.Key)
+}
+
 func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {
 	out := edgeproto.AppInst{}
 	found := testutil.GetAppInst(t, ctx, api, &in.Key, &out)
@@ -668,7 +724,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 				ClusterKey: edgeproto.ClusterKey{
 					Name: util.K8SSanitize(cloudcommon.AutoClusterPrefix + "override-clust"),
 				},
-				CloudletKey:  testutil.CloudletData[1].Key,
+				CloudletKey:  testutil.CloudletData()[1].Key,
 				Organization: cloudcommon.OrganizationMobiledgeX,
 			},
 		},

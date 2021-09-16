@@ -81,8 +81,8 @@ func addAppInstLabels(meta *metav1.ObjectMeta, app *edgeproto.App) {
 // the config label. Typically this would be all the AppInsts in the
 // Cluster (or namespace for multi-tenant clusters).
 func getConfigLabel(names *KubeNames) string {
-	if names.Namespace != "" {
-		return names.Namespace
+	if names.MultitenantNamespace != "" {
+		return names.MultitenantNamespace
 	}
 	return names.ClusterName
 }
@@ -218,7 +218,7 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 		if imagePullSecrets != nil {
 			addImagePullSecret(ctx, template, imagePullSecrets)
 		}
-		if names.Namespace != "" && app.ServerlessConfig != nil {
+		if names.MultitenantNamespace != "" && app.ServerlessConfig != nil {
 			err := addResourceLimits(ctx, template, app.ServerlessConfig)
 			if err != nil {
 				return "", err
@@ -272,7 +272,7 @@ func AddManifest(mf, addmf string) string {
 
 func getDefaultReplicas(app *edgeproto.App, names *KubeNames) *int32 {
 	val := int32(1)
-	if names.Namespace != "" && app.ServerlessConfig != nil {
+	if names.MultitenantNamespace != "" && app.ServerlessConfig != nil {
 		val = int32(app.ServerlessConfig.MinReplicas)
 	}
 	return &val

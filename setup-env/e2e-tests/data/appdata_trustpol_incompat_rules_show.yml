@@ -38,7 +38,7 @@ settings:
   updatevmpooltimeout: 20m0s
   updatetrustpolicytimeout: 5s
   dmeapimetricscollectioninterval: 30s
-  edgeeventsmetricscollectioninterval: 1h0m0s
+  edgeeventsmetricscollectioninterval: 1s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
   createcloudlettimeout: 10s
@@ -273,7 +273,7 @@ apps:
   imagetype: Helm
   accessports: tcp:9090
   defaultflavor:
-    name: x1.medium
+    name: x1.small
   annotations: version=9.4.10
   deployment: helm
   delopt: AutoDelete

@@ -12,18 +12,18 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/access"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
+	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 const LETS_ENCRYPT_MAX_DOMAINS_PER_CERT = 100
 
-var SharedRootLbClient ssh.Client
-var DedicatedClients map[string]ssh.Client
 var DedicatedTls access.TLSCert
 var DedicatedMux sync.Mutex
 
@@ -77,24 +77,16 @@ var fixedCerts = false
 var AtomicCertsUpdater = "/usr/local/bin/atomic-certs-update.sh"
 
 var accessApi *accessapi.ControllerClient
+var platform pf.Platform
+var getRootLBCertsTrigger chan bool
 
-func Init(ctx context.Context, clients map[string]ssh.Client, inAccessApi *accessapi.ControllerClient) {
+func Init(ctx context.Context, inPlatform pf.Platform, inAccessApi *accessapi.ControllerClient) {
 	accessApi = inAccessApi
-	if len(DedicatedClients) == 0 {
-		DedicatedClients = make(map[string]ssh.Client)
-	}
-	if clients == nil {
-		return
-	}
-	DedicatedMux.Lock()
-	defer DedicatedMux.Unlock()
-	for k, v := range clients {
-		DedicatedClients[k] = v
-	}
+	platform = inPlatform
 }
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
-func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool) {
+func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "GetRootLbCerts", "commonName", commonName)
 	_, found := noSudoMap[platformType]
 	if found {
@@ -110,48 +102,66 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName,
 	}
 	out, err := client.Output("pwd")
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get pwd", "dedicatedCommonName", dedicatedCommonName, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get pwd", "commonName", commonName, "err", err)
 		return
 	}
 	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
-	SharedRootLbClient = client
-	getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
-	// refresh every 30 days
-	for {
-		select {
-		case <-time.After(30 * 24 * time.Hour):
-			getRootLbCertsHelper(ctx, key, commonName, dedicatedCommonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+	getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+	go func() {
+		// refresh every 30 days
+		for {
+			select {
+			case <-time.After(30 * 24 * time.Hour):
+			case <-getRootLBCertsTrigger:
+			}
+			lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
+			getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+			lbCertsSpan.Finish()
 		}
-	}
+	}()
 }
 
-func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName, dedicatedCommonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
+func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
 	var err error
 	tls := access.TLSCert{}
 	if commercialCerts {
-		err = getCertFromVault(ctx, &tls, commonName, dedicatedCommonName)
+		err = getCertFromVault(ctx, &tls, commonName)
 	} else {
-		err = getSelfSignedCerts(ctx, &tls, commonName, dedicatedCommonName)
+		err = getSelfSignedCerts(ctx, &tls, commonName)
 	}
 	if err == nil {
-		err = writeCertToRootLb(ctx, &tls, SharedRootLbClient, certsDir, certFile, keyFile)
-		if err != nil {
-			nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", commonName)
-		}
-		// dedicated LBs
-		DedicatedMux.Lock()
-		DedicatedTls = tls
-		for lbName, client := range DedicatedClients {
-			if client == nil {
-				nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), fmt.Errorf("missing client"), "rootlb", lbName)
-				continue
-			}
+		client, err := platform.GetNodePlatformClient(ctx, &edgeproto.CloudletMgmtNode{Type: cloudcommon.CloudletNodeSharedRootLB})
+		if err == nil {
 			err = writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
 			if err != nil {
-				nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", lbName)
+				err = fmt.Errorf("write cert to rootLB failed: %v", err)
+				nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", commonName)
 			}
+		} else {
+			err = fmt.Errorf("Failed to get shared RootLB ssh client: %v", err)
+			nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", commonName)
 		}
+		DedicatedMux.Lock()
+		DedicatedTls = tls
 		DedicatedMux.Unlock()
+		// dedicated LBs
+		dedicatedClients, err := platform.GetRootLBClients(ctx)
+		if err == nil {
+			for lbName, client := range dedicatedClients {
+				if client == nil {
+					nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), fmt.Errorf("missing client"), "rootlb", lbName)
+					continue
+				}
+				err = writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
+				if err != nil {
+					err = fmt.Errorf("write cert to rootLB failed: %v", err)
+					nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", lbName)
+				}
+			}
+		} else {
+			err = fmt.Errorf("Failed to get dedicated RootLB ssh clients: %v", err)
+			nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", commonName)
+		}
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
 		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), fmt.Errorf("Unable to get certs: %v", err))
@@ -215,7 +225,7 @@ func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Clie
 // GetCertFromVault fills in the cert fields by calling the vault  plugin.  The vault plugin will
 // return a new cert if one is not already available, or a cached copy of an existing cert.
 func getCertFromVault(ctx context.Context, tlsCert *access.TLSCert, commonNames ...string) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "GetCertFromVault", "commonName", commonNames)
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetCertFromVault", "commonNames", commonNames)
 	// needs to have at least one domain name specified, and not more than LetsEncrypt's limit per cert
 	// in reality len(commonNames) should always be 2, one for the sharedLB and a wildcard one for the dedicatedLBs
 	if len(commonNames) < 1 || LETS_ENCRYPT_MAX_DOMAINS_PER_CERT < len(commonNames) {
@@ -287,8 +297,8 @@ func getSelfSignedCerts(ctx context.Context, tlsCert *access.TLSCert, commonName
 	return nil
 }
 
-func NewDedicatedLB(ctx context.Context, key *edgeproto.CloudletKey, name string, client ssh.Client, nodeMgr *node.NodeMgr) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "NewDedicatedLB", "name", name)
+func SetupTLSCerts(ctx context.Context, key *edgeproto.CloudletKey, name string, client ssh.Client, nodeMgr *node.NodeMgr) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "SetupTLSCerts", "name", name)
 	out, err := client.Output("pwd")
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Error: Unable to get pwd", "name", name, "err", err)
@@ -297,15 +307,15 @@ func NewDedicatedLB(ctx context.Context, key *edgeproto.CloudletKey, name string
 	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
 	DedicatedMux.Lock()
 	defer DedicatedMux.Unlock()
-	DedicatedClients[name] = client
 	err = writeCertToRootLb(ctx, &DedicatedTls, client, certsDir, certFile, keyFile)
 	if err != nil {
 		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), err, "rootlb", name)
 	}
 }
 
-func RemoveDedicatedLB(ctx context.Context, name string) {
-	DedicatedMux.Lock()
-	defer DedicatedMux.Unlock()
-	delete(DedicatedClients, name)
+func TriggerRootLBCertsRefresh() {
+	select {
+	case getRootLBCertsTrigger <- true:
+	default:
+	}
 }

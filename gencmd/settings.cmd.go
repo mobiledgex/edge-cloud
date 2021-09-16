@@ -226,6 +226,7 @@ var SettingsOptionalArgs = []string{
 	"locationtilesidelengthkm",
 	"edgeeventsmetricscontinuousqueriescollectionintervals:empty",
 	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval",
+	"edgeeventsmetricscontinuousqueriescollectionintervals:#.retention",
 	"influxdbdownsampledmetricsretention",
 	"influxdbedgeeventsmetricsretention",
 	"appinstclientcleanupinterval",
@@ -268,16 +269,17 @@ var SettingsComments = map[string]string{
 	"updatecloudlettimeout":                                       "Update Cloudlet timeout (duration)",
 	"locationtilesidelengthkm":                                    "Length of location tiles side for latency metrics (km)",
 	"edgeeventsmetricscontinuousqueriescollectionintervals:empty": "List of collection intervals for Continuous Queries for EdgeEvents metrics, specify edgeeventsmetricscontinuousqueriescollectionintervals:empty=true to clear",
-	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval": "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
-	"influxdbdownsampledmetricsretention":                              "Default retention policy for downsampled influx db (duration)",
-	"influxdbedgeeventsmetricsretention":                               "Default retention policy for edgeevents metrics influx db (duration)",
-	"appinstclientcleanupinterval":                                     "AppInstClient cleanup thread run interval",
-	"clusterautoscaleaveragingdurationsec":                             "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
-	"clusterautoscaleretrydelay":                                       "Cluster auto scale retry delay if scaling failed",
-	"alertpolicymintriggertime":                                        "Minimmum trigger time for alert policies",
-	"disableratelimit":                                                 "Disable rate limiting for APIs (default is false)",
-	"maxnumperipratelimiters":                                          "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
-	"resourcesnapshotthreadinterval":                                   "ResourceSnapshot Refresh thread run interval",
+	"edgeeventsmetricscontinuousqueriescollectionintervals:#.interval":  "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
+	"edgeeventsmetricscontinuousqueriescollectionintervals:#.retention": "Retention duration for Influxdb interval (0 uses default retention policy)",
+	"influxdbdownsampledmetricsretention":                               "Default retention policy for downsampled influx db (duration)",
+	"influxdbedgeeventsmetricsretention":                                "Default retention policy for edgeevents metrics influx db (duration)",
+	"appinstclientcleanupinterval":                                      "AppInstClient cleanup thread run interval",
+	"clusterautoscaleaveragingdurationsec":                              "Cluster auto scale averaging duration for stats to avoid spikes (seconds), avoid setting below 30s or it will not capture any measurements to average",
+	"clusterautoscaleretrydelay":                                        "Cluster auto scale retry delay if scaling failed",
+	"alertpolicymintriggertime":                                         "Minimmum trigger time for alert policies",
+	"disableratelimit":                                                  "Disable rate limiting for APIs (default is false)",
+	"maxnumperipratelimiters":                                           "Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)",
+	"resourcesnapshotthreadinterval":                                    "ResourceSnapshot Refresh thread run interval",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -285,9 +287,11 @@ var SettingsSpecialArgs = map[string]string{
 var CollectionIntervalRequiredArgs = []string{}
 var CollectionIntervalOptionalArgs = []string{
 	"interval",
+	"retention",
 }
 var CollectionIntervalAliasArgs = []string{}
 var CollectionIntervalComments = map[string]string{
-	"interval": "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
+	"interval":  "Collection interval for Influxdb (Specifically used for continuous query intervals) (Data from old continuous queries will be inaccessible if intervals are updated)",
+	"retention": "Retention duration for Influxdb interval (0 uses default retention policy)",
 }
 var CollectionIntervalSpecialArgs = map[string]string{}

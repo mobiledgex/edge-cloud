@@ -100,11 +100,11 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.ChefClientInterval, dur0)
 		case SettingsFieldCloudletMaintenanceTimeout:
 			v.CheckGT(f, s.CloudletMaintenanceTimeout, dur0)
-		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
-			// no validation
 		case SettingsFieldInfluxDbMetricsRetention:
 			// no validation
 		case SettingsFieldInfluxDbCloudletUsageMetricsRetention:
+			// no validation
+		case SettingsFieldInfluxDbDownsampledMetricsRetention:
 			// no validation
 		case SettingsFieldUpdateVmPoolTimeout:
 			v.CheckGT(f, s.UpdateVmPoolTimeout, dur0)
@@ -116,15 +116,20 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.CleanupReservableAutoClusterIdletime, Duration(30*time.Second))
 		case SettingsFieldAppinstClientCleanupInterval:
 			v.CheckGT(f, s.AppinstClientCleanupInterval, Duration(2*time.Second))
+		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsInterval:
+			// no validation
+		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervalsRetention:
+			// no validation
 		case SettingsFieldEdgeEventsMetricsCollectionInterval:
 			v.CheckGT(f, s.EdgeEventsMetricsCollectionInterval, dur0)
 		case SettingsFieldEdgeEventsMetricsContinuousQueriesCollectionIntervals:
 			for _, val := range s.EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-				v.CheckGT(f, val.Interval, dur0)
+				if v.CheckGT(f, val.Interval, dur0); v.err != nil {
+					break
+				}
+				v.CheckGTE(f, val.Retention, dur0)
 			}
 		case SettingsFieldInfluxDbEdgeEventsMetricsRetention:
-			// no validation
-		case SettingsFieldInfluxDbDownsampledMetricsRetention:
 			// no validation
 		case SettingsFieldLocationTileSideLengthKm:
 			v.CheckGT(f, s.LocationTileSideLengthKm, int64(0))
@@ -188,13 +193,16 @@ func GetDefaultSettings() *Settings {
 	s.InfluxDbEdgeEventsMetricsRetention = Duration(672 * time.Hour) // 28 days
 	s.EdgeEventsMetricsContinuousQueriesCollectionIntervals = []*CollectionInterval{
 		&CollectionInterval{
-			Interval: Duration(24 * time.Hour), // Downsample into daily intervals
+			Interval:  Duration(24 * time.Hour),  // Downsample into daily intervals
+			Retention: Duration(168 * time.Hour), // Retain for a week
 		},
 		&CollectionInterval{
-			Interval: Duration(168 * time.Hour), // Downsample into weekly intervals
+			Interval:  Duration(168 * time.Hour), // Downsample into weekly intervals
+			Retention: Duration(672 * time.Hour), // Retain for a month
 		},
 		&CollectionInterval{
-			Interval: Duration(672 * time.Hour), // Downsample into monthly intervals
+			Interval:  Duration(672 * time.Hour),      // Downsample into monthly intervals
+			Retention: Duration(672 * 12 * time.Hour), // Retain for a year
 		},
 	}
 	s.InfluxDbDownsampledMetricsRetention = Duration(8760 * time.Hour) // 1 year

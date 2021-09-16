@@ -857,10 +857,12 @@ var AppInstComments = map[string]string{
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
 	"realclustername":                "Real ClusterInst name",
+	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
 	"fields":                   "StringArray",
+	"internalporttolbip":       "StringToString",
 	"runtimeinfo.containerids": "StringArray",
 	"status.msgs":              "StringArray",
 }

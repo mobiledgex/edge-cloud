@@ -227,7 +227,7 @@ func TestApiRateLimitMgr(t *testing.T) {
 
 	// Add apis and their rate limit settings to mgr
 	for _, settings := range allsettings {
-		mgr.CreateApiEndpointLimiter(settings, nil, nil)
+		mgr.CreateApiEndpointLimiter(settings.Key.ApiName, settings, nil, nil)
 	}
 
 	// Spawn fake clients that "call" the apis (all should pass)
@@ -276,7 +276,7 @@ func TestApiRateLimitMgr(t *testing.T) {
 						RateLimitTarget: edgeproto.RateLimitTarget_ALL_REQUESTS,
 					},
 				},
-				Settings: &edgeproto.MaxReqsSettings{
+				Settings: edgeproto.MaxReqsSettings{
 					MaxReqsAlgorithm: edgeproto.MaxReqsRateLimitAlgorithm_FIXED_WINDOW_ALGORITHM,
 					MaxRequests:      1,
 					Interval:         edgeproto.Duration(time.Second),
