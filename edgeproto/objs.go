@@ -780,7 +780,7 @@ func (s *Network) Validate(fields map[string]struct{}) error {
 		return err
 	}
 	if s.ConnectionType == NetworkConnectionType_UNDEFINED {
-		return errors.New("Connection type invalid")
+		return errors.New("Invalid connection type")
 	}
 	for _, route := range s.Routes {
 		_, _, err := net.ParseCIDR(route.DestinationCidr)

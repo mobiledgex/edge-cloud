@@ -50,6 +50,7 @@ type Caches struct {
 	VMPoolCache           *edgeproto.VMPoolCache
 	VMPoolInfoCache       *edgeproto.VMPoolInfoCache
 	GPUDriverCache        *edgeproto.GPUDriverCache
+	NetworkCache          *edgeproto.NetworkCache
 
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool

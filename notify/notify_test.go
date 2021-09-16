@@ -199,6 +199,7 @@ func TestNotifyBasic(t *testing.T) {
 	crmHandler.WaitForAppInsts(2)
 	crmHandler.WaitForVMPools(1)
 	crmHandler.WaitForGPUDrivers(1)
+	crmHandler.WaitForNetworks(1)
 	require.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
 	require.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
 	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
@@ -206,6 +207,8 @@ func TestNotifyBasic(t *testing.T) {
 	require.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	require.Equal(t, 1, len(crmHandler.VMPoolCache.Objs), "num vmPools")
 	require.Equal(t, 1, len(crmHandler.GPUDriverCache.Objs), "num gpuDrivers")
+	require.Equal(t, 1, len(crmHandler.NetworkCache.Objs), "num networks")
+
 	// verify modRef values
 	appBuf := edgeproto.App{}
 	flavorBuf := edgeproto.Flavor{}
