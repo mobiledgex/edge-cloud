@@ -11,7 +11,6 @@ import "cluster.proto";
 import "cloudletkey.proto";
 import "common.proto";
 import "infraresources.proto";
-import "network.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
