@@ -120,6 +120,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.MaxReqsRateLimitSettings[:], func(i, j int) bool {
 		return a.MaxReqsRateLimitSettings[i].Key.GetKeyString() < a.MaxReqsRateLimitSettings[j].Key.GetKeyString()
 	})
+	sort.Slice(a.Networks[:], func(i, j int) bool {
+		return a.Networks[i].Key.GetKeyString() < a.Networks[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {

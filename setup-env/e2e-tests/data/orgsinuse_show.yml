@@ -3,5 +3,5 @@ orgs:
   code: 1
 - message: in use by some App, AppInst
   code: 1
-- message: in use by some AppInst, Cloudlet, ClusterInst, OperatorCode
+- message: in use by some AppInst, Cloudlet, ClusterInst, Network, OperatorCode
   code: 1
