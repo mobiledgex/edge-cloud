@@ -78,7 +78,6 @@ type Services struct {
 }
 
 func main() {
-
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
@@ -89,11 +88,6 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 	defer stopServices()
-	sigChan = make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
-	// wait until process in killed/interrupted
-	sig := <-sigChan
-	fmt.Println(sig)
 }
 
 func startServices() error {
@@ -114,6 +108,7 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
+	defer span.Finish()
 	log.SetTags(span, myCloudletInfo.Key.GetTags())
 	crmutil.InitDebug(&nodeMgr)
 
@@ -133,12 +128,10 @@ func startServices() error {
 	// Load platform implementation.
 	platform, err = pfutils.GetPlatform(ctx, *platformName, nodeMgr.UpdateNodeProps)
 	if err != nil {
-		span.Finish()
 		return err
 	}
 
 	if !nodeMgr.AccessKeyClient.IsEnabled() {
-		span.Finish()
 		return err
 	}
 	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr)
@@ -362,7 +355,6 @@ func startServices() error {
 		controllerData.StartFlavorUpdateThread(&myCloudletInfo, features.IsFake)
 		services.flavorRefreshRunning = true
 	}
-	span.Finish()
 	return nil
 }
 

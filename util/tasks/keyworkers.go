@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/log"
@@ -74,6 +75,8 @@ func (s *KeyWorkers) runWorker(worker *keyWorker) {
 		span, ctx := log.ChildSpan(worker.ctx, log.DebugLevelApi, s.name+" KeyWorker")
 		worker.needsWork = false
 		s.mux.Unlock()
+
+		fmt.Printf("\n\nrunWorker-I-calling our workFunc with key %+v\n\n", worker.key)
 
 		s.workFunc(ctx, worker.key)
 		span.Finish()

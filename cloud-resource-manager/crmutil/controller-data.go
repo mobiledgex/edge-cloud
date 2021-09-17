@@ -116,7 +116,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 
 	// debug functions
 	nodeMgr.Debug.AddDebugFunc(GetEnvoyVersionCmd, cd.GetClusterEnvoyVersion)
-
+	//	nodeMgr.Debug.AddDebugFunc(GatherCloudletInfo, cd.GatherCloudletInfo)
 	return cd
 }
 
@@ -1379,13 +1379,13 @@ func (cd *ControllerData) StartFlavorUpdateThread(cloudletInfo *edgeproto.Cloudl
 	cd.finishFlavorRefreshThread = make(chan struct{})
 	var interval = cd.settings.FlavorRefreshThreadInterval
 	if testmode {
-		interval = edgeproto.Duration(time.Second * 1)
+		cd.settings.FlavorRefreshThreadInterval = edgeproto.Duration(time.Second * 1)
 	}
 	go func() {
 		done := false
 		for !done {
 			select {
-			case <-time.After(interval.TimeDuration()):
+			case <-time.After(cd.settings.FlavorRefreshThreadInterval.TimeDuration()):
 				span := log.StartSpan(log.DebugLevelApi, "FlavorResourceRefresh thread")
 				ctx := log.ContextWithSpan(context.Background(), span)
 				if !testmode {

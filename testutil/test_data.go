@@ -596,7 +596,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 var AppInstData = []edgeproto.AppInst{
 	edgeproto.AppInst{ // 0
 		Key: edgeproto.AppInstKey{
-			AppKey:         AppData[0].Key,
+			AppKey:         AppData[0].Key, // Pokeman Go!
 			ClusterInstKey: *ClusterInstData[0].Key.Virtual(""),
 		},
 		CloudletLoc: cloudletData[0].Location,
@@ -934,9 +934,9 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 			},
 			&edgeproto.FlavorInfo{
 				Name:  "flavor.doNotUse",
-				Vcpus: uint64(4),
-				Ram:   uint64(4096),
-				Disk:  uint64(20),
+				Vcpus: uint64(1),
+				Ram:   uint64(512),
+				Disk:  uint64(5),
 			},
 		},
 		ResourcesSnapshot: edgeproto.InfraResourcesSnapshot{

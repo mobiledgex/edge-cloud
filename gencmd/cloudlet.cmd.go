@@ -122,6 +122,10 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.CompatibilityVersion = 0
 	}
+	for i0 := 0; i0 < len(in.DeprecatedFlavors); i0++ {
+	}
+	for i0 := 0; i0 < len(in.DeletedFlavors); i0++ {
+	}
 }
 
 var GPUDriverApiCmd edgeproto.GPUDriverApiClient
@@ -2608,7 +2612,7 @@ var FlavorInfoComments = map[string]string{
 	"ram":        "Ram in MB on the Cloudlet",
 	"disk":       "Amount of disk in GB on the Cloudlet",
 	"propmap":    "OS Flavor Properties, if any",
-	"deprecated": "Set if this infra flavor gets deleted during runtime while in use",
+	"deprecated": "true if the infra flavor has been deleted while in use",
 }
 var FlavorInfoSpecialArgs = map[string]string{
 	"propmap": "StringToString",
@@ -2697,6 +2701,18 @@ var CloudletInfoOptionalArgs = []string{
 	"trustpolicystate",
 	"compatibilityversion",
 	"properties",
+	"deprecatedflavors:#.name",
+	"deprecatedflavors:#.vcpus",
+	"deprecatedflavors:#.ram",
+	"deprecatedflavors:#.disk",
+	"deprecatedflavors:#.propmap",
+	"deprecatedflavors:#.deprecated",
+	"deletedflavors:#.name",
+	"deletedflavors:#.vcpus",
+	"deletedflavors:#.ram",
+	"deletedflavors:#.disk",
+	"deletedflavors:#.propmap",
+	"deletedflavors:#.deprecated",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -2718,7 +2734,7 @@ var CloudletInfoComments = map[string]string{
 	"flavors:#.ram":                          "Ram in MB on the Cloudlet",
 	"flavors:#.disk":                         "Amount of disk in GB on the Cloudlet",
 	"flavors:#.propmap":                      "OS Flavor Properties, if any",
-	"flavors:#.deprecated":                   "Set if this infra flavor gets deleted during runtime while in use",
+	"flavors:#.deprecated":                   "true if the infra flavor has been deleted while in use",
 	"containerversion":                       "Cloudlet container version",
 	"osimages:#.name":                        "image name",
 	"osimages:#.tags":                        "optional tags present on image",
@@ -2749,16 +2765,30 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.vmappinsts:#.appkey.version":                 "App version",
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.clusterkey.name": "Cluster name",
 	"resourcessnapshot.vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
-	"trustpolicystate":     "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-	"compatibilityversion": "Version for compatibility tracking",
-	"properties":           "Cloudlet properties",
+	"trustpolicystate":               "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"compatibilityversion":           "Version for compatibility tracking",
+	"properties":                     "Cloudlet properties",
+	"deprecatedflavors:#.name":       "Name of the flavor on the Cloudlet",
+	"deprecatedflavors:#.vcpus":      "Number of VCPU cores on the Cloudlet",
+	"deprecatedflavors:#.ram":        "Ram in MB on the Cloudlet",
+	"deprecatedflavors:#.disk":       "Amount of disk in GB on the Cloudlet",
+	"deprecatedflavors:#.propmap":    "OS Flavor Properties, if any",
+	"deprecatedflavors:#.deprecated": "true if the infra flavor has been deleted while in use",
+	"deletedflavors:#.name":          "Name of the flavor on the Cloudlet",
+	"deletedflavors:#.vcpus":         "Number of VCPU cores on the Cloudlet",
+	"deletedflavors:#.ram":           "Ram in MB on the Cloudlet",
+	"deletedflavors:#.disk":          "Amount of disk in GB on the Cloudlet",
+	"deletedflavors:#.propmap":       "OS Flavor Properties, if any",
+	"deletedflavors:#.deprecated":    "true if the infra flavor has been deleted while in use",
 }
 var CloudletInfoSpecialArgs = map[string]string{
-	"errors":            "StringArray",
-	"fields":            "StringArray",
-	"flavors:#.propmap": "StringToString",
-	"properties":        "StringToString",
-	"status.msgs":       "StringArray",
+	"deletedflavors:#.propmap":    "StringToString",
+	"deprecatedflavors:#.propmap": "StringToString",
+	"errors":                      "StringArray",
+	"fields":                      "StringArray",
+	"flavors:#.propmap":           "StringToString",
+	"properties":                  "StringToString",
+	"status.msgs":                 "StringArray",
 }
 var CloudletMetricsRequiredArgs = []string{}
 var CloudletMetricsOptionalArgs = []string{

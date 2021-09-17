@@ -14,6 +14,7 @@ import (
 const (
 	GetEnvoyVersionCmd = "get-cluster-envoy-version"
 	RefreshRootLBCerts = "refresh-rootlb-certs"
+	GatherCloudletInfo = "gather-cloudlet-info"
 	CRMCmd             = "crmcmd"
 )
 

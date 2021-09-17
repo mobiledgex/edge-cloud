@@ -1660,6 +1660,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				"clusterInst", clusterInst, "err", autoerr)
 		}
 	}
+	s.cleanupDeletedInfraFlavorAlerts(ctx, in)
+
 	return err
 }
 
@@ -1972,4 +1974,16 @@ func clusterInstReservationEvent(ctx context.Context, eventName string, appInst 
 		realClusterName = appInst.Key.ClusterInstKey.ClusterKey.Name
 	}
 	nodeMgr.Event(ctx, eventName, appInst.Key.AppKey.Organization, appInst.Key.GetTags(), nil, "realcluster", realClusterName)
+}
+
+func (s *AppInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, appInst *edgeproto.AppInst) {
+
+	workerKey := HandleFlavorAlertWorkerKey{
+		cloudletKey: edgeproto.CloudletKey{
+			Organization: appInst.Key.ClusterInstKey.CloudletKey.Organization,
+			Name:         appInst.Key.ClusterInstKey.CloudletKey.Name,
+		},
+		flavor: appInst.VmFlavor,
+	}
+	cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
 }

@@ -704,8 +704,9 @@ message FlavorInfo {
   uint64 disk = 4;
   // OS Flavor Properties, if any
   map<string,string> prop_map = 5 [(protogen.backend) = true];
-  // Set if this infra flavor gets deleted during runtime while in use
-  bool deprecated = 6 [(protogen.backend) = true];
+  // true if the infra flavor has been deleted while in use
+  bool deprecated = 6;
+
 }
 
 message OSAZone {
@@ -766,6 +767,11 @@ message CloudletInfo {
   uint32 compatibility_version = 19 [(protogen.hidetag) = "nocmp"];
   // Cloudlet properties
   map<string,string> properties = 20;
+  // Deprecated infra flavors are those deleted while in use
+  repeated FlavorInfo  deprecated_flavors = 21;
+  // Deleted infra flavors from latest update
+  repeated FlavorInfo deleted_flavors = 22;
+
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
