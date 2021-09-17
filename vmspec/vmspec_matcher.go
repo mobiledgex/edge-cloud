@@ -342,7 +342,9 @@ func GetVMSpec(ctx context.Context, nodeflavor edgeproto.Flavor, cli edgeproto.C
 	})
 	for _, flavor := range flavorList {
 		// has the infra flavor been deleted?
+
 		if flavor.Deprecated {
+			fmt.Printf("\t\tGetVMSpect-I-skipping deprecated flavor %+v\n", flavor)
 			continue
 		}
 		if flavor.Vcpus < nodeflavor.Vcpus {

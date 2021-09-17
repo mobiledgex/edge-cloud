@@ -154,23 +154,6 @@ gpudrivers:
   type: GpuTypeVgpu
 `
 
-func startMain(t *testing.T) (chan struct{}, error) {
-	mainStarted = make(chan struct{})
-	mainDone := make(chan struct{})
-	*platformName = "PLATFORM_TYPE_FAKE"
-	go func() {
-		main()
-		close(mainDone)
-	}()
-	// wait until main is ready
-	select {
-	case <-mainStarted:
-	case <-mainDone:
-		return nil, fmt.Errorf("main unexpectedly quit")
-	}
-	return mainDone, nil
-}
-
 func TestCRM(t *testing.T) {
 	var err error
 	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelInfra)

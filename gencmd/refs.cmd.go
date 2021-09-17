@@ -297,7 +297,7 @@ var VMResourceComments = map[string]string{
 	"vmflavor.ram":                 "Ram in MB on the Cloudlet",
 	"vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
 	"vmflavor.propmap":             "OS Flavor Properties, if any",
-	"vmflavor.deprecated":          "Set if this infra flavor gets deleted during runtime while in use",
+	"vmflavor.deprecated":          "true if the infra flavor has been deleted while in use",
 	"type":                         "Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"appaccesstype":                "Access type for resource of type App VM, one of DefaultForDeployment, Direct, LoadBalancer",
 }

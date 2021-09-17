@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -105,6 +106,9 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		return
 	}
 	if !cloudcommon.IsMonitoredAlert(in.Labels) {
+
+		fmt.Printf("\n\nAlert.Update alert %s not Monitored ignoring\n\n", name)
+
 		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
 		return
 	}
@@ -151,6 +155,7 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	s.sourceCache.DeleteCondFunc(ctx, in, rev, func(old *edgeproto.Alert) bool {
 		if old.NotifyId != in.NotifyId {
 			// already updated by another thread, don't delete
+			fmt.Printf("\n\nAlert.Delete notifyId fooage return false\n\n")
 			return false
 		}
 		return true

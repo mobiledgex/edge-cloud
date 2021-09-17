@@ -1210,6 +1210,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
+
+	fmt.Printf("\n\ndeleteClusterInstINternal delete %+v ignoreCRM: in.CrmOverride : %+v \n\n", in.Key, in.CrmOverride)
+
 	// If it is autoClusterInst and creation had failed, then deletion should proceed
 	// even though clusterinst is in use by Application Instance
 	if !(cctx.Undo && cctx.AutoCluster) {
@@ -1291,6 +1294,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 					break
 				}
 			}
+
 			if ii < len(refs.ClusterInsts) {
 				// explicity zero out deleted item to
 				// prevent memory leak
@@ -1299,6 +1303,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 				a[len(a)-1] = edgeproto.ClusterInstRefKey{}
 				refs.ClusterInsts = a[:len(a)-1]
 			}
+
 			freeIP(in, &cloudlet, &refs)
 
 			if in.Reservable && in.Auto && strings.HasPrefix(in.Key.ClusterKey.Name, cloudcommon.ReservableClusterPrefix) {
@@ -1315,6 +1320,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
 		if ignoreCRM(cctx) {
+			fmt.Printf("\n\ndeleteClusterInstInternal ingore on so STMDEL for %+v\n\n", in.Key)
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -1323,6 +1329,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
 			streamObjApi.store.STMDel(stm, &streamKey)
 		} else {
+			fmt.Printf("\n\nfuckfuckfuckfuckfuckfuck deleteClusterInstInternal ingore off only requestin delete for  %+v\n\n", in.Key)
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
 		}
@@ -1362,6 +1369,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
+	s.cleanupDeletedInfraFlavorAlerts(ctx, in)
 	return err
 }
 
@@ -1738,5 +1746,20 @@ func getDefaultMTClustKey(cloudletKey edgeproto.CloudletKey) *edgeproto.ClusterI
 			Name: cloudcommon.DefaultMultiTenantCluster,
 		},
 		Organization: cloudcommon.OrganizationMobiledgeX,
+	}
+}
+func (s *ClusterInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, clusterInst *edgeproto.ClusterInst) {
+	workerKey := HandleFlavorAlertWorkerKey{
+		cloudletKey: edgeproto.CloudletKey{
+			Organization: clusterInst.Key.CloudletKey.Organization,
+			Name:         clusterInst.Key.CloudletKey.Name,
+		},
+		flavor: clusterInst.NodeFlavor,
+	}
+	cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
+
+	if clusterInst.NodeFlavor != clusterInst.MasterNodeFlavor {
+		workerKey.flavor = clusterInst.MasterNodeFlavor
+		cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
 	}
 }
