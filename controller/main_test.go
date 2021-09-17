@@ -213,7 +213,6 @@ func TestEdgeCloudBug26(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 
-	// XXX move this into TestController
 	conn, err := getGrpcClient(t)
 	require.Nil(t, err, "grcp client")
 	defer conn.Close()

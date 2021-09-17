@@ -13,9 +13,6 @@ import (
 // Helper function to start influxd
 // Must be called before Controller startServices()
 // After calling this function, should call defer p.StopLocal() to clean up if return value is non-nil
-// Because go test runs test from different packages in parallel,
-// influxdb started in unit tests from different packages must use
-// different http and bind ports.
 func StartInfluxd(t *testing.T) *process.Influx {
 	// Allow multiple influxDBs to run in parallel
 	// from different unit test packages.
