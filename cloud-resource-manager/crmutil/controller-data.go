@@ -360,10 +360,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
-
-			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 			// Get cluster resources and report to controller.
+			updateClusterCacheCallback(edgeproto.UpdateTask, "Getting Cluster Infra Resources")
 			resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
@@ -374,6 +372,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err", err)
 				}
 			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
+			cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 		}()
 	} else if new.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
@@ -415,10 +415,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 			}
 			return nil
 		})
-
-		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
-		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 		// Get cluster resources and report to controller.
+		updateClusterCacheCallback(edgeproto.UpdateTask, "Getting Cluster Infra Resources")
 		resources, err := cd.platform.GetClusterInfraResources(ctx, &new.Key)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "error getting infra resources", "err", err)
@@ -429,6 +427,8 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 				log.SpanLog(ctx, log.DebugLevelInfra, "failed to set cluster inst resources", "err", err)
 			}
 		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "cluster state ready", "ClusterInst", *new)
+		cd.clusterInstInfoState(ctx, &new.Key, edgeproto.TrackedState_READY, updateClusterCacheCallback)
 	} else if new.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// Marks start of clusterinst change and hence increases ref count
 		cd.vmResourceActionBegin()
