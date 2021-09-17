@@ -38,12 +38,12 @@ func (s *NetworkApi) CreateNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 func (s *NetworkApi) UpdateNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_UpdateNetworkServer) error {
 	ctx := cb.Context()
 	cur := edgeproto.Network{}
-	changed := 0
 
 	if clusterInstApi.UsesNetwork(&in.Key) {
 		return errors.New("Network cannot be modified while associated with a Cluster Instance")
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		changed := 0
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
@@ -91,15 +91,4 @@ func (s *NetworkApi) STMFind(stm concurrency.STM, name, org string, network *edg
 		return fmt.Errorf("Network %s for organization %s not found", name, org)
 	}
 	return nil
-}
-
-func (s *NetworkApi) GetNetworks(networks map[edgeproto.NetworkKey]*edgeproto.Network) {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
-		net := data.Obj
-		copy := &edgeproto.Network{}
-		copy.DeepCopyIn(net)
-		networks[net.Key] = copy
-	}
 }

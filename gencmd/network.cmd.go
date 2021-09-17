@@ -80,10 +80,6 @@ func CreateNetwork(c *cli.Command, in *edgeproto.Network) error {
 			}
 			return fmt.Errorf("CreateNetwork recv failed: %s", errstr)
 		}
-		if cli.OutputStream {
-			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
-			continue
-		}
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {

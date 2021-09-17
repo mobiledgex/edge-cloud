@@ -905,7 +905,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				Organization: in.Key.CloudletKey.Organization,
 			}
 			if !networkApi.store.STMGet(stm, &networkKey, &network) {
-				return fmt.Errorf("Network: %s not found", networkKey.String())
+				return networkKey.NotFoundError()
 			}
 		}
 

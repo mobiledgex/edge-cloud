@@ -209,7 +209,7 @@ func GetNetworksForClusterInst(ctx context.Context, clusterInst *edgeproto.Clust
 			Organization: clusterInst.Key.CloudletKey.Organization,
 		}
 		if !networkCache.Get(&nk, &net) {
-			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find network from cache", "nk", nk, "pp", nk)
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find network from cache", "nk", nk)
 			return nil, fmt.Errorf("fail to find network from cache: %s", nk)
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "Found network from cache", "nk", nk, "net", net)

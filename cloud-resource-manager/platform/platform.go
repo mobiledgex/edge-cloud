@@ -69,7 +69,7 @@ type Features struct {
 	SupportsImageTypeOVF          bool // Supports OVF images for VM deployments
 	IsVMPool                      bool // cloudlet is just a pool of pre-existing VMs
 	IsFake                        bool // Just for unit-testing/e2e-testing
-	SupportsAdditionalNetworks    bool // networks can be added
+	SupportsAdditionalNetworks    bool // Additional networks can be added
 }
 
 // Platform abstracts the underlying cloudlet platform.

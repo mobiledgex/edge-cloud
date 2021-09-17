@@ -12,6 +12,14 @@ option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// Network Connection Type
+//
+// NetworkConnectionType is the supported list of network types to be optionally added to a cluster instance
+//
+// 0: `UNDEFINED`
+// 1: `CONNECT_TO_LOAD_BALANCER`
+// 2: `CONNECT_TO_NODES`
+// 3: `CONNECT_TO_ALL`
 enum NetworkConnectionType {
   // Undefined
   UNDEFINED = 0;
@@ -70,7 +78,6 @@ service NetworkApi {
       post: "/create/network"
       body: "*"
     };
-    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.mc2_api_requires_org) = "Key.Organization";
   }
