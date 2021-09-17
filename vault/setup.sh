@@ -18,10 +18,13 @@ case "$auths" in
     *) vault auth enable approle
 esac
 
-CADIR=/tmp/vault_pki
+#CADIR=/tmp/vault_pki
+if [ -z $CADIR ]; then
+    CADIR=/tmp/vault_pki
+fi
 
 rm -Rf $CADIR
-mkdir $CADIR
+mkdir -p $CADIR
 
 # enable root pki
 vault secrets enable pki

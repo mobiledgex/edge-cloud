@@ -17,6 +17,7 @@ func TestAlertPolicyApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -29,8 +30,8 @@ func TestAlertPolicyApi(t *testing.T) {
 
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache, &appInstInfoApi, &clusterInstInfoApi)
 	reduceInfoTimeouts(t, ctx)
-	InfluxUsageUnitTestSetup(t)
-	defer InfluxUsageUnitTestStop()
+	influxUsageUnitTestSetup(t)
+	defer influxUsageUnitTestStop()
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)

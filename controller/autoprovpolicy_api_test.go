@@ -22,6 +22,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -34,8 +35,8 @@ func TestAutoProvPolicyApi(t *testing.T) {
 
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache, &appInstInfoApi, &clusterInstInfoApi)
 	reduceInfoTimeouts(t, ctx)
-	InfluxUsageUnitTestSetup(t)
-	defer InfluxUsageUnitTestStop()
+	influxUsageUnitTestSetup(t)
+	defer influxUsageUnitTestStop()
 
 	cloudletData := testutil.CloudletData()
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)

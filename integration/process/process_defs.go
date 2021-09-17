@@ -7,6 +7,9 @@ type Vault struct {
 	DmeSecret  string
 	Regions    string
 	VaultDatas []VaultData
+	ListenAddr string
+	RootToken  string
+	CADir      string
 	cmd        *exec.Cmd
 }
 
