@@ -27,4 +27,6 @@ streamobjs:
   - message: Updating
   - message: Updating Cluster Inst
   - message: Ready
+  - message: Getting Cluster Infra Resources
+  - message: Ready
   - message: Updated ClusterInst successfully

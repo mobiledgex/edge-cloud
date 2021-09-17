@@ -111,6 +111,7 @@ streamobjs:
   - message: Creating
   - message: First Create Task
   - message: Second Create Task
+  - message: Getting Cluster Infra Resources
   - message: Ready
   - message: Created ClusterInst successfully
 - key:
@@ -125,6 +126,7 @@ streamobjs:
   - message: Creating
   - message: First Create Task
   - message: Second Create Task
+  - message: Getting Cluster Infra Resources
   - message: Ready
   - message: Created ClusterInst successfully
 - key:
