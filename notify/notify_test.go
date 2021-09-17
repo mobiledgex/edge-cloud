@@ -184,6 +184,7 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[1], 16)
 	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[2], 17)
 	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[3], 18)
+	serverHandler.NetworkCache.Update(ctx, &testutil.NetworkData[0], 19)
 	// trigger updates with CloudletInfo update after updating other
 	// data, otherwise the updates here plus the updates triggered by
 	// updating CloudletInfo can cause updates to get sent twice,
