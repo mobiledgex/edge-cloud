@@ -556,7 +556,7 @@ func (p *Crm) String(opts ...StartOp) string {
 
 // InfluxLocal
 
-func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
+func (p *Influx) StartLocal(logfile string, opts ...StartOp) (reterr error) {
 	var prefix string
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -610,6 +610,11 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if reterr != nil {
+			p.StopLocal()
+		}
+	}()
 
 	// if auth is enabled we need to create default user
 	if p.Auth.User != "" {
@@ -636,19 +641,16 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		fmt.Printf("Query: %s\n", urlStr)
 		_, err := client.Do(r)
 		if err != nil {
-			p.StopLocal()
 			return err
 		}
 	}
 	// create auth file for Vault
 	creds_json, err := json.Marshal(p.Auth)
 	if err != nil {
-		p.StopLocal()
 		return err
 	}
 	err = ioutil.WriteFile(InfluxCredsFile, creds_json, 0644)
 	if err != nil {
-		p.StopLocal()
 		return err
 	}
 	// make sure influx is online
@@ -657,7 +659,6 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	client, err := influxsup.GetClient(prefix, p.Auth.User, p.Auth.Pass)
 	if err != nil {
-		p.StopLocal()
 		return err
 	}
 	online := false
@@ -669,7 +670,6 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		time.Sleep(100 * time.Millisecond)
 	}
 	if !online {
-		p.StopLocal()
 		return fmt.Errorf("InfluxDB service not online")
 	}
 	return nil

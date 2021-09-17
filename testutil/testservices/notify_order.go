@@ -54,15 +54,15 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 	}
 	// AppInstRefs dependencies
 	if o, found := order[appInstRefs]; found {
-		CheckDep(t, "appisntrefs", order, o, app)
+		CheckDep(t, "appinstrefs", order, o, app)
 		// For auto-prov, AppInsts must be sent before AppInstRefs.
 		// This ensures that the health state of AppInsts can be
 		// checked when traversing the refs.
-		CheckDep(t, "appisntrefs", order, o, appInst)
+		CheckDep(t, "appinstrefs", order, o, appInst)
 		// For auto-prov, Cloudlets must be sent before AppInstRefs.
 		// This ensures that the health state of Cloudlets can be
 		// checked when traversing the refs.
-		CheckDep(t, "appisntrefs", order, o, cloudlet)
+		CheckDep(t, "appinstrefs", order, o, cloudlet)
 	}
 }
 

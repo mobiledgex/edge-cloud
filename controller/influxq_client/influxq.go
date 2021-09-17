@@ -29,22 +29,21 @@ var InfluxQPrecision = "us"
 var InfluxQReconnectDelay time.Duration = 10 * time.Second
 
 type InfluxQ struct {
-	dbName     string
-	user       string
-	password   string
-	client     client.Client
-	data       []*edgeproto.Metric
-	done       bool
-	dbcreated  bool
-	doPush     chan bool
-	mux        sync.Mutex
-	wg         sync.WaitGroup
-	ErrBatch   uint64
-	ErrPoint   uint64
-	Qfull      uint64
-	initRP     bool
-	initRPDone bool
-	initRPDur  time.Duration
+	dbName    string
+	user      string
+	password  string
+	client    client.Client
+	data      []*edgeproto.Metric
+	done      bool
+	dbcreated bool
+	doPush    chan bool
+	mux       sync.Mutex
+	wg        sync.WaitGroup
+	ErrBatch  uint64
+	ErrPoint  uint64
+	Qfull     uint64
+	initRP    bool
+	initRPDur time.Duration
 }
 
 func NewInfluxQ(DBName, username, password string) *InfluxQ {
@@ -60,7 +59,6 @@ func NewInfluxQ(DBName, username, password string) *InfluxQ {
 // must be called before Start()
 func (q *InfluxQ) InitRetentionPolicy(dur time.Duration) {
 	q.initRP = true
-	q.initRPDone = false
 	q.initRPDur = dur
 }
 
@@ -86,7 +84,7 @@ func (q *InfluxQ) Stop() {
 }
 
 func (q *InfluxQ) initDB() error {
-	if q.dbcreated && (q.initRPDone || !q.initRP) {
+	if q.dbcreated && !q.initRP {
 		return nil
 	}
 	span := log.StartSpan(log.DebugLevelInfo, "InfluxQ initDB")
@@ -106,13 +104,13 @@ func (q *InfluxQ) initDB() error {
 		}
 		q.dbcreated = true
 	}
-	if q.initRP && !q.initRPDone {
+	if q.initRP {
 		err := q.CreateRetentionPolicy(q.initRPDur, DefaultRetentionPolicy)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "init retention policy failed", "name", q.dbName, "err", err)
 			return err
 		}
-		q.initRPDone = true
+		q.initRP = false
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "initDB done", "name", q.dbName)
 	return nil

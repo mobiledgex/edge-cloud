@@ -18,7 +18,6 @@ case "$auths" in
     *) vault auth enable approle
 esac
 
-#CADIR=/tmp/vault_pki
 if [ -z $CADIR ]; then
     CADIR=/tmp/vault_pki
 fi

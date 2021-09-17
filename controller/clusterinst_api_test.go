@@ -39,8 +39,6 @@ func TestClusterInstApi(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
-	influxUsageUnitTestSetup(t)
-	defer influxUsageUnitTestStop()
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -870,7 +868,6 @@ func influxUsageUnitTestStop() {
 		services.events = nil
 	}
 	if testInfluxProc != nil {
-		//log.DebugLog(log.DebugLevelApi, "Stopping testInfluxProc")
 		testInfluxProc.StopLocal()
 		testInfluxProc = nil
 	}

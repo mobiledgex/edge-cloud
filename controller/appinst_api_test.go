@@ -100,9 +100,6 @@ func TestAppInstApi(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 
-	influxUsageUnitTestSetup(t)
-	defer influxUsageUnitTestStop()
-
 	// cannote create instances without apps and cloudlets
 	for _, data := range testutil.AppInstData {
 		obj := data
@@ -406,8 +403,6 @@ func TestAutoClusterInst(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
-	influxUsageUnitTestSetup(t)
-	defer influxUsageUnitTestStop()
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
