@@ -18,25 +18,24 @@ option (gogoproto.goproto_sizecache_all) = false;
 //
 // 0: `UNDEFINED`
 // 1: `CONNECT_TO_LOAD_BALANCER`
-// 2: `CONNECT_TO_NODES`
+// 2: `CONNECT_TO_CLUSTER_NODES`
 // 3: `CONNECT_TO_ALL`
 enum NetworkConnectionType {
   // Undefined
   UNDEFINED = 0;
   // Network connects to load balancer   
   CONNECT_TO_LOAD_BALANCER = 1;
-  // Network connects to k8s and docker nodes
-  CONNECT_TO_NODES = 2;
-  // Network connects all VMs
+  // Network connects to k8s and docker cluster nodes
+  CONNECT_TO_CLUSTER_NODES = 2;
+  // Network connects to all VMs
   CONNECT_TO_ALL = 3;
 }
 
 message Route {
-  // destination CIDR
+  // Destination CIDR
   string destination_cidr = 1;
-  // next hop IP
+  // Next hop IP
   string next_hop_ip = 2;
-  // 
 }
 
 message NetworkKey {

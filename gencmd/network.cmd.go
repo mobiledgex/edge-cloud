@@ -357,8 +357,8 @@ var RouteOptionalArgs = []string{
 }
 var RouteAliasArgs = []string{}
 var RouteComments = map[string]string{
-	"destinationcidr": "destination CIDR",
-	"nexthopip":       "next hop IP",
+	"destinationcidr": "Destination CIDR",
+	"nexthopip":       "Next hop IP",
 }
 var RouteSpecialArgs = map[string]string{}
 var NetworkKeyRequiredArgs = []string{}
@@ -391,9 +391,9 @@ var NetworkComments = map[string]string{
 	"cloudlet-org":             "Name of the organization for the cloudlet that this network can be provisioned on",
 	"name":                     "Network Name",
 	"routes:empty":             "List of routes, specify routes:empty=true to clear",
-	"routes:#.destinationcidr": "destination CIDR",
-	"routes:#.nexthopip":       "next hop IP",
-	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToNodes, ConnectToAll",
+	"routes:#.destinationcidr": "Destination CIDR",
+	"routes:#.nexthopip":       "Next hop IP",
+	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
 }
 var NetworkSpecialArgs = map[string]string{
 	"fields": "StringArray",

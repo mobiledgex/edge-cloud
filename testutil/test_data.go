@@ -1994,7 +1994,7 @@ var NetworkData = []edgeproto.Network{
 			Name:         "network1",
 			Organization: cloudletData[2].Key.Organization,
 		},
-		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_NODES,
+		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_CLUSTER_NODES,
 		Routes: []edgeproto.Route{
 			edgeproto.Route{
 				DestinationCidr: "4.100.0.0/16",
@@ -2028,7 +2028,7 @@ var NetworkErrorData = []edgeproto.Network{
 			Name:         "networkbadcidr",
 			Organization: cloudletData[2].Key.Organization,
 		},
-		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_NODES,
+		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_CLUSTER_NODES,
 		Routes: []edgeproto.Route{
 			edgeproto.Route{
 				DestinationCidr: "abcd",

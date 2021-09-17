@@ -16,10 +16,10 @@ func TestNetworkApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
-
+	// defer testfinish() TODO uncomment after PR 1493 merged
 	dummy := dummyEtcd{}
 	dummy.Start()
-
+	defer dummy.Stop()
 	sync := InitSync(&dummy)
 	InitApis(sync)
 	sync.Start()
@@ -31,7 +31,6 @@ func TestNetworkApi(t *testing.T) {
 	expectCreateNetworkError(t, ctx, &testutil.NetworkErrorData[1], "Invalid next hop")
 	expectCreateNetworkError(t, ctx, &testutil.NetworkErrorData[2], "Invalid connection type")
 
-	dummy.Stop()
 }
 
 func expectCreateNetworkError(t *testing.T, ctx context.Context, in *edgeproto.Network, msg string) {
