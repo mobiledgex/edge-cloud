@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -32,7 +31,6 @@ func (s *NetworkApi) CreateNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 	}
 	_, err := s.store.Create(ctx, in, s.sync.syncWait)
 	return err
-
 }
 
 func (s *NetworkApi) UpdateNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_UpdateNetworkServer) error {
@@ -81,14 +79,4 @@ func (s *NetworkApi) ShowNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_
 		return err
 	})
 	return err
-}
-
-func (s *NetworkApi) STMFind(stm concurrency.STM, name, org string, network *edgeproto.Network) error {
-	key := edgeproto.NetworkKey{}
-	key.Name = name
-	key.Organization = org
-	if !s.store.STMGet(stm, &key, network) {
-		return fmt.Errorf("Network %s for organization %s not found", name, org)
-	}
-	return nil
 }
