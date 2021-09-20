@@ -104,7 +104,7 @@ networks:
     nexthopip: 10.200.10.1
   - destinationcidr: 10.140.20.0/24
     nexthopip: 10.140.20.1
-  connectiontype: ConnectToNodes
+  connectiontype: ConnectToClusterNodes
 
 - key:
     organization: tmus
