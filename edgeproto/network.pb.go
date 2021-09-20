@@ -303,7 +303,7 @@ type NetworkApiClient interface {
 	DeleteNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (NetworkApi_DeleteNetworkClient, error)
 	// Update a Network
 	UpdateNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (NetworkApi_UpdateNetworkClient, error)
-	// Show Trust Policies. Any fields specified will be used to filter results.
+	// Show Networks. Any fields specified will be used to filter results.
 	ShowNetwork(ctx context.Context, in *Network, opts ...grpc.CallOption) (NetworkApi_ShowNetworkClient, error)
 }
 
@@ -451,7 +451,7 @@ type NetworkApiServer interface {
 	DeleteNetwork(*Network, NetworkApi_DeleteNetworkServer) error
 	// Update a Network
 	UpdateNetwork(*Network, NetworkApi_UpdateNetworkServer) error
-	// Show Trust Policies. Any fields specified will be used to filter results.
+	// Show Networks. Any fields specified will be used to filter results.
 	ShowNetwork(*Network, NetworkApi_ShowNetworkServer) error
 }
 
