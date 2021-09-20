@@ -25,11 +25,6 @@ func (q *InfluxQ) CreateRetentionPolicy(retentionTime time.Duration, rpType Rete
 		return fmt.Errorf("retention policy creation failed - %s db finished", q.dbName)
 	}
 
-	// make sure db has been created before moving on
-	if err := q.WaitCreated(); err != nil {
-		return fmt.Errorf("retention policy creation failed - %s", err.Error())
-	}
-
 	shard := time.Duration(24 * time.Hour)
 	if retentionTime < shard {
 		shard = retentionTime

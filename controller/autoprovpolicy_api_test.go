@@ -22,6 +22,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -34,8 +35,6 @@ func TestAutoProvPolicyApi(t *testing.T) {
 
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache, &appInstInfoApi, &clusterInstInfoApi)
 	reduceInfoTimeouts(t, ctx)
-	InfluxUsageUnitTestSetup(t)
-	defer InfluxUsageUnitTestStop()
 
 	cloudletData := testutil.CloudletData()
 	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -196,127 +195,147 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	_, err = appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
 
-	// *** Check Demand Reason ***
+	updateCloudlets := func(pt *autoProvPolicyTest, list []*edgeproto.AutoProvCloudlet) {
+		pt.policy.Cloudlets = list
+		pt.policy.Fields = []string{
+			edgeproto.AutoProvPolicyFieldCloudlets,
+			edgeproto.AutoProvPolicyFieldCloudletsKey,
+			edgeproto.AutoProvPolicyFieldCloudletsKeyOrganization,
+			edgeproto.AutoProvPolicyFieldCloudletsKeyName}
+		_, err = autoProvPolicyApi.UpdateAutoProvPolicy(ctx, &pt.policy)
+		require.Nil(t, err)
+	}
 
-	// spawn threads to create AppInsts on every cloudlet
-	// the checks should limit the creates to MaxInstances
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
-	pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MaxInstances))
+	// For exhaustive testing, 300 iterations takes about 10 minutes
+	iterations := 3
+	for ii := 0; ii < iterations; ii++ {
+		log.SpanLog(ctx, log.DebugLevelInfo, "ApiChecks", "iter", ii)
+		// *** Check Demand Reason ***
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
-	pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MaxInstances))
+		// spawn threads to create AppInsts on every cloudlet
+		// the checks should limit the creates to MaxInstances
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
+		pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MaxInstances))
 
-	// spawn threads to delete AppInsts on every cloudlet
-	// the checks should limit the deletes to MinActiveInstances
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonDemand)
-	pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MinActiveInstances))
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
+		pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MaxInstances))
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonDemand)
-	pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MinActiveInstances))
+		// spawn threads to delete AppInsts on every cloudlet
+		// the checks should limit the deletes to MinActiveInstances
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonDemand)
+		pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MinActiveInstances))
 
-	// remove all AppInsts to prep for next test (as if done by user)
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt1.expectAppInsts(t, ctx, &app, 0)
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonDemand)
+		pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MinActiveInstances))
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt2.expectAppInsts(t, ctx, &app, 0)
+		// remove all AppInsts to prep for next test (as if done by user)
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt1.expectAppInsts(t, ctx, &app, 0)
 
-	// *** Check MinMax Reason ***
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt2.expectAppInsts(t, ctx, &app, 0)
 
-	// spawn threads to create AppInsts on every cloudlet
-	// the checks should limit the creates to MinActiveInstances
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
-	pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MinActiveInstances))
+		// *** Check MinMax Reason ***
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
-	pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MinActiveInstances))
+		// spawn threads to create AppInsts on every cloudlet
+		// the checks should limit the creates to MinActiveInstances
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
+		pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MinActiveInstances))
 
-	// create instances manually on all cloudlets
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
-	pt1.expectAppInsts(t, ctx, &app, numCloudlets1)
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
+		pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MinActiveInstances))
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
-	pt2.expectAppInsts(t, ctx, &app, numCloudlets2)
+		// create instances manually on all cloudlets
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
+		pt1.expectAppInsts(t, ctx, &app, numCloudlets1)
 
-	// spawn threads to delete AppInsts on every cloudlet
-	// the checks should limit the deletes to MaxInstances
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonMinMax)
-	pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MaxInstances))
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
+		pt2.expectAppInsts(t, ctx, &app, numCloudlets2)
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonMinMax)
-	pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MaxInstances))
+		// spawn threads to delete AppInsts on every cloudlet
+		// the checks should limit the deletes to MaxInstances
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonMinMax)
+		pt1.expectAppInsts(t, ctx, &app, int(pt1.policy.MaxInstances))
 
-	// remove all AppInsts to prep for next test (as if done by user)
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt1.expectAppInsts(t, ctx, &app, 0)
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonMinMax)
+		pt2.expectAppInsts(t, ctx, &app, int(pt2.policy.MaxInstances))
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt2.expectAppInsts(t, ctx, &app, 0)
+		// remove all AppInsts to prep for next test (as if done by user)
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt1.expectAppInsts(t, ctx, &app, 0)
 
-	// *** Check Orphaned Reason ***
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt2.expectAppInsts(t, ctx, &app, 0)
 
-	// create instances manually on all cloudlets
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
-	pt1.expectAppInsts(t, ctx, &app, numCloudlets1)
+		// *** Check Orphaned Reason ***
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
-	pt2.expectAppInsts(t, ctx, &app, numCloudlets2)
+		// create instances manually on all cloudlets
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
+		pt1.expectAppInsts(t, ctx, &app, numCloudlets1)
 
-	// remove cloudlets from policies
-	rmCount1 := 3
-	pt1.policy.Cloudlets = pt1.policy.Cloudlets[rmCount1:]
-	pt1.policy.Fields = []string{
-		edgeproto.AutoProvPolicyFieldCloudlets,
-		edgeproto.AutoProvPolicyFieldCloudletsKey,
-		edgeproto.AutoProvPolicyFieldCloudletsKeyOrganization,
-		edgeproto.AutoProvPolicyFieldCloudletsKeyName}
-	_, err = autoProvPolicyApi.UpdateAutoProvPolicy(ctx, &pt1.policy)
-	require.Nil(t, err)
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
+		pt2.expectAppInsts(t, ctx, &app, numCloudlets2)
 
-	rmCount2 := 7
-	pt2.policy.Cloudlets = pt2.policy.Cloudlets[rmCount2:]
-	pt2.policy.Fields = pt1.policy.Fields
-	_, err = autoProvPolicyApi.UpdateAutoProvPolicy(ctx, &pt2.policy)
-	require.Nil(t, err)
+		// remove cloudlets from policies
+		rmCount1 := 3
+		pt1cloudletsSave := pt1.policy.Cloudlets
+		updateCloudlets(pt1, pt1.policy.Cloudlets[rmCount1:])
 
-	// spawn threads to delete
-	// this should delete all the AppInsts that are on removed
-	// cloudlets, but leave the rest untouched.
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonOrphaned)
-	pt1.expectAppInsts(t, ctx, &app, numCloudlets1-rmCount1)
+		rmCount2 := 7
+		pt2cloudletsSave := pt2.policy.Cloudlets
+		updateCloudlets(pt2, pt2.policy.Cloudlets[rmCount2:])
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonOrphaned)
-	pt2.expectAppInsts(t, ctx, &app, numCloudlets2-rmCount2)
+		// spawn threads to delete
+		// this should delete all the AppInsts that are on removed
+		// cloudlets, but leave the rest untouched.
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonOrphaned)
+		pt1.expectAppInsts(t, ctx, &app, numCloudlets1-rmCount1)
 
-	// remove all AppInsts for clean up
-	pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt1.expectAppInsts(t, ctx, &app, 0)
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, cloudcommon.AutoProvReasonOrphaned)
+		pt2.expectAppInsts(t, ctx, &app, numCloudlets2-rmCount2)
 
-	pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt2.expectAppInsts(t, ctx, &app, 0)
+		// remove all AppInsts for clean up
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt1.expectAppInsts(t, ctx, &app, 0)
 
-	// Check limit only 1 App instance can be auto-provisioned per cloudlet,
-	// regardless of the number of reservable ClusterInsts available.
-	pt3.expectAppInsts(t, ctx, &app, 0)
-	// Reason Demand
-	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
-	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
-	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt3.expectAppInsts(t, ctx, &app, 0)
-	// Reason MinMax
-	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
-	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
-	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt3.expectAppInsts(t, ctx, &app, 0)
-	// Manual create should not limit them (double cloudlets list so
-	// creates two per cloudlet)
-	pt3cloudletsSave := pt3.cloudlets
-	pt3.cloudlets = append(pt3.cloudlets, pt3.cloudlets...)
-	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
-	pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
-	pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
-	pt3.expectAppInsts(t, ctx, &app, 0)
-	pt3.cloudlets = pt3cloudletsSave
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt2.expectAppInsts(t, ctx, &app, 0)
+
+		// Check limit only 1 App instance can be auto-provisioned per cloudlet,
+		// regardless of the number of reservable ClusterInsts available.
+		pt3.expectAppInsts(t, ctx, &app, 0)
+		// Reason Demand
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonDemand)
+		pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt3.expectAppInsts(t, ctx, &app, 0)
+		// Reason MinMax
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, cloudcommon.AutoProvReasonMinMax)
+		pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt3.expectAppInsts(t, ctx, &app, 0)
+		// Manual create should not limit them (double cloudlets list so
+		// creates two per cloudlet)
+		pt3cloudletsSave := pt3.cloudlets
+		pt3.cloudlets = append(pt3.cloudlets, pt3.cloudlets...)
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Create, "")
+		pt3.expectAppInsts(t, ctx, &app, len(pt3.cloudlets))
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt3.expectAppInsts(t, ctx, &app, 0)
+		pt3.cloudlets = pt3cloudletsSave
+
+		// restore cloudlets to policies
+		updateCloudlets(pt1, pt1cloudletsSave)
+		updateCloudlets(pt2, pt2cloudletsSave)
+
+		// remove all AppInsts to prep for next iteration (as if done by user)
+		pt1.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt1.expectAppInsts(t, ctx, &app, 0)
+		pt2.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt2.expectAppInsts(t, ctx, &app, 0)
+		pt3.goDoAppInsts(t, ctx, &app, cloudcommon.Delete, "")
+		pt3.expectAppInsts(t, ctx, &app, 0)
+	}
 
 	// cleanup all data
 	_, err = appApi.DeleteApp(ctx, &app)
@@ -411,6 +430,7 @@ func (s *autoProvPolicyTest) delete(t *testing.T, ctx context.Context) {
 }
 
 func (s *autoProvPolicyTest) goDoAppInsts(t *testing.T, ctx context.Context, app *edgeproto.App, action cloudcommon.Action, reason string) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "Start goDoAppInsts", "action", action.String(), "key", app.Key, "reason", reason)
 	var wg sync.WaitGroup
 	if reason != "" {
 		// This impersonates the AutoProv service by setting the

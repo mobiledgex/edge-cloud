@@ -29,47 +29,47 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 
 	// Cloudlet dependencies
 	if o, found := order[cloudlet]; found {
-		CheckDep(t, order, o, flavor)
-		CheckDep(t, order, o, vmPool)
-		CheckDep(t, order, o, gpuDriver)
+		CheckDep(t, "cloudlet", order, o, flavor)
+		CheckDep(t, "cloudlet", order, o, vmPool)
+		CheckDep(t, "cloudlet", order, o, gpuDriver)
 	}
 	// ClusterInst dependencies
 	if o, found := order[clusterInst]; found {
-		CheckDep(t, order, o, flavor)
-		CheckDep(t, order, o, cloudlet)
-		CheckDep(t, order, o, autoScalePolicy)
-		CheckDep(t, order, o, TrustPolicy)
+		CheckDep(t, "clusterinst", order, o, flavor)
+		CheckDep(t, "clusterinst", order, o, cloudlet)
+		CheckDep(t, "clusterinst", order, o, autoScalePolicy)
+		CheckDep(t, "clusterinst", order, o, TrustPolicy)
 	}
 	// App dependecies
 	if o, found := order[app]; found {
-		CheckDep(t, order, o, flavor)
-		CheckDep(t, order, o, autoProvPolicy)
+		CheckDep(t, "app", order, o, flavor)
+		CheckDep(t, "app", order, o, autoProvPolicy)
 	}
 	// AppInst dependencies
 	if o, found := order[appInst]; found {
-		CheckDep(t, order, o, flavor)
-		CheckDep(t, order, o, app)
-		CheckDep(t, order, o, clusterInst)
-		CheckDep(t, order, o, TrustPolicy)
+		CheckDep(t, "appinst", order, o, flavor)
+		CheckDep(t, "appinst", order, o, app)
+		CheckDep(t, "appinst", order, o, clusterInst)
+		CheckDep(t, "appinst", order, o, TrustPolicy)
 	}
 	// AppInstRefs dependencies
 	if o, found := order[appInstRefs]; found {
-		CheckDep(t, order, o, app)
+		CheckDep(t, "appinstrefs", order, o, app)
 		// For auto-prov, AppInsts must be sent before AppInstRefs.
 		// This ensures that the health state of AppInsts can be
 		// checked when traversing the refs.
-		CheckDep(t, order, o, appInst)
+		CheckDep(t, "appinstrefs", order, o, appInst)
 		// For auto-prov, Cloudlets must be sent before AppInstRefs.
 		// This ensures that the health state of Cloudlets can be
 		// checked when traversing the refs.
-		CheckDep(t, order, o, cloudlet)
+		CheckDep(t, "appinstrefs", order, o, cloudlet)
 	}
 }
 
-func CheckDep(t *testing.T, order map[reflect.Type]int, ord int, dep reflect.Type) {
+func CheckDep(t *testing.T, typ string, order map[reflect.Type]int, ord int, dep reflect.Type) {
 	depOrd, found := order[dep]
 	if !found {
-		fmt.Printf("Warning: missing dep %v\n", dep)
+		fmt.Printf("Warning: missing %s dep %v\n", typ, dep)
 		return
 	}
 	require.Greater(t, ord, depOrd)

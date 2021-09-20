@@ -706,6 +706,8 @@ var AllDataOptionalArgs = []string{
 	"appinstrefs:#.key.version",
 	"appinstrefs:#.insts:#.key",
 	"appinstrefs:#.insts:#.value",
+	"appinstrefs:#.deleterequestedinsts:#.key",
+	"appinstrefs:#.deleterequestedinsts:#.value",
 	"vmpools:#.fields",
 	"vmpools:#.key.organization",
 	"vmpools:#.key.name",

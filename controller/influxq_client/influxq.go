@@ -26,8 +26,7 @@ var InfluxQPushInterval time.Duration = time.Second
 var InfluxQPushCountTrigger = 50
 var InfluxQPushCountMax = 5000
 var InfluxQPrecision = "us"
-var InfluxQReconnectDelay time.Duration = time.Second
-var InfluxQReconnectAttempts = 5
+var InfluxQReconnectDelay time.Duration = 10 * time.Second
 
 type InfluxQ struct {
 	dbName    string
@@ -43,6 +42,8 @@ type InfluxQ struct {
 	ErrBatch  uint64
 	ErrPoint  uint64
 	Qfull     uint64
+	initRP    bool
+	initRPDur time.Duration
 }
 
 func NewInfluxQ(DBName, username, password string) *InfluxQ {
@@ -53,6 +54,12 @@ func NewInfluxQ(DBName, username, password string) *InfluxQ {
 	q.user = username
 	q.password = password
 	return &q
+}
+
+// must be called before Start()
+func (q *InfluxQ) InitRetentionPolicy(dur time.Duration) {
+	q.initRP = true
+	q.initRPDur = dur
 }
 
 func (q *InfluxQ) Start(addr string) error {
@@ -76,24 +83,45 @@ func (q *InfluxQ) Stop() {
 	q.client.Close()
 }
 
+func (q *InfluxQ) initDB() error {
+	if q.dbcreated && !q.initRP {
+		return nil
+	}
+	span := log.StartSpan(log.DebugLevelInfo, "InfluxQ initDB")
+	ctx := log.ContextWithSpan(context.Background(), span)
+	defer span.Finish()
+
+	if !q.dbcreated {
+		// make sure main db is created otherwise
+		// batch point writes will fail
+		_, err := q.QueryDB(fmt.Sprintf("create database %s", q.dbName))
+		if err != nil {
+			if _, ok := err.(net.Error); !ok {
+				// only log for non-network errors
+				log.SpanLog(ctx, log.DebugLevelInfo, "create database", "name", q.dbName, "err", err)
+			}
+			return err
+		}
+		q.dbcreated = true
+	}
+	if q.initRP {
+		err := q.CreateRetentionPolicy(q.initRPDur, DefaultRetentionPolicy)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "init retention policy failed", "name", q.dbName, "err", err)
+			return err
+		}
+		q.initRP = false
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "initDB done", "name", q.dbName)
+	return nil
+}
+
 func (q *InfluxQ) RunPush() {
 	for !q.done {
-		if !q.dbcreated {
-			// make sure main db is created otherwise
-			// batch point writes will fail
-			_, err := q.QueryDB(fmt.Sprintf("create database %s", q.dbName))
-			if err != nil {
-				if _, ok := err.(net.Error); !ok {
-					// only log for non-network errors
-					log.DebugLog(log.DebugLevelMetrics, "create database", "err", err)
-				}
-				time.Sleep(InfluxQReconnectDelay)
-				continue
-			} else {
-				q.dbcreated = true
-			}
+		if err := q.initDB(); err != nil {
+			time.Sleep(InfluxQReconnectDelay)
+			continue
 		}
-
 		select {
 		case <-q.doPush:
 		case <-time.After(InfluxQPushInterval):

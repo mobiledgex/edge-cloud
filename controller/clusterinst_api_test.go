@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os/exec"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +11,7 @@ import (
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
+	"github.com/mobiledgex/edge-cloud/controller/influxq_client/influxq_testutil"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -26,6 +26,7 @@ func TestClusterInstApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -38,8 +39,6 @@ func TestClusterInstApi(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
-	InfluxUsageUnitTestSetup(t)
-	defer InfluxUsageUnitTestStop()
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -845,36 +844,40 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 
 var testInfluxProc *process.Influx
 
-func InfluxUsageUnitTestSetup(t *testing.T) {
-	addr := "http://127.0.0.1:8086"
+func influxUsageUnitTestSetup(t *testing.T) {
+	testInfluxProc = influxq_testutil.StartInfluxd(t)
 
-	// start influxd if not already running
-	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
-	if err != nil {
-		p := process.Influx{}
-		p.Common.Name = "influx-test"
-		p.HttpAddr = addr
-		p.DataDir = "/var/tmp/.influxdb"
-		// start influx
-		err = p.StartLocal("/var/tmp/influxdb.log",
-			process.WithCleanStartup())
-		require.Nil(t, err, "start InfluxDB server")
-		testInfluxProc = &p
-	}
 	q := influxq.NewInfluxQ(cloudcommon.EventsDbName, "", "")
-	err = q.Start(addr)
+	err := q.Start("http://" + testInfluxProc.HttpAddr)
 	if err != nil {
-		testInfluxProc.StopLocal()
+		influxUsageUnitTestStop()
 	}
 	require.Nil(t, err, "new influx q")
 	services.events = q
+
+	connected := q.WaitConnected()
+	if !connected {
+		influxUsageUnitTestStop()
+	}
+	require.True(t, connected)
 }
 
-func InfluxUsageUnitTestStop() {
-	services.events.Stop()
+func influxUsageUnitTestStop() {
+	if services.events != nil {
+		services.events.Stop()
+		services.events = nil
+	}
 	if testInfluxProc != nil {
 		testInfluxProc.StopLocal()
+		testInfluxProc = nil
 	}
+}
+
+func TestInflux(t *testing.T) {
+	p := influxq_testutil.StartInfluxd(t)
+	p.StopLocal()
+	p = influxq_testutil.StartInfluxd(t)
+	p.StopLocal()
 }
 
 func TestDefaultMTCluster(t *testing.T) {
@@ -883,6 +886,7 @@ func TestDefaultMTCluster(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()

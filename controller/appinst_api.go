@@ -1608,6 +1608,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			in.Status = edgeproto.StatusInfo{}
 			s.store.STMPut(stm, in)
+			appInstRefsApi.addDeleteRequestedRef(stm, &in.Key)
 		}
 		return nil
 	})
@@ -1747,6 +1748,9 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 					"key", &in.Key, "cur", inst.State, "next", in.State)
 				return nil
 			}
+			if inst.State == edgeproto.TrackedState_DELETE_REQUESTED && in.State != edgeproto.TrackedState_DELETE_REQUESTED {
+				appInstRefsApi.removeDeleteRequestedRef(stm, &in.Key)
+			}
 			inst.State = in.State
 			applyUpdate = true
 		}
@@ -1755,6 +1759,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		} else {
 			inst.Errors = nil
 		}
+
 		inst.RuntimeInfo = in.RuntimeInfo
 		if applyUpdate {
 			s.store.STMPut(stm, &inst)
