@@ -163,6 +163,12 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 	return nil
 }
 
+func (s *AccessKeyClient) finish() {
+	// reset state for unit tests
+	s.enabled = false
+	s.requireAccessKey = false
+}
+
 func (s *AccessKeyClient) IsEnabled() bool {
 	return s.enabled
 }

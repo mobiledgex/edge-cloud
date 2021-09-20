@@ -126,6 +126,7 @@ func TestCloudletApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -839,6 +840,7 @@ func TestShowFlavorsForCloudlet(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -871,10 +873,10 @@ func TestShowFlavorsForCloudlet(t *testing.T) {
 }
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
-
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	cAppApi := testutil.NewInternalAppApi(&appApi)
 	testinit()
+	defer testfinish()
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())

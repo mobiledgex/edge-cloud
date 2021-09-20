@@ -24,6 +24,7 @@ func TestAddRemove(t *testing.T) {
 	require.Nil(t, err, "init edge events plugin")
 	dmecommon.SetupMatchEngine(eehandler)
 	dmecommon.InitAppInstClients()
+	defer dmecommon.StopAppInstClients()
 
 	setupJwks()
 	apps := dmetest.GenerateApps()

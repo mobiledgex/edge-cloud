@@ -72,36 +72,48 @@ func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edg
 	if !d.enable {
 		return
 	}
-	go d.clusterInstChanged(ctx, key, modRev)
+	// copy out from cache since data may change while thread runs
+	inst := edgeproto.ClusterInst{}
+	found := d.ClusterInstCache.Get(key, &inst)
+	if !found {
+		return
+	}
+	go d.clusterInstChanged(ctx, &inst)
 }
 
 func (d *DummyInfoResponder) runClusterInstDeleted(ctx context.Context, old *edgeproto.ClusterInst) {
 	if !d.enable {
 		return
 	}
-	go d.clusterInstDeleted(ctx, old)
+	copy := &edgeproto.ClusterInst{}
+	copy.DeepCopyIn(old)
+	go d.clusterInstDeleted(ctx, copy)
 }
 
 func (d *DummyInfoResponder) runAppInstChanged(ctx context.Context, key *edgeproto.AppInstKey, old *edgeproto.AppInst, modRev int64) {
 	if !d.enable {
 		return
 	}
-	go d.appInstChanged(ctx, key, modRev)
+	// copy out from cache since data may change while thread runs
+	inst := edgeproto.AppInst{}
+	found := d.AppInstCache.Get(key, &inst)
+	if !found {
+		return
+	}
+	go d.appInstChanged(ctx, &inst)
 }
 
 func (d *DummyInfoResponder) runAppInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
 	if !d.enable {
 		return
 	}
-	go d.appInstDeleted(ctx, old)
+	copy := &edgeproto.AppInst{}
+	copy.DeepCopyIn(old)
+	go d.appInstDeleted(ctx, copy)
 }
 
-func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, modRev int64) {
-	inst := edgeproto.ClusterInst{}
-	found := d.ClusterInstCache.Get(key, &inst)
-	if !found {
-		return
-	}
+func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgeproto.ClusterInst) {
+	key := &inst.Key
 	if inst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update
 		log.DebugLog(log.DebugLevelApi, "Update ClusterInst", "key", key)
@@ -145,12 +157,8 @@ func (d *DummyInfoResponder) clusterInstDeleted(ctx context.Context, old *edgepr
 	d.ClusterInstInfoCache.Delete(ctx, &info, 0)
 }
 
-func (d *DummyInfoResponder) appInstChanged(ctx context.Context, key *edgeproto.AppInstKey, modRev int64) {
-	inst := edgeproto.AppInst{}
-	found := d.AppInstCache.Get(key, &inst)
-	if !found {
-		return
-	}
+func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto.AppInst) {
+	key := &inst.Key
 	if inst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update
 		log.DebugLog(log.DebugLevelApi, "Update app inst", "key", key)

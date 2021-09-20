@@ -41,6 +41,7 @@ func TestAppInstClientApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 	cplookup := &node.CloudletPoolCache{}
 	cplookup.Init()
 	nodeMgr.CloudletPoolLookup = cplookup
