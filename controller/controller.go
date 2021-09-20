@@ -98,6 +98,7 @@ type Services struct {
 	accessKeyGrpcServer       node.AccessKeyGrpcServer
 	listeners                 []net.Listener
 	publicCertManager         *node.PublicCertManager
+	stopInitCC                chan bool
 }
 
 func main() {
@@ -265,27 +266,21 @@ func startServices() error {
 
 	// downsampled metrics influx
 	downsampledMetricsInfluxQ := influxq.NewInfluxQ(cloudcommon.DownsampledMetricsDbName, influxAuth.User, influxAuth.Pass)
+	downsampledMetricsInfluxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration())
 	err = downsampledMetricsInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	err = downsampledMetricsInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
-	if err != nil {
-		return fmt.Errorf("Failed to update default retention policy for downsampled metrics influx db, error is %s", err.Error())
-	}
 	services.downsampledMetricsInfluxQ = downsampledMetricsInfluxQ
 
 	// metrics influx
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
+	influxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
-	}
-	err = influxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
-	if err != nil {
-		return fmt.Errorf("Failed to update default retention policy for metrics influx db, error is %s", err.Error())
 	}
 	services.influxQ = influxQ
 
@@ -300,39 +295,27 @@ func startServices() error {
 
 	// persistent stats influx
 	edgeEventsInfluxQ := influxq.NewInfluxQ(cloudcommon.EdgeEventsMetricsDbName, influxAuth.User, influxAuth.Pass)
+	edgeEventsInfluxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration())
 	err = edgeEventsInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	err = edgeEventsInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
-	if err != nil {
-		return fmt.Errorf("Failed to update default retention policy for edgeevents metrics influx db, error is %s", err.Error())
-	}
 	services.edgeEventsInfluxQ = edgeEventsInfluxQ
 
 	// cloudlet resources influx
 	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
+	cloudletResourcesInfluxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 	err = cloudletResourcesInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
 			*influxAddr, err)
 	}
-	err = cloudletResourcesInfluxQ.CreateRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration(), influxq.DefaultRetentionPolicy)
-	if err != nil {
-		return fmt.Errorf("Failed to update default retention policy for cloudlet resources influx db, error is %s", err.Error())
-	}
 	services.cloudletResourcesInfluxQ = cloudletResourcesInfluxQ
 
 	// create continuous queries for edgeevents metrics
-	for _, collectioninterval := range settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
-		interval := time.Duration(collectioninterval.Interval)
-		retention := time.Duration(collectioninterval.Retention)
-		latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(interval, retention)
-		influxq.CreateContinuousQuery(edgeEventsInfluxQ, downsampledMetricsInfluxQ, latencyCqSettings)
-		deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(interval, retention)
-		influxq.CreateContinuousQuery(edgeEventsInfluxQ, downsampledMetricsInfluxQ, deviceCqSettings)
-	}
+	services.stopInitCC = make(chan bool)
+	go initContinuousQueries()
 
 	InitNotify(influxQ, edgeEventsInfluxQ, &appInstClientApi)
 	if *notifyParentAddrs != "" {
@@ -553,6 +536,9 @@ func stopServices() {
 	if services.notifyClient != nil {
 		services.notifyClient.Stop()
 	}
+	if services.stopInitCC != nil {
+		close(services.stopInitCC)
+	}
 	if services.influxQ != nil {
 		services.influxQ.Stop()
 	}
@@ -581,6 +567,7 @@ func stopServices() {
 		lis.Close()
 	}
 	nodeMgr.Finish()
+	services = Services{}
 }
 
 // Helper function to verify the compatibility of etcd version and
@@ -714,4 +701,50 @@ func initDebug(ctx context.Context, nodeMgr *node.NodeMgr) {
 		func(ctx context.Context, req *edgeproto.DebugRequest) string {
 			return vmspec.ToggleFlavorMatchVerbose()
 		})
+}
+
+func initContinuousQueries() {
+	done := false
+	for !done {
+		if services.stopInitCC == nil {
+			break
+		}
+		span := log.StartSpan(log.DebugLevelInfo, "initContinuousQueries")
+		ctx := log.ContextWithSpan(context.Background(), span)
+
+		// create continuous queries for edgeevents metrics
+		var err error
+		for _, collectioninterval := range settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+			interval := time.Duration(collectioninterval.Interval)
+			retention := time.Duration(collectioninterval.Retention)
+			latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(interval, retention)
+			err = influxq.CreateContinuousQuery(services.edgeEventsInfluxQ, services.downsampledMetricsInfluxQ, latencyCqSettings)
+			if err != nil && strings.Contains(err.Error(), "already exists") {
+				err = nil
+			}
+			if err != nil {
+				break
+			}
+			deviceCqSettings := influxq.CreateDeviceInfoContinuousQuerySettings(interval, retention)
+			err = influxq.CreateContinuousQuery(services.edgeEventsInfluxQ, services.downsampledMetricsInfluxQ, deviceCqSettings)
+			if err != nil && strings.Contains(err.Error(), "already exists") {
+				err = nil
+			}
+			if err != nil {
+				break
+			}
+		}
+		if err == nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "initContinuousQueries done")
+			span.Finish()
+			break
+		}
+		log.SpanLog(ctx, log.DebugLevelInfo, "initContinuousQueries", "err", err)
+		span.Finish()
+		select {
+		case <-time.After(influxq.InfluxQReconnectDelay):
+		case <-services.stopInitCC:
+			done = true
+		}
+	}
 }

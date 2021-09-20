@@ -193,6 +193,7 @@ func (s *NodeMgr) Finish() {
 	if s.ESClient != nil {
 		close(s.esEventsDone)
 	}
+	s.AccessKeyClient.finish()
 	log.FinishTracer()
 }
 

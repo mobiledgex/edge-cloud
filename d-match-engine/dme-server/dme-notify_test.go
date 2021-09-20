@@ -32,6 +32,7 @@ func TestNotify(t *testing.T) {
 	dmecommon.SetupMatchEngine(eehandler)
 	initRateLimitMgr()
 	dmecommon.InitAppInstClients()
+	defer dmecommon.StopAppInstClients()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 

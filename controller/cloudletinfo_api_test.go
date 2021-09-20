@@ -16,6 +16,7 @@ func TestCloudletInfo(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
