@@ -747,5 +747,4 @@ func initContinuousQueries() {
 			done = true
 		}
 	}
-
 }
