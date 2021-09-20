@@ -556,7 +556,7 @@ func (p *Crm) String(opts ...StartOp) string {
 
 // InfluxLocal
 
-func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
+func (p *Influx) StartLocal(logfile string, opts ...StartOp) (reterr error) {
 	var prefix string
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -564,6 +564,24 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		if err := p.ResetData(); err != nil {
 			return err
 		}
+	}
+
+	// check if another influx already running
+	if p.HttpAddr == "" {
+		p.HttpAddr = influxsup.DefaultHttpAddr
+	}
+	if p.BindAddr == "" {
+		p.BindAddr = influxsup.DefaultBindAddr
+	}
+	conn, err := net.DialTimeout("tcp", p.HttpAddr, 100*time.Millisecond)
+	if err == nil && conn != nil {
+		conn.Close()
+		return fmt.Errorf("InfluxDB http addr %s already in use", p.HttpAddr)
+	}
+	conn, err = net.DialTimeout("tcp", p.BindAddr, 100*time.Millisecond)
+	if err == nil && conn != nil {
+		conn.Close()
+		return fmt.Errorf("InfluxDB bind addr %s already in use", p.BindAddr)
 	}
 
 	influxops := []influxsup.InfluxOp{
@@ -592,6 +610,11 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if reterr != nil {
+			p.StopLocal()
+		}
+	}()
 
 	// if auth is enabled we need to create default user
 	if p.Auth.User != "" {
@@ -618,21 +641,56 @@ func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
 		fmt.Printf("Query: %s\n", urlStr)
 		_, err := client.Do(r)
 		if err != nil {
-			p.StopLocal()
 			return err
 		}
 	}
 	// create auth file for Vault
 	creds_json, err := json.Marshal(p.Auth)
 	if err != nil {
-		p.StopLocal()
 		return err
 	}
-	return ioutil.WriteFile(InfluxCredsFile, creds_json, 0644)
+	err = ioutil.WriteFile(InfluxCredsFile, creds_json, 0644)
+	if err != nil {
+		return err
+	}
+	// make sure influx is online
+	if prefix == "" {
+		prefix = "http://" + p.HttpAddr
+	}
+	client, err := influxsup.GetClient(prefix, p.Auth.User, p.Auth.Pass)
+	if err != nil {
+		return err
+	}
+	online := false
+	for ii := 0; ii < 50; ii++ {
+		if _, _, err := client.Ping(0); err == nil {
+			online = true
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if !online {
+		return fmt.Errorf("InfluxDB service not online")
+	}
+	return nil
 }
 
 func (p *Influx) StopLocal() {
 	StopLocal(p.cmd)
+	// make sure influx isn't running anymore
+	log.Printf("Check that InfluxDB at %s is not running\n", p.HttpAddr)
+	done := false
+	for ii := 0; ii < 50; ii++ {
+		conn, err := net.DialTimeout("tcp", p.HttpAddr, 100*time.Millisecond)
+		if err == nil && conn != nil {
+			conn.Close()
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		done = true
+		break
+	}
+	log.Printf("InfluxDB at %s is done: %t\n", p.HttpAddr, done)
 }
 
 func (p *Influx) GetExeName() string { return "influxd" }
@@ -732,7 +790,7 @@ func (p *ClusterSvc) LookupArgs() string { return p.Name }
 // Vault
 
 // In dev mode, Vault is locked to below address
-var VaultAddress = "http://127.0.0.1:8200"
+var defaultVaultAddress = "http://127.0.0.1:8200"
 
 type VaultRoles struct {
 	NotifyRootRoleID   string `json:"notifyrootroleid"`
@@ -770,6 +828,26 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	}
 
 	args := []string{"server", "-dev"}
+	if p.ListenAddr == "" {
+		p.ListenAddr = defaultVaultAddress
+	}
+	if !strings.HasPrefix(p.ListenAddr, "http://") {
+		return fmt.Errorf("vault listen addr must start with http://")
+	}
+	// unfortunately arg passed to vault cannot have http
+	addr := strings.TrimPrefix(p.ListenAddr, "http://")
+	args = append(args, "-dev-listen-address="+addr)
+
+	// Specify the root token. Vault generates one automatically
+	// and stores it in ~/.vault-token for the CLI to use, but
+	// somehow with unit tests running multiple Vaults, they mess
+	// up the ~/.vault-token for each other (even though they're
+	// not supposed to be running at the same time).
+	p.RootToken = "vault-token"
+	args = append(args, "-dev-root-token-id="+p.RootToken)
+	if p.CADir == "" {
+		p.CADir = "/tmp/vault_pki"
+	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	if err != nil {
@@ -787,7 +865,6 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	if p.cmd.Process == nil {
 		return fmt.Errorf("failed to start vault process, see log %s", logfile)
 	}
-
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 
@@ -795,9 +872,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	gopath := os.Getenv("GOPATH")
 	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh"
 	out := p.Run("/bin/sh", setup, &err)
-	if err != nil {
-		fmt.Println(out)
-	}
+	fmt.Println(out)
 	// get roleIDs and secretIDs
 	vroles := VaultRoles{}
 	vroles.RegionRoles = make(map[string]*VaultRegionRoles)
@@ -902,17 +977,7 @@ func (p *Vault) PutSecret(region, name, secret string, err *error) {
 }
 
 func (p *Vault) Run(bin, args string, err *error) string {
-	if *err != nil {
-		return ""
-	}
-	cmd := exec.Command(bin, strings.Split(args, " ")...)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("VAULT_ADDR=%s", VaultAddress))
-	out, cerr := cmd.CombinedOutput()
-	if cerr != nil {
-		*err = fmt.Errorf("cmd '%s %s' failed, %s, %v", bin, args, string(out), cerr.Error())
-		return string(out)
-	}
-	return string(out)
+	return p.RunWithInput(bin, args, nil, err)
 }
 
 func (p *Vault) RunWithInput(bin, args string, input io.Reader, err *error) string {
@@ -920,8 +985,13 @@ func (p *Vault) RunWithInput(bin, args string, input io.Reader, err *error) stri
 		return ""
 	}
 	cmd := exec.Command(bin, strings.Split(args, " ")...)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("VAULT_ADDR=%s", VaultAddress))
-	cmd.Stdin = input
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("VAULT_ADDR=%s", p.ListenAddr),
+		fmt.Sprintf("VAULT_TOKEN=%s", p.RootToken),
+		fmt.Sprintf("CADIR=%s", p.CADir))
+	if input != nil {
+		cmd.Stdin = input
+	}
 	out, cerr := cmd.CombinedOutput()
 	if cerr != nil {
 		*err = fmt.Errorf("cmd '%s %s' failed, %s, %v", bin, args, string(out), cerr.Error())
@@ -946,6 +1016,9 @@ func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, err
+	}
+	if p.CADir == "" {
+		p.CADir = dir + "/vault_pki"
 	}
 	rolesfile := dir + "/roles.yaml"
 	err = p.StartLocal(dir+"/vault.log", WithRolesFile(rolesfile))
