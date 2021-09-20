@@ -13,6 +13,9 @@ import (
 // will be placed.
 // Note that InfluxDB requires a config file, and does not accept
 // configuration options as command line arguments.
+var DefaultHttpAddr = "127.0.0.1:8086"
+var DefaultBindAddr = "127.0.0.1:8088"
+
 func SetupInflux(dir string, ops ...InfluxOp) (string, error) {
 	err := os.MkdirAll(dir, 0744)
 	if err != nil {
@@ -85,8 +88,8 @@ func (s *InfluxOptions) Apply(ops ...InfluxOp) {
 
 func (s *InfluxOptions) SetDefaults(dir string) {
 	s.DataDir = dir
-	s.HttpAddr = "127.0.0.1:8086"
-	s.BindAddr = "127.0.0.1:8088"
+	s.HttpAddr = DefaultHttpAddr
+	s.BindAddr = DefaultBindAddr
 }
 
 var influxConfTemplate = `
