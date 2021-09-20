@@ -853,6 +853,7 @@ func influxUsageUnitTestSetup(t *testing.T) {
 		influxUsageUnitTestStop()
 	}
 	require.Nil(t, err, "new influx q")
+	require.True(t, q.WaitConnected())
 	services.events = q
 
 	connected := q.WaitConnected()

@@ -179,6 +179,48 @@ var FindCloudletData = []FindCloudletRR{
 	},
 }
 
+var FindCloudletAllianceOrg = []FindCloudletRR{
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Niantic Labs",
+			AppName: "HarryPotter-go",
+			AppVers: "1.0",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "TMUS",
+			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[1].Uri,
+			CloudletLocation: &Cloudlets[1].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  "TMUS", // real cloudlet is TDG, but treat as TMUS
+		ReplyCloudlet: Cloudlets[1].Name,
+	},
+}
+
+var FindCloudletNoAllianceOrg = []FindCloudletRR{
+	FindCloudletRR{
+		Reg: dme.RegisterClientRequest{
+			OrgName: "Niantic Labs",
+			AppName: "HarryPotter-go",
+			AppVers: "1.0",
+		},
+		Req: dme.FindCloudletRequest{
+			CarrierName: "TMUS",
+			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
+		},
+		Reply: dme.FindCloudletReply{
+			Fqdn:             Cloudlets[3].Uri,
+			CloudletLocation: &Cloudlets[3].Location,
+			Status:           1,
+		},
+		ReplyCarrier:  Cloudlets[3].CarrierName,
+		ReplyCloudlet: Cloudlets[3].Name,
+	},
+}
+
 var FindCloudletHAData = []FindCloudletRR{
 	FindCloudletRR{
 		Reg: dme.RegisterClientRequest{

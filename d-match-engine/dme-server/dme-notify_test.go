@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -50,6 +51,10 @@ func TestNotify(t *testing.T) {
 	client.Start()
 
 	// create data on server side
+	for _, cloudlet := range dmetest.GenerateCloudlets() {
+		dmecommon.SetInstStateFromCloudlet(ctx, &edgeproto.Cloudlet{Key: cloudlet.Key})
+		dmecommon.SetInstStateFromCloudletInfo(ctx, cloudlet)
+	}
 	for _, app := range apps {
 		serverHandler.AppCache.Update(ctx, app, 0)
 	}
@@ -168,6 +173,9 @@ func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey, isApp
 		for _, app := range tbl.Apps {
 			if c, found := app.Carriers[carrier]; found {
 				for clusterInstKey, appInst := range c.Insts {
+					if clusterInstKey.CloudletKey.GetKeyString() == key.GetKeyString() {
+						fmt.Printf("Appinst is %+v\n", appInst)
+					}
 					if clusterInstKey.CloudletKey.GetKeyString() == key.GetKeyString() &&
 						dmecommon.IsAppInstUsable(appInst) {
 						still_enabled = true
@@ -178,9 +186,9 @@ func waitAndCheckCloudletforApps(t *testing.T, key *edgeproto.CloudletKey, isApp
 		time.Sleep(10 * time.Millisecond)
 	}
 	if isAppInstUsable {
-		assert.True(t, still_enabled, "Notify message should have propagated")
+		require.True(t, still_enabled, "Notify message should have propagated")
 	} else {
-		assert.False(t, still_enabled, "Notify message did not propagate")
+		require.False(t, still_enabled, "Notify message did not propagate")
 	}
 }
 
