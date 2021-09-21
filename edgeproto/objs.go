@@ -767,8 +767,8 @@ func (s *Device) Validate(fields map[string]struct{}) error {
 }
 
 func (key *NetworkKey) ValidateKey() error {
-	if !util.ValidName(key.Organization) {
-		return errors.New("Invalid cloudlet organization name")
+	if err := key.CloudletKey.ValidateKey(); err != nil {
+		return err
 	}
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid network name")

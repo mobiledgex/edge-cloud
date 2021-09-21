@@ -71,11 +71,11 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
+	mgr.RegisterSendNetworkCache(&s.NetworkCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 	mgr.RegisterSendAppCache(&s.AppCache)
 	mgr.RegisterSendAppInstCache(&s.AppInstCache)
 	mgr.RegisterSendAlertCache(&s.AlertCache)
-	mgr.RegisterSendNetworkCache(&s.NetworkCache)
 
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)

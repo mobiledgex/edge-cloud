@@ -205,8 +205,8 @@ func GetNetworksForClusterInst(ctx context.Context, clusterInst *edgeproto.Clust
 	for _, netName := range clusterInst.Networks {
 		net := edgeproto.Network{}
 		nk := edgeproto.NetworkKey{
-			Name:         netName,
-			Organization: clusterInst.Key.CloudletKey.Organization,
+			Name:        netName,
+			CloudletKey: clusterInst.Key.CloudletKey,
 		}
 		if !networkCache.Get(&nk, &net) {
 			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find network from cache", "nk", nk)

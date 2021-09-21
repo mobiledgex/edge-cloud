@@ -4,6 +4,7 @@ syntax = "proto3";
 package edgeproto;
 
 import "google/api/annotations.proto";
+import "cloudletkey.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
@@ -39,8 +40,8 @@ message Route {
 }
 
 message NetworkKey {
-  // Name of the organization for the cloudlet that this network can be provisioned on
-  string organization = 1 [(protogen.keytag) = "networkorg"];
+  // Cloudlet that this network can be provisioned on
+  CloudletKey cloudlet_key = 1 [(gogoproto.nullable) = false];
   // Network Name
   string name = 2 [(protogen.keytag) = "network"];
   option (protogen.generate_matches) = true;
@@ -49,8 +50,7 @@ message NetworkKey {
 }
 
 
-// TrustPolicy defines security restrictions for cluster instances
-// nodes scaled up or down.
+// Network defines additional networks which can be optionally added to a cloudlet 
 message Network {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
@@ -66,8 +66,8 @@ message Network {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.Organization";
-  option (protogen.uses_org) = "key=Organization";
+  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization";
+  option (protogen.uses_org) = "key=CloudletKey.Organization";
 }
 
 service NetworkApi {
@@ -77,8 +77,8 @@ service NetworkApi {
       post: "/create/network"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletKey.Organization";
   }
   // Delete a Network
   rpc DeleteNetwork(Network) returns (stream Result) {
@@ -87,7 +87,7 @@ service NetworkApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
   }
   // Update a Network
   rpc UpdateNetwork(Network) returns (stream Result) {
@@ -96,7 +96,7 @@ service NetworkApi {
       body: "*"
     };
     option (protogen.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
   }
   // Show Networks. Any fields specified will be used to filter results.
   rpc ShowNetwork(Network) returns (stream Network) {
@@ -104,6 +104,6 @@ service NetworkApi {
       post: "/show/network"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.Organization";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.CloudletKey.Organization";
   }
 }

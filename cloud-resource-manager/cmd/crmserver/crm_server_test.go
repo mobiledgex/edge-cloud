@@ -160,7 +160,9 @@ gpudrivers:
 
 networks:
 - key:
-    organization: tmus
+    cloudletkey:
+       organization: tmus
+       cloudlet: cloud2
     name: net1
   routes:
   - destinationcidr: 10.200.10.0/24

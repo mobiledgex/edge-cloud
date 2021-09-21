@@ -1974,8 +1974,8 @@ var AlertPolicyData = []edgeproto.AlertPolicy{
 var NetworkData = []edgeproto.Network{
 	edgeproto.Network{
 		Key: edgeproto.NetworkKey{
-			Name:         "network0",
-			Organization: cloudletData[2].Key.Organization,
+			Name:        "network0",
+			CloudletKey: cloudletData[2].Key,
 		},
 		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_LOAD_BALANCER,
 		Routes: []edgeproto.Route{
@@ -1991,8 +1991,8 @@ var NetworkData = []edgeproto.Network{
 	},
 	edgeproto.Network{
 		Key: edgeproto.NetworkKey{
-			Name:         "network1",
-			Organization: cloudletData[2].Key.Organization,
+			Name:        "network1",
+			CloudletKey: cloudletData[2].Key,
 		},
 		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_CLUSTER_NODES,
 		Routes: []edgeproto.Route{
@@ -2008,8 +2008,8 @@ var NetworkData = []edgeproto.Network{
 	},
 	edgeproto.Network{
 		Key: edgeproto.NetworkKey{
-			Name:         "network2",
-			Organization: cloudletData[2].Key.Organization,
+			Name:        "network2",
+			CloudletKey: cloudletData[2].Key,
 		},
 		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_ALL,
 		Routes: []edgeproto.Route{
@@ -2025,8 +2025,8 @@ var NetworkErrorData = []edgeproto.Network{
 	// bad cidr
 	edgeproto.Network{
 		Key: edgeproto.NetworkKey{
-			Name:         "networkbadcidr",
-			Organization: cloudletData[2].Key.Organization,
+			Name:        "networkbadcidr",
+			CloudletKey: cloudletData[2].Key,
 		},
 		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_CLUSTER_NODES,
 		Routes: []edgeproto.Route{
@@ -2039,8 +2039,8 @@ var NetworkErrorData = []edgeproto.Network{
 	// bad next hop ip
 	edgeproto.Network{
 		Key: edgeproto.NetworkKey{
-			Name:         "networkbadroute",
-			Organization: cloudletData[2].Key.Organization,
+			Name:        "networkbadroute",
+			CloudletKey: cloudletData[2].Key,
 		},
 		ConnectionType: edgeproto.NetworkConnectionType_CONNECT_TO_LOAD_BALANCER,
 		Routes: []edgeproto.Route{
@@ -2053,8 +2053,8 @@ var NetworkErrorData = []edgeproto.Network{
 	// missing connection type
 	edgeproto.Network{
 		Key: edgeproto.NetworkKey{
-			Name:         "networknoconntype",
-			Organization: cloudletData[2].Key.Organization,
+			Name:        "networknoconntype",
+			CloudletKey: cloudletData[2].Key,
 		},
 		Routes: []edgeproto.Route{
 			edgeproto.Route{

@@ -153,7 +153,7 @@ func (s *ClusterInstApi) UsesNetwork(networkKey *edgeproto.NetworkKey) bool {
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		val := data.Obj
-		if val.Key.CloudletKey.Organization == networkKey.Organization {
+		if val.Key.CloudletKey == networkKey.CloudletKey {
 			for _, n := range val.Networks {
 				if n == networkKey.Name {
 					return true
@@ -901,8 +901,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		for _, n := range in.Networks {
 			network := edgeproto.Network{}
 			networkKey := edgeproto.NetworkKey{
-				Name:         n,
-				Organization: in.Key.CloudletKey.Organization,
+				Name:        n,
+				CloudletKey: in.Key.CloudletKey,
 			}
 			if !networkApi.store.STMGet(stm, &networkKey, &network) {
 				return networkKey.NotFoundError()

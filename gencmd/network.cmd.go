@@ -363,17 +363,20 @@ var RouteComments = map[string]string{
 var RouteSpecialArgs = map[string]string{}
 var NetworkKeyRequiredArgs = []string{}
 var NetworkKeyOptionalArgs = []string{
-	"organization",
+	"cloudletkey.organization",
+	"cloudletkey.name",
 	"name",
 }
 var NetworkKeyAliasArgs = []string{}
 var NetworkKeyComments = map[string]string{
-	"organization": "Name of the organization for the cloudlet that this network can be provisioned on",
-	"name":         "Network Name",
+	"cloudletkey.organization": "Organization of the cloudlet site",
+	"cloudletkey.name":         "Name of the cloudlet",
+	"name":                     "Network Name",
 }
 var NetworkKeySpecialArgs = map[string]string{}
 var NetworkRequiredArgs = []string{
 	"cloudlet-org",
+	"key.cloudletkey.name",
 	"name",
 }
 var NetworkOptionalArgs = []string{
@@ -383,12 +386,13 @@ var NetworkOptionalArgs = []string{
 	"connectiontype",
 }
 var NetworkAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudlet-org=key.cloudletkey.organization",
 	"name=key.name",
 }
 var NetworkComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":             "Name of the organization for the cloudlet that this network can be provisioned on",
+	"cloudlet-org":             "Organization of the cloudlet site",
+	"key.cloudletkey.name":     "Name of the cloudlet",
 	"name":                     "Network Name",
 	"routes:empty":             "List of routes, specify routes:empty=true to clear",
 	"routes:#.destinationcidr": "Destination CIDR",

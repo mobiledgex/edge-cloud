@@ -648,6 +648,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendNetworkCache(&networkApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
@@ -655,7 +656,6 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&userAlertApi.cache)
-	notify.ServerMgrOne.RegisterSendNetworkCache(&networkApi.cache)
 
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
