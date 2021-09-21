@@ -28,7 +28,7 @@ enum NetworkConnectionType {
   CONNECT_TO_LOAD_BALANCER = 1;
   // Network connects to k8s and docker cluster nodes
   CONNECT_TO_CLUSTER_NODES = 2;
-  // Network connects to all VMs
+  // Network connects to load balancer and all nodes
   CONNECT_TO_ALL = 3;
 }
 
@@ -50,7 +50,7 @@ message NetworkKey {
 }
 
 
-// Network defines additional networks which can be optionally added to a cloudlet 
+// Network defines additional networks which can be optionally assigned to a cloudlet key and used on a cluster instance
 message Network {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;

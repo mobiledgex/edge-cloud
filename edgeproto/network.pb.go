@@ -55,7 +55,7 @@ const (
 	NetworkConnectionType_CONNECT_TO_LOAD_BALANCER NetworkConnectionType = 1
 	// Network connects to k8s and docker cluster nodes
 	NetworkConnectionType_CONNECT_TO_CLUSTER_NODES NetworkConnectionType = 2
-	// Network connects to all VMs
+	// Network connects to load balancer and all nodes
 	NetworkConnectionType_CONNECT_TO_ALL NetworkConnectionType = 3
 )
 
@@ -161,7 +161,7 @@ func (m *NetworkKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_NetworkKey proto.InternalMessageInfo
 
-// Network defines additional networks which can be optionally added to a cloudlet
+// Network defines additional networks which can be optionally assigned to a cloudlet key and used on a cluster instance
 type Network struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
