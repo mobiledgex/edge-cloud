@@ -1,0 +1,17 @@
+ARG ALLINONE=default
+ARG EDGE_CLOUD_BASE_IMAGE=scratch
+
+FROM $ALLINONE as allinone
+
+FROM $EDGE_CLOUD_BASE_IMAGE
+
+COPY --from=allinone \
+	/usr/local/bin/atomic-certs-update.sh \
+	/usr/local/bin/crmserver \
+	/usr/local/bin/resource-tracker \
+	/usr/local/bin/
+COPY --from=allinone \
+	/plugins/edgeevents.so \
+	/plugins/platforms.so \
+	/plugins/
+COPY --from=allinone /version.txt /version.txt
