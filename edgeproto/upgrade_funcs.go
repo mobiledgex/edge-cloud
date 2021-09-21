@@ -224,3 +224,31 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 	})
 	return err
 }
+
+// Handles initializing a new map on existing AppInstRefs objects.
+func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "AppInstRefsDR")
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInstRefs"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var refs AppInstRefs
+		err2 := json.Unmarshal(val, &refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appinstrefs", refs)
+			return err2
+		}
+		if refs.DeleteRequestedInsts != nil {
+			return nil
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "init DeletedRequestedInsts map on AppInstRefs", "refsKey", refs.Key.String())
+		refs.DeleteRequestedInsts = make(map[string]uint32)
+		val, err2 = json.Marshal(refs)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "AppInstRefs", refs)
+			return err2
+		}
+		objStore.Put(ctx, string(key), string(val))
+		return nil
+	})
+	return err
+}
