@@ -859,7 +859,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		if err == nil {
 			vault.DeleteKV(client, node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization))
 		} else {
-			log.DebugLog(log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
 		}
 	} else if kafkaClusterChanged || kafkaUserChanged || kafkaPasswordChanged {
 		// get existing data
@@ -1373,7 +1373,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			appInst := edgeproto.AppInst{Key: key}
 			derr := appInstApi.deleteAppInstInternal(DefCallContext(), &appInst, cb)
 			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
+				log.SpanLog(ctx, log.DebugLevelApi,
 					"Failed to delete dynamic app inst",
 					"key", key, "err", derr)
 				return derr
@@ -1385,7 +1385,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			clInst := edgeproto.ClusterInst{Key: key}
 			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
 			if derr != nil {
-				log.DebugLog(log.DebugLevelApi,
+				log.SpanLog(ctx, log.DebugLevelApi,
 					"Failed to delete dynamic ClusterInst",
 					"key", key, "err", derr)
 				return derr
@@ -1468,7 +1468,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err == nil {
 			vault.DeleteKV(client, node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization))
 		} else {
-			log.DebugLog(log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
 		}
 	}
 	cloudletPoolApi.cloudletDeleted(ctx, &in.Key)
@@ -1604,7 +1604,7 @@ func (s *CloudletApi) UpdateAppInstLocations(ctx context.Context, in *edgeproto.
 
 		err := appInstApi.updateAppInstStore(ctx, &inst)
 		if err != nil {
-			log.DebugLog(log.DebugLevelApi, "Update AppInst Location",
+			log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst Location",
 				"inst", inst, "err", err)
 		}
 	}
@@ -1625,6 +1625,48 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 		}
 	}
 	return nil
+}
+
+func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cl := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		for _, org := range cl.AllianceOrgs {
+			if org == in.Organization {
+				return fmt.Errorf("%s already part of alliance orgs", in.Organization)
+			}
+		}
+		cl.AllianceOrgs = append(cl.AllianceOrgs, in.Organization)
+		s.store.STMPut(stm, &cl)
+		return nil
+	})
+	return &edgeproto.Result{}, err
+}
+
+func (s *CloudletApi) RemoveCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cl := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		changed := false
+		for ii, org := range cl.AllianceOrgs {
+			if org != in.Organization {
+				continue
+			}
+			cl.AllianceOrgs = append(cl.AllianceOrgs[:ii], cl.AllianceOrgs[ii+1:]...)
+			changed = true
+			break
+		}
+		if !changed {
+			return nil
+		}
+		s.store.STMPut(stm, &cl)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
@@ -1896,7 +1938,7 @@ func (s *CloudletApi) UpdateCloudletsUsingTrustPolicy(ctx context.Context, trust
 	for k, r := range updateResults {
 		numTotal++
 		result := <-r
-		log.DebugLog(log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
+		log.SpanLog(ctx, log.DebugLevelApi, "cloudletUpdateResult ", "key", k, "error", result.errString)
 		if result.errString == "" {
 			numPassed++
 		} else if caseInsensitiveContainsTimedOut(result.errString) {
