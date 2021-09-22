@@ -415,7 +415,7 @@ func (key *CloudletPoolKey) ValidateKey() error {
 		return errors.New("Invalid organization name")
 	}
 	if !util.ValidName(key.Name) {
-		return errors.New("Invalid Cloudlet Pool name")
+		return fmt.Errorf("Invalid Cloudlet Pool name %q", key.Name)
 	}
 	return nil
 }

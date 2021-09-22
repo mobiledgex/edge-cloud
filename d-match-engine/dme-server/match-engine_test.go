@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
@@ -8,13 +9,14 @@ import (
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 )
 
 func TestAddRemove(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelDmereq)
+	log.SetDebugLevel(log.DebugLevelDmereq | log.DebugLevelDmedb)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
@@ -29,7 +31,7 @@ func TestAddRemove(t *testing.T) {
 	setupJwks()
 	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
-	cloudlets := dmetest.GenerateClouldlets()
+	cloudlets := dmetest.GenerateCloudlets()
 
 	tbl := dmecommon.DmeAppTbl
 
@@ -44,6 +46,13 @@ func TestAddRemove(t *testing.T) {
 	}
 	require.Equal(t, len(tbl.Cloudlets), len(cloudlets), "cloudlet object exists")
 
+	// add alliance orgs
+	cloudletShared := edgeproto.Cloudlet{
+		Key:          cloudlets[1].Key,
+		AllianceOrgs: []string{"DMUUS"},
+	}
+	dmecommon.SetInstStateFromCloudlet(ctx, &cloudletShared)
+
 	// add all data, check that number of instances matches
 	for _, inst := range apps {
 		dmecommon.AddApp(ctx, inst)
@@ -52,61 +61,47 @@ func TestAddRemove(t *testing.T) {
 		dmecommon.AddAppInst(ctx, inst)
 	}
 	checkAllData(t, appInsts)
+	// only one cloudlet with one alliance org, and since all apps are
+	// deployed to each cloudlet, that means one set of appinsts are
+	// added to the alliance count for cloudlets[1].
+	checkAllianceInsts(t, len(apps))
 
 	// re-add data, counts should remain unchanged
 	for _, inst := range appInsts {
 		dmecommon.AddAppInst(ctx, inst)
 	}
 	checkAllData(t, appInsts)
+	checkAllianceInsts(t, len(apps))
 
 	// delete one data, check new counts
 	dmecommon.RemoveAppInst(ctx, appInsts[0])
 	remaining := appInsts[1:]
 	checkAllData(t, remaining)
+	checkAllianceInsts(t, len(apps))
 	serv := server{}
 
 	// test findCloudlet
-	for ii, rr := range dmetest.FindCloudletData {
-		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+	runFindCloudlet(t, dmetest.FindCloudletData, span, &serv)
+	runFindCloudlet(t, dmetest.FindCloudletAllianceOrg, span, &serv)
+	runGetAppInstList(t, dmetest.GetAppInstListAllianceOrg, span, &serv)
 
-		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
-		assert.Nil(t, err, "register client")
+	// update cloudlet alliance orgs to remove them
+	cloudletNotShared := cloudletShared
+	cloudletNotShared.AllianceOrgs = []string{}
+	dmecommon.SetInstStateFromCloudlet(ctx, &cloudletNotShared)
+	// run checks
+	checkAllianceInsts(t, 0)
+	runFindCloudlet(t, dmetest.FindCloudletData, span, &serv)
+	runFindCloudlet(t, dmetest.FindCloudletNoAllianceOrg, span, &serv)
+	runGetAppInstList(t, dmetest.GetAppInstListNoAllianceOrg, span, &serv)
 
-		// Since we're directly calling functions, we end up
-		// bypassing the interceptor which sets up the cookie key.
-		// So set it on the context manually.
-		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
-		assert.Nil(t, err, "verify cookie")
-		// verify that UUID in the response is a new value if it was empty in the request
-		if rr.Reg.UniqueId == "" {
-			assert.NotEqual(t, regReply.UniqueId, "")
-			assert.NotEqual(t, regReply.UniqueIdType, "")
-			// should match what's in the cookie
-			assert.Equal(t, regReply.UniqueId, ckey.UniqueId)
-			assert.Equal(t, regReply.UniqueIdType, ckey.UniqueIdType)
-		} else {
-			// If it was not empty cookie should have the uuid from the register
-			assert.Equal(t, rr.Reg.UniqueId, ckey.UniqueId)
-			assert.Equal(t, rr.Reg.UniqueIdType, ckey.UniqueIdType)
-		}
-		ctx = dmecommon.NewCookieContext(ctx, ckey)
-		// Make sure we get the statsKey value filled in
-		call := dmecommon.ApiStatCall{}
-		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.Key)
-
-		reply, err := serv.FindCloudlet(ctx, &rr.Req)
-		assert.Nil(t, err, "find cloudlet")
-		assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletData[%d]", ii)
-		if reply.Status == dme.FindCloudletReply_FIND_FOUND {
-			assert.Equal(t, rr.Reply.Fqdn, reply.Fqdn,
-				"findCloudletData[%d]", ii)
-			// Check the filled in cloudlet details
-			assert.Equal(t, rr.ReplyCarrier,
-				call.Key.CloudletFound.Organization, "findCloudletData[%d]", ii)
-			assert.Equal(t, rr.ReplyCloudlet,
-				call.Key.CloudletFound.Name, "findCloudletData[%d]", ii)
-		}
-	}
+	// add back alliance orgs
+	dmecommon.SetInstStateFromCloudlet(ctx, &cloudletShared)
+	// run checks
+	checkAllianceInsts(t, len(apps))
+	runFindCloudlet(t, dmetest.FindCloudletData, span, &serv)
+	runFindCloudlet(t, dmetest.FindCloudletAllianceOrg, span, &serv)
+	runGetAppInstList(t, dmetest.GetAppInstListAllianceOrg, span, &serv)
 
 	// test findCloudlet HA. Repeat the FindCloudlet 100 times and
 	// make sure we get results for both cloudlets
@@ -215,33 +210,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, appInst.Uri, reply.Fqdn)
 
 	// Check GetAppInstList API - check sorted by distance
-	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
-	reg = dme.RegisterClientRequest{
-		OrgName: dmetest.Apps[1].Organization,
-		AppName: dmetest.Apps[1].Name,
-		AppVers: dmetest.Apps[1].Vers,
-	}
-	regReply, err = serv.RegisterClient(ctx, &reg)
-	require.Nil(t, err)
-	ckey, err = dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
-	require.Nil(t, err, "verify cookie")
-	ctx = dmecommon.NewCookieContext(ctx, ckey)
-
-	listReq := dme.AppInstListRequest{}
-	listReq.GpsLocation = &dme.Loc{
-		Latitude:  51,
-		Longitude: 11,
-	}
-	listReq.SessionCookie = regReply.SessionCookie
-	listReq.Limit = 4
-	listReply, err := serv.GetAppInstList(ctx, &listReq)
-	require.Nil(t, err)
-	require.Equal(t, 4, len(listReply.Cloudlets))
-	lastDist := float64(0)
-	for _, cloc := range listReply.Cloudlets {
-		require.Greater(t, cloc.Distance, lastDist)
-		lastDist = cloc.Distance
-	}
+	runGetAppInstList(t, dmetest.GetAppInstListData, span, &serv)
 
 	// delete all data
 	for _, app := range apps {
@@ -280,4 +249,93 @@ func checkAllData(t *testing.T, appInsts []*edgeproto.AppInst) {
 		}
 	}
 	assert.Equal(t, totalInstances, len(appInsts), "Number of appInstances")
+}
+
+func checkAllianceInsts(t *testing.T, expectedCount int) {
+	tbl := dmecommon.DmeAppTbl
+	total := 0
+	for _, app := range tbl.Apps {
+		for cname := range app.Carriers {
+			total += len(app.Carriers[cname].AllianceInsts)
+		}
+	}
+	require.Equal(t, expectedCount, total, "Number of alliance appInstances")
+}
+
+func runFindCloudlet(t *testing.T, rrs []dmetest.FindCloudletRR, span opentracing.Span, serv *server) {
+	for ii, rr := range rrs {
+		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+
+		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
+		assert.Nil(t, err, "register client")
+
+		// Since we're directly calling functions, we end up
+		// bypassing the interceptor which sets up the cookie key.
+		// So set it on the context manually.
+		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+		assert.Nil(t, err, "verify cookie")
+		// verify that UUID in the response is a new value if it was empty in the request
+		if rr.Reg.UniqueId == "" {
+			assert.NotEqual(t, regReply.UniqueId, "")
+			assert.NotEqual(t, regReply.UniqueIdType, "")
+			// should match what's in the cookie
+			assert.Equal(t, regReply.UniqueId, ckey.UniqueId)
+			assert.Equal(t, regReply.UniqueIdType, ckey.UniqueIdType)
+		} else {
+			// If it was not empty cookie should have the uuid from the register
+			assert.Equal(t, rr.Reg.UniqueId, ckey.UniqueId)
+			assert.Equal(t, rr.Reg.UniqueIdType, ckey.UniqueIdType)
+		}
+		ctx = dmecommon.NewCookieContext(ctx, ckey)
+		// Make sure we get the statsKey value filled in
+		call := dmecommon.ApiStatCall{}
+		ctx = context.WithValue(ctx, dmecommon.StatKeyContextKey, &call.Key)
+
+		reply, err := serv.FindCloudlet(ctx, &rr.Req)
+		assert.Nil(t, err, "find cloudlet")
+		assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletData[%d]", ii)
+		if reply.Status == dme.FindCloudletReply_FIND_FOUND {
+			require.Equal(t, rr.Reply.Fqdn, reply.Fqdn,
+				"findCloudletData[%d]", ii)
+			// Check the filled in cloudlet details
+			require.Equal(t, rr.ReplyCarrier,
+				call.Key.CloudletFound.Organization, "findCloudletData[%d]", ii)
+			require.Equal(t, rr.ReplyCloudlet,
+				call.Key.CloudletFound.Name, "findCloudletData[%d]", ii)
+		}
+	}
+}
+
+func runGetAppInstList(t *testing.T, rrs []dmetest.GetAppInstListRR, span opentracing.Span, serv *server) {
+	for ii, rr := range rrs {
+		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+		info := fmt.Sprintf("[%d]", ii)
+
+		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
+		require.Nil(t, err, info)
+		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+		require.Nil(t, err, info)
+		// set session cookie key directly on context since we're bypassing
+		// interceptors
+		ctx = dmecommon.NewCookieContext(ctx, ckey)
+
+		reply, err := serv.GetAppInstList(ctx, &rr.Req)
+		require.Nil(t, err, info)
+		require.Equal(t, rr.Reply.Status, reply.Status, info)
+		require.Equal(t, len(rr.Reply.Cloudlets), len(reply.Cloudlets), info)
+		var lastDistance float64
+		for jj, clExp := range rr.Reply.Cloudlets {
+			clAct := reply.Cloudlets[jj]
+			info2 := fmt.Sprintf("[%d][%d]", ii, jj)
+
+			require.NotNil(t, clAct, info2)
+			require.Equal(t, clExp.CarrierName, clAct.CarrierName, info2)
+			require.Equal(t, clExp.CloudletName, clAct.CloudletName, info2)
+			require.NotNil(t, clAct.GpsLocation, info2)
+			require.Equal(t, clExp.GpsLocation.Latitude, clAct.GpsLocation.Latitude, info2)
+			require.Equal(t, clExp.GpsLocation.Longitude, clAct.GpsLocation.Longitude, info2)
+			require.GreaterOrEqual(t, clAct.Distance, lastDistance, info2)
+			lastDistance = clAct.Distance
+		}
+	}
 }
