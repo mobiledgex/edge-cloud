@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
@@ -82,6 +83,7 @@ func TestAddRemove(t *testing.T) {
 	// test findCloudlet
 	runFindCloudlet(t, dmetest.FindCloudletData, span, &serv)
 	runFindCloudlet(t, dmetest.FindCloudletAllianceOrg, span, &serv)
+	runGetAppInstList(t, dmetest.GetAppInstListAllianceOrg, span, &serv)
 
 	// update cloudlet alliance orgs to remove them
 	cloudletNotShared := cloudletShared
@@ -91,6 +93,7 @@ func TestAddRemove(t *testing.T) {
 	checkAllianceInsts(t, 0)
 	runFindCloudlet(t, dmetest.FindCloudletData, span, &serv)
 	runFindCloudlet(t, dmetest.FindCloudletNoAllianceOrg, span, &serv)
+	runGetAppInstList(t, dmetest.GetAppInstListNoAllianceOrg, span, &serv)
 
 	// add back alliance orgs
 	dmecommon.SetInstStateFromCloudlet(ctx, &cloudletShared)
@@ -98,6 +101,7 @@ func TestAddRemove(t *testing.T) {
 	checkAllianceInsts(t, len(apps))
 	runFindCloudlet(t, dmetest.FindCloudletData, span, &serv)
 	runFindCloudlet(t, dmetest.FindCloudletAllianceOrg, span, &serv)
+	runGetAppInstList(t, dmetest.GetAppInstListAllianceOrg, span, &serv)
 
 	// test findCloudlet HA. Repeat the FindCloudlet 100 times and
 	// make sure we get results for both cloudlets
@@ -206,33 +210,7 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, appInst.Uri, reply.Fqdn)
 
 	// Check GetAppInstList API - check sorted by distance
-	ctx = dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
-	reg = dme.RegisterClientRequest{
-		OrgName: dmetest.Apps[1].Organization,
-		AppName: dmetest.Apps[1].Name,
-		AppVers: dmetest.Apps[1].Vers,
-	}
-	regReply, err = serv.RegisterClient(ctx, &reg)
-	require.Nil(t, err)
-	ckey, err = dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
-	require.Nil(t, err, "verify cookie")
-	ctx = dmecommon.NewCookieContext(ctx, ckey)
-
-	listReq := dme.AppInstListRequest{}
-	listReq.GpsLocation = &dme.Loc{
-		Latitude:  51,
-		Longitude: 11,
-	}
-	listReq.SessionCookie = regReply.SessionCookie
-	listReq.Limit = 4
-	listReply, err := serv.GetAppInstList(ctx, &listReq)
-	require.Nil(t, err)
-	require.Equal(t, 4, len(listReply.Cloudlets))
-	lastDist := float64(0)
-	for _, cloc := range listReply.Cloudlets {
-		require.Greater(t, cloc.Distance, lastDist)
-		lastDist = cloc.Distance
-	}
+	runGetAppInstList(t, dmetest.GetAppInstListData, span, &serv)
 
 	// delete all data
 	for _, app := range apps {
@@ -324,6 +302,40 @@ func runFindCloudlet(t *testing.T, rrs []dmetest.FindCloudletRR, span opentracin
 				call.Key.CloudletFound.Organization, "findCloudletData[%d]", ii)
 			require.Equal(t, rr.ReplyCloudlet,
 				call.Key.CloudletFound.Name, "findCloudletData[%d]", ii)
+		}
+	}
+}
+
+func runGetAppInstList(t *testing.T, rrs []dmetest.GetAppInstListRR, span opentracing.Span, serv *server) {
+	for ii, rr := range rrs {
+		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123, span)
+		info := fmt.Sprintf("[%d]", ii)
+
+		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
+		require.Nil(t, err, info)
+		ckey, err := dmecommon.VerifyCookie(ctx, regReply.SessionCookie)
+		require.Nil(t, err, info)
+		// set session cookie key directly on context since we're bypassing
+		// interceptors
+		ctx = dmecommon.NewCookieContext(ctx, ckey)
+
+		reply, err := serv.GetAppInstList(ctx, &rr.Req)
+		require.Nil(t, err, info)
+		require.Equal(t, rr.Reply.Status, reply.Status, info)
+		require.Equal(t, len(rr.Reply.Cloudlets), len(reply.Cloudlets), info)
+		var lastDistance float64
+		for jj, clExp := range rr.Reply.Cloudlets {
+			clAct := reply.Cloudlets[jj]
+			info2 := fmt.Sprintf("[%d][%d]", ii, jj)
+
+			require.NotNil(t, clAct, info2)
+			require.Equal(t, clExp.CarrierName, clAct.CarrierName, info2)
+			require.Equal(t, clExp.CloudletName, clAct.CloudletName, info2)
+			require.NotNil(t, clAct.GpsLocation, info2)
+			require.Equal(t, clExp.GpsLocation.Latitude, clAct.GpsLocation.Latitude, info2)
+			require.Equal(t, clExp.GpsLocation.Longitude, clAct.GpsLocation.Longitude, info2)
+			require.GreaterOrEqual(t, clAct.Distance, lastDistance, info2)
+			lastDistance = clAct.Distance
 		}
 	}
 }
