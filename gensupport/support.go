@@ -667,6 +667,7 @@ func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorPr
 	}
 	info.Out = GetDesc(g, method.GetOutputType())
 	info.OutType = *info.Out.DescriptorProto.Name
+	info.Method = method
 	if ServerStreaming(method) {
 		info.Stream = true
 	}
