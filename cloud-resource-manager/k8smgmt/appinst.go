@@ -442,20 +442,39 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 				namespace = DefaultNamespace
 			}
 		}
-		// Returns list of pods and its containers in the format: "<PodName>/<ContainerName>"
-		cmd := fmt.Sprintf("%s kubectl get pods -n %s -o json --sort-by=.metadata.name --selector=%s=%s "+
-			"| jq -r '.items[] | .metadata.name as $podName | .spec.containers[] | "+
-			"($podName+\"/\"+.name)'", names.KconfEnv, namespace, MexAppLabel, name)
+
+		// Returns list of pods and its containers in the format: "<Namespace>/<PodName>/<ContainerName>"
+
+		// Get list of all running pods.
+		// NOTE: Parsing status from json output doesn't give correct value as observed with kubectl version 1.18
+		//       Hence, look at table output and then get list of running pods and use this to fetch container names
+		cmd := fmt.Sprintf("%s kubectl get pods -n %s --no-headers --sort-by=.metadata.name --selector=%s=%s "+
+			"| awk '{if ($3 == \"Running\") print $1}'",
+			names.KconfEnv, namespace, MexAppLabel, name)
 		out, err := client.Output(cmd)
 		if err != nil {
 			return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
 		}
-		lines := strings.Split(out, "\n")
-		for _, line := range lines {
-			if strings.TrimSpace(line) == "" {
+		podNames := strings.Split(out, "\n")
+		for _, podName := range podNames {
+			podName = strings.TrimSpace(podName)
+			if podName == "" {
 				continue
 			}
-			rt.ContainerIds = append(rt.ContainerIds, namespace+"/"+strings.TrimSpace(line))
+			cmd = fmt.Sprintf("%s kubectl get pod %s -n %s -o json | jq -r '.spec.containers[] | .name'",
+				names.KconfEnv, podName, namespace)
+			out, err = client.Output(cmd)
+			if err != nil {
+				return nil, fmt.Errorf("error getting kubernetes pod %q containers, %s, %s, %s", podName, cmd, out, err.Error())
+			}
+			contNames := strings.Split(out, "\n")
+			for _, contName := range contNames {
+				contName = strings.TrimSpace(contName)
+				if contName == "" {
+					continue
+				}
+				rt.ContainerIds = append(rt.ContainerIds, namespace+"/"+podName+"/"+contName)
+			}
 		}
 	}
 
