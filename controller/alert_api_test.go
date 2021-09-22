@@ -24,6 +24,7 @@ func TestAlertApi(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -86,6 +87,7 @@ func TestAppInstDownAlert(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -164,4 +166,8 @@ func testinit() {
 	cloudletLookup := &node.CloudletCache{}
 	cloudletLookup.Init()
 	nodeMgr.CloudletLookup = cloudletLookup
+}
+
+func testfinish() {
+	services = Services{}
 }

@@ -243,7 +243,6 @@ func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) er
 	var err error
 	var rev int64 = 0
 	ii := 0
-	backoff := time.Millisecond
 	for {
 		stm.reset()
 		err = apply(&stm)
@@ -255,11 +254,11 @@ func (e *dummyEtcd) ApplySTM(ctx context.Context, apply func(concurrency.STM) er
 			break
 		}
 		ii++
-		if ii > 5 {
+		if ii > 12 {
 			err = errors.New("too many iterations")
 			break
 		}
-		backoff *= time.Duration(rand.Intn(20))
+		backoff := time.Millisecond * time.Duration((ii+1)*rand.Intn(10))
 		time.Sleep(backoff)
 	}
 	return rev, err
@@ -310,6 +309,7 @@ func (e *dummyEtcd) commit(ctx context.Context, stm *dummySTM) (int64, error) {
 	// commit all changes in one revision
 	e.rev++
 	for key, val := range stm.wset {
+
 		if val == "" {
 			// delete
 			delete(e.db, key)
@@ -356,6 +356,9 @@ func (d *dummySTM) Get(keys ...string) string {
 	key := keys[0]
 	if wv, ok := d.wset[key]; ok {
 		return wv
+	}
+	if rr, ok := d.rset[key]; ok {
+		return rr.val
 	}
 	byt, _, modRev, err := d.client.Get(key)
 	rev := d.client.rev
