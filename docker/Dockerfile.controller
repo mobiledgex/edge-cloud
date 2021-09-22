@@ -4,3 +4,4 @@ FROM $ALLINONE as allinone
 FROM gcr.io/distroless/base-debian10
 
 COPY --from=allinone /usr/local/bin/controller /usr/local/bin/controller
+COPY --from=allinone /plugins/platforms.so /plugins/
