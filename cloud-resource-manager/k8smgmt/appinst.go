@@ -442,6 +442,9 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 				namespace = DefaultNamespace
 			}
 		}
+
+		// Returns list of pods and its containers in the format: "<Namespace>/<PodName>/<ContainerName>"
+
 		// Get list of all running pods.
 		// NOTE: Parsing status from json output doesn't give correct value as observed with kubectl version 1.18
 		//       Hence, look at table output and then get list of running pods and use this to fetch container names
@@ -454,11 +457,10 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 		}
 		podNames := strings.Split(out, "\n")
 		for _, podName := range podNames {
-			podName := strings.TrimSpace(podName)
+			podName = strings.TrimSpace(podName)
 			if podName == "" {
 				continue
 			}
-			// Returns list of pods and its containers in the format: "<PodName>/<ContainerName>"
 			cmd = fmt.Sprintf("%s kubectl get pod %s -n %s -o json | jq -r '.spec.containers[] | .name'",
 				names.KconfEnv, podName, namespace)
 			out, err = client.Output(cmd)
