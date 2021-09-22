@@ -55,7 +55,8 @@ type DmeAppInstState struct {
 }
 
 type DmeAppInsts struct {
-	Insts map[edgeproto.VirtualClusterInstKey]*DmeAppInst
+	Insts         map[edgeproto.VirtualClusterInstKey]*DmeAppInst
+	AllianceInsts map[edgeproto.VirtualClusterInstKey]*DmeAppInst
 }
 
 type DmeApp struct {
@@ -78,6 +79,8 @@ type DmeCloudlet struct {
 	State            dme.CloudletState
 	MaintenanceState dme.MaintenanceState
 	GpsLocation      dme.Loc
+	AllianceCarriers map[string]struct{}
+	AppInstKeys      map[edgeproto.AppInstKey]struct{}
 }
 
 type AutoProvPolicy struct {
@@ -137,7 +140,6 @@ func SetupMatchEngine(eehandler EdgeEventsHandler) {
 // AppInst state is a superset of the cloudlet state and appInst state
 // Returns if this AppInstance is usable or not
 func IsAppInstUsable(appInst *DmeAppInst) bool {
-	fmt.Printf("IsAppInstUsable: %+v\n", *appInst)
 	if appInst == nil {
 		return false
 	}
@@ -237,22 +239,24 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		return
 	}
 	app.Lock()
-	if _, foundCarrier := app.Carriers[carrierName]; foundCarrier {
+	defer app.Unlock()
+	insts, foundCarrier := app.Carriers[carrierName]
+	if foundCarrier {
 		log.SpanLog(ctx, log.DebugLevelDmedb, "carrier already exists", "carrierName", carrierName)
 	} else {
 		log.SpanLog(ctx, log.DebugLevelDmedb, "adding carrier for app", "carrierName", carrierName)
-		app.Carriers[carrierName] = new(DmeAppInsts)
-		app.Carriers[carrierName].Insts = make(map[edgeproto.VirtualClusterInstKey]*DmeAppInst)
+		insts = newDmeAppInsts()
+		app.Carriers[carrierName] = insts
 	}
 	logMsg := "Updating app inst"
-	cl, foundAppInst := app.Carriers[carrierName].Insts[appInst.Key.ClusterInstKey]
+	cl, foundAppInst := insts.Insts[appInst.Key.ClusterInstKey]
 	sendAvailableAppInst := false
 	if !foundAppInst {
 		sendAvailableAppInst = true // if this is a new appinst, send msg to clients that are closer that this appinst is available
 		cl = new(DmeAppInst)
 		cl.virtualClusterInstKey = appInst.Key.ClusterInstKey
 		cl.clusterInstKey = *appInst.ClusterInstKey()
-		app.Carriers[carrierName].Insts[cl.virtualClusterInstKey] = cl
+		insts.Insts[cl.virtualClusterInstKey] = cl
 		logMsg = "Adding app inst"
 	}
 	// update existing app inst
@@ -274,15 +278,22 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 			go EEHandler.SendAppInstStateEdgeEvent(ctx, appinstState, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
 		}
 	}
-	// Check if Cloudlet states have changed
-	if cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]; foundCloudlet {
-		cl.CloudletState = cloudlet.State
-		cl.MaintenanceState = cloudlet.MaintenanceState
-	} else {
-		cl.CloudletState = dme.CloudletState_CLOUDLET_STATE_UNKNOWN
-		cl.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
+	// add ref on cloudlet
+	cloudlet, foundCloudlet := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]
+	if !foundCloudlet {
+		log.SpanLog(ctx, log.DebugLevelInfo, "AddAppInst: cloudlet not found", "key", appInst.Key)
+		return
 	}
+	// track appinst key by cloudlet
+	cloudlet.AppInstKeys[appInst.Key] = struct{}{}
 
+	// Check if Cloudlet states have changed
+	cl.CloudletState = cloudlet.State
+	cl.MaintenanceState = cloudlet.MaintenanceState
+	// add to alliance carriers
+	for allianceCarrier, _ := range cloudlet.AllianceCarriers {
+		addAppInstAlliance(ctx, app, cl, allianceCarrier)
+	}
 	if sendAvailableAppInst && IsAppInstUsable(cl) {
 		go EEHandler.SendAvailableAppInst(ctx, app, appInst.Key, cl, carrierName)
 	}
@@ -295,7 +306,35 @@ func AddAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 		"latitude", appInst.CloudletLoc.Latitude,
 		"longitude", appInst.CloudletLoc.Longitude,
 		"healthState", appInst.HealthCheck)
-	app.Unlock()
+}
+
+func newDmeAppInsts() *DmeAppInsts {
+	d := &DmeAppInsts{}
+	d.Insts = make(map[edgeproto.VirtualClusterInstKey]*DmeAppInst)
+	d.AllianceInsts = make(map[edgeproto.VirtualClusterInstKey]*DmeAppInst)
+	return d
+}
+
+func addAppInstAlliance(ctx context.Context, app *DmeApp, appInst *DmeAppInst, allianceCarrier string) {
+	log.SpanLog(ctx, log.DebugLevelDmedb, "addAppInstAlliance", "allianceCarrier", allianceCarrier, "app", app.AppKey, "clusterInst", appInst.virtualClusterInstKey)
+	insts, found := app.Carriers[allianceCarrier]
+	if !found {
+		insts = newDmeAppInsts()
+		app.Carriers[allianceCarrier] = insts
+	}
+	insts.AllianceInsts[appInst.virtualClusterInstKey] = appInst
+}
+
+func removeAppInstAlliance(ctx context.Context, app *DmeApp, appInstKey edgeproto.AppInstKey, allianceCarrier string) {
+	log.SpanLog(ctx, log.DebugLevelDmedb, "removeAppInstAlliance", "allianceCarrier", allianceCarrier, "appInst", appInstKey)
+	insts, found := app.Carriers[allianceCarrier]
+	if !found {
+		return
+	}
+	delete(insts.AllianceInsts, appInstKey.ClusterInstKey)
+	if len(insts.Insts) == 0 && len(insts.AllianceInsts) == 0 {
+		delete(app.Carriers, allianceCarrier)
+	}
 }
 
 func RemoveApp(ctx context.Context, in *edgeproto.App) {
@@ -326,38 +365,48 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	tbl.Lock()
 	defer tbl.Unlock()
 	app, ok := tbl.Apps[appkey]
-	if ok {
-		app.Lock()
-		if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
-			if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
-				cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+	if !ok {
+		return
+	}
+	app.Lock()
+	defer app.Unlock()
+	if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
+		if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
+			cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
 
-				// Remove AppInst from edgeevents plugin
-				appinstState := &DmeAppInstState{
-					AppInstHealth: cl.AppInstHealth,
-				}
-				go func(a *DmeAppInstState) {
-					EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
-					EEHandler.RemoveAppInst(ctx, appInst.Key)
-				}(appinstState)
+			// Remove AppInst from edgeevents plugin
+			appinstState := &DmeAppInstState{
+				AppInstHealth: cl.AppInstHealth,
+			}
+			go func(a *DmeAppInstState) {
+				EEHandler.SendAppInstStateEdgeEvent(ctx, a, appInst.Key, dme.ServerEdgeEvent_EVENT_APPINST_HEALTH)
+				EEHandler.RemoveAppInst(ctx, appInst.Key)
+			}(appinstState)
 
-				delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
-				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
-					"appName", appkey.Name,
-					"appVersion", appkey.Version,
-					"latitude", cl.Location.Latitude,
-					"longitude", cl.Location.Longitude)
-			}
-			if len(app.Carriers[carrierName].Insts) == 0 {
-				delete(tbl.Apps[appkey].Carriers, carrierName)
-				log.SpanLog(ctx, log.DebugLevelDmedb, "Removing carrier for app",
-					"carrier", carrierName,
-					"appName", appkey.Name,
-					"appVersion", appkey.Version)
-			}
+			delete(app.Carriers[carrierName].Insts, appInst.Key.ClusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelDmedb, "Removing app inst",
+				"appName", appkey.Name,
+				"appVersion", appkey.Version,
+				"latitude", cl.Location.Latitude,
+				"longitude", cl.Location.Longitude)
 		}
-		app.Unlock()
+		if len(c.Insts) == 0 && len(c.AllianceInsts) == 0 {
+			delete(tbl.Apps[appkey].Carriers, carrierName)
+			log.SpanLog(ctx, log.DebugLevelDmedb, "Removing carrier for app",
+				"carrier", carrierName,
+				"appName", appkey.Name,
+				"appVersion", appkey.Version)
+		}
+	}
+	cloudlet, found := tbl.Cloudlets[appInst.Key.ClusterInstKey.CloudletKey]
+	if !found {
+		log.SpanLog(ctx, log.DebugLevelDmedb, "RemoveAppInst: cloudlet not found", "key", appInst.Key)
+		return
+	}
+	// remove alliance references
+	for allianceCarrier, _ := range cloudlet.AllianceCarriers {
+		removeAppInstAlliance(ctx, app, appInst.Key, allianceCarrier)
 	}
 }
 
@@ -578,6 +627,8 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 	if !foundCloudlet {
 		cloudlet = new(DmeCloudlet)
 		cloudlet.CloudletKey = in.Key
+		cloudlet.AllianceCarriers = make(map[string]struct{})
+		cloudlet.AppInstKeys = make(map[edgeproto.AppInstKey]struct{})
 		tbl.Cloudlets[in.Key] = cloudlet
 	}
 	sendAvailableAppInst := false
@@ -596,22 +647,38 @@ func SetInstStateFromCloudlet(ctx context.Context, in *edgeproto.Cloudlet) {
 		}
 	}
 	cloudlet.GpsLocation = in.Location
+	oldAllianceCarriers := cloudlet.AllianceCarriers
+	newAllianceCarriers := map[string]struct{}{}
+	cloudlet.AllianceCarriers = map[string]struct{}{}
+	for _, org := range in.AllianceOrgs {
+		cloudlet.AllianceCarriers[org] = struct{}{}
+		if _, found := oldAllianceCarriers[org]; !found {
+			newAllianceCarriers[org] = struct{}{}
+		}
+		// anything remaining in oldAllianceCarriers are those
+		// that have been removed.
+		delete(oldAllianceCarriers, org)
+	}
 
-	for _, app := range tbl.Apps {
-		app.Lock()
-		if c, found := app.Carriers[carrier]; found {
-			for clusterInstKey, appinst := range c.Insts {
-				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &in.Key) {
-					c.Insts[clusterInstKey].MaintenanceState = in.MaintenanceState
-					if sendAvailableAppInst && IsAppInstUsable(appinst) {
-						appinstkey := edgeproto.AppInstKey{
-							AppKey:         app.AppKey,
-							ClusterInstKey: clusterInstKey,
-						}
-						go EEHandler.SendAvailableAppInst(ctx, app, appinstkey, appinst, carrier)
-					}
-				}
-			}
+	// do updates for all AppInsts on this Cloudlet
+	for appInstKey, _ := range cloudlet.AppInstKeys {
+		// get app
+		app, _, appinst, err := getTableAppInstAndLock(appInstKey)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelDmedb, "SetInstStateFromCloudlet: appInst lookup failed", "key", appInstKey, "err", err)
+			continue
+		}
+		appinst.MaintenanceState = in.MaintenanceState
+		if sendAvailableAppInst && IsAppInstUsable(appinst) {
+			go EEHandler.SendAvailableAppInst(ctx, app, appInstKey, appinst, carrier)
+		}
+		// add new alliance carriers
+		for allianceCarrier, _ := range newAllianceCarriers {
+			addAppInstAlliance(ctx, app, appinst, allianceCarrier)
+		}
+		// remove old alliance carriers
+		for allianceCarrier, _ := range oldAllianceCarriers {
+			removeAppInstAlliance(ctx, app, appInstKey, allianceCarrier)
 		}
 		app.Unlock()
 	}
@@ -647,25 +714,41 @@ func SetInstStateFromCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 		}
 	}
 
-	for _, app := range tbl.Apps {
-		app.Lock()
-		if c, found := app.Carriers[carrier]; found {
-			for clusterInstKey, appinst := range c.Insts {
-				if cloudletKeyEqual(&clusterInstKey.CloudletKey, &info.Key) {
-					c.Insts[clusterInstKey].CloudletState = info.State
-					c.Insts[clusterInstKey].MaintenanceState = info.MaintenanceState
-					if sendAvailableAppInst && IsAppInstUsable(appinst) {
-						appinstkey := edgeproto.AppInstKey{
-							AppKey:         app.AppKey,
-							ClusterInstKey: clusterInstKey,
-						}
-						go EEHandler.SendAvailableAppInst(ctx, app, appinstkey, appinst, carrier)
-					}
-				}
-			}
+	for appInstKey, _ := range cloudlet.AppInstKeys {
+		app, _, appinst, err := getTableAppInstAndLock(appInstKey)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelDmedb, "SetInstStateFromCloudletInfo: appInst lookup failed", "key", appInstKey, "err", err)
+			continue
+		}
+		appinst.CloudletState = info.State
+		appinst.MaintenanceState = info.MaintenanceState
+		if sendAvailableAppInst && IsAppInstUsable(appinst) {
+			go EEHandler.SendAvailableAppInst(ctx, app, appInstKey, appinst, carrier)
 		}
 		app.Unlock()
 	}
+}
+
+// must be called with table lock held. If found, app lock must be
+// released by caller.
+func getTableAppInstAndLock(appInstKey edgeproto.AppInstKey) (*DmeApp, *DmeAppInsts, *DmeAppInst, error) {
+	app, ok := DmeAppTbl.Apps[appInstKey.AppKey]
+	if !ok {
+		return nil, nil, nil, fmt.Errorf("app not found")
+	}
+	app.Lock()
+	carrier := appInstKey.ClusterInstKey.CloudletKey.Organization
+	insts, ok := app.Carriers[carrier]
+	if !ok {
+		app.Unlock()
+		return nil, nil, nil, fmt.Errorf("insts for carrier not found")
+	}
+	appinst, ok := insts.Insts[appInstKey.ClusterInstKey]
+	if !ok {
+		app.Unlock()
+		return nil, nil, nil, fmt.Errorf("appinst not found")
+	}
+	return app, insts, appinst, nil
 }
 
 // Given an AppInstKey, return the corresponding DmeCloudlet
@@ -756,7 +839,12 @@ func SearchAppInsts(ctx context.Context, carrierName string, app *DmeApp, loc *d
 	}
 
 	for cname, carrierData := range app.Carriers {
-		search.searchAppInsts(ctx, cname, carrierData)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "search carrier insts", "carrier", cname, "num insts", len(carrierData.Insts), "num alliance insts", len(carrierData.AllianceInsts))
+		search.searchAppInsts(ctx, cname, carrierData.Insts)
+		if carrierName != "" {
+			// not searching all carriers, so include alliance
+			search.searchAppInsts(ctx, cname, carrierData.AllianceInsts)
+		}
 	}
 	key := &app.AppKey
 	for ii, found := range search.results {
@@ -847,11 +935,11 @@ func (s *searchAppInst) padDistance(carrier string) float64 {
 	return 0
 }
 
-func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appInsts *DmeAppInsts) {
+func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appInsts map[edgeproto.VirtualClusterInstKey]*DmeAppInst) {
 	if !s.searchCarrier(carrier) {
 		return
 	}
-	for _, i := range appInsts.Insts {
+	for _, i := range appInsts {
 		d := DistanceBetween(*s.loc, i.Location) + s.padDistance(carrier)
 		usable := IsAppInstUsable(i)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "found cloudlet at",

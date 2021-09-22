@@ -17,10 +17,16 @@ type Arg struct {
 	Comment string
 }
 
+type MessageInfo struct {
+	Desc     *generator.Descriptor
+	Services map[string]*descriptor.ServiceDescriptorProto
+}
+
 // Get all message types that are used as input to a method in any
-// of the files.
-func GetInputMessages(g *generator.Generator, support *PluginSupport) map[string]*generator.Descriptor {
-	allInputDescs := make(map[string]*generator.Descriptor)
+// of the files. Also track which service api group each message type
+// is in to avoid naming conflicts.
+func GetInputMessages(g *generator.Generator, support *PluginSupport) map[string]*MessageInfo {
+	allInputDescs := make(map[string]*MessageInfo)
 	for _, protofile := range support.ProtoFiles {
 		if !support.GenFile(protofile.GetName()) {
 			continue
@@ -34,7 +40,15 @@ func GetInputMessages(g *generator.Generator, support *PluginSupport) map[string
 					continue
 				}
 				desc := GetDesc(g, method.GetInputType())
-				allInputDescs[*desc.DescriptorProto.Name] = desc
+				name := *desc.DescriptorProto.Name
+				info, found := allInputDescs[name]
+				if !found {
+					info = &MessageInfo{}
+					info.Desc = desc
+					info.Services = make(map[string]*descriptor.ServiceDescriptorProto)
+					allInputDescs[name] = info
+				}
+				info.Services[*svc.Name] = svc
 			}
 		}
 	}
