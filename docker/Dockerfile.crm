@@ -9,6 +9,7 @@ COPY --from=allinone \
 	/usr/local/bin/atomic-certs-update.sh \
 	/usr/local/bin/crmserver \
 	/usr/local/bin/resource-tracker \
+	/usr/local/bin/shepherd \
 	/usr/local/bin/
 COPY --from=allinone \
 	/plugins/edgeevents.so \
