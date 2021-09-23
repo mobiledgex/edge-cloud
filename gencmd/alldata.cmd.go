@@ -122,9 +122,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].CompatibilityVersion = 0
 		}
-		for i1 := 0; i1 < len(in.CloudletInfos[i0].DeprecatedFlavors); i1++ {
-		}
-		for i1 := 0; i1 < len(in.CloudletInfos[i0].DeletedFlavors); i1++ {
+		if _, found := tags["nocmp"]; found {
+			in.CloudletInfos[i0].DeprecatedFlavors = nil
 		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
@@ -523,12 +522,6 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.deprecatedflavors:#.disk",
 	"cloudletinfos:#.deprecatedflavors:#.propmap",
 	"cloudletinfos:#.deprecatedflavors:#.deprecated",
-	"cloudletinfos:#.deletedflavors:#.name",
-	"cloudletinfos:#.deletedflavors:#.vcpus",
-	"cloudletinfos:#.deletedflavors:#.ram",
-	"cloudletinfos:#.deletedflavors:#.disk",
-	"cloudletinfos:#.deletedflavors:#.propmap",
-	"cloudletinfos:#.deletedflavors:#.deprecated",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -995,12 +988,6 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.deprecatedflavors:#.disk":                                      "Amount of disk in GB on the Cloudlet",
 	"cloudletinfos:#.deprecatedflavors:#.propmap":                                   "OS Flavor Properties, if any",
 	"cloudletinfos:#.deprecatedflavors:#.deprecated":                                "true if the infra flavor has been deleted while in use",
-	"cloudletinfos:#.deletedflavors:#.name":                                         "Name of the flavor on the Cloudlet",
-	"cloudletinfos:#.deletedflavors:#.vcpus":                                        "Number of VCPU cores on the Cloudlet",
-	"cloudletinfos:#.deletedflavors:#.ram":                                          "Ram in MB on the Cloudlet",
-	"cloudletinfos:#.deletedflavors:#.disk":                                         "Amount of disk in GB on the Cloudlet",
-	"cloudletinfos:#.deletedflavors:#.propmap":                                      "OS Flavor Properties, if any",
-	"cloudletinfos:#.deletedflavors:#.deprecated":                                   "true if the infra flavor has been deleted while in use",
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
@@ -1241,7 +1228,6 @@ var AllDataSpecialArgs = map[string]string{
 	"apps:#.fields":                               "StringArray",
 	"autoprovpolicies:#.fields":                   "StringArray",
 	"autoscalepolicies:#.fields":                  "StringArray",
-	"cloudletinfos:#.deletedflavors:#.propmap":    "StringToString",
 	"cloudletinfos:#.deprecatedflavors:#.propmap": "StringToString",
 	"cloudletinfos:#.errors":                      "StringArray",
 	"cloudletinfos:#.fields":                      "StringArray",

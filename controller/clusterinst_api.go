@@ -1211,8 +1211,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		return err
 	}
 
-	fmt.Printf("\n\ndeleteClusterInstINternal delete %+v ignoreCRM: in.CrmOverride : %+v \n\n", in.Key, in.CrmOverride)
-
 	// If it is autoClusterInst and creation had failed, then deletion should proceed
 	// even though clusterinst is in use by Application Instance
 	if !(cctx.Undo && cctx.AutoCluster) {
@@ -1320,7 +1318,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
 		if ignoreCRM(cctx) {
-			fmt.Printf("\n\ndeleteClusterInstInternal ingore on so STMDEL for %+v\n\n", in.Key)
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -1329,7 +1326,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
 			streamObjApi.store.STMDel(stm, &streamKey)
 		} else {
-			fmt.Printf("\n\nfuckfuckfuckfuckfuckfuck deleteClusterInstInternal ingore off only requestin delete for  %+v\n\n", in.Key)
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
 		}
@@ -1757,7 +1753,6 @@ func (s *ClusterInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, cl
 		flavor: clusterInst.NodeFlavor,
 	}
 	cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
-
 	if clusterInst.NodeFlavor != clusterInst.MasterNodeFlavor {
 		workerKey.flavor = clusterInst.MasterNodeFlavor
 		cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)

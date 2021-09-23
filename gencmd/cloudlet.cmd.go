@@ -122,9 +122,8 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	if _, found := tags["nocmp"]; found {
 		in.CompatibilityVersion = 0
 	}
-	for i0 := 0; i0 < len(in.DeprecatedFlavors); i0++ {
-	}
-	for i0 := 0; i0 < len(in.DeletedFlavors); i0++ {
+	if _, found := tags["nocmp"]; found {
+		in.DeprecatedFlavors = nil
 	}
 }
 
@@ -2707,12 +2706,6 @@ var CloudletInfoOptionalArgs = []string{
 	"deprecatedflavors:#.disk",
 	"deprecatedflavors:#.propmap",
 	"deprecatedflavors:#.deprecated",
-	"deletedflavors:#.name",
-	"deletedflavors:#.vcpus",
-	"deletedflavors:#.ram",
-	"deletedflavors:#.disk",
-	"deletedflavors:#.propmap",
-	"deletedflavors:#.deprecated",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -2774,15 +2767,8 @@ var CloudletInfoComments = map[string]string{
 	"deprecatedflavors:#.disk":       "Amount of disk in GB on the Cloudlet",
 	"deprecatedflavors:#.propmap":    "OS Flavor Properties, if any",
 	"deprecatedflavors:#.deprecated": "true if the infra flavor has been deleted while in use",
-	"deletedflavors:#.name":          "Name of the flavor on the Cloudlet",
-	"deletedflavors:#.vcpus":         "Number of VCPU cores on the Cloudlet",
-	"deletedflavors:#.ram":           "Ram in MB on the Cloudlet",
-	"deletedflavors:#.disk":          "Amount of disk in GB on the Cloudlet",
-	"deletedflavors:#.propmap":       "OS Flavor Properties, if any",
-	"deletedflavors:#.deprecated":    "true if the infra flavor has been deleted while in use",
 }
 var CloudletInfoSpecialArgs = map[string]string{
-	"deletedflavors:#.propmap":    "StringToString",
 	"deprecatedflavors:#.propmap": "StringToString",
 	"errors":                      "StringArray",
 	"fields":                      "StringArray",
