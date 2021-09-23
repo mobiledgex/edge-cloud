@@ -23,6 +23,7 @@ func TestVerifyLoc(t *testing.T) {
 	require.Nil(t, err, "init edge events plugin")
 	dmecommon.SetupMatchEngine(eehandler)
 	dmecommon.InitAppInstClients()
+	defer dmecommon.StopAppInstClients()
 	operatorApiGw, _ = initOperator(ctx, "standalone")
 	setupJwks()
 

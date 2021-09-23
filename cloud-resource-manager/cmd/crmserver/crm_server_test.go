@@ -221,6 +221,7 @@ func TestCRM(t *testing.T) {
 	nodeMgr.AccessKeyClient.AccessApiAddr = accessKeyGrpcServer.ApiAddr()
 	nodeMgr.AccessKeyClient.AccessKeyFile = accessKeyFile
 	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
+
 	*platformName = "PLATFORM_TYPE_FAKE"
 	err = startServices()
 	require.Nil(t, err, "start crm")

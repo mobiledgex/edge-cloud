@@ -22,23 +22,23 @@ func TestInfluxQ(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 
-	addr := "127.0.0.1:8086"
 	// lower the interval so we don't have to wait so long
 	InfluxQPushInterval = 10 * time.Millisecond
 	InfluxQReconnectDelay = 10 * time.Millisecond
 	ctx := log.StartTestSpan(context.Background())
 
-	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
-		defer p.StopLocal()
-	}
+	p := influxq_testutil.StartInfluxd(t)
+	defer p.StopLocal()
 
+	addr := "http://" + p.HttpAddr
 	q := NewInfluxQ("metrics", "", "")
-	err := q.Start("http://" + addr)
+	err := q.Start(addr)
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
 
 	connected := q.WaitConnected()
 	assert.True(t, connected, "connected")
+	require.Nil(t, q.WaitCreated())
 
 	// clear test metrics
 	_, err = q.QueryDB(`DROP SERIES FROM "test-metric"`)
@@ -169,11 +169,13 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	// Create Downsampled DB
 	qd := NewInfluxQ(cloudcommon.DownsampledMetricsDbName, "", "")
 	// Start downsample db
-	err := qd.Start("http://" + addr)
+	err := qd.Start(addr)
 	require.Nil(t, err, "new influx q")
 	defer qd.Stop()
 	connected := qd.WaitConnected()
 	assert.True(t, connected, "connected downsampled db")
+	createdErr := qd.WaitCreated()
+	require.Nil(t, createdErr)
 
 	// Update default retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
 	rpdef := time.Duration(1 * time.Hour)
@@ -221,8 +223,10 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	time.Sleep(2 * time.Second)
 	query := fmt.Sprintf("select * from \"test-metric-10ms\"")
 	res, err := qd.QueryDB(query)
-	assert.Nil(t, err, "select *")
-	assert.True(t, len(res[0].Series[0].Values) > 0, "num results")
+	require.Nil(t, err, "select *")
+	require.True(t, len(res) > 0)
+	require.True(t, len(res[0].Series) > 0)
+	require.True(t, len(res[0].Series[0].Values) > 0, "num results")
 
 	// Create non-default retention policy to downsampled db (this will be used for continuous query fully qualified measurement)
 	rpnondef := time.Duration(2 * time.Hour)
@@ -272,6 +276,8 @@ func testRetentionPolicyAndContinuousQuery(t *testing.T, ctx context.Context, q 
 	measurementName := CreateInfluxFullyQualifiedMeasurementName(cloudcommon.DownsampledMetricsDbName, "test-metric", 5*time.Millisecond, 2*time.Hour)
 	query = fmt.Sprintf("select * from %s", measurementName)
 	res, err = qd.QueryDB(query)
-	assert.Nil(t, err, "select *")
-	assert.True(t, len(res[0].Series[0].Values) > 0, "num results")
+	require.Nil(t, err, "select *")
+	require.True(t, len(res) > 0)
+	require.True(t, len(res[0].Series) > 0)
+	require.True(t, len(res[0].Series[0].Values) > 0, "num results")
 }

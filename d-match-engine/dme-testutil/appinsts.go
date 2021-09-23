@@ -156,7 +156,7 @@ func GenerateAppInsts() []*edgeproto.AppInst {
 	return insts
 }
 
-func GenerateClouldlets() []*edgeproto.CloudletInfo {
+func GenerateCloudlets() []*edgeproto.CloudletInfo {
 	infos := make([]*edgeproto.CloudletInfo, 0)
 	for _, c := range Cloudlets {
 		infos = append(infos, MakeCloudletInfo(&c))
