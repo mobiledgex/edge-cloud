@@ -259,7 +259,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
-	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
+	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
 
 	testVMPoolUpdates(t, ctx, &data.VmPools[0], ctrlHandler)
 

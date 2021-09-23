@@ -843,6 +843,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.CompatibilityVersion")
 	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "CloudletInfos.DeprecatedFlavors")
+	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "CloudletPools.CreatedAt")
 	}
