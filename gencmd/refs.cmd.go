@@ -376,6 +376,8 @@ var AppInstRefsRequiredArgs = []string{
 var AppInstRefsOptionalArgs = []string{
 	"insts:#.key",
 	"insts:#.value",
+	"deleterequestedinsts:#.key",
+	"deleterequestedinsts:#.value",
 }
 var AppInstRefsAliasArgs = []string{}
 var AppInstRefsComments = map[string]string{

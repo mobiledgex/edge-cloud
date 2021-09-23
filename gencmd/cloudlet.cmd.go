@@ -1347,6 +1347,120 @@ func RemoveCloudletResMappings(c *cli.Command, data []edgeproto.CloudletResMap, 
 	}
 }
 
+var AddCloudletAllianceOrgCmd = &cli.Command{
+	Use:          "AddCloudletAllianceOrg",
+	RequiredArgs: strings.Join(CloudletAllianceOrgRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletAllianceOrgOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAllianceOrgAliasArgs, " "),
+	SpecialArgs:  &CloudletAllianceOrgSpecialArgs,
+	Comments:     CloudletAllianceOrgComments,
+	ReqData:      &edgeproto.CloudletAllianceOrg{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddCloudletAllianceOrg,
+}
+
+func runAddCloudletAllianceOrg(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletAllianceOrg)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddCloudletAllianceOrg(c, obj)
+}
+
+func AddCloudletAllianceOrg(c *cli.Command, in *edgeproto.CloudletAllianceOrg) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.AddCloudletAllianceOrg(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddCloudletAllianceOrg failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddCloudletAllianceOrgs(c *cli.Command, data []edgeproto.CloudletAllianceOrg, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddCloudletAllianceOrg %v\n", data[ii])
+		myerr := AddCloudletAllianceOrg(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RemoveCloudletAllianceOrgCmd = &cli.Command{
+	Use:          "RemoveCloudletAllianceOrg",
+	RequiredArgs: strings.Join(CloudletAllianceOrgRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletAllianceOrgOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletAllianceOrgAliasArgs, " "),
+	SpecialArgs:  &CloudletAllianceOrgSpecialArgs,
+	Comments:     CloudletAllianceOrgComments,
+	ReqData:      &edgeproto.CloudletAllianceOrg{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRemoveCloudletAllianceOrg,
+}
+
+func runRemoveCloudletAllianceOrg(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletAllianceOrg)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RemoveCloudletAllianceOrg(c, obj)
+}
+
+func RemoveCloudletAllianceOrg(c *cli.Command, in *edgeproto.CloudletAllianceOrg) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.RemoveCloudletAllianceOrg(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RemoveCloudletAllianceOrg failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RemoveCloudletAllianceOrgs(c *cli.Command, data []edgeproto.CloudletAllianceOrg, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RemoveCloudletAllianceOrg %v\n", data[ii])
+		myerr := RemoveCloudletAllianceOrg(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var FindFlavorMatchCmd = &cli.Command{
 	Use:          "FindFlavorMatch",
 	RequiredArgs: strings.Join(FlavorMatchRequiredArgs, " "),
@@ -1768,6 +1882,8 @@ var CloudletApiCmds = []*cobra.Command{
 	GetCloudletResourceUsageCmd.GenCmd(),
 	AddCloudletResMappingCmd.GenCmd(),
 	RemoveCloudletResMappingCmd.GenCmd(),
+	AddCloudletAllianceOrgCmd.GenCmd(),
+	RemoveCloudletAllianceOrgCmd.GenCmd(),
 	FindFlavorMatchCmd.GenCmd(),
 	ShowFlavorsForCloudletCmd.GenCmd(),
 	GetOrganizationsOnCloudletCmd.GenCmd(),
@@ -2370,6 +2486,7 @@ var CloudletOptionalArgs = []string{
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
+	"allianceorgs",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -2456,9 +2573,11 @@ var CloudletComments = map[string]string{
 	"gpuconfig.driver.organization":       "Organization to which the driver belongs to",
 	"gpuconfig.properties":                "Properties to identify specifics of GPU, specify gpuconfig.properties:empty=true to clear",
 	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
+	"allianceorgs":                        "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet., specify allianceorgs:empty=true to clear",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",
+	"allianceorgs":         "StringArray",
 	"chefclientkey":        "StringToString",
 	"config.envvar":        "StringToString",
 	"envvar":               "StringToString",
@@ -2595,6 +2714,22 @@ var CloudletResourceUsageComments = map[string]string{
 	"info:#.alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var CloudletResourceUsageSpecialArgs = map[string]string{}
+var CloudletAllianceOrgRequiredArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+	"organization",
+}
+var CloudletAllianceOrgOptionalArgs = []string{}
+var CloudletAllianceOrgAliasArgs = []string{
+	"cloudlet-org=key.organization",
+	"cloudlet=key.name",
+}
+var CloudletAllianceOrgComments = map[string]string{
+	"cloudlet-org": "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"organization": "Alliance organization",
+}
+var CloudletAllianceOrgSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
@@ -2871,6 +3006,7 @@ var CreateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
+	"allianceorgs",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2918,6 +3054,7 @@ var DeleteCloudletOptionalArgs = []string{
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
+	"allianceorgs",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -2954,6 +3091,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
+	"allianceorgs",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -3001,6 +3139,7 @@ var ShowCloudletOptionalArgs = []string{
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
+	"allianceorgs",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

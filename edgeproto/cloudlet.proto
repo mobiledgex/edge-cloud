@@ -467,6 +467,8 @@ message Cloudlet {
   GPUConfig gpu_config = 45 [(gogoproto.nullable) = false];
   // Enable experimental default multitenant (serverless) cluster
   bool enable_default_serverless_cluster = 46;
+  // This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet.
+  repeated string alliance_orgs = 47;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -540,6 +542,15 @@ message CloudletResourceUsage {
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
 }
 
+message CloudletAllianceOrg {
+  // Cloudlet Key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Alliance organization
+  string organization = 2;
+  option (protogen.also_required) = "Organization";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,alliance-org=organization";
+}
+
 service CloudletApi {
   // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
   // and integrated as part of MobiledgeX edge resource portfolio.
@@ -576,6 +587,7 @@ service CloudletApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
     option (protogen.method_noconfig) = "PlatformType,DeploymentLocal,Flavor,PhysicalName,ContainerVersion,ResTagMap,VmImageVersion,Deployment,InfraApiAccess,InfraConfig,OverridePolicyContainerVersion,VmPool,ResTagMap";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Show Cloudlets. Lists all the cloudlets managed from Edge Controller.
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
@@ -633,10 +645,28 @@ service CloudletApi {
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
-  // Add Optional Resource tag table
+  // Remove Optional Resource tag table
   rpc RemoveCloudletResMapping(CloudletResMap) returns (Result) {
     option (google.api.http) = {
       post: "/rmmapping/cloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+
+  // Add alliance organization to the cloudlet
+  rpc AddCloudletAllianceOrg(CloudletAllianceOrg) returns (Result) {
+    option (google.api.http) = {
+      post: "/addallianceorg/cloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
+  }
+  // Remove alliance organization from the cloudlet
+  rpc RemoveCloudletAllianceOrg(CloudletAllianceOrg) returns (Result) {
+    option (google.api.http) = {
+      post: "/rmallianceorg/cloudlet"
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
