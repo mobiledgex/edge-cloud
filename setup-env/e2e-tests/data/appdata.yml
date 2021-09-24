@@ -61,6 +61,8 @@ clusterinsts:
   sharedvolumesize: 100
   nummasters: 1
   numnodes: 2
+  networks:
+  - net1
 
 - key:
     clusterkey:
@@ -75,10 +77,35 @@ clusterinsts:
   ipaccess: Dedicated
   nummasters: 1
   numnodes: 2
+  networks:
+  - net2
 
 operatorcodes:
 - code: 31026
   organization: dmuus
+
+networks:
+- key:
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    name: net1
+  routes:
+  - destinationcidr: 10.200.10.0/24
+    nexthopip: 10.200.10.1
+  - destinationcidr: 10.140.20.0/24
+    nexthopip: 10.140.20.1
+  connectiontype: ConnectToClusterNodes
+
+- key:
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    name: net2
+  routes:
+  - destinationcidr: 10.55.0.0/16
+    nexthopip: 10.55.0.1
+  connectiontype: ConnectToLoadBalancer
 
 cloudlets:
 - key:

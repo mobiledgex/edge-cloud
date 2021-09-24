@@ -42,6 +42,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
 		}
 	}
+	for i0 := 0; i0 < len(in.Networks); i0++ {
+		for i1 := 0; i1 < len(in.Networks[i0].Routes); i1++ {
+		}
+	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Errors = nil
@@ -356,6 +360,13 @@ var AllDataOptionalArgs = []string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr",
+	"networks:#.fields",
+	"networks:#.key.cloudletkey.organization",
+	"networks:#.key.cloudletkey.name",
+	"networks:#.key.name",
+	"networks:#.routes:#.destinationcidr",
+	"networks:#.routes:#.nexthopip",
+	"networks:#.connectiontype",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -602,6 +613,7 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.reservationendedat.seconds",
 	"clusterinsts:#.reservationendedat.nanos",
 	"clusterinsts:#.multitenant",
+	"clusterinsts:#.networks",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -839,6 +851,13 @@ var AllDataComments = map[string]string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin":                          "TCP or UDP port range start",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax":                          "TCP or UDP port range end",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr":                            "remote CIDR X.X.X.X/X",
+	"networks:#.fields":                                                             "Fields are used for the Update API to specify which fields to apply",
+	"networks:#.key.cloudletkey.organization":                                       "Organization of the cloudlet site",
+	"networks:#.key.cloudletkey.name":                                               "Name of the cloudlet",
+	"networks:#.key.name":                                                           "Network Name",
+	"networks:#.routes:#.destinationcidr":                                           "Destination CIDR",
+	"networks:#.routes:#.nexthopip":                                                 "Next hop IP",
+	"networks:#.connectiontype":                                                     "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
 	"cloudlets:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                                                  "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                                          "Name of the cloudlet",
@@ -1042,6 +1061,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.resources.vms:#.containers:#.clusterip":                         "IP within the CNI and is applicable to kubernetes only",
 	"clusterinsts:#.resources.vms:#.containers:#.restarts":                          "Restart count, applicable to kubernetes only",
 	"clusterinsts:#.multitenant":                                                    "Multi-tenant kubernetes cluster",
+	"clusterinsts:#.networks":                                                       "networks to connect to",
 	"apps:#.fields":                                                                 "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                                       "App developer organization",
 	"apps:#.key.name":                                                               "App name",
@@ -1223,6 +1243,7 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudlets:#.status.msgs":                 "StringArray",
 	"clusterinsts:#.errors":                   "StringArray",
 	"clusterinsts:#.fields":                   "StringArray",
+	"clusterinsts:#.networks":                 "StringArray",
 	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
@@ -1230,6 +1251,7 @@ var AllDataSpecialArgs = map[string]string{
 	"gpudrivers:#.fields":                     "StringArray",
 	"gpudrivers:#.properties":                 "StringToString",
 	"maxreqsratelimitsettings:#.fields":       "StringArray",
+	"networks:#.fields":                       "StringArray",
 	"restagtables:#.fields":                   "StringArray",
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
