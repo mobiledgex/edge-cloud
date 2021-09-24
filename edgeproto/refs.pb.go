@@ -967,6 +967,10 @@ func (m *VMResource) CopyInFields(src *VMResource) int {
 			m.VmFlavor.PropMap = nil
 			changed++
 		}
+		if m.VmFlavor.Deprecated != src.VmFlavor.Deprecated {
+			m.VmFlavor.Deprecated = src.VmFlavor.Deprecated
+			changed++
+		}
 	} else if m.VmFlavor != nil {
 		m.VmFlavor = nil
 		changed++

@@ -145,6 +145,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.MaxNumPerIpRateLimiters, int64(0))
 		case SettingsFieldResourceSnapshotThreadInterval:
 			v.CheckGT(f, s.ResourceSnapshotThreadInterval, Duration(30*time.Second))
+		case SettingsFieldFlavorRefreshThreadInterval:
+			v.CheckGT(f, s.FlavorRefreshThreadInterval, Duration(60*time.Second))
 
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
@@ -212,6 +214,7 @@ func GetDefaultSettings() *Settings {
 	s.DisableRateLimit = false
 	s.MaxNumPerIpRateLimiters = 10000
 	s.ResourceSnapshotThreadInterval = Duration(10 * time.Minute)
+	s.FlavorRefreshThreadInterval = Duration(60 * time.Minute)
 	return &s
 }
 
