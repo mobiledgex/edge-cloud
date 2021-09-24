@@ -393,6 +393,9 @@ func GetFieldTaggedName(sf reflect.StructField, ns FieldNamespace) string {
 
 func FindHierField(t reflect.Type, hierName string, ns FieldNamespace) (reflect.StructField, bool) {
 	sf := reflect.StructField{}
+	if t == nil {
+		return sf, false
+	}
 	found := false
 	for _, name := range strings.Split(hierName, ".") {
 		if t.Kind() == reflect.Ptr {
