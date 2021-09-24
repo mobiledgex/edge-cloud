@@ -18,6 +18,7 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 	flavor := reflect.TypeOf((*notify.FlavorSendMany)(nil))
 	vmPool := reflect.TypeOf((*notify.VMPoolSendMany)(nil))
 	gpuDriver := reflect.TypeOf((*notify.GPUDriverSendMany)(nil))
+	network := reflect.TypeOf((*notify.NetworkSendMany)(nil))
 	cloudlet := reflect.TypeOf((*notify.CloudletSendMany)(nil))
 	clusterInst := reflect.TypeOf((*notify.ClusterInstSendMany)(nil))
 	app := reflect.TypeOf((*notify.AppSendMany)(nil))
@@ -39,6 +40,7 @@ func CheckNotifySendOrder(t *testing.T, order map[reflect.Type]int) {
 		CheckDep(t, "clusterinst", order, o, cloudlet)
 		CheckDep(t, "clusterinst", order, o, autoScalePolicy)
 		CheckDep(t, "clusterinst", order, o, TrustPolicy)
+		CheckDep(t, "clusterinst", order, o, network)
 	}
 	// App dependecies
 	if o, found := order[app]; found {

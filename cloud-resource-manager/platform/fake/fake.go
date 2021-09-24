@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -23,6 +24,7 @@ import (
 
 type Platform struct {
 	consoleServer *httptest.Server
+	caches        *platform.Caches
 }
 
 var (
@@ -121,6 +123,7 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
+	s.caches = caches
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
@@ -147,6 +150,7 @@ func (s *Platform) GetFeatures() *platform.Features {
 		SupportsTrustPolicy:        true,
 		CloudletServicesLocal:      true,
 		IsFake:                     true,
+		SupportsAdditionalNetworks: true,
 	}
 }
 
@@ -301,6 +305,15 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 	updateCallback(edgeproto.UpdateTask, "First Create Task")
 	updateCallback(edgeproto.UpdateTask, "Second Create Task")
 	updateClusterResCount(clusterInst)
+
+	// verify we can find any provisioned networks
+	if len(clusterInst.Networks) > 0 {
+		networks, err := crmutil.GetNetworksForClusterInst(ctx, clusterInst, s.caches.NetworkCache)
+		if err != nil {
+			return fmt.Errorf("Error getting cluster networks - %v", err)
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "found networks from cache", "networks", networks)
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake ClusterInst ready")
 	return nil
 }
