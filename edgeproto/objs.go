@@ -120,6 +120,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.MaxReqsRateLimitSettings[:], func(i, j int) bool {
 		return a.MaxReqsRateLimitSettings[i].Key.GetKeyString() < a.MaxReqsRateLimitSettings[j].Key.GetKeyString()
 	})
+	sort.Slice(a.Networks[:], func(i, j int) bool {
+		return a.Networks[i].Key.GetKeyString() < a.Networks[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -760,6 +763,35 @@ func (s *Device) Validate(fields map[string]struct{}) error {
 		return err
 	}
 	// TODO - we might want to validate timestamp in the future
+	return nil
+}
+
+func (key *NetworkKey) ValidateKey() error {
+	if err := key.CloudletKey.ValidateKey(); err != nil {
+		return err
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid network name")
+	}
+	return nil
+}
+func (s *Network) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if s.ConnectionType == NetworkConnectionType_UNDEFINED {
+		return errors.New("Invalid connection type")
+	}
+	for _, route := range s.Routes {
+		_, _, err := net.ParseCIDR(route.DestinationCidr)
+		if err != nil {
+			return errors.New("Invalid route destination cidr")
+		}
+		ip := net.ParseIP(route.NextHopIp)
+		if ip == nil {
+			return errors.New("Invalid next hop")
+		}
+	}
 	return nil
 }
 
