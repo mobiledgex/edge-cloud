@@ -146,6 +146,7 @@ func (s *Platform) GetFeatures() *platform.Features {
 		SupportsSharedVolume:       true,
 		SupportsTrustPolicy:        true,
 		CloudletServicesLocal:      true,
+		SupportsNativeFlavors:      true,
 		IsFake:                     true,
 	}
 }

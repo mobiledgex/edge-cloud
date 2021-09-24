@@ -2734,14 +2734,16 @@ var FlavorInfoOptionalArgs = []string{
 	"ram",
 	"disk",
 	"propmap",
+	"deprecated",
 }
 var FlavorInfoAliasArgs = []string{}
 var FlavorInfoComments = map[string]string{
-	"name":    "Name of the flavor on the Cloudlet",
-	"vcpus":   "Number of VCPU cores on the Cloudlet",
-	"ram":     "Ram in MB on the Cloudlet",
-	"disk":    "Amount of disk in GB on the Cloudlet",
-	"propmap": "OS Flavor Properties, if any",
+	"name":       "Name of the flavor on the Cloudlet",
+	"vcpus":      "Number of VCPU cores on the Cloudlet",
+	"ram":        "Ram in MB on the Cloudlet",
+	"disk":       "Amount of disk in GB on the Cloudlet",
+	"propmap":    "OS Flavor Properties, if any",
+	"deprecated": "true if this infra flavor has been deleted while in use",
 }
 var FlavorInfoSpecialArgs = map[string]string{
 	"propmap": "StringToString",
@@ -2786,6 +2788,7 @@ var CloudletInfoOptionalArgs = []string{
 	"flavors:#.ram",
 	"flavors:#.disk",
 	"flavors:#.propmap",
+	"flavors:#.deprecated",
 	"status.tasknumber",
 	"status.maxtasks",
 	"status.taskname",
@@ -2850,6 +2853,7 @@ var CloudletInfoComments = map[string]string{
 	"flavors:#.ram":                          "Ram in MB on the Cloudlet",
 	"flavors:#.disk":                         "Amount of disk in GB on the Cloudlet",
 	"flavors:#.propmap":                      "OS Flavor Properties, if any",
+	"flavors:#.deprecated":                   "true if this infra flavor has been deleted while in use",
 	"containerversion":                       "Cloudlet container version",
 	"osimages:#.name":                        "image name",
 	"osimages:#.tags":                        "optional tags present on image",

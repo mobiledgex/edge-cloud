@@ -29,6 +29,7 @@ import (
 
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var notifySrvAddr = flag.String("notifySrvAddr", "127.0.0.1:51001", "Address for the CRM notify listener to run on")
+var notifyServer notify.ServerMgr
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var physicalName = flag.String("physicalName", "", "Physical infrastructure cloudlet name, defaults to cloudlet name in cloudletKey")
 var debugLevels = flag.String("d", "", fmt.Sprintf("Comma separated list of %v", log.DebugLevelStrings))
@@ -55,6 +56,7 @@ var myCloudletInfo edgeproto.CloudletInfo //XXX this effectively makes one CRM p
 var nodeMgr node.NodeMgr
 
 var sigChan chan os.Signal
+var services Services
 var mainStarted chan struct{}
 var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
@@ -68,10 +70,27 @@ const (
 	envMexBuildFlavor = "MEX_BUILD_FLAVOR"
 )
 
+type Services struct {
+	notifyClientRunning          bool
+	notifyServerRunning          bool
+	infraResourcesRefreshRunning bool
+	flavorRefreshRunning         bool
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
 	flag.Parse()
+
+	err := startServices()
+	if err != nil {
+		stopServices()
+		log.FatalLog(err.Error())
+	}
+	defer stopServices()
+}
+
+func startServices() error {
 
 	if strings.Contains(*debugLevels, "mexos") {
 		log.WarnLog("mexos log level is obsolete, please use infra")
@@ -87,9 +106,9 @@ func main() {
 	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 	ctx, span, err := nodeMgr.Init(node.NodeTypeCRM, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
 	if err != nil {
-		log.FatalLog(err.Error())
+		return err
 	}
-	defer nodeMgr.Finish()
+	defer span.Finish()
 	log.SetTags(span, myCloudletInfo.Key.GetTags())
 	crmutil.InitDebug(&nodeMgr)
 
@@ -109,13 +128,11 @@ func main() {
 	// Load platform implementation.
 	platform, err = pfutils.GetPlatform(ctx, *platformName, nodeMgr.UpdateNodeProps)
 	if err != nil {
-		span.Finish()
-		log.FatalLog(err.Error())
+		return err
 	}
 
 	if !nodeMgr.AccessKeyClient.IsEnabled() {
-		span.Finish()
-		log.FatalLog("access key client is not enabled")
+		return err
 	}
 	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr)
 
@@ -136,14 +153,14 @@ func main() {
 		node.CertIssuerRegionalCloudlet,
 		[]node.MatchCA{node.SameRegionalMatchCA()})
 	if err != nil {
-		log.FatalLog(err.Error())
+		return err
 	}
 	notifyServerTls, err := nodeMgr.InternalPki.GetServerTlsConfig(ctx,
 		nodeMgr.CommonName(),
 		node.CertIssuerRegionalCloudlet,
 		[]node.MatchCA{node.SameRegionalCloudletMatchCA()})
 	if err != nil {
-		log.FatalLog(err.Error())
+		return err
 	}
 	dialOption := tls.GetGrpcDialOption(notifyClientTls)
 	notifyClient = notify.NewClient(nodeMgr.Name(), addrs, dialOption,
@@ -153,7 +170,7 @@ func main() {
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
 	notifyClient.Start()
-	defer notifyClient.Stop()
+	services.notifyClientRunning = true
 
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
@@ -324,23 +341,41 @@ func main() {
 	}()
 
 	// setup crm notify listener (for shepherd)
-	var notifyServer notify.ServerMgr
 	initSrvNotify(&notifyServer)
 	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
-	defer notifyServer.Stop()
+	services.notifyServerRunning = true
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "Starting Cloudlet resource refresh thread", "cloudlet", myCloudletInfo.Key)
 	controllerData.StartInfraResourceRefreshThread(&myCloudletInfo)
-	defer controllerData.FinishInfraResourceRefreshThread()
+	services.infraResourcesRefreshRunning = true
 
-	span.Finish()
-	if mainStarted != nil {
-		// for unit testing to detect when main is ready
-		close(mainStarted)
+	features := platform.GetFeatures()
+	if features.SupportsNativeFlavors {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Starting flavor refresh thread", "cloudlet", myCloudletInfo.Key, "platform", platformName, "test mode", features.IsFake)
+		controllerData.StartFlavorUpdateThread(&myCloudletInfo, features.IsFake)
+		services.flavorRefreshRunning = true
 	}
+	return nil
+}
 
-	sig := <-sigChan
-	fmt.Println(sig)
+func stopServices() {
+	if services.flavorRefreshRunning {
+		controllerData.FinishFlavorRefreshThread()
+		services.flavorRefreshRunning = false
+	}
+	if services.infraResourcesRefreshRunning {
+		controllerData.FinishInfraResourceRefreshThread()
+		services.infraResourcesRefreshRunning = false
+	}
+	if notifyClient != nil && services.notifyClientRunning {
+		notifyClient.Stop()
+		services.notifyClientRunning = false
+	}
+	if services.notifyServerRunning {
+		notifyServer.Stop()
+		services.notifyServerRunning = false
+	}
+	nodeMgr.Finish()
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -159,23 +158,6 @@ gpudrivers:
   type: GpuTypeVgpu
 `
 
-func startMain(t *testing.T) (chan struct{}, error) {
-	mainStarted = make(chan struct{})
-	mainDone := make(chan struct{})
-	*platformName = "PLATFORM_TYPE_FAKE"
-	go func() {
-		main()
-		close(mainDone)
-	}()
-	// wait until main is ready
-	select {
-	case <-mainStarted:
-	case <-mainDone:
-		return nil, fmt.Errorf("main unexpectedly quit")
-	}
-	return mainDone, nil
-}
-
 func TestCRM(t *testing.T) {
 	var err error
 	log.SetDebugLevel(log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelInfra)
@@ -233,28 +215,20 @@ func TestCRM(t *testing.T) {
 	cdata.CrmAccessPublicKey = accessKey.PublicPEM
 	ctrlHandler.CloudletCache.Update(ctx, &cdata, 0)
 	ctrlMgr.Start("ctrl", notifyAddr, nil)
+	defer ctrlMgr.Stop()
 
-	os.Args = append(os.Args, "-cloudletKey")
-	os.Args = append(os.Args, string(bytes))
-	os.Args = append(os.Args, "-notifyAddrs")
-	os.Args = append(os.Args, notifyAddr)
-	os.Args = append(os.Args, "--accessApiAddr", accessKeyGrpcServer.ApiAddr())
-	os.Args = append(os.Args, "--accessKeyFile", accessKeyFile)
+	*notifyAddrs = notifyAddr
+	nodeMgr.AccessKeyClient.AccessApiAddr = accessKeyGrpcServer.ApiAddr()
+	nodeMgr.AccessKeyClient.AccessKeyFile = accessKeyFile
+
+	*cloudletKeyStr = string(bytes)
 	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	defer nodeMgr.Finish()
-	mainDone, err := startMain(t)
-	if err != nil {
-		close(sigChan)
-		require.Nil(t, err, "start main")
-		return
-	}
-	defer func() {
-		// closing the signal channel triggers main to exit
-		close(sigChan)
-		// wait until main is done so it can clean up properly
-		<-mainDone
-		ctrlMgr.Stop()
-	}()
+
+	*platformName = "PLATFORM_TYPE_FAKE"
+	err = startServices()
+	require.Nil(t, err, "start crm")
+	defer stopServices()
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}
