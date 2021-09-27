@@ -3,6 +3,8 @@ include Makedefs
 
 GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
 
+EDGE_CLOUD_BASE_IMAGE = $(REGISTRY)/edge-cloud-base-image:v1.2.4.1-hf3-298-gf5bbdac6
+
 export GO111MODULE=on
 
 all: build install 
@@ -41,13 +43,17 @@ build-linux:
 
 build-docker:
 	rsync --checksum .dockerignore ../.dockerignore
-	docker buildx build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d'), ${TAG}" \
+	docker buildx build --push \
+		--build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d'), ${TAG}" \
+		--build-arg EDGE_CLOUD_BASE_IMAGE=$(EDGE_CLOUD_BASE_IMAGE) \
 		--build-arg REGISTRY=$(REGISTRY) \
-		-t mobiledgex/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
-	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:${TAG}
-	docker push $(REGISTRY)/edge-cloud:$(TAG)
-	docker tag mobiledgex/edge-cloud:$(TAG) $(REGISTRY)/edge-cloud:latest
-	docker push $(REGISTRY)/edge-cloud:latest
+		-t $(REGISTRY)/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
+	for COMP in alertmgr-sidecar autoprov cluster-svc controller crm dme edgeturn mc notifyroot; do \
+		docker buildx build --push -t $(REGISTRY)/edge-cloud-$$COMP:$(TAG) \
+			--build-arg ALLINONE=$(REGISTRY)/edge-cloud:$(TAG) \
+			--build-arg EDGE_CLOUD_BASE_IMAGE=$(EDGE_CLOUD_BASE_IMAGE) \
+			-f docker/Dockerfile.$$COMP docker || exit 1; \
+	done
 
 build-nightly: REGISTRY = harbor.mobiledgex.net/mobiledgex
 build-nightly: build-docker
