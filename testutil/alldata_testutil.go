@@ -24,6 +24,7 @@ type AllDataOut struct {
 	OperatorCodes              []edgeproto.Result
 	ResTagTables               []edgeproto.Result
 	TrustPolicies              [][]edgeproto.Result
+	Networks                   [][]edgeproto.Result
 	Cloudlets                  [][]edgeproto.Result
 	CloudletInfos              []edgeproto.Result
 	CloudletPools              []edgeproto.Result
@@ -59,6 +60,8 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("restagtables")
 	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	apicb("trustpolicies")
+	run.NetworkApi(&in.Networks, inMap["networks"], &out.Networks)
+	apicb("networks")
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	apicb("cloudlets")
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
@@ -123,6 +126,8 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	apicb("cloudlets")
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
+	apicb("networks")
+	run.NetworkApi(&in.Networks, inMap["networks"], &out.Networks)
 	apicb("trustpolicies")
 	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	apicb("restagtables")
@@ -143,6 +148,7 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.OperatorCodeApi(&in.OperatorCodes, nil, &out.OperatorCodes)
 	run.ResTagTableApi(&in.ResTagTables, nil, &out.ResTagTables)
 	run.TrustPolicyApi(&in.TrustPolicies, nil, &out.TrustPolicies)
+	run.NetworkApi(&in.Networks, nil, &out.Networks)
 	run.CloudletApi(&in.Cloudlets, nil, &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, nil, &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, nil, &out.CloudletPools)

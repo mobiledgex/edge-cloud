@@ -41,6 +41,7 @@ type ControllerData struct {
 	ResTagTableCache            edgeproto.ResTagTableCache
 	GPUDriverCache              edgeproto.GPUDriverCache
 	AlertPolicyCache            edgeproto.AlertPolicyCache
+	NetworkCache                edgeproto.NetworkCache
 	ExecReqHandler              *ExecReqHandler
 	ExecReqSend                 *notify.ExecRequestSend
 	ControllerWait              chan bool
@@ -93,6 +94,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	edgeproto.InitResTagTableCache(&cd.ResTagTableCache)
 	edgeproto.InitGPUDriverCache(&cd.GPUDriverCache)
 	edgeproto.InitAlertPolicyCache(&cd.AlertPolicyCache)
+	edgeproto.InitNetworkCache(&cd.NetworkCache)
 	cd.ExecReqHandler = NewExecReqHandler(cd)
 	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
@@ -195,6 +197,25 @@ func GetCloudletTrustPolicy(ctx context.Context, name string, cloudletOrg string
 		emptyPol := &edgeproto.TrustPolicy{}
 		return emptyPol, nil
 	}
+}
+
+func GetNetworksForClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, networkCache *edgeproto.NetworkCache) ([]*edgeproto.Network, error) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "GetNetworksForClusterInst", "clusterInst", clusterInst)
+	networks := []*edgeproto.Network{}
+	for _, netName := range clusterInst.Networks {
+		net := edgeproto.Network{}
+		nk := edgeproto.NetworkKey{
+			Name:        netName,
+			CloudletKey: clusterInst.Key.CloudletKey,
+		}
+		if !networkCache.Get(&nk, &net) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Cannot find network from cache", "nk", nk)
+			return nil, fmt.Errorf("fail to find network from cache: %s", nk)
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "Found network from cache", "nk", nk, "net", net)
+		networks = append(networks, &net)
+	}
+	return networks, nil
 }
 
 func (cd *ControllerData) vmResourceActionBegin() {

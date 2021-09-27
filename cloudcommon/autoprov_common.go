@@ -51,7 +51,7 @@ func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.C
 }
 
 func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {
-	if inst.State == edgeproto.TrackedState_DELETE_REQUESTED || inst.State == edgeproto.TrackedState_DELETING || inst.State == edgeproto.TrackedState_DELETE_PREPARE || inst.State == edgeproto.TrackedState_NOT_PRESENT {
+	if inst.State == edgeproto.TrackedState_DELETE_REQUESTED || inst.State == edgeproto.TrackedState_DELETING || inst.State == edgeproto.TrackedState_DELETE_PREPARE || inst.State == edgeproto.TrackedState_DELETE_DONE || inst.State == edgeproto.TrackedState_NOT_PRESENT {
 		return true
 	}
 	return false

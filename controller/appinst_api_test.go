@@ -85,9 +85,11 @@ func TestAppInstApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
 	InitApis(sync)
@@ -98,11 +100,9 @@ func TestAppInstApi(t *testing.T) {
 
 	reduceInfoTimeouts(t, ctx)
 
-	InfluxUsageUnitTestSetup(t)
-	defer InfluxUsageUnitTestStop()
-
 	// cannote create instances without apps and cloudlets
-	for _, obj := range testutil.AppInstData {
+	for _, data := range testutil.AppInstData {
+		obj := data
 		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create app inst without apps/cloudlets")
 		// Verify stream AppInst fails
@@ -128,7 +128,8 @@ func TestAppInstApi(t *testing.T) {
 	responder.SetSimulateAppCreateFailure(true)
 	// clean up on failure may find ports inconsistent
 	RequireAppInstPortConsistency = false
-	for ii, obj := range testutil.AppInstData {
+	for ii, data := range testutil.AppInstData {
+		obj := data // make new copy since range variable gets reused each iter
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
 		}
@@ -305,7 +306,8 @@ func TestAppInstApi(t *testing.T) {
 	require.Nil(t, err, "create appinst")
 
 	// delete all AppInsts and Apps and check that refs are empty
-	for ii, obj := range testutil.AppInstData {
+	for ii, data := range testutil.AppInstData {
+		obj := data
 		if ii == 0 {
 			// skip AppInst[0], it was deleted earlier in the test
 			continue
@@ -324,13 +326,12 @@ func TestAppInstApi(t *testing.T) {
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
 	clusterInstApi.cleanupWorkers.WaitIdle()
 
-	for ii, obj := range testutil.AppData {
+	for ii, data := range testutil.AppData {
+		obj := data
 		_, err := appApi.DeleteApp(ctx, &obj)
 		require.Nil(t, err, "Delete app %d: %s failed", ii, obj.Key.GetKeyString())
 	}
 	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, []edgeproto.AppInstRefs{})
-
-	dummy.Stop()
 }
 
 func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testutil.AppCommonApi, cCloudletApi *testutil.CloudletCommonApi, cAppInstApi *testutil.AppInstCommonApi) {
@@ -395,6 +396,7 @@ func TestAutoClusterInst(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	testinit()
+	defer testfinish()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -407,8 +409,6 @@ func TestAutoClusterInst(t *testing.T) {
 		&appInstInfoApi, &clusterInstInfoApi)
 
 	reduceInfoTimeouts(t, ctx)
-	InfluxUsageUnitTestSetup(t)
-	defer InfluxUsageUnitTestStop()
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
@@ -554,7 +554,8 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 
 	// existing AppInst creates should fail because the ClusterInst org
 	// must match the AppInst org.
-	for ii, obj := range testutil.AppInstData {
+	for ii, data := range testutil.AppInstData {
+		obj := data
 		if !strings.HasPrefix(obj.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
 			continue
 		}
@@ -570,7 +571,8 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 
 	appInsts := []edgeproto.AppInst{}
 	clusterInsts := []edgeproto.ClusterInst{}
-	for ii, obj := range testutil.AppInstData {
+	for ii, data := range testutil.AppInstData {
+		obj := data
 		if !strings.HasPrefix(obj.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
 			continue
 		}

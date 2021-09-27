@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/controller/influxq_client/influxq_testutil"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -34,17 +33,19 @@ func TestController(t *testing.T) {
 	*localEtcd = true
 	*initLocalEtcd = true
 	testinit()
+	defer testfinish()
+	// avoid dummy influxQs created by testinit() since we're calling startServices
+	services = Services{}
+
 	leaseTimeoutSec = 3
 	syncLeaseDataRetry = 0
 
-	addr := "127.0.0.1:8086"
-	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
-		defer p.StopLocal()
-	}
+	influxUsageUnitTestSetup(t)
+	defer influxUsageUnitTestStop()
 
 	err := startServices()
-	require.Nil(t, err, "start")
 	defer stopServices()
+	require.Nil(t, err, "start")
 
 	reduceInfoTimeouts(t, ctx)
 
@@ -196,17 +197,19 @@ func TestEdgeCloudBug26(t *testing.T) {
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
 	testinit()
+	defer testfinish()
+	// avoid dummy influxQs created by testinit() since we're calling startServices
+	services = Services{}
+
 	*localEtcd = true
 	*initLocalEtcd = true
 
-	addr := "127.0.0.1:8086"
-	if p := influxq_testutil.StartInfluxd(t, addr); p != nil {
-		defer p.StopLocal()
-	}
+	influxUsageUnitTestSetup(t)
+	defer influxUsageUnitTestStop()
 
 	err := startServices()
-	require.Nil(t, err, "start")
 	defer stopServices()
+	require.Nil(t, err, "start")
 
 	reduceInfoTimeouts(t, ctx)
 

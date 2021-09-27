@@ -32,6 +32,7 @@ func (s *AppInstRefsApi) createRef(stm concurrency.STM, key *edgeproto.AppKey) {
 	refs := edgeproto.AppInstRefs{}
 	refs.Key = *key
 	refs.Insts = make(map[string]uint32)
+	refs.DeleteRequestedInsts = make(map[string]uint32)
 	s.store.STMPut(stm, &refs)
 }
 
@@ -44,6 +45,7 @@ func (s *AppInstRefsApi) addRef(stm concurrency.STM, key *edgeproto.AppInstKey) 
 	if !s.store.STMGet(stm, &key.AppKey, &refs) {
 		refs.Key = key.AppKey
 		refs.Insts = make(map[string]uint32)
+		refs.DeleteRequestedInsts = make(map[string]uint32)
 	}
 	refs.Insts[key.GetKeyString()] = 1
 	s.store.STMPut(stm, &refs)
@@ -55,5 +57,26 @@ func (s *AppInstRefsApi) removeRef(stm concurrency.STM, key *edgeproto.AppInstKe
 		return
 	}
 	delete(refs.Insts, key.GetKeyString())
+	delete(refs.DeleteRequestedInsts, key.GetKeyString())
+	s.store.STMPut(stm, &refs)
+}
+
+func (s *AppInstRefsApi) addDeleteRequestedRef(stm concurrency.STM, key *edgeproto.AppInstKey) {
+	refs := edgeproto.AppInstRefs{}
+	if !s.store.STMGet(stm, &key.AppKey, &refs) {
+		refs.Key = key.AppKey
+		refs.Insts = make(map[string]uint32)
+		refs.DeleteRequestedInsts = make(map[string]uint32)
+	}
+	refs.DeleteRequestedInsts[key.GetKeyString()] = 1
+	s.store.STMPut(stm, &refs)
+}
+
+func (s *AppInstRefsApi) removeDeleteRequestedRef(stm concurrency.STM, key *edgeproto.AppInstKey) {
+	refs := edgeproto.AppInstRefs{}
+	if !s.store.STMGet(stm, &key.AppKey, &refs) {
+		return
+	}
+	delete(refs.DeleteRequestedInsts, key.GetKeyString())
 	s.store.STMPut(stm, &refs)
 }
