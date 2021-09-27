@@ -1,0 +1,109 @@
+// Network proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "cloudletkey.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+// Network Connection Type
+//
+// NetworkConnectionType is the supported list of network types to be optionally added to a cluster instance
+//
+// 0: `UNDEFINED`
+// 1: `CONNECT_TO_LOAD_BALANCER`
+// 2: `CONNECT_TO_CLUSTER_NODES`
+// 3: `CONNECT_TO_ALL`
+enum NetworkConnectionType {
+  // Undefined
+  UNDEFINED = 0;
+  // Network connects to load balancer   
+  CONNECT_TO_LOAD_BALANCER = 1;
+  // Network connects to k8s and docker cluster nodes
+  CONNECT_TO_CLUSTER_NODES = 2;
+  // Network connects to load balancer and all nodes
+  CONNECT_TO_ALL = 3;
+}
+
+message Route {
+  // Destination CIDR
+  string destination_cidr = 1;
+  // Next hop IP
+  string next_hop_ip = 2;
+}
+
+message NetworkKey {
+  // Cloudlet that this network can be provisioned on
+  CloudletKey cloudlet_key = 1 [(gogoproto.nullable) = false];
+  // Network Name
+  string name = 2 [(protogen.keytag) = "network"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+
+// Network defines additional networks which can be optionally assigned to a cloudlet key and used on a cluster instance
+message Network {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  NetworkKey key = 2 [(gogoproto.nullable) = false];
+  // List of routes
+  repeated Route routes = 3 [(gogoproto.nullable) = false];
+  // Network connection type
+  NetworkConnectionType connection_type = 4;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;  
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization";
+  option (protogen.uses_org) = "key=CloudletKey.Organization";
+}
+
+service NetworkApi {
+  // Create a Network
+  rpc CreateNetwork(Network) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/create/network"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletKey.Organization";
+  }
+  // Delete a Network
+  rpc DeleteNetwork(Network) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/delete/network"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
+  }
+  // Update a Network
+  rpc UpdateNetwork(Network) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/update/network"
+      body: "*"
+    };
+    option (protogen.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletKey.Organization";
+  }
+  // Show Networks. Any fields specified will be used to filter results.
+  rpc ShowNetwork(Network) returns (stream Network) {
+    option (google.api.http) = {
+      post: "/show/network"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.CloudletKey.Organization";
+  }
+}

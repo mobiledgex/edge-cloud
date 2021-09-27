@@ -33,6 +33,7 @@ type DummyHandler struct {
 	DeviceCache          edgeproto.DeviceCache
 	frClusterInsts       edgeproto.FreeReservableClusterInstCache
 	SettingsCache        edgeproto.SettingsCache
+	NetworkCache         edgeproto.NetworkCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -55,6 +56,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
 	edgeproto.InitTrustPolicyCache(&h.TrustPolicyCache)
 	edgeproto.InitDeviceCache(&h.DeviceCache)
+	edgeproto.InitNetworkCache(&h.NetworkCache)
 	h.frClusterInsts.Init()
 	return h
 }
@@ -69,6 +71,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)
 	mgr.RegisterSendAutoProvPolicyCache(&s.AutoProvPolicyCache)
+	mgr.RegisterSendNetworkCache(&s.NetworkCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 	mgr.RegisterSendAppCache(&s.AppCache)
 	mgr.RegisterSendAppInstCache(&s.AppInstCache)
@@ -101,6 +104,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvFlavorCache(&s.FlavorCache)
 	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 	cl.RegisterRecvAutoProvPolicyCache(&s.AutoProvPolicyCache)
+	cl.RegisterRecvNetworkCache(&s.NetworkCache)
 }
 
 func (s *DummyHandler) RegisterDMEClient(cl *Client) {
@@ -127,6 +131,7 @@ const (
 	VMPoolType
 	VMPoolInfoType
 	GPUDriverType
+	NetworkType
 )
 
 type WaitForCache interface {
@@ -171,7 +176,10 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.NodeCache
 	case FreeReservableClusterInstType:
 		cache = &s.frClusterInsts
+	case NetworkType:
+		cache = &s.NetworkCache
 	}
+
 	return cache
 }
 
@@ -205,6 +213,8 @@ func (c CacheType) String() string {
 		return "NodeCache"
 	case FreeReservableClusterInstType:
 		return "FreeReservableClusterInstCache"
+	case NetworkType:
+		return "NetworkCache"
 	}
 	return "unknown cache type"
 }
@@ -269,6 +279,10 @@ func (s *DummyHandler) WaitForClusterInsts(count int) error {
 
 func (s *DummyHandler) WaitForAlerts(count int) error {
 	return s.WaitFor(AlertType, count)
+}
+
+func (s *DummyHandler) WaitForNetworks(count int) error {
+	return s.WaitFor(NetworkType, count)
 }
 
 func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state dmeproto.CloudletState) error {

@@ -199,6 +199,7 @@ func main() {
 			VMPoolCache:           &controllerData.VMPoolCache,
 			VMPoolInfoCache:       &controllerData.VMPoolInfoCache,
 			GPUDriverCache:        &controllerData.GPUDriverCache,
+			NetworkCache:          &controllerData.NetworkCache,
 		}
 
 		features := platform.GetFeatures()

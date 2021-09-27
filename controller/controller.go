@@ -435,6 +435,7 @@ func startServices() error {
 	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
 	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
 	edgeproto.RegisterAlertPolicyApiServer(server, &userAlertApi)
+	edgeproto.RegisterNetworkApiServer(server, &networkApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -630,6 +631,7 @@ func InitApis(sync *Sync) {
 	InitAppInstLatencyApi(sync)
 	InitGPUDriverApi(sync)
 	InitAlertPolicyApi(sync)
+	InitNetworkApi(sync)
 }
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
@@ -646,6 +648,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendNetworkCache(&networkApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
