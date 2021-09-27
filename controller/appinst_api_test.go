@@ -298,6 +298,12 @@ func TestAppInstApi(t *testing.T) {
 		}
 	}
 
+	// test appint create with overlapping ports
+	obj = testutil.AppInstData[0]
+	obj.Key.AppKey = testutil.AppData[1].Key
+	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err, "create appinst")
+
 	// delete all AppInsts and Apps and check that refs are empty
 	for ii, obj := range testutil.AppInstData {
 		if ii == 0 {
