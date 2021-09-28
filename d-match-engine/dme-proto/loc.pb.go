@@ -70,22 +70,22 @@ var xxx_messageInfo_Timestamp proto.InternalMessageInfo
 //
 // GPS Location
 type Loc struct {
-	// latitude in WGS 84 coordinates
+	// Latitude in WGS 84 coordinates
 	Latitude float64 `protobuf:"fixed64,1,opt,name=latitude,proto3" json:"latitude,omitempty"`
-	// longitude in WGS 84 coordinates
+	// Longitude in WGS 84 coordinates
 	Longitude float64 `protobuf:"fixed64,2,opt,name=longitude,proto3" json:"longitude,omitempty"`
-	// horizontal accuracy (radius in meters)
+	// Horizontal accuracy (radius in meters)
 	HorizontalAccuracy float64 `protobuf:"fixed64,3,opt,name=horizontal_accuracy,json=horizontalAccuracy,proto3" json:"horizontal_accuracy,omitempty"`
-	// vertical accuracy (meters)
+	// Vertical accuracy (meters)
 	VerticalAccuracy float64 `protobuf:"fixed64,4,opt,name=vertical_accuracy,json=verticalAccuracy,proto3" json:"vertical_accuracy,omitempty"`
 	// On android only lat and long are guaranteed to be supplied
-	// altitude in meters
+	// Altitude in meters
 	Altitude float64 `protobuf:"fixed64,5,opt,name=altitude,proto3" json:"altitude,omitempty"`
-	// course (IOS) / bearing (Android) (degrees east relative to true north)
+	// Course (IOS) / bearing (Android) (degrees east relative to true north)
 	Course float64 `protobuf:"fixed64,6,opt,name=course,proto3" json:"course,omitempty"`
-	// speed (IOS) / velocity (Android) (meters/sec)
+	// Speed (IOS) / velocity (Android) (meters/sec)
 	Speed float64 `protobuf:"fixed64,7,opt,name=speed,proto3" json:"speed,omitempty"`
-	// timestamp
+	// Timestamp
 	Timestamp            *Timestamp `protobuf:"bytes,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
@@ -128,9 +128,9 @@ var xxx_messageInfo_Loc proto.InternalMessageInfo
 //
 // Sample
 type Sample struct {
-	// latency value
+	// Latency value
 	Value float64 `protobuf:"fixed64,1,opt,name=value,proto3" json:"value,omitempty"`
-	// timestamp
+	// Timestamp
 	Timestamp *Timestamp `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// _(optional)_ Vendor specific data
 	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
@@ -174,19 +174,19 @@ var xxx_messageInfo_Sample proto.InternalMessageInfo
 
 // Statistics
 type Statistics struct {
-	// average
+	// Average
 	Avg float64 `protobuf:"fixed64,1,opt,name=avg,proto3" json:"avg,omitempty"`
-	// minimum
+	// Minimum
 	Min float64 `protobuf:"fixed64,2,opt,name=min,proto3" json:"min,omitempty"`
-	// maximum
+	// Maximum
 	Max float64 `protobuf:"fixed64,3,opt,name=max,proto3" json:"max,omitempty"`
-	// square root of unbiased variance
+	// Square root of unbiased variance
 	StdDev float64 `protobuf:"fixed64,4,opt,name=std_dev,json=stdDev,proto3" json:"std_dev,omitempty"`
-	// unbiased variance
+	// Unbiased variance
 	Variance float64 `protobuf:"fixed64,5,opt,name=variance,proto3" json:"variance,omitempty"`
-	// number of samples to create stats
+	// Number of samples to create stats
 	NumSamples uint64 `protobuf:"varint,6,opt,name=num_samples,json=numSamples,proto3" json:"num_samples,omitempty"`
-	// timestamp
+	// Timestamp
 	Timestamp            *Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
