@@ -37,13 +37,13 @@ var LocOptionalArgs = []string{
 }
 var LocAliasArgs = []string{}
 var LocComments = map[string]string{
-	"latitude":           "latitude in WGS 84 coordinates",
-	"longitude":          "longitude in WGS 84 coordinates",
-	"horizontalaccuracy": "horizontal accuracy (radius in meters)",
-	"verticalaccuracy":   "vertical accuracy (meters)",
-	"altitude":           "On android only lat and long are guaranteed to be supplied altitude in meters",
-	"course":             "course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"speed":              "speed (IOS) / velocity (Android) (meters/sec)",
+	"latitude":           "Latitude in WGS 84 coordinates",
+	"longitude":          "Longitude in WGS 84 coordinates",
+	"horizontalaccuracy": "Horizontal accuracy (radius in meters)",
+	"verticalaccuracy":   "Vertical accuracy (meters)",
+	"altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
+	"course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 }
 var LocSpecialArgs = map[string]string{}
 var SampleRequiredArgs = []string{}
@@ -55,7 +55,7 @@ var SampleOptionalArgs = []string{
 }
 var SampleAliasArgs = []string{}
 var SampleComments = map[string]string{
-	"value": "latency value",
+	"value": "Latency value",
 	"tags":  "_(optional)_ Vendor specific data",
 }
 var SampleSpecialArgs = map[string]string{
@@ -74,11 +74,11 @@ var StatisticsOptionalArgs = []string{
 }
 var StatisticsAliasArgs = []string{}
 var StatisticsComments = map[string]string{
-	"avg":        "average",
-	"min":        "minimum",
-	"max":        "maximum",
-	"stddev":     "square root of unbiased variance",
-	"variance":   "unbiased variance",
-	"numsamples": "number of samples to create stats",
+	"avg":        "Average",
+	"min":        "Minimum",
+	"max":        "Maximum",
+	"stddev":     "Square root of unbiased variance",
+	"variance":   "Unbiased variance",
+	"numsamples": "Number of samples to create stats",
 }
 var StatisticsSpecialArgs = map[string]string{}
