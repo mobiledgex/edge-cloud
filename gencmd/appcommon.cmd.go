@@ -35,7 +35,7 @@ var AppPortComments = map[string]string{
 	"fqdnprefix":   "skip 4 to preserve the numbering. 4 was path_prefix but was removed since we dont need it after removed http FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.",
 	"endport":      "A non-zero end port indicates a port range from internal port to end port, inclusive.",
 	"tls":          "TLS termination for this port",
-	"nginx":        "use nginx proxy for this port if you really need a transparent proxy (udp only)",
+	"nginx":        "Use nginx proxy for this port if you really need a transparent proxy (udp only)",
 	"maxpktsize":   "Maximum datagram size (udp only)",
 }
 var AppPortSpecialArgs = map[string]string{}

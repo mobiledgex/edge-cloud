@@ -246,7 +246,7 @@ type AppPort struct {
 	EndPort int32 `protobuf:"varint,6,opt,name=end_port,json=endPort,proto3" json:"end_port,omitempty"`
 	// TLS termination for this port
 	Tls bool `protobuf:"varint,7,opt,name=tls,proto3" json:"tls,omitempty"`
-	// use nginx proxy for this port if you really need a transparent proxy (udp only)
+	// Use nginx proxy for this port if you really need a transparent proxy (udp only)
 	Nginx bool `protobuf:"varint,8,opt,name=nginx,proto3" json:"nginx,omitempty"`
 	// Maximum datagram size (udp only)
 	MaxPktSize           int64    `protobuf:"varint,9,opt,name=max_pkt_size,json=maxPktSize,proto3" json:"max_pkt_size,omitempty"`
