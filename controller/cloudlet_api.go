@@ -1619,6 +1619,9 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 }
 
 func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	if in.Organization == "" {
+		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cl := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &cl) {
@@ -1637,6 +1640,9 @@ func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.
 }
 
 func (s *CloudletApi) RemoveCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	if in.Organization == "" {
+		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cl := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &cl) {
