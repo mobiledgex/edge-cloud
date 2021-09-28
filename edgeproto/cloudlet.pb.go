@@ -259,17 +259,17 @@ func (ReportSchedule) EnumDescriptor() ([]byte, []int) {
 //
 // Time limits for cloudlet create, update and delete operations
 type OperationTimeLimits struct {
-	// override default max time to create a cluster instance (duration)
+	// Override default max time to create a cluster instance (duration)
 	CreateClusterInstTimeout Duration `protobuf:"varint,1,opt,name=create_cluster_inst_timeout,json=createClusterInstTimeout,proto3,casttype=Duration" json:"create_cluster_inst_timeout,omitempty"`
-	// override default max time to update a cluster instance (duration)
+	// Override default max time to update a cluster instance (duration)
 	UpdateClusterInstTimeout Duration `protobuf:"varint,2,opt,name=update_cluster_inst_timeout,json=updateClusterInstTimeout,proto3,casttype=Duration" json:"update_cluster_inst_timeout,omitempty"`
-	// override default max time to delete a cluster instance (duration)
+	// Override default max time to delete a cluster instance (duration)
 	DeleteClusterInstTimeout Duration `protobuf:"varint,3,opt,name=delete_cluster_inst_timeout,json=deleteClusterInstTimeout,proto3,casttype=Duration" json:"delete_cluster_inst_timeout,omitempty"`
-	// override default max time to create an app instance (duration)
+	// Override default max time to create an app instance (duration)
 	CreateAppInstTimeout Duration `protobuf:"varint,4,opt,name=create_app_inst_timeout,json=createAppInstTimeout,proto3,casttype=Duration" json:"create_app_inst_timeout,omitempty"`
-	// override default max time to update an app instance (duration)
+	// Override default max time to update an app instance (duration)
 	UpdateAppInstTimeout Duration `protobuf:"varint,5,opt,name=update_app_inst_timeout,json=updateAppInstTimeout,proto3,casttype=Duration" json:"update_app_inst_timeout,omitempty"`
-	// override default max time to delete an app instance (duration)
+	// Override default max time to delete an app instance (duration)
 	DeleteAppInstTimeout Duration `protobuf:"varint,6,opt,name=delete_app_inst_timeout,json=deleteAppInstTimeout,proto3,casttype=Duration" json:"delete_app_inst_timeout,omitempty"`
 }
 
@@ -902,19 +902,19 @@ type Cloudlet struct {
 	ResourceQuotas []ResourceQuota `protobuf:"bytes,39,rep,name=resource_quotas,json=resourceQuotas,proto3" json:"resource_quotas"`
 	// Default resource alert threshold percentage
 	DefaultResourceAlertThreshold int32 `protobuf:"varint,40,opt,name=default_resource_alert_threshold,json=defaultResourceAlertThreshold,proto3" json:"default_resource_alert_threshold,omitempty"`
-	// Addr of the controller hosting the cloudlet services if it is running locally
+	// Address of the controller hosting the cloudlet services if it is running locally
 	HostController string `protobuf:"bytes,41,opt,name=HostController,proto3" json:"HostController,omitempty"`
-	// operator provided kafka cluster endpoint to push events to
+	// Operator provided kafka cluster endpoint to push events to
 	KafkaCluster string `protobuf:"bytes,42,opt,name=kafka_cluster,json=kafkaCluster,proto3" json:"kafka_cluster,omitempty"`
-	// username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+	// Username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
 	KafkaUser string `protobuf:"bytes,43,opt,name=kafka_user,json=kafkaUser,proto3" json:"kafka_user,omitempty"`
-	// password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+	// Password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
 	KafkaPassword string `protobuf:"bytes,44,opt,name=kafka_password,json=kafkaPassword,proto3" json:"kafka_password,omitempty"`
 	// GPU Configuration associated with cloudlet
 	GpuConfig GPUConfig `protobuf:"bytes,45,opt,name=gpu_config,json=gpuConfig,proto3" json:"gpu_config"`
 	// Enable experimental default multitenant (serverless) cluster
 	EnableDefaultServerlessCluster bool `protobuf:"varint,46,opt,name=enable_default_serverless_cluster,json=enableDefaultServerlessCluster,proto3" json:"enable_default_serverless_cluster,omitempty"`
-	// This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet.
+	// This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet
 	AllianceOrgs []string `protobuf:"bytes,47,rep,name=alliance_orgs,json=allianceOrgs,proto3" json:"alliance_orgs,omitempty"`
 }
 
