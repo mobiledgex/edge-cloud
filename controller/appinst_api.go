@@ -354,6 +354,28 @@ const (
 	DeprecatedAutoCluster
 )
 
+func (s *AppInstApi) checkPortOverlapDedicatedLB(appPorts []dme.AppPort, clusterInstKey *edgeproto.VirtualClusterInstKey) error {
+	lookupKey := edgeproto.AppInst{Key: edgeproto.AppInstKey{ClusterInstKey: *clusterInstKey}}
+	err := s.cache.Show(&lookupKey, func(obj *edgeproto.AppInst) error {
+		if obj.State == edgeproto.TrackedState_DELETE_ERROR || edgeproto.IsTransientState(obj.State) {
+			// ignore apps that are in failed, or transient state
+			return nil
+		}
+		for ii := range appPorts {
+			for jj := range obj.MappedPorts {
+				if edgeproto.DoPortsOverlap(appPorts[ii], obj.MappedPorts[jj]) {
+					if appPorts[ii].EndPort != appPorts[ii].InternalPort && appPorts[ii].EndPort != 0 {
+						return fmt.Errorf("port range %d-%d overlaps with ports in use on the cluster", appPorts[ii].InternalPort, appPorts[ii].EndPort)
+					}
+					return fmt.Errorf("port %d is already in use on the cluster", appPorts[ii].InternalPort)
+				}
+			}
+		}
+		return nil
+	})
+	return err
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -962,7 +984,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 		if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
-			for ii, _ := range ports {
+			for ii := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
 		} else if ipaccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
@@ -1023,15 +1045,19 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		} else {
 			if isIPAllocatedPerService(ctx, cloudletPlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
-				//dedicated access in which each service gets a different ip
+				// dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
-				for ii, _ := range ports {
+				for ii := range ports {
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
 			} else {
-				//dedicated access in which IP is that of the LB
+				// we need to prevent overlapping ports on the dedicated rootLB
+				if err = s.checkPortOverlapDedicatedLB(ports, &in.Key.ClusterInstKey); !cctx.Undo && err != nil {
+					return err
+				}
+				// dedicated access in which IP is that of the LB
 				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
-				for ii, _ := range ports {
+				for ii := range ports {
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
 			}

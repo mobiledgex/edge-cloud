@@ -957,6 +957,24 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	return appports, nil
 }
 
+func DoPortsOverlap(a dme.AppPort, b dme.AppPort) bool {
+	lastPortA := a.EndPort
+	if lastPortA == 0 {
+		lastPortA = a.InternalPort
+	}
+	lastPortB := b.EndPort
+	if lastPortB == 0 {
+		lastPortB = b.InternalPort
+	}
+	if a.Proto != b.Proto ||
+		a.InternalPort > lastPortB ||
+		lastPortA < b.InternalPort {
+		// no overlap
+		return false
+	}
+	return true
+}
+
 func CmpSortDebugReply(a DebugReply, b DebugReply) bool {
 	// e2e tests ignore Name for comparison, so name cannot
 	// be used to sort.
