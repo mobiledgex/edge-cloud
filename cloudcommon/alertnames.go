@@ -97,6 +97,16 @@ func IsMonitoredAlert(labels map[string]string) bool {
 	return false
 }
 
+// Prune labels we don't want to show on the alerts sent to the external alert integrations
+func IsLabelInternal(label string) bool {
+	if label == "instance" ||
+		label == "job" ||
+		label == AlertTypeLabel {
+		return true
+	}
+	return false
+}
+
 func IsInternalAlert(labels map[string]string) bool {
 	alertName, _ := labels["alertname"]
 	if alertName == AlertAppInstDown ||
