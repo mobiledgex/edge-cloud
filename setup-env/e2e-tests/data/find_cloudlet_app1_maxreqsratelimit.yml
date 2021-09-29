@@ -12,4 +12,4 @@ findcloudletrequest:
     latitude: 36.00
     longitude: -96.00
   cellid: 1234
-error-expected: "rpc error: code = ResourceExhausted desc = Request for /distributed_match_engine.MatchEngineApi/FindCloudlet rate limited, please retry later. Error is: exceeded limit of 1, retry again in"
+error-expected: "rpc error: code = ResourceExhausted desc = Request for /distributed_match_engine.MatchEngineApi/FindCloudlet rate limited, please retry later. Error is: Exceeded limit of 1, retry again in"

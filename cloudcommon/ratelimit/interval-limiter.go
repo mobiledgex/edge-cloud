@@ -41,7 +41,7 @@ func (i *IntervalLimiter) Limit(ctx context.Context, info *CallerInfo) error {
 	}
 	if i.currentNumberOfRequests >= i.requestLimit && i.requestLimit != 0 {
 		waitTime := i.interval - (time.Now().Sub(i.intervalStartTime))
-		return fmt.Errorf("exceeded limit of %d, retry again in %v", i.requestLimit, waitTime)
+		return fmt.Errorf("Exceeded limit of %d, retry again in %v", i.requestLimit, waitTime)
 	} else {
 		i.currentNumberOfRequests++
 		return nil
