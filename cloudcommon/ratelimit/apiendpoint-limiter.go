@@ -69,7 +69,7 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context, info *CallerInfo) error 
 		}
 		err := limiter.Limit(ctx, info)
 		if err != nil {
-			return fmt.Errorf("client exceeded api rate limit per ip. %s", err)
+			return fmt.Errorf("Client exceeded api rate limit per ip. %s", err)
 		}
 	}
 	if a.doesLimitByUser() && info.User != "" {
