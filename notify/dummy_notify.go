@@ -295,7 +295,7 @@ func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state dm
 			}
 			lastState = cloudletInfo.State
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(30 * time.Millisecond)
 	}
 
 	return fmt.Errorf("Unable to get desired cloudletInfo state, actual state %s, desired state %s", lastState, state)
