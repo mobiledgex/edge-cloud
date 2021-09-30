@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -30,6 +31,7 @@ const (
 	DisableSampleLog     = "disable-sample-logging"
 	EnableSampleLog      = "enable-sample-logging"
 	DumpCloudletPools    = "dump-cloudlet-pools"
+	DumpStackTrace       = "dump-stack-trace"
 )
 
 type DebugNode struct {
@@ -82,6 +84,14 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 				return err.Error()
 			}
 			return string(out)
+		})
+	s.AddDebugFunc(DumpStackTrace,
+		func(ctx context.Context, req *edgeproto.DebugRequest) string {
+			buf := make([]byte, 8192)
+			runtime.Stack(buf, true)
+			// dump to log file in case notify-send is broken.
+			fmt.Println(string(buf))
+			return string(buf)
 		})
 }
 
