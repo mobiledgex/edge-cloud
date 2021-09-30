@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -114,7 +115,7 @@ func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSett
 		return err
 	}
 
-	ratelimitsettings := buildRateLimitSettings(flowsettings, maxreqssettings)
+	ratelimitsettings := ratelimit.DbToUserSettings(flowsettings, maxreqssettings)
 	for _, settings := range ratelimitsettings {
 		if err = cb.Send(settings); err != nil {
 			return err
@@ -122,44 +123,6 @@ func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSett
 	}
 
 	return nil
-}
-
-func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msettings []*edgeproto.MaxReqsRateLimitSettings) []*edgeproto.RateLimitSettings {
-	settingsmap := make(map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings)
-
-	for _, fsetting := range fsettings {
-		key := fsetting.Key.RateLimitKey
-		ratelimitsetting, ok := settingsmap[key]
-		if !ok || ratelimitsetting == nil {
-			ratelimitsetting = &edgeproto.RateLimitSettings{
-				Key:             key,
-				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
-				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
-			}
-			settingsmap[key] = ratelimitsetting
-		}
-		ratelimitsetting.FlowSettings[fsetting.Key.FlowSettingsName] = &fsetting.Settings
-	}
-
-	for _, msetting := range msettings {
-		key := msetting.Key.RateLimitKey
-		ratelimitsetting, ok := settingsmap[key]
-		if !ok || ratelimitsetting == nil {
-			ratelimitsetting = &edgeproto.RateLimitSettings{
-				Key:             key,
-				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
-				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
-			}
-			settingsmap[key] = ratelimitsetting
-		}
-		ratelimitsetting.MaxReqsSettings[msetting.Key.MaxReqsSettingsName] = &msetting.Settings
-	}
-
-	ratelimitsettings := make([]*edgeproto.RateLimitSettings, 0)
-	for _, settings := range settingsmap {
-		ratelimitsettings = append(ratelimitsettings, settings)
-	}
-	return ratelimitsettings
 }
 
 // Create FlowRateLimitSettings for the specified RateLimitSettings. If no RateLimitSettings exists, create a new one
