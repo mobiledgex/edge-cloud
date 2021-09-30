@@ -130,6 +130,7 @@ func TestCloudletApi(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
 	InitApis(sync)
@@ -183,7 +184,6 @@ func TestCloudletApi(t *testing.T) {
 	testBadLong(t, ctx, &cl, []float64{180.1, -180.1, -1323213, 1232334}, "update")
 
 	// Resource Mapping tests
-
 	testResMapKeysApi(t, ctx, &cl)
 	testGpuResourceMapping(t, ctx, &cl)
 
@@ -191,7 +191,7 @@ func TestCloudletApi(t *testing.T) {
 	testCloudletStates(t, ctx)
 	testManualBringup(t, ctx)
 
-	dummy.Stop()
+	testShowFlavorsForCloudlet(t, ctx)
 }
 
 func testBadLat(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, lats []float64, action string) {
@@ -834,42 +834,35 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	})
 }
 
-func TestShowFlavorsForCloudlet(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify | log.DebugLevelEvents)
-	log.InitTracer(nil)
-	defer log.FinishTracer()
-	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
-
-	dummy := dummyEtcd{}
-	dummy.Start()
-
-	sync := InitSync(&dummy)
-	InitApis(sync)
-	sync.Start()
-	defer sync.Done()
-
+func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context) {
+	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	// Use a clouldet with no ResourceTagMap
 	cCldApi := testutil.NewInternalCloudletApi(&cloudletApi)
-	// create flavors
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	fmt.Printf("\n\nSetup complete start creating test cloudlets from test_data\n\n")
-
-	// Use a  clouldet with no ResourceTagMap
 	cld := testutil.CloudletData()[1]
-	err := cloudletApi.CreateCloudlet(&cld, testutil.NewCudStreamoutCloudlet(ctx))
-	require.Nil(t, err)
 
 	show := testutil.ShowFlavorsForCloudlet{}
 	show.Init()
-	cldInfo := testutil.CloudletInfoData[1]
-	_, err = cloudletInfoApi.InjectCloudletInfo(ctx, &cldInfo)
+
+	err := cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
+	require.Equal(t, 2, len(show.Data))
+
+	// Show flavors for a chosen operator.
+	show.Init()
+	cld.Key.Name = ""
+
+	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
+	require.Nil(t, err)
+	require.Equal(t, 4, len(show.Data))
+
+	// Show flavors for a chosen cloudlet name.
+	show.Init()
+	cld = testutil.CloudletData()[1]
+	cld.Key.Organization = ""
 
 	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(show.Data))
-	dummy.Stop()
 }
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
