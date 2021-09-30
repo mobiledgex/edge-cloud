@@ -74,6 +74,9 @@ func (r *RateLimitManager) RemoveFlowRateLimitSettings(key edgeproto.FlowRateLim
 		return
 	}
 	limiter.removeFlowRateLimitSettings(key.RateLimitKey.RateLimitTarget, key.FlowSettingsName)
+	if limiter.isEmpty() {
+		delete(r.limitsPerApi, api)
+	}
 }
 
 // Update the maxreqs rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
@@ -100,14 +103,20 @@ func (r *RateLimitManager) RemoveMaxReqsRateLimitSettings(key edgeproto.MaxReqsR
 		return
 	}
 	limiter.removeMaxReqsRateLimitSettings(key.RateLimitKey.RateLimitTarget, key.MaxReqsSettingsName)
+	if limiter.isEmpty() {
+		delete(r.limitsPerApi, api)
+	}
 }
 
 // Remove FlowRateLimitSettings whose keys are not in the keys map
 func (r *RateLimitManager) PruneFlowRateLimitSettings(keys map[edgeproto.FlowRateLimitSettingsKey]struct{}) {
 	r.Lock()
 	defer r.Unlock()
-	for _, limiter := range r.limitsPerApi {
+	for api, limiter := range r.limitsPerApi {
 		limiter.pruneFlowRateLimitSettings(keys)
+		if limiter.isEmpty() {
+			delete(r.limitsPerApi, api)
+		}
 	}
 }
 
@@ -115,8 +124,11 @@ func (r *RateLimitManager) PruneFlowRateLimitSettings(keys map[edgeproto.FlowRat
 func (r *RateLimitManager) PruneMaxReqsRateLimitSettings(keys map[edgeproto.MaxReqsRateLimitSettingsKey]struct{}) {
 	r.Lock()
 	defer r.Unlock()
-	for _, limiter := range r.limitsPerApi {
+	for api, limiter := range r.limitsPerApi {
 		limiter.pruneMaxReqsRateLimitSettings(keys)
+		if limiter.isEmpty() {
+			delete(r.limitsPerApi, api)
+		}
 	}
 }
 
