@@ -53,6 +53,7 @@ func GetEtcdClient(cfg *clientv3.Config) (*EtcdClient, error) {
 func (e *EtcdClient) CheckConnected(tries int, retryTime time.Duration) error {
 	var err error
 	for ii := 0; ii < tries; ii++ {
+		fmt.Printf("\n\tetcd:CheckConnected try %d\n", ii)
 		ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 		_, err = e.client.MemberList(ctx)
 		cancel()

@@ -135,6 +135,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	// Get non-conflicting port for NotifySrvAddr if actual port is 0
 	newAddr, err := GetAvailablePort(cloudlet.NotifySrvAddr)
 	if err != nil {
+		fmt.Printf("\n\tStartCRMService error getting ports %s\n\n", err.Error())
 		return err
 	}
 	cloudlet.NotifySrvAddr = newAddr
@@ -144,10 +145,12 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 		// Write access key to local disk
 		err = os.MkdirAll(GetLocalAccessKeyDir(), 0744)
 		if err != nil {
+			fmt.Printf("\n\tStartCRMService error  %s\n\n", err.Error())
 			return err
 		}
 		err = ioutil.WriteFile(accessKeyFile, []byte(pfConfig.CrmAccessPrivateKey), 0644)
 		if err != nil {
+			fmt.Printf("\n\tStartCRMService error  %s\n\n", err.Error())
 			return err
 		}
 	}
@@ -156,12 +159,14 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	trackedProcess[cloudlet.Key] = nil
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
+		fmt.Printf("\n\tStartCRMService error  %s\n\n", err.Error())
 		return err
 	}
 	crmProc.AccessKeyFile = accessKeyFile
 
 	err = crmProc.StartLocal(GetCloudletLogFile(cloudlet.Key.Name), opts...)
 	if err != nil {
+		fmt.Printf("\n\tStartCRMService error  %s\n\n", err.Error())
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName(), "pfConfig", pfConfig)

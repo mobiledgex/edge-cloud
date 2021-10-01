@@ -160,6 +160,7 @@ func startServices() error {
 	if *externalApiAddr == "" {
 		*externalApiAddr, err = util.GetExternalApiAddr(*apiAddr)
 		if err != nil {
+			fmt.Printf("\n\tstartServices-E-error on GetExternalApiAddr: %s\n", err.Error())
 			return err
 		}
 	}
@@ -173,11 +174,13 @@ func startServices() error {
 	// etcd is per-region.
 	objstore.InitRegion(uint32(1))
 	if !util.ValidRegion(*region) {
+		fmt.Printf("\n\tstartServices-E-error invalid region name\n")
 		return fmt.Errorf("invalid region name")
 	}
 
 	ctx, span, err := nodeMgr.Init(node.NodeTypeController, node.CertIssuerRegional, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
 	if err != nil {
+		fmt.Printf("\n\tstartServices-E-error nodemgr.Init %s\n", err.Error())
 		return err
 	}
 	initDebug(ctx, &nodeMgr)
@@ -187,9 +190,10 @@ func startServices() error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	err = validateFields(ctx)
 	if err != nil {
+		fmt.Printf("\n\tstartServices-E-error validateFields %s\n", err.Error())
 		return err
 	}
-
+	fmt.Printf("\n\tstartServices fininsh validate Fields\n")
 	if *localEtcd {
 		opts := []process.StartOp{}
 		if *initLocalEtcd {
@@ -197,35 +201,44 @@ func startServices() error {
 		}
 		etcdLocal, err := StartLocalEtcdServer(opts...)
 		if err != nil {
+			fmt.Printf("\n\tstartServices-E-error startLocalEtcdServer  %s\n", err.Error())
 			return fmt.Errorf("starting local etcd server failed: %v", err)
 		}
 		services.etcdLocal = etcdLocal
 		etcdUrls = &etcdLocal.ClientAddrs
 	}
+	fmt.Printf("\n\tstartServices: etcd started\n")
 	objStore, err := GetEtcdClientBasic(*etcdUrls)
 	if err != nil {
+		fmt.Printf("\n\tstartServices-E-error init object store  %s\n", err.Error())
 		return fmt.Errorf("Failed to initialize Object Store, %v", err)
 	}
+	fmt.Printf("\n\tstartSErvices created etcd client are we connected?\n")
 	err = objStore.CheckConnected(50, 20*time.Millisecond)
 	if err != nil {
+		fmt.Printf("\n\tstartServices-E-error connect to etcd s %s\n", err.Error())
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
 	}
-
+	fmt.Printf("\n\tstartServices: etcd connected...\n")
 	// We might need to upgrade the stored objects
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
 		version, err := checkVersion(ctx, objStore)
 		if err != nil && strings.Contains(err.Error(), ErrCtrlUpgradeRequired.Error()) && *autoUpgrade {
 			err = edgeproto.UpgradeToLatest(version, objStore)
+
 			if err != nil {
+				fmt.Printf("\n\tstartServices-E-error upgrade to latest  %s\n", err.Error())
 				return fmt.Errorf("Failed to ugprade data model: %v", err)
 			}
 		} else if err != nil {
+			fmt.Printf("\n\tstartServices-version mismatch  %s\n", err.Error())
 			return fmt.Errorf("Running version doesn't match the version of etcd, %v", err)
 		}
 	}
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
+		fmt.Printf("\n\tstartServices listen failed:  %s\n", err)
 		return fmt.Errorf("Failed to listen on address %s, %v", *apiAddr, err)
 	}
 	services.listeners = append(services.listeners, lis)
@@ -244,6 +257,7 @@ func startServices() error {
 
 	err = settingsApi.initDefaults(ctx)
 	if err != nil {
+		fmt.Printf("\n\tstartServices-version init settings failed  %s\n", err.Error())
 		return fmt.Errorf("Failed to init settings, %v", err)
 	}
 	// cleanup thread must start after settings are loaded

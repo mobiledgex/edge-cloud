@@ -4,6 +4,8 @@
 package main
 
 import (
+	"fmt"
+
 	"path/filepath"
 	"runtime"
 
@@ -30,7 +32,9 @@ func StartLocalEtcdServer(opts ...process.StartOp) (*process.Etcd, error) {
 	log.InfoLog("Starting local etcd", "clientUrls", etcd.ClientAddrs)
 	err := etcd.StartLocal("", opts...)
 	if err != nil {
+		fmt.Printf("\nStartLocal failed: err %s\n", err.Error())
 		return nil, err
 	}
+	fmt.Printf("StartLocalEtcdServer return nil\n")
 	return etcd, nil
 }

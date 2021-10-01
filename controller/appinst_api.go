@@ -1981,14 +1981,11 @@ func clusterInstReservationEvent(ctx context.Context, eventName string, appInst 
 }
 
 func (s *AppInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, appInst *edgeproto.AppInst) {
-	if cloudletInfoApi.haveMatchingPendingFlavorAlert(ctx, &appInst.Key.ClusterInstKey.CloudletKey, appInst.VmFlavor) {
-		workerKey := HandleFlavorAlertWorkerKey{
-			cloudletKey: edgeproto.CloudletKey{
-				Organization: appInst.Key.ClusterInstKey.CloudletKey.Organization,
-				Name:         appInst.Key.ClusterInstKey.CloudletKey.Name,
-			},
-			flavor: appInst.VmFlavor,
-		}
-		cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
+	workerKey := HandleFlavorAlertWorkerKey{
+		cloudletKey: edgeproto.CloudletKey{
+			Organization: appInst.Key.ClusterInstKey.CloudletKey.Organization,
+			Name:         appInst.Key.ClusterInstKey.CloudletKey.Name,
+		},
 	}
+	cloudletInfoApi.infraFlavorAlertTask.NeedsWork(ctx, workerKey)
 }
