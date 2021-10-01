@@ -35,9 +35,7 @@ func InitCloudletInfoApi(sync *Sync) {
 }
 
 type HandleFlavorAlertWorkerKey struct {
-	cloudletKey edgeproto.CloudletKey
-	//	flavor           string
-	//	masterNodeFlavor string
+	cloudletKey      edgeproto.CloudletKey
 	deprecatedFlavor string
 	recreatedFlavor  string
 	usingObjs        string
@@ -506,7 +504,6 @@ func getCloudletPropertyBool(info *edgeproto.CloudletInfo, prop string, def bool
 func newDeprecatedFlavorInUseAlert(key *edgeproto.CloudletKey, infraFlavor string) *edgeproto.Alert {
 	alert := edgeproto.Alert{}
 	alert.Labels = key.GetTags()
-	// takes care of cloudlet and cloudletOrg labels
 	alert.Labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopeCloudlet
 	alert.Labels["alertname"] = cloudcommon.AlertDeprecatedFlavorInUse
 	alert.Labels["infraflavor"] = infraFlavor
@@ -516,16 +513,6 @@ func newDeprecatedFlavorInUseAlert(key *edgeproto.CloudletKey, infraFlavor strin
 func ClearDeletedInfraFlavorAlert(ctx context.Context, key *edgeproto.CloudletKey, flavor string) {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "clear alert for recreated", "flavor", flavor)
-
-	/*
-		alert := edgeproto.Alert{}
-		alert.Labels = make(map[string]string)
-		alert.Labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopeCloudlet
-		alert.Labels["alertname"] = cloudcommon.AlertInfraFlavorDeleted
-		alert.Labels["cloudlet"] = info.Key.Name
-		alert.Labels["cloudletorg"] = info.Key.Organization
-		alert.Labels["infraflavor"] = flavor
-	*/
 	alert := newDeprecatedFlavorInUseAlert(key, flavor)
 	alertApi.Delete(ctx, alert, 0)
 }
@@ -538,13 +525,6 @@ func RaiseDeletedInfraFlavorAlert(ctx context.Context, key *edgeproto.CloudletKe
 	alert.Annotations["users"] = reasons
 	alertApi.Update(ctx, alert, 0)
 }
-
-/* needed?
-type missingFlavorDescriptor struct {
-	flavor *edgeproto.FlavorInfo
-	usingObjs []string  // likely will need to be a simple string for hashable?
-}
-*/
 
 func (s *CloudletInfoApi) getMissingFlavors(ctx context.Context, info *edgeproto.CloudletInfo, inFlavorMap map[string]*edgeproto.FlavorInfo) ([]string, map[string]string, error) {
 	var missingFlavors []string
@@ -814,27 +794,6 @@ func (s *CloudletInfoApi) getInfraFlavorUsageCounts(ctx context.Context, info *e
 	log.SpanLog(ctx, log.DebugLevelInfra, "flavor usage", "count", count)
 	return flavorRefs, nil
 }
-
-/*
-func (s *CloudletInfoApi) haveMatchingPendingFlavorAlert(ctx context.Context, cloudletKey *edgeproto.CloudletKey, flavor string) bool {
-	// for infra flavors having been deleted at runtime
-	for k, val := range alertApi.cache.Objs {
-		fmt.Printf("\n\tHaveMatchingPending consider alert key %+v looking for flavor %s \n", k, flavor)
-		alert := val.Obj
-		if name, found := alert.Labels["alertname"]; found && name != cloudcommon.AlertDeprecatedFlavorInUse {
-			continue
-		}
-		if name, found := alert.Labels["cloudlet"]; found && name != cloudletKey.Name {
-			continue
-		}
-		if name, found := alert.Labels["infraflavor"]; found && name == flavor {
-			fmt.Printf("\n\thaveMatchingPendingAlert return true\n\n")
-			return true
-		}
-	}
-	return false
-}
-*/
 
 func genInfraFlavorEvent(ctx context.Context, key *edgeproto.CloudletKey, flavors map[string]*edgeproto.FlavorInfo, reason string) {
 	vals := ""
