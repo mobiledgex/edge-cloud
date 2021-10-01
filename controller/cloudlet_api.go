@@ -460,6 +460,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if in.TrustPolicy != "" && !features.SupportsTrustPolicy {
 		return fmt.Errorf("Trust Policy not supported on %s", platName)
 	}
+	if err := validateAllianceOrgs(ctx, in); err != nil {
+		return err
+	}
 
 	cloudletKey := in.Key
 	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
@@ -796,6 +799,10 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
 	ctx := inCb.Context()
+
+	if err := validateAllianceOrgs(ctx, in); err != nil {
+		return err
+	}
 
 	cloudletKey := in.Key
 	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
@@ -1627,6 +1634,22 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 	return nil
 }
 
+func validateAllianceOrgs(ctx context.Context, in *edgeproto.Cloudlet) error {
+	// check for duplicate orgs
+	// make sure can't add your own org
+	orgs := make(map[string]struct{})
+	for _, org := range in.AllianceOrgs {
+		if org == in.Key.Organization {
+			return fmt.Errorf("Cannot add cloudlet's own org %q as alliance org", org)
+		}
+		if _, ok := orgs[org]; ok {
+			return fmt.Errorf("Duplicate alliance org %q specified", org)
+		}
+		orgs[org] = struct{}{}
+	}
+	return nil
+}
+
 func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
 	if in.Organization == "" {
 		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
@@ -1636,12 +1659,10 @@ func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.
 		if !s.store.STMGet(stm, &in.Key, &cl) {
 			return in.Key.NotFoundError()
 		}
-		for _, org := range cl.AllianceOrgs {
-			if org == in.Organization {
-				return fmt.Errorf("%s already part of alliance orgs", in.Organization)
-			}
-		}
 		cl.AllianceOrgs = append(cl.AllianceOrgs, in.Organization)
+		if err := validateAllianceOrgs(ctx, &cl); err != nil {
+			return err
+		}
 		s.store.STMPut(stm, &cl)
 		return nil
 	})
