@@ -27,7 +27,7 @@ settings:
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
   disableratelimit: true
-  maxnumperipratelimiters: 10000
+  ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
 flavors:
 - key:

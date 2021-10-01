@@ -195,8 +195,8 @@ var dbMaxSettings = []*edgeproto.MaxReqsRateLimitSettings{
 
 func TestConversion(t *testing.T) {
 	dbf, dbm := UserToDbSettings(userSettings)
-	require.Equal(t, dbFlowSettings, dbf)
-	require.Equal(t, dbMaxSettings, dbm)
+	require.ElementsMatch(t, dbFlowSettings, dbf)
+	require.ElementsMatch(t, dbMaxSettings, dbm)
 	sets := DbToUserSettings(dbFlowSettings, dbMaxSettings)
-	require.Equal(t, userSettings, sets)
+	require.ElementsMatch(t, userSettings, sets)
 }
