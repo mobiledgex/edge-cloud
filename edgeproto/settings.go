@@ -141,8 +141,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGT(f, s.AlertPolicyMinTriggerTime, dur0)
 		case SettingsFieldDisableRateLimit:
 			// no validation
-		case SettingsFieldMaxNumPerIpRateLimiters:
-			v.CheckGT(f, s.MaxNumPerIpRateLimiters, int64(0))
+		case SettingsFieldRateLimitMaxTrackedIps:
+			v.CheckGT(f, s.RateLimitMaxTrackedIps, int64(0))
 		case SettingsFieldResourceSnapshotThreadInterval:
 			v.CheckGT(f, s.ResourceSnapshotThreadInterval, Duration(30*time.Second))
 
@@ -210,7 +210,7 @@ func GetDefaultSettings() *Settings {
 	s.ClusterAutoScaleRetryDelay = Duration(time.Minute)
 	s.AlertPolicyMinTriggerTime = Duration(30 * time.Second)
 	s.DisableRateLimit = false
-	s.MaxNumPerIpRateLimiters = 10000
+	s.RateLimitMaxTrackedIps = 10000
 	s.ResourceSnapshotThreadInterval = Duration(10 * time.Minute)
 	return &s
 }

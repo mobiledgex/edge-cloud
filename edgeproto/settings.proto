@@ -89,8 +89,8 @@ message Settings {
   int64 alert_policy_min_trigger_time = 36 [(gogoproto.casttype) = "Duration"];
   // Disable rate limiting for APIs (default is false)
   bool disable_rate_limit = 37;
-  // Maximum number of perip rate limiters for an endpoint (ie. number of ips stored to rate limit)
-  int64 max_num_per_ip_rate_limiters = 39;
+  // Maximum number of IPs to track for rate limiting
+  int64 rate_limit_max_tracked_ips = 39;
   // ResourceSnapshot Refresh thread run interval
   int64 resource_snapshot_thread_interval = 41 [(gogoproto.casttype) = "Duration"];
   option (protogen.generate_matches) = true;

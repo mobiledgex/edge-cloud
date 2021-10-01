@@ -41,7 +41,7 @@ settings:
   clusterautoscaleretrydelay: 1m
   alertpolicymintriggertime: 30s
   disableratelimit: false
-  maxnumperipratelimiters: 10000
+  ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
 flowratelimitsettings:
 - key:
