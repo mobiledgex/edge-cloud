@@ -192,6 +192,7 @@ func TestCloudletApi(t *testing.T) {
 	testManualBringup(t, ctx)
 
 	testShowFlavorsForCloudlet(t, ctx)
+	testAllianceOrgs(t, ctx)
 }
 
 func testBadLat(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, lats []float64, action string) {
@@ -863,6 +864,61 @@ func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context) {
 	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(show.Data))
+}
+
+func testAllianceOrgs(t *testing.T, ctx context.Context) {
+	data := testutil.CloudletData()
+	cloudlet := data[0]
+
+	// negative tests
+	selfOrgErr := `Cannot add cloudlet's own org "UFGT Inc." as alliance org`
+	dupOrgErr := `Duplicate alliance org "foo" specified`
+
+	// update cloudlet checks
+	cloudlet.AllianceOrgs = []string{cloudlet.Key.Organization}
+	err := cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err)
+	require.Equal(t, selfOrgErr, err.Error())
+	cloudlet.AllianceOrgs = []string{"foo", "bar", "foo"}
+	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err)
+	require.Equal(t, dupOrgErr, err.Error())
+
+	// create cloudlet checks
+	cloudlet.Key.Name += "allianceorgtest"
+	cloudlet.AllianceOrgs = []string{cloudlet.Key.Organization}
+	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+
+	require.NotNil(t, err)
+	require.Equal(t, selfOrgErr, err.Error())
+	cloudlet.AllianceOrgs = []string{"foo", "bar", "foo"}
+	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.NotNil(t, err)
+	require.Equal(t, dupOrgErr, err.Error())
+
+	// add alliance org checks
+	cao := edgeproto.CloudletAllianceOrg{
+		Key:          data[0].Key,
+		Organization: data[0].Key.Organization,
+	}
+	_, err = cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
+	require.NotNil(t, err)
+	require.Equal(t, selfOrgErr, err.Error())
+	cao.Organization = "foo"
+	_, err = cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
+	require.Nil(t, err)
+	_, err = cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
+	require.NotNil(t, err)
+	require.Equal(t, dupOrgErr, err.Error())
+	_, err = cloudletApi.RemoveCloudletAllianceOrg(ctx, &cao)
+	require.Nil(t, err)
+	_, err = cloudletApi.RemoveCloudletAllianceOrg(ctx, &cao)
+	require.Nil(t, err)
+	// verify removed
+	check := edgeproto.Cloudlet{}
+	found := cloudletApi.cache.Get(&data[0].Key, &check)
+	require.True(t, found)
+	require.Equal(t, 0, len(check.AllianceOrgs))
 }
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
