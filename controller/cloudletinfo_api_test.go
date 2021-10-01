@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -84,23 +85,24 @@ func TestFlavorInfoDelta(t *testing.T) {
 	// case 1 addFlavor
 	newFlavorMap[newFlavor1.Name] = &newFlavor1
 	addedFlavors, deletedFlavors, updatedFlavors, _ = cloudletInfoApi.findFlavorDeltas(ctx, flavorMap, newFlavorMap)
+	require.Equal(t, 13, len(newFlavorMap), "newFlavor count off")
 
 	require.Equal(t, 1, len(addedFlavors), "findFlavorDeltas add")
 	require.Equal(t, 0, len(deletedFlavors), "findFlavorDeltas add")
 	require.Equal(t, 0, len(updatedFlavors), "findFlavorDeltas add")
-	require.Equal(t, "newFlavor1", addedFlavors[0].Name, "findFlavorDeltas add")
+	require.Equal(t, "newFlavor1", addedFlavors["newFlavor1"].Name, "findFlavorDeltas add")
 
+	flavorMap[newFlavor1.Name] = &newFlavor1
 	// case 2 deleteFlavor
 	delete(newFlavorMap, "newFlavor1")
-
 	addedFlavors, deletedFlavors, updatedFlavors, _ = cloudletInfoApi.findFlavorDeltas(ctx, flavorMap, newFlavorMap)
 	require.Equal(t, 0, len(addedFlavors), "findFlavorDeltas delete")
 	require.Equal(t, 1, len(deletedFlavors), "findFlavorDeltas delete")
 	require.Equal(t, 0, len(updatedFlavors), "findFlavorDeltas delete")
-	require.Equal(t, "newFlavor1", deletedFlavors[0].Name, "findFlavorDeltas")
+	require.Equal(t, "newFlavor1", deletedFlavors["newFlavor1"].Name, "findFlavorDeltas")
 
-	require.Equal(t, len(flavorMap), len(newFlavorMap), "maps unequal")
-
+	delete(flavorMap, "newFlavor1")
+	require.Equal(t, len(flavorMap), len(newFlavorMap), "test maps unequal len")
 	// case 3 updateFlavor
 	// Make  flavor.tiny1 have 2 Vcpus
 	newTiny1 := edgeproto.FlavorInfo{
@@ -116,7 +118,7 @@ func TestFlavorInfoDelta(t *testing.T) {
 	require.Equal(t, 0, len(addedFlavors), "findFlavorDeltas update")
 	require.Equal(t, 0, len(deletedFlavors), "findFlavorDeltas update")
 	require.Equal(t, 1, len(updatedFlavors), "findFlavorDeltas update")
-	require.Equal(t, "flavor.tiny1", updatedFlavors[0].Name, "findFlavorDeltas update")
+	require.Equal(t, "flavor.tiny1", updatedFlavors["flavor.tiny1"].Name, "findFlavorDeltas update")
 
 	delete(newFlavorMap, "newFlavor1")
 	// case 4 one change of each type simultaniously
@@ -146,11 +148,11 @@ func TestFlavorInfoDelta(t *testing.T) {
 
 	addedFlavors, deletedFlavors, updatedFlavors, _ = cloudletInfoApi.findFlavorDeltas(ctx, flavorMap, newFlavorMap)
 	require.Equal(t, 1, len(addedFlavors), "findFlavorDeltas update")
-	require.Equal(t, "newFlavor1", addedFlavors[0].Name, "findFlavorDeltas multi")
+	require.Equal(t, "newFlavor1", addedFlavors["newFlavor1"].Name, "findFlavorDeltas multi")
 	require.Equal(t, 1, len(deletedFlavors), "findFlavorDeltas update")
-	require.Equal(t, "flavor.tiny1", deletedFlavors[0].Name, "findFlavorDeltas multi")
+	require.Equal(t, "flavor.tiny1", deletedFlavors["flavor.tiny1"].Name, "findFlavorDeltas multi")
 	require.Equal(t, 1, len(updatedFlavors), "findFlavorDeltas update")
-	require.Equal(t, "flavor.tiny2", updatedFlavors[0].Name, "findFlavorDeltas multi")
+	require.Equal(t, "flavor.tiny2", updatedFlavors["flavor.tiny2"].Name, "findFlavorDeltas multi")
 
 	// case 5 two adds at a time
 	newFlavorMap = nil
@@ -177,10 +179,22 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
+
+	*localEtcd = true
+	*initLocalEtcd = true
+
 	testinit()
+	defer testfinish()
+	services = Services{}
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+
+	fmt.Printf("\n\tTEST startServices\n")
+	err := startServices()
+	defer stopServices()
+	require.Nil(t, err, "start crm")
+	fmt.Printf("\tTEST startServices done, proceeding with test\n")
 
 	sync := InitSync(&dummy)
 	InitApis(sync)
@@ -195,7 +209,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	// Inject the cloudletInfo test data for Update to fetch
 	cldInfo := testutil.CloudletInfoData[0]
 
-	_, err := cloudletInfoApi.InjectCloudletInfo(ctx, &cldInfo)
+	_, err = cloudletInfoApi.InjectCloudletInfo(ctx, &cldInfo)
 	require.Nil(t, err)
 
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
@@ -250,16 +264,13 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	copy(newFlavors, testutil.CloudletInfoData[0].Flavors)
 	require.Equal(t, 12, len(newFlavors), "test_data  flavors count unexpected")
 
-	for _, f := range newFlavors {
-		c, e := cloudletInfoApi.getInfraFlavorUsageCount(ctx, &cloudletInfo, f.Name)
-		require.Nil(t, e, "get usage count failed %s", e)
-		if f.Name == "flavor.Tiny2" {
-			require.Equal(t, 2, c, "use count off for flavor.tiny2")
-		}
-		if f.Name == "flavor.medium" {
-			require.Equal(t, 5, c, "use count off for flavor.medium")
-		}
-	}
+	countRefs, e := cloudletInfoApi.getInfraFlavorUsageCounts(ctx, &cloudletInfo)
+	require.Nil(t, e, "get usage count failed %s", e)
+	count := countRefs["flavor.tiny2"]
+	require.Equal(t, 8, count, "use count off for flavor.tiny2")
+	count = countRefs["flavor.medium"]
+	require.Equal(t, 5, count, "use count off for flavor.medium")
+
 	// First an empy update, make sure nothing changed
 	cloudletInfo.Flavors = newFlavors
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
@@ -273,18 +284,21 @@ func TestFlavorInfoUpdate(t *testing.T) {
 		}
 	}
 	require.Equal(t, 11, len(newFlavors))
+	fmt.Printf("\n\tTEST empty update PASS\n")
 
 	// the op deleted tiny2 on us while running (crm thread running GatherCloudletInfo())
 	cloudletInfo.Flavors = newFlavors
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
 	// check the marking was applied
 
-	for _, flavor := range cloudletInfo.Flavors {
+	for i, flavor := range cloudletInfo.Flavors {
+		fmt.Printf("\n\tTEST cloudletInfo.Flavors[%d] = %+v\n", i, flavor)
 		if flavor.Name == "flavor.tiny2" {
 			require.Equal(t, true, flavor.Deprecated, "not deprecated")
 			break
 		}
 	}
+
 	// Since the infra-flavor was being used by our app, rather than being removed
 	// during the update, it was left in marked deprecated.
 	require.Equal(t, 12, len(cloudletInfo.Flavors), "should be present but deprecated")
@@ -306,6 +320,9 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	require.Equal(t, 1, alerts, "Alert count wrong")
 	require.True(t, alertFound, "failed to find infra flavor deleted alert")
 
+	fmt.Printf("\n\tTEST deprecated flavor PASS\n")
+
+	fmt.Printf("\n\tTEST flavor remapping  start \n")
 	// Now test flavor re-mapping, with tiny2 deprecated, GetVMSpec will skip this infra flavor
 	// GetVMSpec() on our meta flavor x1.tiny that would match our infra flavor.tiny2 if were not deprecated
 	fm := edgeproto.FlavorMatch{
@@ -323,9 +340,13 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	require.Equal(t, 11, len(newFlavors), "newFlavor count off")
 	// we tested deprecation / remapping and alert generation
 
+	fmt.Printf("\n\tTEST flavor remapping  PASS\n")
+
 	// now delete an unsed flavor, it should go quietly
 	// make sure our flavor.tiny1 is still not being used.
-	tiny1count, err := cloudletInfoApi.getInfraFlavorUsageCount(ctx, &cloudletInfo, "flavor.tiny1")
+	countRefs, err = cloudletInfoApi.getInfraFlavorUsageCounts(ctx, &cloudletInfo)
+	require.Nil(t, err, "getInforaFlavorUsageCounts failed")
+	tiny1count := countRefs["flavor.tiny1"]
 	require.Equal(t, 0, tiny1count, "flavor.tiny1 is unexpectedly in use!")
 
 	for ii, flavor := range newFlavors {
@@ -337,6 +358,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	}
 	require.Equal(t, 10, len(newFlavors))
 
+	fmt.Printf("\n\tTEST start delete tiny1 test\n")
 	cloudletInfo.Flavors = newFlavors
 	cloudletInfoApi.Update(ctx, &cloudletInfo, 0)
 	sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -366,12 +388,15 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	require.Equal(t, false, found, "Update failed flavor.tiny1 not deleted but something was")
 	require.Equal(t, 11, len(cloudletInfo.Flavors), "Update failed to remove flavor.tiny1")
 
+	fmt.Printf("\n\tTEST delete tiny1 test   PASS\n")
+
 	// Present the now deprecated flavor.tiny2 back to newFlavors.
 	// Putting back in a flavor that was previsouly deprecated should clear
 	// the dep mark restoring the flavor. (It will again be considered for matching meta flavors)
 	// and if the flavors values were changed, they will be applied,
 	// An update event will be issued in that  case
 
+	fmt.Printf("\n\tTEST recreate flavor.tiny2 \n")
 	require.Equal(t, "flavor.tiny2", testutil.CloudletInfoData[0].Flavors[1].Name, "test_data changed")
 	newFlavors = append(newFlavors, testutil.CloudletInfoData[0].Flavors[1]) // is this tiny2
 	require.Equal(t, 11, len(newFlavors), "unexpected len of newFlavors")
@@ -386,6 +411,8 @@ func TestFlavorInfoUpdate(t *testing.T) {
 			break
 		}
 	}
+
+	fmt.Printf("\n\tTEST recreate flavor.tiny2    PASS\n")
 	// check the InfraFlavorDeleted alert, it should have been cleared by restoring
 	// the deprecated flavor.
 
@@ -395,6 +422,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	// our worker task to check for pending alerts containing their flavor(s). Once all objects using
 	// tiny2 have been deleted, the task should clear the alert and pull out the flavor.
 
+	fmt.Printf("\n\tTEST delete tiny2 again to generated another alert\n")
 	// pull tiny2 back out to gen the alert
 	for ii, flavor := range newFlavors {
 		if flavor.Name == "flavor.tiny2" {
@@ -430,6 +458,10 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	// Ok, with an existing deprecated flavor, and pending Alert  delete the users of it, our task should notice and clear the alert
 	// first delete the clusterInsts, I suppose that will take out any appInsts there
 
+	fmt.Printf("\n\tTEST delete tiny2 again to generated another alert PASS\n")
+
+	fmt.Printf("\n\tTEST clear pending alert via delete clusters/apps\n")
+
 	// Now we start exercising the worker task called from the using objects as they are deleted
 	err = appInstApi.DeleteAppInst(&pokeInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "Error Delete poke AppInst")
@@ -452,7 +484,7 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	foundclust = clusterInstApi.cache.Get(&reserveClust.Key, &check)
 	require.False(t, foundclust)
 	// wait for the task to complete
-	cloudletInfoApi.clearInfraFlavorAlertTask.WaitIdle()
+	cloudletInfoApi.infraFlavorAlertTask.WaitIdle()
 
 	alertFound = false
 	for k, _ := range alertApi.cache.Objs {
@@ -470,6 +502,11 @@ func TestFlavorInfoUpdate(t *testing.T) {
 	// We started wtih 12 infra flavors, deleted tiny1, and now tiny2,
 	require.Equal(t, 10, len(cloudletInfo.Flavors), "cloudletInfoFlavors count")
 	// finsh clean up
+
+	fmt.Printf("\n\tTEST clear pending alert via delete clusters/apps  PASS\n")
+
+	// should we add tiny1 and tiny2 back into cloueltlet?
+
 	_, err = cloudletInfoApi.EvictCloudletInfo(ctx, &cloudletInfo)
 	// More to cleanup? XXX
 	require.Nil(t, err, "Evict")

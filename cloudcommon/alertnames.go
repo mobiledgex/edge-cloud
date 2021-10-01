@@ -12,9 +12,11 @@ const (
 	AlertCloudletDownDescription             = "Cloudlet resource manager is offline"
 	AlertClusterSvcAppInstFailureDescription = "Cluster-svc create AppInst failed"
 	AlertCloudletResourceUsage               = "CloudletResourceUsage"
-	AlertInfraFlavorDeleted                  = "InfraFlavorDeleted"
-	AlertInfraFlavorDeletedDescription       = "Infra Flavor Deleted while in use"
-	AlertTypeUserDefined                     = "UserDefined"
+
+	AlertDeprecatedFlavorInUse            = "InfraFlavorDeleted"
+	AlertDeprecatedFlavorInUseDescription = "Infra Flavor Deleted while in use"
+
+	AlertTypeUserDefined = "UserDefined"
 )
 
 // Alert types

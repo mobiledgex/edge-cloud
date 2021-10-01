@@ -1742,23 +1742,13 @@ func getDefaultMTClustKey(cloudletKey edgeproto.CloudletKey) *edgeproto.ClusterI
 	}
 }
 
+// don't need to pass any flavor, we'll look at 'em all
 func (s *ClusterInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, clusterInst *edgeproto.ClusterInst) {
-	// for infra flavors having been deleted at runtime
-	workerKey := HandleFlavorAlertWorkerKey{}
-	if cloudletInfoApi.haveMatchingPendingFlavorAlert(ctx, &clusterInst.Key.CloudletKey, clusterInst.MasterNodeFlavor) {
-		workerKey = HandleFlavorAlertWorkerKey{
-			cloudletKey: edgeproto.CloudletKey{
-				Organization: clusterInst.Key.CloudletKey.Organization,
-				Name:         clusterInst.Key.CloudletKey.Name,
-			},
-			flavor: clusterInst.NodeFlavor,
-		}
-		cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
+	workerKey := HandleFlavorAlertWorkerKey{
+		cloudletKey: edgeproto.CloudletKey{
+			Organization: clusterInst.Key.CloudletKey.Organization,
+			Name:         clusterInst.Key.CloudletKey.Name,
+		},
 	}
-	if clusterInst.NodeFlavor != clusterInst.NodeFlavor {
-		if cloudletInfoApi.haveMatchingPendingFlavorAlert(ctx, &clusterInst.Key.CloudletKey, clusterInst.MasterNodeFlavor) {
-			workerKey.flavor = clusterInst.MasterNodeFlavor
-			cloudletInfoApi.clearInfraFlavorAlertTask.NeedsWork(ctx, workerKey)
-		}
-	}
+	cloudletInfoApi.infraFlavorAlertTask.NeedsWork(ctx, workerKey)
 }
