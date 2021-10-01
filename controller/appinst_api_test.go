@@ -299,6 +299,13 @@ func TestAppInstApi(t *testing.T) {
 		}
 	}
 
+	// test appint create with overlapping ports
+	obj = testutil.AppInstData[0]
+	obj.Key.AppKey = testutil.AppData[1].Key
+	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	require.NotNil(t, err, "Overlapping ports would trigger an app inst create failure")
+	require.Contains(t, err.Error(), "port 80 is already in use")
+
 	// delete all AppInsts and Apps and check that refs are empty
 	for ii, data := range testutil.AppInstData {
 		obj := data

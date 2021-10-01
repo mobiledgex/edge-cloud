@@ -92,7 +92,7 @@ func TestIntervalLimiter(t *testing.T) {
 	}
 	err := intervalLimiter.Limit(ctx, nil)
 	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+	assert.True(t, strings.Contains(err.Error(), "Exceeded limit"))
 
 	// test fixed number of requests that come in concurrently
 	intervalLimiter = NewIntervalLimiter(numRequestsPerSecond, time.Duration(time.Second))
@@ -109,7 +109,7 @@ func TestIntervalLimiter(t *testing.T) {
 	}
 	err = <-done
 	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+	assert.True(t, strings.Contains(err.Error(), "Exceeded limit"))
 }
 
 func TestCompositeLimiter(t *testing.T) {
@@ -132,7 +132,7 @@ func TestCompositeLimiter(t *testing.T) {
 	time.Sleep(time.Second)
 	err = compositeLimiter.Limit(ctx, nil)
 	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+	assert.True(t, strings.Contains(err.Error(), "Exceeded limit"))
 
 	// test composite limiter concurrently
 	numRequests := 5
@@ -153,7 +153,7 @@ func TestCompositeLimiter(t *testing.T) {
 	}
 	err = <-done
 	assert.NotNil(t, err)
-	assert.True(t, strings.Contains(err.Error(), "exceeded limit"))
+	assert.True(t, strings.Contains(err.Error(), "Exceeded limit"))
 }
 
 func TestApiRateLimitMgr(t *testing.T) {
@@ -287,5 +287,5 @@ func TestApiRateLimitMgr(t *testing.T) {
 	}
 	wg.Wait()
 	require.NotNil(t, err)
-	require.True(t, strings.Contains(err.Error(), "exceeded limit"))
+	require.True(t, strings.Contains(err.Error(), "Exceeded limit"))
 }

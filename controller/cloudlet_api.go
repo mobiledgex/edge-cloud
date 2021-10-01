@@ -1628,6 +1628,9 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 }
 
 func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	if in.Organization == "" {
+		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cl := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &cl) {
@@ -1646,6 +1649,9 @@ func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.
 }
 
 func (s *CloudletApi) RemoveCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	if in.Organization == "" {
+		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cl := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &cl) {
@@ -2226,17 +2232,47 @@ func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgep
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
 		allMetaFlavors[*k] = struct{}{}
 	})
-	for flavor, _ := range allMetaFlavors {
-		fm := edgeproto.FlavorMatch{
-			Key:        *in,
-			FlavorName: flavor.Name,
+	cloudletKeys := make(map[edgeproto.CloudletKey]struct{})
+	if in.ValidateKey() == nil {
+		// only one cloudlet specified
+		cloudletKeys[*in] = struct{}{}
+	} else {
+		// find all matching cloudlets
+		cloudletApi.cache.GetAllKeys(ctx, func(k *edgeproto.CloudletKey, modRef int64) {
+			if k.Matches(in, edgeproto.MatchFilter()) {
+				cloudletKeys[*k] = struct{}{}
+			}
+		})
+	}
+	flavors := make(map[edgeproto.FlavorKey]struct{})
+	for cloudletKey, _ := range cloudletKeys {
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet", "cloudletKey", cloudletKey)
+		for flavor, _ := range allMetaFlavors {
+			fm := edgeproto.FlavorMatch{
+				Key:        cloudletKey,
+				FlavorName: flavor.Name,
+			}
+			match, err := s.FindFlavorMatch(ctx, &fm)
+			if err != nil {
+				continue
+			}
+			flavors[flavor] = struct{}{}
+			log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", cloudletKey)
 		}
-		match, err := s.FindFlavorMatch(ctx, &fm)
+	}
+	// convert flavors to list so we can sort
+	flavorsList := []edgeproto.FlavorKey{}
+	for flavorKey, _ := range flavors {
+		flavorsList = append(flavorsList, flavorKey)
+	}
+	sort.Slice(flavorsList, func(i, j int) bool {
+		return flavorsList[i].GetKeyString() < flavorsList[j].GetKeyString()
+	})
+	for _, flavorKey := range flavorsList {
+		err := cb.Send(&flavorKey)
 		if err != nil {
-			continue
+			return err
 		}
-		cb.Send(&flavor)
-		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", in)
 	}
 	return nil
 }
