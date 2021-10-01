@@ -534,7 +534,10 @@ func (p *Crm) StopLocal() {
 }
 
 func (p *Crm) Wait() error {
-	return p.cmd.Wait()
+	if p.cmd != nil {
+		return p.cmd.Wait()
+	}
+	return nil
 }
 
 func (p *Crm) GetExeName() string { return "crmserver" }

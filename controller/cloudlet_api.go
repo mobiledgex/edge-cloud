@@ -460,6 +460,9 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if in.TrustPolicy != "" && !features.SupportsTrustPolicy {
 		return fmt.Errorf("Trust Policy not supported on %s", platName)
 	}
+	if err := validateAllianceOrgs(ctx, in); err != nil {
+		return err
+	}
 
 	cloudletKey := in.Key
 	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
@@ -599,6 +602,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	var cloudletPlatform pf.Platform
 	deleteAccessVars := false
 	updatecb := updateCloudletCallback{in, cb}
+	cloudletResourcesCreated := false
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
@@ -622,7 +626,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
 				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
+				cloudletResourcesCreated, err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					deleteAccessVars = true
 				}
@@ -692,7 +696,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "Deleting Cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
+		log.SpanLog(ctx, log.DebugLevelInfo, "deleting cloudlet due to failures", "cloudletResourcesCreated", cloudletResourcesCreated)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb, cloudletResourcesCreated)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
 		}
@@ -796,6 +801,10 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_UpdateCloudletServer) (reterr error) {
 	ctx := inCb.Context()
+
+	if err := validateAllianceOrgs(ctx, in); err != nil {
+		return err
+	}
 
 	cloudletKey := in.Key
 	sendObj, cb, err := startCloudletStream(ctx, &cloudletKey, inCb)
@@ -1284,10 +1293,10 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	return s.deleteCloudletInternal(DefCallContext(), in, cb)
+	return s.deleteCloudletInternal(DefCallContext(), in, cb, true)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer, cloudletResourcesCreated bool) (reterr error) {
 	ctx := inCb.Context()
 
 	cloudletKey := in.Key
@@ -1423,14 +1432,16 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			// run delete on this Controller
 			err = s.PlatformDeleteCloudlet(in, cb)
-			if err != nil {
+		}
+		if err != nil {
+			// if we are ignoring CRM errors, or if there were no resources created, proceed with deletion
+			if cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS || !cloudletResourcesCreated {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
+				s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
+				err = nil
+			} else {
 				return err
 			}
-		}
-		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
-			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-			err = nil
 		}
 	}
 
@@ -1627,18 +1638,35 @@ func (s *CloudletApi) showCloudletsByKeys(keys map[edgeproto.CloudletKey]struct{
 	return nil
 }
 
+func validateAllianceOrgs(ctx context.Context, in *edgeproto.Cloudlet) error {
+	// check for duplicate orgs
+	// make sure can't add your own org
+	orgs := make(map[string]struct{})
+	for _, org := range in.AllianceOrgs {
+		if org == in.Key.Organization {
+			return fmt.Errorf("Cannot add cloudlet's own org %q as alliance org", org)
+		}
+		if _, ok := orgs[org]; ok {
+			return fmt.Errorf("Duplicate alliance org %q specified", org)
+		}
+		orgs[org] = struct{}{}
+	}
+	return nil
+}
+
 func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	if in.Organization == "" {
+		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cl := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &cl) {
 			return in.Key.NotFoundError()
 		}
-		for _, org := range cl.AllianceOrgs {
-			if org == in.Organization {
-				return fmt.Errorf("%s already part of alliance orgs", in.Organization)
-			}
-		}
 		cl.AllianceOrgs = append(cl.AllianceOrgs, in.Organization)
+		if err := validateAllianceOrgs(ctx, &cl); err != nil {
+			return err
+		}
 		s.store.STMPut(stm, &cl)
 		return nil
 	})
@@ -1646,6 +1674,9 @@ func (s *CloudletApi) AddCloudletAllianceOrg(ctx context.Context, in *edgeproto.
 }
 
 func (s *CloudletApi) RemoveCloudletAllianceOrg(ctx context.Context, in *edgeproto.CloudletAllianceOrg) (*edgeproto.Result, error) {
+	if in.Organization == "" {
+		return &edgeproto.Result{}, fmt.Errorf("No alliance organization specified")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cl := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, &cl) {
@@ -2226,17 +2257,47 @@ func (s *CloudletApi) ShowFlavorsForCloudlet(in *edgeproto.CloudletKey, cb edgep
 	flavorCache.GetAllKeys(ctx, func(k *edgeproto.FlavorKey, modRev int64) {
 		allMetaFlavors[*k] = struct{}{}
 	})
-	for flavor, _ := range allMetaFlavors {
-		fm := edgeproto.FlavorMatch{
-			Key:        *in,
-			FlavorName: flavor.Name,
+	cloudletKeys := make(map[edgeproto.CloudletKey]struct{})
+	if in.ValidateKey() == nil {
+		// only one cloudlet specified
+		cloudletKeys[*in] = struct{}{}
+	} else {
+		// find all matching cloudlets
+		cloudletApi.cache.GetAllKeys(ctx, func(k *edgeproto.CloudletKey, modRef int64) {
+			if k.Matches(in, edgeproto.MatchFilter()) {
+				cloudletKeys[*k] = struct{}{}
+			}
+		})
+	}
+	flavors := make(map[edgeproto.FlavorKey]struct{})
+	for cloudletKey, _ := range cloudletKeys {
+		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet", "cloudletKey", cloudletKey)
+		for flavor, _ := range allMetaFlavors {
+			fm := edgeproto.FlavorMatch{
+				Key:        cloudletKey,
+				FlavorName: flavor.Name,
+			}
+			match, err := s.FindFlavorMatch(ctx, &fm)
+			if err != nil {
+				continue
+			}
+			flavors[flavor] = struct{}{}
+			log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", cloudletKey)
 		}
-		match, err := s.FindFlavorMatch(ctx, &fm)
+	}
+	// convert flavors to list so we can sort
+	flavorsList := []edgeproto.FlavorKey{}
+	for flavorKey, _ := range flavors {
+		flavorsList = append(flavorsList, flavorKey)
+	}
+	sort.Slice(flavorsList, func(i, j int) bool {
+		return flavorsList[i].GetKeyString() < flavorsList[j].GetKeyString()
+	})
+	for _, flavorKey := range flavorsList {
+		err := cb.Send(&flavorKey)
 		if err != nil {
-			continue
+			return err
 		}
-		cb.Send(&flavor)
-		log.SpanLog(ctx, log.DebugLevelApi, "ShowFlavorsForCloudlet match", "metaflavor", flavor, "with", match.FlavorName, "on cloudlet", in)
 	}
 	return nil
 }

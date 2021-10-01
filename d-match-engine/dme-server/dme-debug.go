@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -12,6 +13,7 @@ import (
 
 func InitDebug(nodeMgr *node.NodeMgr) {
 	nodeMgr.Debug.AddDebugFunc(dmecommon.RequestAppInstLatency, requestAppInstLatency)
+	nodeMgr.Debug.AddDebugFunc("spew-rate-limit-mgr", spewRateLimitMgr)
 }
 
 func requestAppInstLatency(ctx context.Context, req *edgeproto.DebugRequest) string {
@@ -37,4 +39,13 @@ func createAppInstKeyFromRequest(req *edgeproto.DebugRequest) (*edgeproto.AppIns
 	}
 
 	return &appInstKey, nil
+}
+
+func spewRateLimitMgr(ctx context.Context, req *edgeproto.DebugRequest) string {
+	if dmecommon.RateLimitMgr == nil {
+		return "nil"
+	}
+	dmecommon.RateLimitMgr.Lock()
+	defer dmecommon.RateLimitMgr.Unlock()
+	return spew.Sdump(dmecommon.RateLimitMgr)
 }

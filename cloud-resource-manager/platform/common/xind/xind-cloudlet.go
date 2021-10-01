@@ -11,7 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/vault"
 )
 
-func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, acccessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *platform.Caches, acccessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) (bool, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "create cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
@@ -19,9 +19,9 @@ func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet,
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet create failed", "err", err)
-		return err
+		return true, err
 	}
-	return nil
+	return true, nil
 }
 
 func (s *Xind) UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error {

@@ -99,6 +99,8 @@ message ClusterInst {
   distributed_match_engine.Timestamp reservation_ended_at = 31 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Multi-tenant kubernetes cluster
   bool multi_tenant = 32;
+  // networks to connect to
+  repeated string networks = 33;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -152,7 +154,7 @@ service ClusterInstApi {
     };
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Organization";
-    option (protogen.method_noconfig) = "Flavor,NumMasters,AvailabilityZone,Reservable,SharedVolumeSize,IpAccess,Deployment,ImageName";
+    option (protogen.method_noconfig) = "Flavor,NumMasters,AvailabilityZone,Reservable,SharedVolumeSize,IpAccess,Deployment,ImageName,Networks";
   }
   // Show Cluster Instances. Lists all the cluster instances managed by Edge Controller.
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {

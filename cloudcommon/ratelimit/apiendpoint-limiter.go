@@ -69,7 +69,7 @@ func (a *apiEndpointLimiter) Limit(ctx context.Context, info *CallerInfo) error 
 		}
 		err := limiter.Limit(ctx, info)
 		if err != nil {
-			return fmt.Errorf("client exceeded api rate limit per ip. %s", err)
+			return fmt.Errorf("Client exceeded api rate limit per ip. %s", err)
 		}
 	}
 	if a.doesLimitByUser() && info.User != "" {
@@ -333,6 +333,27 @@ func (a *apiEndpointLimiter) doesLimitByIp() bool {
 // Helper function that checks if the mgr should rate limit the endpoint on all requests
 func (a *apiEndpointLimiter) doesLimitByAllRequests() bool {
 	return a.apiEndpointRateLimitSettings.AllRequestsRateLimitSettings != nil
+}
+
+func (a *apiEndpointLimiter) isEmpty() bool {
+	settings := a.apiEndpointRateLimitSettings
+	if settings == nil {
+		return true
+	}
+	numSettings := 0
+	if settings.AllRequestsRateLimitSettings != nil {
+		numSettings += len(settings.AllRequestsRateLimitSettings.FlowSettings)
+		numSettings += len(settings.AllRequestsRateLimitSettings.MaxReqsSettings)
+	}
+	if settings.PerIpRateLimitSettings != nil {
+		numSettings += len(settings.PerIpRateLimitSettings.FlowSettings)
+		numSettings += len(settings.PerIpRateLimitSettings.MaxReqsSettings)
+	}
+	if settings.PerUserRateLimitSettings != nil {
+		numSettings += len(settings.PerUserRateLimitSettings.FlowSettings)
+		numSettings += len(settings.PerUserRateLimitSettings.MaxReqsSettings)
+	}
+	return numSettings == 0
 }
 
 // Helper function that creates slice of Limiters to be passed into NewCompositeLimiter

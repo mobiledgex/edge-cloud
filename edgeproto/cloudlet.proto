@@ -24,17 +24,17 @@ option (gogoproto.goproto_sizecache_all) = false;
 //
 // Time limits for cloudlet create, update and delete operations
 message OperationTimeLimits{
-    // override default max time to create a cluster instance (duration)
+    // Override default max time to create a cluster instance (duration)
     int64 create_cluster_inst_timeout = 1 [(gogoproto.casttype) = "Duration"];
-    // override default max time to update a cluster instance (duration)
+    // Override default max time to update a cluster instance (duration)
     int64 update_cluster_inst_timeout = 2 [(gogoproto.casttype) = "Duration"];
-    // override default max time to delete a cluster instance (duration)
+    // Override default max time to delete a cluster instance (duration)
     int64 delete_cluster_inst_timeout = 3 [(gogoproto.casttype) = "Duration"];
-    // override default max time to create an app instance (duration)
+    // Override default max time to create an app instance (duration)
     int64 create_app_inst_timeout = 4 [(gogoproto.casttype) = "Duration"];
-    // override default max time to update an app instance (duration)
+    // Override default max time to update an app instance (duration)
     int64 update_app_inst_timeout = 5 [(gogoproto.casttype) = "Duration"];
-    // override default max time to delete an app instance (duration)
+    // Override default max time to delete an app instance (duration)
     int64 delete_app_inst_timeout = 6 [(gogoproto.casttype) = "Duration"];
 }
 
@@ -455,19 +455,19 @@ message Cloudlet {
   repeated ResourceQuota resource_quotas = 39 [(gogoproto.nullable) = false];
   // Default resource alert threshold percentage
   int32 default_resource_alert_threshold = 40 [(protogen.hidetag) = "nocmp"];
-  // Addr of the controller hosting the cloudlet services if it is running locally
+  // Address of the controller hosting the cloudlet services if it is running locally
   string HostController = 41 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // operator provided kafka cluster endpoint to push events to
+  // Operator provided kafka cluster endpoint to push events to
   string kafka_cluster = 42;
-  // username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+  // Username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
   string kafka_user = 43;
-  // password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
+  // Password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally
   string kafka_password = 44;
   // GPU Configuration associated with cloudlet
   GPUConfig gpu_config = 45 [(gogoproto.nullable) = false];
   // Enable experimental default multitenant (serverless) cluster
   bool enable_default_serverless_cluster = 46;
-  // This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet.
+  // This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet
   repeated string alliance_orgs = 47;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

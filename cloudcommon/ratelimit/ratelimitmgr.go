@@ -16,19 +16,19 @@ import (
  */
 type RateLimitManager struct {
 	util.Mutex
-	limitsPerApi              map[string]*apiEndpointLimiter
-	disableRateLimit          bool
-	maxNumPerIpRateLimiters   int
-	maxNumPerUserRateLimiters int
+	limitsPerApi     map[string]*apiEndpointLimiter
+	disableRateLimit bool
+	maxTrackedIps    int
+	maxTrackedUsers  int
 }
 
 // Create a RateLimitManager
-func NewRateLimitManager(disableRateLimit bool, maxNumPerIpRateLimiters int, maxNumPerUserRateLimiters int) *RateLimitManager {
+func NewRateLimitManager(disableRateLimit bool, maxTrackedIps int, maxTrackedUsers int) *RateLimitManager {
 	r := &RateLimitManager{}
 	r.limitsPerApi = make(map[string]*apiEndpointLimiter)
 	r.disableRateLimit = disableRateLimit
-	r.maxNumPerIpRateLimiters = maxNumPerIpRateLimiters
-	r.maxNumPerUserRateLimiters = maxNumPerUserRateLimiters
+	r.maxTrackedIps = maxTrackedIps
+	r.maxTrackedUsers = maxTrackedUsers
 	return r
 }
 
@@ -43,7 +43,7 @@ func (r *RateLimitManager) CreateApiEndpointLimiter(api string, allRequestsRateL
 		PerUserRateLimitSettings:     perUserRateLimitSettings,
 	}
 	// Map API to ApiEndpointLimiter for easy lookup
-	r.limitsPerApi[api] = newApiEndpointLimiter(api, apiEndpointRateLimitSettings, r.maxNumPerIpRateLimiters, r.maxNumPerIpRateLimiters)
+	r.limitsPerApi[api] = newApiEndpointLimiter(api, apiEndpointRateLimitSettings, r.maxTrackedIps, r.maxTrackedUsers)
 }
 
 // Update the flow rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
@@ -54,7 +54,7 @@ func (r *RateLimitManager) UpdateFlowRateLimitSettings(flowRateLimitSettings *ed
 	api := flowRateLimitSettings.Key.RateLimitKey.ApiName
 	limiter, ok := r.limitsPerApi[api]
 	if !ok || limiter == nil {
-		limiter = newApiEndpointLimiter(api, &apiEndpointRateLimitSettings{}, r.maxNumPerIpRateLimiters, r.maxNumPerIpRateLimiters)
+		limiter = newApiEndpointLimiter(api, &apiEndpointRateLimitSettings{}, r.maxTrackedIps, r.maxTrackedUsers)
 	}
 	// Update ApiEndpointLimiter with new RateLimitSettings
 	limiter.updateFlowRateLimitSettings(flowRateLimitSettings)
@@ -74,6 +74,9 @@ func (r *RateLimitManager) RemoveFlowRateLimitSettings(key edgeproto.FlowRateLim
 		return
 	}
 	limiter.removeFlowRateLimitSettings(key.RateLimitKey.RateLimitTarget, key.FlowSettingsName)
+	if limiter.isEmpty() {
+		delete(r.limitsPerApi, api)
+	}
 }
 
 // Update the maxreqs rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
@@ -84,7 +87,7 @@ func (r *RateLimitManager) UpdateMaxReqsRateLimitSettings(maxReqsRateLimitSettin
 	api := maxReqsRateLimitSettings.Key.RateLimitKey.ApiName
 	limiter, ok := r.limitsPerApi[api]
 	if !ok || limiter == nil {
-		limiter = newApiEndpointLimiter(api, &apiEndpointRateLimitSettings{}, r.maxNumPerIpRateLimiters, r.maxNumPerIpRateLimiters)
+		limiter = newApiEndpointLimiter(api, &apiEndpointRateLimitSettings{}, r.maxTrackedIps, r.maxTrackedUsers)
 	}
 	// Update ApiEndpointLimiter with new RateLimitSettings
 	limiter.updateMaxReqsRateLimitSettings(maxReqsRateLimitSettings)
@@ -100,14 +103,20 @@ func (r *RateLimitManager) RemoveMaxReqsRateLimitSettings(key edgeproto.MaxReqsR
 		return
 	}
 	limiter.removeMaxReqsRateLimitSettings(key.RateLimitKey.RateLimitTarget, key.MaxReqsSettingsName)
+	if limiter.isEmpty() {
+		delete(r.limitsPerApi, api)
+	}
 }
 
 // Remove FlowRateLimitSettings whose keys are not in the keys map
 func (r *RateLimitManager) PruneFlowRateLimitSettings(keys map[edgeproto.FlowRateLimitSettingsKey]struct{}) {
 	r.Lock()
 	defer r.Unlock()
-	for _, limiter := range r.limitsPerApi {
+	for api, limiter := range r.limitsPerApi {
 		limiter.pruneFlowRateLimitSettings(keys)
+		if limiter.isEmpty() {
+			delete(r.limitsPerApi, api)
+		}
 	}
 }
 
@@ -115,8 +124,11 @@ func (r *RateLimitManager) PruneFlowRateLimitSettings(keys map[edgeproto.FlowRat
 func (r *RateLimitManager) PruneMaxReqsRateLimitSettings(keys map[edgeproto.MaxReqsRateLimitSettingsKey]struct{}) {
 	r.Lock()
 	defer r.Unlock()
-	for _, limiter := range r.limitsPerApi {
+	for api, limiter := range r.limitsPerApi {
 		limiter.pruneMaxReqsRateLimitSettings(keys)
+		if limiter.isEmpty() {
+			delete(r.limitsPerApi, api)
+		}
 	}
 }
 
@@ -127,21 +139,21 @@ func (r *RateLimitManager) UpdateDisableRateLimit(disable bool) {
 	r.disableRateLimit = disable
 }
 
-// Update MaxNumPerIpRateLimiters when settings are updated
-func (r *RateLimitManager) UpdateMaxNumPerIpRateLimiters(max int) {
+// Update MaxTrackedIps when settings are updated
+func (r *RateLimitManager) UpdateMaxTrackedIps(max int) {
 	r.Lock()
 	defer r.Unlock()
-	r.maxNumPerIpRateLimiters = max
+	r.maxTrackedIps = max
 	for _, limiter := range r.limitsPerApi {
 		limiter.updateMaxNumIps(max)
 	}
 }
 
-// Update MaxNumPerUserRateLimiters when settings are updated
-func (r *RateLimitManager) UpdateMaxNumPerUserRateLimiters(max int) {
+// Update MaxTrackedUsers when settings are updated
+func (r *RateLimitManager) UpdateMaxTrackedUsers(max int) {
 	r.Lock()
 	defer r.Unlock()
-	r.maxNumPerUserRateLimiters = max
+	r.maxTrackedUsers = max
 	for _, limiter := range r.limitsPerApi {
 		limiter.updateMaxNumUsers(max)
 	}
