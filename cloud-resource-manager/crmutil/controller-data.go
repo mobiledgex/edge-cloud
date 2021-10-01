@@ -1378,7 +1378,7 @@ func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 func (cd *ControllerData) StartFlavorUpdateThread(cloudletInfo *edgeproto.CloudletInfo, testmode bool) {
 	cd.finishFlavorRefreshThread = make(chan struct{})
 	if testmode {
-		cd.settings.FlavorRefreshThreadInterval = edgeproto.Duration(time.Second * 1)
+		cd.settings.FlavorRefreshThreadInterval = edgeproto.Duration(time.Second * 10)
 	}
 	go func() {
 		done := false

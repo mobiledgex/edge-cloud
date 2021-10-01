@@ -89,6 +89,8 @@ func main() {
 		log.FatalLog(err.Error())
 	}
 	defer stopServices()
+	sig := <-sigChan
+	fmt.Println(sig)
 	fmt.Printf("\n\nCRM Main completed\n\n")
 }
 
