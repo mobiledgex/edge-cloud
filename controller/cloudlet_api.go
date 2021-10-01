@@ -599,6 +599,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	var cloudletPlatform pf.Platform
 	deleteAccessVars := false
 	updatecb := updateCloudletCallback{in, cb}
+	cleanupPlatformOnError := false
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
@@ -622,7 +623,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
 				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
+				cleanupPlatformOnError, err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					deleteAccessVars = true
 				}
@@ -692,7 +693,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "Deleting Cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
+		log.SpanLog(ctx, log.DebugLevelInfo, "deleting cloudlet due to failures", "cleanupPlatform", cleanupPlatformOnError)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb, cleanupPlatformOnError)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
 		}
@@ -1284,10 +1286,10 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	return s.deleteCloudletInternal(DefCallContext(), in, cb)
+	return s.deleteCloudletInternal(DefCallContext(), in, cb, true)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer, cleanupPlatform bool) (reterr error) {
 	ctx := inCb.Context()
 
 	cloudletKey := in.Key
@@ -1393,7 +1395,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
-	if !ignoreCRMState(cctx) {
+	if !ignoreCRMState(cctx) && cleanupPlatform {
 		if in.HostController != "" && in.HostController != *externalApiAddr {
 			// connect to Controller where Cloudlet is running and do delete
 			conn, cErr := ControllerConnect(ctx, in.HostController)
