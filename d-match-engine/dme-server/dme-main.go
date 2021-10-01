@@ -454,7 +454,7 @@ func initRateLimitMgr() {
 	if *testMode {
 		disableRateLimit = true
 	}
-	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(disableRateLimit, int(dmecommon.Settings.MaxNumPerIpRateLimiters), 0)
+	dmecommon.RateLimitMgr = ratelimit.NewRateLimitManager(disableRateLimit, int(dmecommon.Settings.RateLimitMaxTrackedIps), 0)
 }
 
 func main() {
