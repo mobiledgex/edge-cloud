@@ -1634,5 +1634,5 @@ func SettingsUpdated(ctx context.Context, old *edgeproto.Settings, new *edgeprot
 	clientsMap.UpdateClientTimeout(new.AppinstClientCleanupInterval)
 	EEStats.UpdateSettings(time.Duration(new.EdgeEventsMetricsCollectionInterval))
 	RateLimitMgr.UpdateDisableRateLimit(new.DisableRateLimit)
-	RateLimitMgr.UpdateMaxNumPerIpRateLimiters(int(new.MaxNumPerIpRateLimiters))
+	RateLimitMgr.UpdateMaxTrackedIps(int(new.RateLimitMaxTrackedIps))
 }
