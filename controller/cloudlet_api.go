@@ -602,6 +602,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	var cloudletPlatform pf.Platform
 	deleteAccessVars := false
 	updatecb := updateCloudletCallback{in, cb}
+	cloudletResourcesCreated := false
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
@@ -625,7 +626,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				// Some platform types require caches
 				caches := getCaches(ctx, &vmPool)
 				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-				err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
+				cloudletResourcesCreated, err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
 				if err != nil && len(accessVars) > 0 {
 					deleteAccessVars = true
 				}
@@ -695,7 +696,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if err != nil {
 		cb.Send(&edgeproto.Result{Message: "Deleting Cloudlet due to failures"})
-		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb)
+		log.SpanLog(ctx, log.DebugLevelInfo, "deleting cloudlet due to failures", "cloudletResourcesCreated", cloudletResourcesCreated)
+		undoErr := s.deleteCloudletInternal(cctx.WithUndo(), in, cb, cloudletResourcesCreated)
 		if undoErr != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Undo create Cloudlet", "undoErr", undoErr)
 		}
@@ -1291,10 +1293,10 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 }
 
 func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
-	return s.deleteCloudletInternal(DefCallContext(), in, cb)
+	return s.deleteCloudletInternal(DefCallContext(), in, cb, true)
 }
 
-func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer) (reterr error) {
+func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cloudlet, inCb edgeproto.CloudletApi_DeleteCloudletServer, cloudletResourcesCreated bool) (reterr error) {
 	ctx := inCb.Context()
 
 	cloudletKey := in.Key
@@ -1430,14 +1432,16 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			// run delete on this Controller
 			err = s.PlatformDeleteCloudlet(in, cb)
-			if err != nil {
+		}
+		if err != nil {
+			// if we are ignoring CRM errors, or if there were no resources created, proceed with deletion
+			if cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS || !cloudletResourcesCreated {
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
+				s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
+				err = nil
+			} else {
 				return err
 			}
-		}
-		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
-			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete Cloudlet ignoring CRM failure: %s", err.Error())})
-			s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_NOT_PRESENT)
-			err = nil
 		}
 	}
 
