@@ -1432,6 +1432,9 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			// run delete on this Controller
 			err = s.PlatformDeleteCloudlet(in, cb)
+			if err != nil {
+				return err
+			}
 		}
 		if err != nil {
 			// if we are ignoring CRM errors, or if there were no resources created, proceed with deletion
