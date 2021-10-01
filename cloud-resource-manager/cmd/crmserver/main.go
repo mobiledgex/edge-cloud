@@ -222,6 +222,7 @@ func startServices() error {
 			VMPoolCache:           &controllerData.VMPoolCache,
 			VMPoolInfoCache:       &controllerData.VMPoolInfoCache,
 			GPUDriverCache:        &controllerData.GPUDriverCache,
+			NetworkCache:          &controllerData.NetworkCache,
 		}
 
 		features := platform.GetFeatures()

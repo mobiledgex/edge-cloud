@@ -148,6 +148,22 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	return false
 }
 
+func (s *ClusterInstApi) UsesNetwork(networkKey *edgeproto.NetworkKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		if val.Key.CloudletKey == networkKey.CloudletKey {
+			for _, n := range val.Networks {
+				if n == networkKey.Name {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 // validateAndDefaultIPAccess checks that the IP access type is valid if it is set.  If it is not set
 // it returns the new value based on the other parameters
 func validateAndDefaultIPAccess(ctx context.Context, clusterInst *edgeproto.ClusterInst, platformType edgeproto.PlatformType, features *platform.Features, cb edgeproto.ClusterInstApi_CreateClusterInstServer) (edgeproto.IpAccess, error) {
@@ -881,6 +897,16 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		refs := edgeproto.CloudletRefs{}
 		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
+		}
+		for _, n := range in.Networks {
+			network := edgeproto.Network{}
+			networkKey := edgeproto.NetworkKey{
+				Name:        n,
+				CloudletKey: in.Key.CloudletKey,
+			}
+			if !networkApi.store.STMGet(stm, &networkKey, &network) {
+				return networkKey.NotFoundError()
+			}
 		}
 
 		if in.Flavor.Name == "" {

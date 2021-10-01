@@ -129,8 +129,8 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.AlertPolicyMinTriggerTime = def.AlertPolicyMinTriggerTime
 			modified = true
 		}
-		if cur.MaxNumPerIpRateLimiters == 0 {
-			cur.MaxNumPerIpRateLimiters = edgeproto.GetDefaultSettings().MaxNumPerIpRateLimiters
+		if cur.RateLimitMaxTrackedIps == 0 {
+			cur.RateLimitMaxTrackedIps = edgeproto.GetDefaultSettings().RateLimitMaxTrackedIps
 			modified = true
 		}
 		if cur.ResourceSnapshotThreadInterval == 0 {

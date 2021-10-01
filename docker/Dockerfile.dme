@@ -1,0 +1,10 @@
+ARG ALLINONE=default
+FROM $ALLINONE as allinone
+
+FROM gcr.io/distroless/base-debian10:debug
+
+COPY --from=allinone /usr/local/bin/dme-server /usr/local/bin/dme-server
+COPY --from=allinone \
+	/plugins/edgeevents.so \
+	/plugins/platforms.so \
+	/plugins/

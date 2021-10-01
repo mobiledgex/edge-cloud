@@ -603,6 +603,7 @@ var ClusterInstOptionalArgs = []string{
 	"sharedvolumesize",
 	"skipcrmcleanuponfailure",
 	"multitenant",
+	"networks",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -652,10 +653,12 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.clusterip": "IP within the CNI and is applicable to kubernetes only",
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"multitenant":                            "Multi-tenant kubernetes cluster",
+	"networks":                               "networks to connect to, specify networks:empty=true to clear",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",
 	"fields":      "StringArray",
+	"networks":    "StringArray",
 	"status.msgs": "StringArray",
 }
 var IdleReservableClusterInstsRequiredArgs = []string{}
