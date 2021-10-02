@@ -3,7 +3,7 @@ include Makedefs
 
 GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
 
-EDGE_CLOUD_BASE_IMAGE = $(REGISTRY)/edge-cloud-base-image:v1.2.4.1-hf3-298-gf5bbdac6
+EDGE_CLOUD_BASE_IMAGE = $(REGISTRY)/edge-cloud-base-image:4a0489acde7c3b38c270cbe0e6b19826d3918173
 
 export GO111MODULE=on
 
