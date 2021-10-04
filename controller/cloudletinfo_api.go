@@ -207,6 +207,8 @@ func FireCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.Cloudle
 }
 
 func ClearCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	// We ignore the controller and notifyId check when cleaning up the alerts here
+	ctx = context.WithValue(ctx, ControllerCreatedAlerts, &ControllerCreatedAlerts)
 	clearCloudletDownAlert(ctx, in)
 	clearCloudletDownAppInstAlerts(ctx, in)
 }
