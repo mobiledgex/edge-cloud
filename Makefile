@@ -25,6 +25,7 @@ check-vers: build-vers
 build: check-vers
 	make -f Makefile.tools
 	make -C protogen
+	make -C edgeprotogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	go install ./protoc-gen-notify
