@@ -5,7 +5,6 @@ package log
 
 import (
 	"encoding/json"
-	"errors"
 	fmt "fmt"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -188,7 +187,7 @@ func (e *DebugLevel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid DebugLevel value %q", str)
 	}
 	*e = DebugLevel(val)
 	return nil
@@ -214,7 +213,7 @@ func (e *DebugLevel) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid DebugLevel value %q", str)
 		}
 		*e = DebugLevel(val)
 		return nil
@@ -222,10 +221,14 @@ func (e *DebugLevel) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := DebugLevel_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid DebugLevel value %d", val)
+		}
 		*e = DebugLevel(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid DebugLevel value %v", b)
 }
 
 /*

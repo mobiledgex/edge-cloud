@@ -6,7 +6,6 @@ package edgeproto
 import (
 	context "context"
 	"encoding/json"
-	"errors"
 	fmt "fmt"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	_ "github.com/gogo/googleapis/google/api"
@@ -1571,7 +1570,7 @@ func (e *OptResNames) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid OptResNames value %q", str)
 	}
 	*e = OptResNames(val)
 	return nil
@@ -1597,7 +1596,7 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid OptResNames value %q", str)
 		}
 		*e = OptResNames(val)
 		return nil
@@ -1605,10 +1604,14 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := OptResNames_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid OptResNames value %d", val)
+		}
 		*e = OptResNames(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid OptResNames value %v", b)
 }
 
 /*

@@ -3729,7 +3729,7 @@ func (e *ApiEndpointType) UnmarshalYAML(unmarshal func(interface{}) error) error
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid ApiEndpointType value %q", str)
 	}
 	*e = ApiEndpointType(val)
 	return nil
@@ -3755,7 +3755,7 @@ func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid ApiEndpointType value %q", str)
 		}
 		*e = ApiEndpointType(val)
 		return nil
@@ -3763,10 +3763,14 @@ func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := ApiEndpointType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid ApiEndpointType value %d", val)
+		}
 		*e = ApiEndpointType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid ApiEndpointType value %v", b)
 }
 
 /*
@@ -3825,7 +3829,7 @@ func (e *RateLimitTarget) UnmarshalYAML(unmarshal func(interface{}) error) error
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid RateLimitTarget value %q", str)
 	}
 	*e = RateLimitTarget(val)
 	return nil
@@ -3851,7 +3855,7 @@ func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid RateLimitTarget value %q", str)
 		}
 		*e = RateLimitTarget(val)
 		return nil
@@ -3859,10 +3863,14 @@ func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := RateLimitTarget_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid RateLimitTarget value %d", val)
+		}
 		*e = RateLimitTarget(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid RateLimitTarget value %v", b)
 }
 
 /*
@@ -3916,7 +3924,7 @@ func (e *FlowRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) error
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %q", str)
 	}
 	*e = FlowRateLimitAlgorithm(val)
 	return nil
@@ -3942,7 +3950,7 @@ func (e *FlowRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %q", str)
 		}
 		*e = FlowRateLimitAlgorithm(val)
 		return nil
@@ -3950,10 +3958,14 @@ func (e *FlowRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := FlowRateLimitAlgorithm_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %d", val)
+		}
 		*e = FlowRateLimitAlgorithm(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %v", b)
 }
 
 /*
@@ -4002,7 +4014,7 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) er
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %q", str)
 	}
 	*e = MaxReqsRateLimitAlgorithm(val)
 	return nil
@@ -4028,7 +4040,7 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %q", str)
 		}
 		*e = MaxReqsRateLimitAlgorithm(val)
 		return nil
@@ -4036,10 +4048,14 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := MaxReqsRateLimitAlgorithm_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %d", val)
+		}
 		*e = MaxReqsRateLimitAlgorithm(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %v", b)
 }
 
 /*
