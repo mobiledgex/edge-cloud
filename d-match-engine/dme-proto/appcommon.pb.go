@@ -790,7 +790,7 @@ func (e *LProto) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid LProto value %q", str)
 	}
 	*e = LProto(val)
 	return nil
@@ -821,7 +821,7 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid LProto value %q", str)
 		}
 		*e = LProto(val)
 		return nil
@@ -829,10 +829,14 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := LProto_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid LProto value %d", val)
+		}
 		*e = LProto(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid LProto value %v", b)
 }
 
 /*
@@ -903,7 +907,7 @@ func (e *HealthCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid HealthCheck value %q", str)
 	}
 	*e = HealthCheck(val)
 	return nil
@@ -934,7 +938,7 @@ func (e *HealthCheck) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid HealthCheck value %q", str)
 		}
 		*e = HealthCheck(val)
 		return nil
@@ -942,10 +946,14 @@ func (e *HealthCheck) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := HealthCheck_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid HealthCheck value %d", val)
+		}
 		*e = HealthCheck(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid HealthCheck value %v", b)
 }
 
 /*
@@ -1031,7 +1039,7 @@ func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid CloudletState value %q", str)
 	}
 	*e = CloudletState(val)
 	return nil
@@ -1062,7 +1070,7 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid CloudletState value %q", str)
 		}
 		*e = CloudletState(val)
 		return nil
@@ -1070,10 +1078,14 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := CloudletState_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid CloudletState value %d", val)
+		}
 		*e = CloudletState(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid CloudletState value %v", b)
 }
 
 /*
@@ -1170,7 +1182,7 @@ func (e *MaintenanceState) UnmarshalYAML(unmarshal func(interface{}) error) erro
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid MaintenanceState value %q", str)
 	}
 	*e = MaintenanceState(val)
 	return nil
@@ -1196,7 +1208,7 @@ func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid MaintenanceState value %q", str)
 		}
 		*e = MaintenanceState(val)
 		return nil
@@ -1204,10 +1216,14 @@ func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := MaintenanceState_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid MaintenanceState value %d", val)
+		}
 		*e = MaintenanceState(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid MaintenanceState value %v", b)
 }
 
 /*

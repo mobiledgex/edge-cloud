@@ -7424,7 +7424,7 @@ func (e *IDTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid IDTypes value %q", str)
 	}
 	*e = IDTypes(val)
 	return nil
@@ -7450,7 +7450,7 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid IDTypes value %q", str)
 		}
 		*e = IDTypes(val)
 		return nil
@@ -7458,10 +7458,14 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := IDTypes_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid IDTypes value %d", val)
+		}
 		*e = IDTypes(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid IDTypes value %v", b)
 }
 
 /*
@@ -7519,7 +7523,7 @@ func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid ReplyStatus value %q", str)
 	}
 	*e = ReplyStatus(val)
 	return nil
@@ -7550,7 +7554,7 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid ReplyStatus value %q", str)
 		}
 		*e = ReplyStatus(val)
 		return nil
@@ -7558,10 +7562,14 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := ReplyStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid ReplyStatus value %d", val)
+		}
 		*e = ReplyStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid ReplyStatus value %v", b)
 }
 
 /*
@@ -7622,7 +7630,7 @@ func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{})
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %q", str)
 	}
 	*e = FindCloudletReply_FindStatus(val)
 	return nil
@@ -7653,7 +7661,7 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %q", str)
 		}
 		*e = FindCloudletReply_FindStatus(val)
 		return nil
@@ -7661,10 +7669,14 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := FindCloudletReply_FindStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %d", val)
+		}
 		*e = FindCloudletReply_FindStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %v", b)
 }
 
 /*
@@ -7721,7 +7733,7 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalYAML(unmarshal func(interface
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %q", str)
 	}
 	*e = VerifyLocationReply_TowerStatus(val)
 	return nil
@@ -7747,7 +7759,7 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %q", str)
 		}
 		*e = VerifyLocationReply_TowerStatus(val)
 		return nil
@@ -7755,10 +7767,14 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := VerifyLocationReply_TowerStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %d", val)
+		}
 		*e = VerifyLocationReply_TowerStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %v", b)
 }
 
 /*
@@ -7841,7 +7857,7 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(int
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %q", str)
 	}
 	*e = VerifyLocationReply_GPSLocationStatus(val)
 	return nil
@@ -7872,7 +7888,7 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %q", str)
 		}
 		*e = VerifyLocationReply_GPSLocationStatus(val)
 		return nil
@@ -7880,10 +7896,14 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := VerifyLocationReply_GPSLocationStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %d", val)
+		}
 		*e = VerifyLocationReply_GPSLocationStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %v", b)
 }
 
 /*
@@ -7944,7 +7964,7 @@ func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) e
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid GetLocationReply_LocStatus value %q", str)
 	}
 	*e = GetLocationReply_LocStatus(val)
 	return nil
@@ -7975,7 +7995,7 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid GetLocationReply_LocStatus value %q", str)
 		}
 		*e = GetLocationReply_LocStatus(val)
 		return nil
@@ -7983,10 +8003,14 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := GetLocationReply_LocStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid GetLocationReply_LocStatus value %d", val)
+		}
 		*e = GetLocationReply_LocStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid GetLocationReply_LocStatus value %v", b)
 }
 
 /*
@@ -8047,7 +8071,7 @@ func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) er
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid AppInstListReply_AIStatus value %q", str)
 	}
 	*e = AppInstListReply_AIStatus(val)
 	return nil
@@ -8078,7 +8102,7 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid AppInstListReply_AIStatus value %q", str)
 		}
 		*e = AppInstListReply_AIStatus(val)
 		return nil
@@ -8086,10 +8110,14 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := AppInstListReply_AIStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid AppInstListReply_AIStatus value %d", val)
+		}
 		*e = AppInstListReply_AIStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid AppInstListReply_AIStatus value %v", b)
 }
 
 /*
@@ -8150,7 +8178,7 @@ func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid FqdnListReply_FLStatus value %q", str)
 	}
 	*e = FqdnListReply_FLStatus(val)
 	return nil
@@ -8181,7 +8209,7 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid FqdnListReply_FLStatus value %q", str)
 		}
 		*e = FqdnListReply_FLStatus(val)
 		return nil
@@ -8189,10 +8217,14 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := FqdnListReply_FLStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid FqdnListReply_FLStatus value %d", val)
+		}
 		*e = FqdnListReply_FLStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid FqdnListReply_FLStatus value %v", b)
 }
 
 /*
@@ -8253,7 +8285,7 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalYAML(unmarshal func(interface{
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %q", str)
 	}
 	*e = AppOfficialFqdnReply_AOFStatus(val)
 	return nil
@@ -8284,7 +8316,7 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %q", str)
 		}
 		*e = AppOfficialFqdnReply_AOFStatus(val)
 		return nil
@@ -8292,10 +8324,14 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := AppOfficialFqdnReply_AOFStatus_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %d", val)
+		}
 		*e = AppOfficialFqdnReply_AOFStatus(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %v", b)
 }
 
 /*
@@ -8356,7 +8392,7 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interf
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %q", str)
 	}
 	*e = DynamicLocGroupRequest_DlgCommType(val)
 	return nil
@@ -8387,7 +8423,7 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %q", str)
 		}
 		*e = DynamicLocGroupRequest_DlgCommType(val)
 		return nil
@@ -8395,10 +8431,14 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := DynamicLocGroupRequest_DlgCommType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %d", val)
+		}
 		*e = DynamicLocGroupRequest_DlgCommType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %v", b)
 }
 
 /*
@@ -8474,7 +8514,7 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalYAML(unmarshal func(interface
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %q", str)
 	}
 	*e = ClientEdgeEvent_ClientEventType(val)
 	return nil
@@ -8505,7 +8545,7 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %q", str)
 		}
 		*e = ClientEdgeEvent_ClientEventType(val)
 		return nil
@@ -8513,10 +8553,14 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := ClientEdgeEvent_ClientEventType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %d", val)
+		}
 		*e = ClientEdgeEvent_ClientEventType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %v", b)
 }
 
 /*
@@ -8607,7 +8651,7 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalYAML(unmarshal func(interface
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %q", str)
 	}
 	*e = ServerEdgeEvent_ServerEventType(val)
 	return nil
@@ -8638,7 +8682,7 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %q", str)
 		}
 		*e = ServerEdgeEvent_ServerEventType(val)
 		return nil
@@ -8646,10 +8690,14 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := ServerEdgeEvent_ServerEventType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %d", val)
+		}
 		*e = ServerEdgeEvent_ServerEventType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %v", b)
 }
 
 /*

@@ -4131,7 +4131,7 @@ func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid ImageType value %q", str)
 	}
 	*e = ImageType(val)
 	return nil
@@ -4162,7 +4162,7 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid ImageType value %q", str)
 		}
 		*e = ImageType(val)
 		return nil
@@ -4170,10 +4170,14 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := ImageType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid ImageType value %d", val)
+		}
 		*e = ImageType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid ImageType value %v", b)
 }
 
 /*
@@ -4249,7 +4253,7 @@ func (e *VmAppOsType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid VmAppOsType value %q", str)
 	}
 	*e = VmAppOsType(val)
 	return nil
@@ -4280,7 +4284,7 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid VmAppOsType value %q", str)
 		}
 		*e = VmAppOsType(val)
 		return nil
@@ -4288,10 +4292,14 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := VmAppOsType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid VmAppOsType value %d", val)
+		}
 		*e = VmAppOsType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid VmAppOsType value %v", b)
 }
 
 /*
@@ -4343,7 +4351,7 @@ func (e *DeleteType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid DeleteType value %q", str)
 	}
 	*e = DeleteType(val)
 	return nil
@@ -4369,7 +4377,7 @@ func (e *DeleteType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid DeleteType value %q", str)
 		}
 		*e = DeleteType(val)
 		return nil
@@ -4377,10 +4385,14 @@ func (e *DeleteType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := DeleteType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid DeleteType value %d", val)
+		}
 		*e = DeleteType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid DeleteType value %v", b)
 }
 
 /*
@@ -4438,7 +4450,7 @@ func (e *AccessType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid AccessType value %q", str)
 	}
 	*e = AccessType(val)
 	return nil
@@ -4469,7 +4481,7 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid AccessType value %q", str)
 		}
 		*e = AccessType(val)
 		return nil
@@ -4477,10 +4489,14 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := AccessType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid AccessType value %d", val)
+		}
 		*e = AccessType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid AccessType value %v", b)
 }
 
 /*

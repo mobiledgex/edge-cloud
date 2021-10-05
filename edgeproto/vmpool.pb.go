@@ -4062,7 +4062,7 @@ func (e *VMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid VMState value %q", str)
 	}
 	*e = VMState(val)
 	return nil
@@ -4093,7 +4093,7 @@ func (e *VMState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid VMState value %q", str)
 		}
 		*e = VMState(val)
 		return nil
@@ -4101,10 +4101,14 @@ func (e *VMState) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := VMState_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid VMState value %d", val)
+		}
 		*e = VMState(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid VMState value %v", b)
 }
 
 /*
@@ -4165,7 +4169,7 @@ func (e *VMAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid VMAction value %q", str)
 	}
 	*e = VMAction(val)
 	return nil
@@ -4196,7 +4200,7 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid VMAction value %q", str)
 		}
 		*e = VMAction(val)
 		return nil
@@ -4204,10 +4208,14 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := VMAction_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid VMAction value %d", val)
+		}
 		*e = VMAction(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid VMAction value %v", b)
 }
 
 /*
