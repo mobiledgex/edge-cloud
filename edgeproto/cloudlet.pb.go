@@ -12752,7 +12752,7 @@ func (e *PlatformType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid PlatformType value %q", str)
 	}
 	*e = PlatformType(val)
 	return nil
@@ -12783,7 +12783,7 @@ func (e *PlatformType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid PlatformType value %q", str)
 		}
 		*e = PlatformType(val)
 		return nil
@@ -12791,10 +12791,14 @@ func (e *PlatformType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := PlatformType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid PlatformType value %d", val)
+		}
 		*e = PlatformType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid PlatformType value %v", b)
 }
 
 /*
@@ -12846,7 +12850,7 @@ func (e *InfraApiAccess) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid InfraApiAccess value %q", str)
 	}
 	*e = InfraApiAccess(val)
 	return nil
@@ -12872,7 +12876,7 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid InfraApiAccess value %q", str)
 		}
 		*e = InfraApiAccess(val)
 		return nil
@@ -12880,10 +12884,14 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := InfraApiAccess_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid InfraApiAccess value %d", val)
+		}
 		*e = InfraApiAccess(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid InfraApiAccess value %v", b)
 }
 
 /*
@@ -12937,7 +12945,7 @@ func (e *OSType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid OSType value %q", str)
 	}
 	*e = OSType(val)
 	return nil
@@ -12963,7 +12971,7 @@ func (e *OSType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid OSType value %q", str)
 		}
 		*e = OSType(val)
 		return nil
@@ -12971,10 +12979,14 @@ func (e *OSType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := OSType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid OSType value %d", val)
+		}
 		*e = OSType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid OSType value %v", b)
 }
 
 /*
@@ -13033,7 +13045,7 @@ func (e *ReportSchedule) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid ReportSchedule value %q", str)
 	}
 	*e = ReportSchedule(val)
 	return nil
@@ -13059,7 +13071,7 @@ func (e *ReportSchedule) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid ReportSchedule value %q", str)
 		}
 		*e = ReportSchedule(val)
 		return nil
@@ -13067,10 +13079,14 @@ func (e *ReportSchedule) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := ReportSchedule_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid ReportSchedule value %d", val)
+		}
 		*e = ReportSchedule(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid ReportSchedule value %v", b)
 }
 
 /*

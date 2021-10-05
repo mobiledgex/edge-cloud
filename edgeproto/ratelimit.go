@@ -19,7 +19,7 @@ func (f *FlowSettings) Validate() error {
 			}
 		}
 	} else {
-		return fmt.Errorf("Invalid FlowAlgorithm %v", f.FlowAlgorithm)
+		return fmt.Errorf("Invalid FlowAlgorithm")
 	}
 	return nil
 }
@@ -34,7 +34,7 @@ func (m *MaxReqsSettings) Validate() error {
 			return fmt.Errorf("Invalid Interval %d, must be greater than 0", m.Interval)
 		}
 	} else {
-		return fmt.Errorf("Invalid MaxReqsAlgorithm %v", m.MaxReqsAlgorithm)
+		return fmt.Errorf("Invalid MaxReqsAlgorithm")
 	}
 	return nil
 }

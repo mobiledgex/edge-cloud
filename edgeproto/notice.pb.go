@@ -518,7 +518,7 @@ func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid NoticeAction value %q", str)
 	}
 	*e = NoticeAction(val)
 	return nil
@@ -544,7 +544,7 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid NoticeAction value %q", str)
 		}
 		*e = NoticeAction(val)
 		return nil
@@ -552,10 +552,14 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := NoticeAction_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid NoticeAction value %d", val)
+		}
 		*e = NoticeAction(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid NoticeAction value %v", b)
 }
 
 /*

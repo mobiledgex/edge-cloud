@@ -5,7 +5,6 @@ package edgeproto
 
 import (
 	"encoding/json"
-	"errors"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -580,7 +579,7 @@ func (e *Liveness) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid Liveness value %q", str)
 	}
 	*e = Liveness(val)
 	return nil
@@ -611,7 +610,7 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid Liveness value %q", str)
 		}
 		*e = Liveness(val)
 		return nil
@@ -619,10 +618,14 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := Liveness_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid Liveness value %d", val)
+		}
 		*e = Liveness(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid Liveness value %v", b)
 }
 
 /*
@@ -683,7 +686,7 @@ func (e *IpSupport) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid IpSupport value %q", str)
 	}
 	*e = IpSupport(val)
 	return nil
@@ -714,7 +717,7 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid IpSupport value %q", str)
 		}
 		*e = IpSupport(val)
 		return nil
@@ -722,10 +725,14 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := IpSupport_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid IpSupport value %d", val)
+		}
 		*e = IpSupport(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid IpSupport value %v", b)
 }
 
 /*
@@ -786,7 +793,7 @@ func (e *IpAccess) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid IpAccess value %q", str)
 	}
 	*e = IpAccess(val)
 	return nil
@@ -817,7 +824,7 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid IpAccess value %q", str)
 		}
 		*e = IpAccess(val)
 		return nil
@@ -825,10 +832,14 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := IpAccess_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid IpAccess value %d", val)
+		}
 		*e = IpAccess(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid IpAccess value %v", b)
 }
 
 /*
@@ -950,7 +961,7 @@ func (e *TrackedState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid TrackedState value %q", str)
 	}
 	*e = TrackedState(val)
 	return nil
@@ -976,7 +987,7 @@ func (e *TrackedState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid TrackedState value %q", str)
 		}
 		*e = TrackedState(val)
 		return nil
@@ -984,10 +995,14 @@ func (e *TrackedState) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := TrackedState_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid TrackedState value %d", val)
+		}
 		*e = TrackedState(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid TrackedState value %v", b)
 }
 
 /*
@@ -1051,7 +1066,7 @@ func (e *CRMOverride) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid CRMOverride value %q", str)
 	}
 	*e = CRMOverride(val)
 	return nil
@@ -1077,7 +1092,7 @@ func (e *CRMOverride) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid CRMOverride value %q", str)
 		}
 		*e = CRMOverride(val)
 		return nil
@@ -1085,10 +1100,14 @@ func (e *CRMOverride) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := CRMOverride_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid CRMOverride value %d", val)
+		}
 		*e = CRMOverride(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid CRMOverride value %v", b)
 }
 
 /*

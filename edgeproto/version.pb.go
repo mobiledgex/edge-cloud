@@ -5,7 +5,6 @@ package edgeproto
 
 import (
 	"encoding/json"
-	"errors"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
@@ -334,7 +333,7 @@ func (e *VersionHash) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid VersionHash value %q", str)
 	}
 	*e = VersionHash(val)
 	return nil
@@ -365,7 +364,7 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid VersionHash value %q", str)
 		}
 		*e = VersionHash(val)
 		return nil
@@ -373,10 +372,14 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := VersionHash_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid VersionHash value %d", val)
+		}
 		*e = VersionHash(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid VersionHash value %v", b)
 }
 
 /*

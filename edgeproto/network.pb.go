@@ -1640,7 +1640,7 @@ func (e *NetworkConnectionType) UnmarshalYAML(unmarshal func(interface{}) error)
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid NetworkConnectionType value %q", str)
 	}
 	*e = NetworkConnectionType(val)
 	return nil
@@ -1666,7 +1666,7 @@ func (e *NetworkConnectionType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid NetworkConnectionType value %q", str)
 		}
 		*e = NetworkConnectionType(val)
 		return nil
@@ -1674,10 +1674,14 @@ func (e *NetworkConnectionType) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := NetworkConnectionType_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid NetworkConnectionType value %d", val)
+		}
 		*e = NetworkConnectionType(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid NetworkConnectionType value %v", b)
 }
 
 /*
