@@ -3158,7 +3158,7 @@ func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid OuterEnum value %q", str)
 	}
 	*e = OuterEnum(val)
 	return nil
@@ -3189,7 +3189,7 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid OuterEnum value %q", str)
 		}
 		*e = OuterEnum(val)
 		return nil
@@ -3197,10 +3197,14 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := OuterEnum_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid OuterEnum value %d", val)
+		}
 		*e = OuterEnum(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid OuterEnum value %v", b)
 }
 
 /*
@@ -3266,7 +3270,7 @@ func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) err
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid TestGen_InnerEnum value %q", str)
 	}
 	*e = TestGen_InnerEnum(val)
 	return nil
@@ -3297,7 +3301,7 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid TestGen_InnerEnum value %q", str)
 		}
 		*e = TestGen_InnerEnum(val)
 		return nil
@@ -3305,10 +3309,14 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := TestGen_InnerEnum_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid TestGen_InnerEnum value %d", val)
+		}
 		*e = TestGen_InnerEnum(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid TestGen_InnerEnum value %v", b)
 }
 
 /*
