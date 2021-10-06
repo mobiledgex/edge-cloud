@@ -333,9 +333,9 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
 		} else {
-			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 			// Send a cloudlet down alert if a cloudlet was ready
 			if cloudletReady {
+				nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 				FireCloudletAndAppInstDownAlerts(ctx, &info)
 			}
 		}
