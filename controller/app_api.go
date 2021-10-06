@@ -386,7 +386,10 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	}
 
 	flavor := &edgeproto.Flavor{}
-	if in.DefaultFlavor.Name != "" && !flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
+	if in.DefaultFlavor.Name == "" {
+		return fmt.Errorf("Default flavor must be specified")
+	}
+	if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
 		return in.DefaultFlavor.NotFoundError()
 	}
 
