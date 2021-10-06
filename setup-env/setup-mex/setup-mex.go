@@ -45,6 +45,16 @@ func GetActionParam(a string) (string, string) {
 	return action, actionParam
 }
 
+func GetCtrlNameFromCrmStartArgs(args []string) string {
+	for ii := range args {
+		act, param := GetActionParam(args[ii])
+		if act == "ctrl" {
+			return param
+		}
+	}
+	return ""
+}
+
 // Change "cluster-svc1 scrapeInterval=30s updateAll" int []{"cluster-svc1", "scrapeInterval=30s", "updateApp"}
 func GetActionArgs(a string) []string {
 	argSlice := strings.Fields(a)
@@ -627,8 +637,17 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 			actionArgs = actionArgs[1:]
 		}
 		if actionSubtype == "crm" {
+			// extract the action param and action args
+			actionArgs = GetActionArgs(actionParam)
+			ctrlName := ""
+			if len(actionArgs) > 0 {
+				actionParam = actionArgs[0]
+				actionArgs = actionArgs[1:]
+				ctrlName = GetCtrlNameFromCrmStartArgs(actionArgs)
+			}
+			log.Printf("Starting CRM %s connected to ctrl %s\n", actionParam, ctrlName)
 			// read the apifile and start crm with the details
-			err := apis.StartCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir)
+			err := apis.StartCrmsLocal(ctx, actionParam, ctrlName, spec.ApiFile, spec.ApiFileVars, outputDir)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}
