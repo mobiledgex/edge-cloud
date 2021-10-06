@@ -35,10 +35,7 @@ func InitCloudletInfoApi(sync *Sync) {
 }
 
 type HandleFlavorAlertWorkerKey struct {
-	cloudletKey      edgeproto.CloudletKey
-	deprecatedFlavor string
-	recreatedFlavor  string
-	usingObjs        string
+	cloudletKey edgeproto.CloudletKey
 }
 
 // We put CloudletInfo in etcd with a lease, so in case both controller
@@ -72,8 +69,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	deleted := make(map[string]*edgeproto.FlavorInfo)
 	updated := make(map[string]*edgeproto.FlavorInfo)
 	recreated := make(map[string]*edgeproto.FlavorInfo)
-	deprecated := make(map[string]*edgeproto.FlavorInfo)
-	usingObjs := make(map[string]string)
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		info := edgeproto.CloudletInfo{}
 		if s.store.STMGet(stm, &in.Key, &info) {
@@ -81,13 +76,13 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				info.State != dme.CloudletState_CLOUDLET_STATE_READY {
 				changedToOnline = true
 			}
-			added, deleted, updated, recreated, deprecated, usingObjs = s.HandleInfraFlavorUpdate(ctx, in, updateFlavors, info.Flavors)
+			added, deleted, updated, recreated = s.HandleInfraFlavorUpdate(ctx, in, updateFlavors, info.Flavors)
 		}
 		s.store.STMPut(stm, in)
 		return nil
 	})
-	if len(added)+len(deleted)+len(updated)+len(recreated)+len(deprecated) != 0 {
-		s.FixupFlavorUpdate(ctx, in, added, deleted, updated, recreated, deprecated, usingObjs)
+	if len(added)+len(deleted)+len(updated)+len(recreated) != 0 {
+		s.fixupFlavorUpdate(ctx, in, added, deleted, updated, recreated)
 	}
 	cloudlet := edgeproto.Cloudlet{}
 	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
@@ -511,8 +506,7 @@ func newDeprecatedFlavorInUseAlert(key *edgeproto.CloudletKey, infraFlavor strin
 }
 
 func ClearDeletedInfraFlavorAlert(ctx context.Context, key *edgeproto.CloudletKey, flavor string) {
-
-	log.SpanLog(ctx, log.DebugLevelInfra, "clear alert for recreated", "flavor", flavor)
+	log.SpanLog(ctx, log.DebugLevelInfra, "clear alert for", "flavor", flavor)
 	alert := newDeprecatedFlavorInUseAlert(key, flavor)
 	alertApi.Delete(ctx, alert, 0)
 }
@@ -526,69 +520,11 @@ func RaiseDeletedInfraFlavorAlert(ctx context.Context, key *edgeproto.CloudletKe
 	alertApi.Update(ctx, alert, 0)
 }
 
-func (s *CloudletInfoApi) getMissingFlavors(ctx context.Context, info *edgeproto.CloudletInfo, inFlavorMap map[string]*edgeproto.FlavorInfo) ([]string, map[string]string, error) {
-	var missingFlavors []string
-	usingObjs := make(map[string]string)
-	missingFlavorsMap := make(map[string]struct{})
-	cloudRefs := edgeproto.CloudletRefs{}
-
-	if !cloudletRefsApi.cache.Get(&info.Key, &cloudRefs) {
-		log.SpanLog(ctx, log.DebugLevelInfra, "missing flavors: no refs for", "cloudlet", info.Key)
-		return missingFlavors, usingObjs, fmt.Errorf("CloudletRefs not found")
-	}
-
-	for _, clust := range cloudRefs.ClusterInsts {
-		clusterInst := edgeproto.ClusterInst{}
-		clusterInstKey := edgeproto.ClusterInstKey{
-			ClusterKey:   clust.ClusterKey,
-			CloudletKey:  info.Key,
-			Organization: clust.Organization,
-		}
-		found := clusterInstApi.cache.Get(&clusterInstKey, &clusterInst)
-		if found {
-			usingObjs[clusterInst.NodeFlavor] = usingObjs[clusterInst.NodeFlavor] + " " + clusterInstKey.ClusterKey.Name + ", "
-			if _, found := inFlavorMap[clusterInst.NodeFlavor]; !found {
-				missingFlavorsMap[clusterInst.NodeFlavor] = struct{}{}
-			}
-			if _, found := inFlavorMap[clusterInst.MasterNodeFlavor]; !found {
-				missingFlavorsMap[clusterInst.MasterNodeFlavor] = struct{}{}
-			}
-		}
-		for _, appInstRefKey := range cloudRefs.VmAppInsts {
-			appInst := edgeproto.AppInst{}
-			appInstKey := edgeproto.AppInstKey{
-				AppKey: edgeproto.AppKey{
-					Organization: appInstRefKey.AppKey.Organization,
-					Name:         appInstRefKey.AppKey.Name,
-					Version:      appInstRefKey.AppKey.Version,
-				},
-				ClusterInstKey: edgeproto.VirtualClusterInstKey{
-					ClusterKey:   clust.ClusterKey,
-					CloudletKey:  info.Key,
-					Organization: clusterInst.Key.Organization,
-				},
-			}
-			found := appInstApi.cache.Get(&appInstKey, &appInst)
-			if found {
-				if _, found := inFlavorMap[appInst.VmFlavor]; !found {
-					missingFlavorsMap[appInst.Flavor.Name] = struct{}{}
-				}
-			}
-		}
-	}
-	for k, _ := range missingFlavorsMap {
-		missingFlavors = append(missingFlavors, k)
-	}
-	return missingFlavors, usingObjs, nil
-}
-
 func (s *CloudletInfoApi) findFlavorDeltas(ctx context.Context, flavorMap, newFlavorMap map[string]*edgeproto.FlavorInfo) (added, deleted, updated, recreated map[string]*edgeproto.FlavorInfo) {
-
 	addedFlavorsMap := make(map[string]*edgeproto.FlavorInfo)
 	deletedFlavorsMap := make(map[string]*edgeproto.FlavorInfo)
 	updatedFlavorsMap := make(map[string]*edgeproto.FlavorInfo)
 	recreatedFlavorsMap := make(map[string]*edgeproto.FlavorInfo)
-
 	sameNames := make(map[string]struct{})
 
 	for key, flavor := range flavorMap {
@@ -622,91 +558,63 @@ func (s *CloudletInfoApi) findFlavorDeltas(ctx context.Context, flavorMap, newFl
 			updatedFlavorsMap[newFlavor.Name] = newFlavor
 		}
 	}
-
 	return addedFlavorsMap, deletedFlavorsMap, updatedFlavorsMap, recreatedFlavorsMap
-
 }
 
-func (s *CloudletInfoApi) HandleInfraFlavorUpdate(ctx context.Context, info *edgeproto.CloudletInfo, newFlavors, curFlavors []*edgeproto.FlavorInfo) (added, deleted, updated, recreated, deprecated map[string]*edgeproto.FlavorInfo, usingObjs map[string]string) {
+func (s *CloudletInfoApi) HandleInfraFlavorUpdate(ctx context.Context, info *edgeproto.CloudletInfo, newFlavors, curFlavors []*edgeproto.FlavorInfo) (added, deleted, updated, recreated map[string]*edgeproto.FlavorInfo) {
 
-	newFlavorsMap := make(map[string]*edgeproto.FlavorInfo) // newFlavors = new was in.Flavors
+	newFlavorsMap := make(map[string]*edgeproto.FlavorInfo) // newFlavors = new  in.Flavors
 	curFlavorsMap := make(map[string]*edgeproto.FlavorInfo) // curFlavors = whats was in the db when the update came in
-	deprecatedFlavorsMap := make(map[string]*edgeproto.FlavorInfo)
-
 	for _, flavor := range curFlavors {
 		curFlavorsMap[flavor.Name] = flavor
 	}
 	for _, flavor := range newFlavors {
 		newFlavorsMap[flavor.Name] = flavor
 	}
-
 	addedFlavorsMap, deletedFlavorsMap, updatedFlavorsMap, recreatedFlavorsMap := s.findFlavorDeltas(ctx, curFlavorsMap, newFlavorsMap)
 	if len(addedFlavorsMap)+len(deletedFlavorsMap)+len(updatedFlavorsMap)+len(recreatedFlavorsMap) == 0 {
-		return addedFlavorsMap, deletedFlavorsMap, updatedFlavorsMap, recreatedFlavorsMap, deprecatedFlavorsMap, usingObjs
+		return addedFlavorsMap, deletedFlavorsMap, updatedFlavorsMap, recreatedFlavorsMap
 	}
-
-	// We're about to range over cloudletRefs asking if any flavor in use is not on newFlavors, its gone missing
-	// if it is, and its been deleted, we add it back marked deprecated
-	missingFlavors, usingObjs, _ := s.getMissingFlavors(ctx, info, newFlavorsMap)
-	for _, missingFlavor := range missingFlavors {
-		if f, found := deletedFlavorsMap[missingFlavor]; found {
-			log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorUpdate deleted and in use: mark deprecated", "flavor", f)
-			f.Deprecated = true
-			curFlavorsMap[f.Name] = f
-			deprecatedFlavorsMap[f.Name] = f
-		}
-	}
-	//	}
-	// Finish addressing flavors
-	info.Flavors = nil
+	// clear old deprecated flavors if they were recreated to avoid overwriting in newFlavorMap
 	for _, f := range recreatedFlavorsMap {
-		if _, found := deprecatedFlavorsMap[f.Name]; found {
-			delete(deprecatedFlavorsMap, f.Name)
+		if flavor, found := curFlavorsMap[f.Name]; found {
+			flavor.Deprecated = false
 		}
 	}
-	for _, f := range deprecatedFlavorsMap {
-		curFlavorsMap[f.Name] = f // ensure it remains  part of info.Flavors
+	// carry forward deprecated flavors missing from newFlavorMap
+	for _, f := range curFlavorsMap {
+		if f.Deprecated {
+			newFlavorsMap[f.Name] = f
+		}
 	}
-	for _, flavor := range curFlavorsMap {
-		// check if any alerts were cleared, if so, clear its marking
-		for _, f := range recreatedFlavorsMap {
-			if f.Name == flavor.Name {
-				flavor.Deprecated = false
-			}
-		}
-		if f, found := deletedFlavorsMap[flavor.Name]; found && !f.Deprecated {
-			// don't put deleted, not in use flavors back, let 'em stay deleted.
-			continue
-
-		}
+	// add newly deleted flavors as deprecated
+	for _, f := range deletedFlavorsMap {
+		f.Deprecated = true
+		newFlavorsMap[f.Name] = f
+	}
+	info.Flavors = nil
+	for _, flavor := range newFlavorsMap {
 		info.Flavors = append(info.Flavors, flavor)
 	}
-	// return bits for events and alerts to be completed in the fixup/worker task
-	return addedFlavorsMap, deletedFlavorsMap, updatedFlavorsMap, recreatedFlavorsMap, deprecatedFlavorsMap, usingObjs
+	return addedFlavorsMap, deletedFlavorsMap, updatedFlavorsMap, recreatedFlavorsMap
 }
 
 func (s *CloudletInfoApi) InfraFlavorAlertTask(ctx context.Context, k interface{}) {
-
 	key, ok := k.(HandleFlavorAlertWorkerKey)
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task: key not correct type", "key", key)
 		return
 	}
-	if key.deprecatedFlavor != "" {
-		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task raise deprecated alert", "infra flavor", key.deprecatedFlavor)
-		RaiseDeletedInfraFlavorAlert(ctx, &key.cloudletKey, key.deprecatedFlavor, key.usingObjs)
-	}
-	if key.recreatedFlavor != "" {
-		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task clear deprecated alert, recreated", "infra flavor", key.recreatedFlavor)
-		ClearDeletedInfraFlavorAlert(ctx, &key.cloudletKey, key.recreatedFlavor)
-	}
-	clearAlertFlavors := []string{}
+	var err error
+	clearAlertFlavors := []*string{}
+	raiseAlertFlavors := []*string{}
 	cloudletInfo := edgeproto.CloudletInfo{}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	refMap := map[string]*InfraFlavorUsage{}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !cloudletInfoApi.store.STMGet(stm, &key.cloudletKey, &cloudletInfo) {
 			return fmt.Errorf("CloudletInfo %s Not found", key.cloudletKey)
 		}
-		refMap, err := s.getInfraFlavorUsageCounts(ctx, &cloudletInfo)
+		refMap, err = s.getInfraFlavorUsageCounts(ctx, stm, &cloudletInfo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavor cleanup infra flavor usage failed", "error", err)
 			return err
@@ -715,12 +623,16 @@ func (s *CloudletInfoApi) InfraFlavorAlertTask(ctx context.Context, k interface{
 		for _, f := range cloudletInfo.Flavors {
 			curFlavorsMap[f.Name] = f
 		}
-
 		for _, flavor := range cloudletInfo.Flavors {
 			if _, found := refMap[flavor.Name]; !found && flavor.Deprecated {
-				log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task delete, unused", "infra flavor", flavor.Name)
 				delete(curFlavorsMap, flavor.Name)
-				clearAlertFlavors = append(clearAlertFlavors, flavor.Name)
+				clearAlertFlavors = append(clearAlertFlavors, &flavor.Name)
+			}
+			if _, found := refMap[flavor.Name]; found {
+				count := refMap[flavor.Name].refCount
+				if count != 0 && flavor.Deprecated {
+					raiseAlertFlavors = append(raiseAlertFlavors, &flavor.Name)
+				}
 			}
 		}
 		cloudletInfo.Flavors = nil
@@ -730,29 +642,31 @@ func (s *CloudletInfoApi) InfraFlavorAlertTask(ctx context.Context, k interface{
 		cloudletInfoApi.store.STMPut(stm, &cloudletInfo)
 		return nil
 	})
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavor cleanup task stm failed", "error", err)
-		return
-	}
 	for _, f := range clearAlertFlavors {
-		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task clear deprecated alert, unused", "infra flavor", f)
-		ClearDeletedInfraFlavorAlert(ctx, &key.cloudletKey, f)
+		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task clear deprecated alert, unused", "infra flavor", *f)
+		ClearDeletedInfraFlavorAlert(ctx, &key.cloudletKey, *f)
+	}
+	for _, f := range raiseAlertFlavors {
+		log.SpanLog(ctx, log.DebugLevelInfra, "InfraFlavorAlert task raise deprecated alert", "infra flavor", *f)
+		RaiseDeletedInfraFlavorAlert(ctx, &key.cloudletKey, *f, refMap[*f].users)
 	}
 }
 
-func (s *CloudletInfoApi) getInfraFlavorUsageCounts(ctx context.Context, info *edgeproto.CloudletInfo /* flavorName string */) (map[string]int, error) {
-	// walk clouldetRefs counting number of entities using cloudlets infra flavors, zero count would mean flavor is unused prestently.
-	// Differs from getMissing in that the former doesn't care about counts, just in use. Could be combined. xxx
+type InfraFlavorUsage struct {
+	refCount int
+	users    string
+}
+
+func (s *CloudletInfoApi) getInfraFlavorUsageCounts(ctx context.Context, stm concurrency.STM, info *edgeproto.CloudletInfo) (map[string]*InfraFlavorUsage, error) {
+	// walk clouldetRefs counting number of entities using the cloudlets infra flavors
+	// returns a map[flavorName]InfraFlavorUsage with refCount and the discovered obj.Names that contribute to the refCount
 	log.SpanLog(ctx, log.DebugLevelInfra, "find usage counts for all flavors of", "cloudlet", info.Key)
-	var count int = 0
-
+	flavorRefs := make(map[string]*InfraFlavorUsage)
 	cloudletRefs := edgeproto.CloudletRefs{}
-	flavorRefs := make(map[string]int)
 
-	if !cloudletRefsApi.cache.Get(&info.Key, &cloudletRefs) {
+	if !cloudletRefsApi.store.STMGet(stm, &info.Key, &cloudletRefs) {
 		return flavorRefs, fmt.Errorf("CloudletRefs not found")
 	}
-
 	for _, clust := range cloudletRefs.ClusterInsts {
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInstKey := edgeproto.ClusterInstKey{
@@ -762,13 +676,25 @@ func (s *CloudletInfoApi) getInfraFlavorUsageCounts(ctx context.Context, info *e
 		}
 		found := clusterInstApi.cache.Get(&clusterInstKey, &clusterInst)
 		if found {
-			flavorRefs[clusterInst.NodeFlavor] += 1
-			if clusterInst.NumNodes > 0 {
-				flavorRefs[clusterInst.NodeFlavor] += int(clusterInst.NumNodes)
+			// If we ever support custom clusters, where each worker node may have its own flavor,
+			// this will need revisting
+			if _, found := flavorRefs[clusterInst.MasterNodeFlavor]; !found {
+				usage := InfraFlavorUsage{}
+				flavorRefs[clusterInst.MasterNodeFlavor] = &usage
 			}
-			flavorRefs[clusterInst.MasterNodeFlavor] += 1
-			if clusterInst.NumMasters > 1 {
-				flavorRefs[clusterInst.MasterNodeFlavor] += int(clusterInst.NumMasters - 1)
+			usage := flavorRefs[clusterInst.MasterNodeFlavor]
+			usage.users = usage.users + clusterInstKey.ClusterKey.Name + " "
+			if clusterInst.NumMasters > 0 {
+				usage.refCount += int(clusterInst.NumMasters)
+			}
+			if clusterInst.NumNodes > 0 {
+				if _, found := flavorRefs[clusterInst.NodeFlavor]; !found {
+					usage := InfraFlavorUsage{}
+					flavorRefs[clusterInst.NodeFlavor] = &usage
+				}
+				usage := flavorRefs[clusterInst.NodeFlavor]
+				usage.users = usage.users + clusterInstKey.ClusterKey.Name + " "
+				usage.refCount += int(clusterInst.NumNodes)
 			}
 		}
 		for _, appInstRefKey := range cloudletRefs.VmAppInsts {
@@ -785,13 +711,18 @@ func (s *CloudletInfoApi) getInfraFlavorUsageCounts(ctx context.Context, info *e
 					Organization: clusterInst.Key.Organization,
 				},
 			}
-			found := appInstApi.cache.Get(&appInstKey, &appInst)
+			found := appInstApi.store.STMGet(stm, &appInstKey, &appInst)
 			if found {
-				flavorRefs[appInst.VmFlavor] += 1
+				if _, found := flavorRefs[appInst.VmFlavor]; !found {
+					usage := InfraFlavorUsage{}
+					flavorRefs[appInst.VmFlavor] = &usage
+				}
+				usage := flavorRefs[appInst.VmFlavor]
+				usage.users += usage.users + appInst.Key.AppKey.Name + " "
+				usage.refCount += 1
 			}
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "flavor usage", "count", count)
 	return flavorRefs, nil
 }
 
@@ -803,7 +734,7 @@ func genInfraFlavorEvent(ctx context.Context, key *edgeproto.CloudletKey, flavor
 	nodeMgr.Event(ctx, reason, key.Organization, key.GetTags(), nil, "flavors", vals)
 }
 
-func (s *CloudletInfoApi) FixupFlavorUpdate(ctx context.Context, in *edgeproto.CloudletInfo, added, deleted, updated, recreated, deprecated map[string]*edgeproto.FlavorInfo, usingObjs map[string]string) {
+func (s *CloudletInfoApi) fixupFlavorUpdate(ctx context.Context, in *edgeproto.CloudletInfo, added, deleted, updated, recreated map[string]*edgeproto.FlavorInfo) {
 	// generate events for all added, deleted, or updated
 	if len(added) != 0 {
 		genInfraFlavorEvent(ctx, &in.Key, added, "flavors added")
@@ -814,27 +745,15 @@ func (s *CloudletInfoApi) FixupFlavorUpdate(ctx context.Context, in *edgeproto.C
 	if len(updated) != 0 {
 		genInfraFlavorEvent(ctx, &in.Key, updated, "flavors updated")
 	}
-	if len(recreated) != 0 {
-		for _, f := range recreated {
-			workerKey := HandleFlavorAlertWorkerKey{
-				cloudletKey:     in.Key,
-				recreatedFlavor: f.Name,
-			}
-			// xxx we're sending off potenitally multiple compeating tasks , combine somehow
-			// Clear pending alert recreated
-			s.infraFlavorAlertTask.NeedsWork(ctx, workerKey)
-		}
+	// Alerts
+	for _, flavor := range recreated {
+		// clear any deprecated alert since flavor is no longer deprecated (doesn't matter if in use or not)
+		ClearDeletedInfraFlavorAlert(ctx, &in.Key, flavor.Name)
 	}
-	if len(deprecated) != 0 {
-		for _, f := range deprecated {
-			users := usingObjs[f.Name]
-			workerKey := HandleFlavorAlertWorkerKey{
-				cloudletKey:      in.Key,
-				deprecatedFlavor: f.Name,
-				usingObjs:        users,
-			}
-			// Raise flavor deprecated alert
-			s.infraFlavorAlertTask.NeedsWork(ctx, workerKey)
+	if len(deleted) != 0 {
+		workerKey := HandleFlavorAlertWorkerKey{
+			cloudletKey: in.Key,
 		}
+		s.infraFlavorAlertTask.NeedsWork(ctx, workerKey)
 	}
 }
