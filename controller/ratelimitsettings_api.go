@@ -176,21 +176,9 @@ func (r *RateLimitSettingsApi) UpdateFlowRateLimitSettings(ctx context.Context, 
 			return in.Key.NotFoundError()
 		}
 
-		old := cur
 		changes := cur.CopyInFields(in)
 		if changes == 0 {
 			return nil
-		}
-
-		// set the values that were set to defaults
-		if cur.Settings.FlowAlgorithm == edgeproto.FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM {
-			cur.Settings.FlowAlgorithm = old.Settings.FlowAlgorithm
-		}
-		if cur.Settings.ReqsPerSecond == 0 {
-			cur.Settings.ReqsPerSecond = old.Settings.ReqsPerSecond
-		}
-		if cur.Settings.BurstSize == 0 {
-			cur.Settings.BurstSize = old.Settings.BurstSize
 		}
 
 		// Validate fields before storing
@@ -292,21 +280,9 @@ func (r *RateLimitSettingsApi) UpdateMaxReqsRateLimitSettings(ctx context.Contex
 			return in.Key.RateLimitKey.NotFoundError()
 		}
 
-		old := cur
 		changes := cur.CopyInFields(in)
 		if changes == 0 {
 			return nil
-		}
-
-		// set the values that were set to defaults
-		if cur.Settings.MaxReqsAlgorithm == edgeproto.MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM {
-			cur.Settings.MaxReqsAlgorithm = old.Settings.MaxReqsAlgorithm
-		}
-		if cur.Settings.MaxRequests == 0 {
-			cur.Settings.MaxRequests = old.Settings.MaxRequests
-		}
-		if cur.Settings.Interval == 0 {
-			cur.Settings.Interval = old.Settings.Interval
 		}
 
 		// Validate fields before storing
