@@ -173,7 +173,7 @@ func (r *RateLimitSettingsApi) UpdateFlowRateLimitSettings(ctx context.Context, 
 	cur := edgeproto.FlowRateLimitSettings{}
 	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !r.flowstore.STMGet(stm, &in.Key, &cur) {
-			return in.Key.RateLimitKey.NotFoundError()
+			return in.Key.NotFoundError()
 		}
 
 		old := cur
