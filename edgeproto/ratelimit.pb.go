@@ -151,9 +151,9 @@ func (MaxReqsRateLimitAlgorithm) EnumDescriptor() ([]byte, []int) {
 type FlowSettings struct {
 	// Flow Rate Limit algorithm
 	FlowAlgorithm FlowRateLimitAlgorithm `protobuf:"varint,1,opt,name=flow_algorithm,json=flowAlgorithm,proto3,enum=edgeproto.FlowRateLimitAlgorithm" json:"flow_algorithm,omitempty"`
-	// requests per second for flow rate limiting
+	// Requests per second for flow rate limiting
 	ReqsPerSecond float64 `protobuf:"fixed64,2,opt,name=reqs_per_second,json=reqsPerSecond,proto3" json:"reqs_per_second,omitempty"`
-	// burst size for flow rate limiting (required for TokenBucketAlgorithm)
+	// Burst size for flow rate limiting (required for TokenBucketAlgorithm)
 	BurstSize int64 `protobuf:"varint,3,opt,name=burst_size,json=burstSize,proto3" json:"burst_size,omitempty"`
 }
 
