@@ -1768,7 +1768,6 @@ func getDefaultMTClustKey(cloudletKey edgeproto.CloudletKey) *edgeproto.ClusterI
 	}
 }
 
-// don't need to pass any flavor, we'll look at 'em all
 func (s *ClusterInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, clusterInst *edgeproto.ClusterInst) {
 	workerKey := HandleFlavorAlertWorkerKey{
 		cloudletKey: edgeproto.CloudletKey{

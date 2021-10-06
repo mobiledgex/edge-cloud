@@ -246,13 +246,11 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 	if *keystr == "" {
 		log.FatalLog("cloudletKey not specified")
 	}
-	fmt.Printf("\n\nParseMyCloudletKey string: %s\n", *keystr)
 	err := json.Unmarshal([]byte(*keystr), mykey)
 	if err != nil {
 		err = yaml.Unmarshal([]byte(*keystr), mykey)
 	}
 	if err != nil {
-		fmt.Printf("\n\nParseMyCloudletKey-E-cloudletKey cant parse: %s fatal \n\n", err.Error())
 		log.FatalLog("Failed to parse cloudletKey", "err", err)
 	}
 

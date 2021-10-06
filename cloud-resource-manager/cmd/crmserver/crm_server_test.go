@@ -236,12 +236,11 @@ func TestCRM(t *testing.T) {
 
 	*cloudletKeyStr = string(bytes)
 	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
-	defer nodeMgr.Finish()
 
 	*platformName = "PLATFORM_TYPE_FAKE"
 	err = startServices()
-	require.Nil(t, err, "start crm")
 	defer stopServices()
+	require.Nil(t, err, "start crm")
 
 	notifyClient.WaitForConnect(1)
 	stats := notify.Stats{}

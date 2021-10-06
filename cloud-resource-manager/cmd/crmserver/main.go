@@ -84,14 +84,12 @@ func main() {
 
 	err := startServices()
 	if err != nil {
-		fmt.Printf("\n\n CRM MAIN error returned from startServices: %s\n\n", err.Error())
 		stopServices()
 		log.FatalLog(err.Error())
 	}
 	defer stopServices()
 	sig := <-sigChan
 	fmt.Println(sig)
-	fmt.Printf("\n\nCRM Main completed\n\n")
 }
 
 func startServices() error {
@@ -106,7 +104,6 @@ func startServices() error {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	standalone := false
-	fmt.Printf("\n\nMain: Parsing cloudletKeyStr is : %s\n\n", *cloudletKeyStr)
 
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
 	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
@@ -344,7 +341,6 @@ func startServices() error {
 				return "triggered refresh of rootlb certs"
 			})
 		}
-		fmt.Printf("\n\tMAIN platform init thread complete cloudlet: %+v\n\n", myCloudletInfo.Key)
 		tlsSpan.Finish()
 	}()
 
@@ -368,7 +364,6 @@ func startServices() error {
 
 func stopServices() {
 
-	fmt.Printf("\n\tstopServices main shutting down gracefully\n\n")
 	if services.flavorRefreshRunning {
 		controllerData.FinishFlavorRefreshThread()
 		services.flavorRefreshRunning = false
