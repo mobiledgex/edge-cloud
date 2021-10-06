@@ -275,14 +275,18 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, apiFileVars map[
 	return true
 }
 
-func StartCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string, outputDir string) error {
+func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, apiFile string, apiFileVars map[string]string, outputDir string) error {
 	if apiFile == "" {
 		log.Println("Error: Cannot run RunCommand API without API file")
 		return fmt.Errorf("Error: Cannot run controller APIs without API file")
 	}
 	readAppDataFile(apiFile, apiFileVars)
 
-	ctrl := util.GetController("")
+	ctrl := util.GetController(ctrlName)
+	if ctrl == nil {
+		log.Printf("Error: Cannot find controller %s", ctrlName)
+		return fmt.Errorf("Error: Cannot find controller %s", ctrlName)
+	}
 
 	for _, c := range appData.Cloudlets {
 		if c.NotifySrvAddr == "" {
