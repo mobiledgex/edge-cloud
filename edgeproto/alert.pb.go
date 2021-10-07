@@ -1190,6 +1190,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(NetworkConnectionType(0)):
+		if en, ok := NetworkConnectionType_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(PowerState(0)):
 		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1254,6 +1258,7 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowAutoProvPolicy":               struct{}{},
 	"ShowTrustPolicyException":         struct{}{},
 	"ShowTrustPolicyExceptionResponse": struct{}{},
+	"ShowNetwork":                      struct{}{},
 	"ShowAppInst":                      struct{}{},
 	"ShowAppInstInfo":                  struct{}{},
 	"ShowAppInstMetrics":               struct{}{},
@@ -1298,6 +1303,7 @@ var AllKeyTags = []string{
 	"gpudriverorg",
 	"maxreqssettingsname",
 	"name",
+	"network",
 	"node",
 	"noderegion",
 	"nodetype",
@@ -1336,6 +1342,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"gpudriverorg":        struct{}{},
 	"maxreqssettingsname": struct{}{},
 	"name":                struct{}{},
+	"network":             struct{}{},
 	"node":                struct{}{},
 	"noderegion":          struct{}{},
 	"nodetype":            struct{}{},

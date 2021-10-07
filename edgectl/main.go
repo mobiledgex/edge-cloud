@@ -103,6 +103,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.GPUDriverApiCmd = edgeproto.NewGPUDriverApiClient(conn)
 	gencmd.AlertPolicyApiCmd = edgeproto.NewAlertPolicyApiClient(conn)
 	gencmd.RateLimitSettingsApiCmd = edgeproto.NewRateLimitSettingsApiClient(conn)
+	gencmd.NetworkApiCmd = edgeproto.NewNetworkApiClient(conn)
 	return nil
 }
 
@@ -133,6 +134,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.TrustPolicyApiCmds...)
 	controllerCmd.AddCommand(gencmd.TrustPolicyExceptionApiCmds...)
 	controllerCmd.AddCommand(gencmd.TrustPolicyExceptionResponseApiCmds...)
+	controllerCmd.AddCommand(gencmd.NetworkApiCmds...)
 	controllerCmd.AddCommand(gencmd.ClusterInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
 	controllerCmd.AddCommand(gencmd.VMPoolApiCmds...)

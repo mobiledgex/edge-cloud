@@ -45,7 +45,8 @@ func TestInternalPki(t *testing.T) {
 		Common: process.Common{
 			Name: "vault",
 		},
-		Regions: "us,eu",
+		Regions:    "us,eu",
+		ListenAddr: "http://127.0.0.1:8200",
 	}
 	vroles, err := vp.StartLocalRoles()
 	require.Nil(t, err, "start local vault")
@@ -55,7 +56,7 @@ func TestInternalPki(t *testing.T) {
 	node.VerifyDelay = time.Millisecond
 	node.VerifyRetry = 3
 
-	vaultAddr := "http://127.0.0.1:8200"
+	vaultAddr := vp.ListenAddr
 	// Set up fake Controller to serve access key API
 	dcUS := &DummyController{}
 	dcUS.Init(ctx, "us", vroles, vaultAddr)
@@ -150,7 +151,7 @@ func TestInternalPki(t *testing.T) {
 	})
 
 	for _, cfg := range cfgTests {
-		testGetTlsConfig(t, ctx, vroles, &cfg)
+		testGetTlsConfig(t, ctx, vaultAddr, vroles, &cfg)
 	}
 
 	// define nodes for certificate exchange tests
@@ -426,7 +427,7 @@ func TestInternalPki(t *testing.T) {
 	})
 
 	for _, test := range csTests {
-		testExchange(t, ctx, vroles, &test)
+		testExchange(t, ctx, vaultAddr, vroles, &test)
 	}
 
 	// Tests for Tls interceptor that allows access for Global/Regional
@@ -492,7 +493,7 @@ func TestInternalPki(t *testing.T) {
 		Client:     dmeClientRegionalUS,
 	})
 	for _, test := range ccTests {
-		testTlsConnect(t, ctx, &test)
+		testTlsConnect(t, ctx, &test, vaultAddr)
 	}
 }
 
@@ -509,9 +510,9 @@ type ConfigTest struct {
 	CloudletKey   *edgeproto.CloudletKey
 }
 
-func testGetTlsConfig(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cfg *ConfigTest) {
+func testGetTlsConfig(t *testing.T, ctx context.Context, vaultAddr string, vroles *process.VaultRoles, cfg *ConfigTest) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "run testGetTlsConfig", "cfg", cfg)
-	vc := getVaultConfig(cfg.NodeType, cfg.Region, vroles)
+	vc := getVaultConfig(cfg.NodeType, cfg.Region, vaultAddr, vroles)
 	mgr := node.NodeMgr{}
 	mgr.InternalPki.UseVaultPki = true
 	mgr.InternalDomain = "mobiledgex.net"
@@ -565,8 +566,8 @@ type ClientServer struct {
 	Line            string
 }
 
-func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, error) {
-	vaultCfg := getVaultConfig(s.Type, s.Region, vroles)
+func (s *PkiConfig) setupNodeMgr(vaultAddr string, vroles *process.VaultRoles) (*node.NodeMgr, error) {
+	vaultCfg := getVaultConfig(s.Type, s.Region, vaultAddr, vroles)
 	nodeMgr := node.NodeMgr{}
 	nodeMgr.SetInternalTlsCertFile(s.CertFile)
 	nodeMgr.SetInternalTlsKeyFile(s.CertKey)
@@ -589,7 +590,7 @@ func (s *PkiConfig) setupNodeMgr(vroles *process.VaultRoles) (*node.NodeMgr, err
 	return &nodeMgr, err
 }
 
-func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles, cs *ClientServer) {
+func testExchange(t *testing.T, ctx context.Context, vaultAddr string, vroles *process.VaultRoles, cs *ClientServer) {
 	if !strings.HasPrefix(runtime.Version(), "go1.12") {
 		// After go1.12, the client side Dial/Handshake does not return
 		// error when the server decides to abort the connection.
@@ -599,7 +600,7 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 		}
 	}
 	fmt.Printf("******************* testExchange %s *********************\n", cs.Line)
-	serverNode, err := cs.Server.setupNodeMgr(vroles)
+	serverNode, err := cs.Server.setupNodeMgr(vaultAddr, vroles)
 	require.Nil(t, err, "serverNode init %s", cs.Line)
 	serverTls, err := serverNode.InternalPki.GetServerTlsConfig(ctx,
 		serverNode.CommonName(),
@@ -610,7 +611,7 @@ func testExchange(t *testing.T, ctx context.Context, vroles *process.VaultRoles,
 		require.NotNil(t, serverTls)
 	}
 
-	clientNode, err := cs.Client.setupNodeMgr(vroles)
+	clientNode, err := cs.Client.setupNodeMgr(vaultAddr, vroles)
 	require.Nil(t, err, "clientNode init %s", cs.Line)
 	clientTls, err := clientNode.InternalPki.GetClientTlsConfig(ctx,
 		clientNode.CommonName(),
@@ -691,13 +692,13 @@ type ClientController struct {
 	Line                       string
 }
 
-func testTlsConnect(t *testing.T, ctx context.Context, cc *ClientController) {
+func testTlsConnect(t *testing.T, ctx context.Context, cc *ClientController, vaultAddr string) {
 	// This tests the TLS interceptors that will require
 	// access keys if client uses the RegionalCloudlet cert.
 	fmt.Printf("******************* testTlsConnect %s *********************\n", cc.Line)
 	cc.Controller.DummyController.KeyServer.SetRequireTlsAccessKey(cc.ControllerRequireAccessKey)
 
-	clientNode, err := cc.Client.setupNodeMgr(cc.Controller.vroles)
+	clientNode, err := cc.Client.setupNodeMgr(vaultAddr, cc.Controller.vroles)
 	require.Nil(t, err, "clientNode init %s", cc.Line)
 	clientTls, err := clientNode.InternalPki.GetClientTlsConfig(ctx,
 		clientNode.CommonName(),
@@ -736,7 +737,7 @@ func testTlsConnect(t *testing.T, ctx context.Context, cc *ClientController) {
 	node.EchoApisTest(t, ctx, clientConn, cc.ExpectErr)
 }
 
-func getVaultConfig(nodetype, region string, vroles *process.VaultRoles) *vault.Config {
+func getVaultConfig(nodetype, region, addr string, vroles *process.VaultRoles) *vault.Config {
 	var roleid string
 	var secretid string
 
@@ -773,7 +774,7 @@ func getVaultConfig(nodetype, region string, vroles *process.VaultRoles) *vault.
 		}
 	}
 	auth := vault.NewAppRoleAuth(roleid, secretid)
-	return vault.NewConfig(process.VaultAddress, auth)
+	return vault.NewConfig(addr, auth)
 }
 
 // Track line number of objects added to list to make it easier
@@ -828,7 +829,7 @@ func (s *DummyController) Init(ctx context.Context, region string, vroles *proce
 	// no crm vault role/secret env vars for controller (no backwards compatability)
 	s.vroles = vroles
 
-	vc := getVaultConfig(node.NodeTypeController, region, vroles)
+	vc := getVaultConfig(node.NodeTypeController, region, vaultAddr, vroles)
 	s.nodeMgr.InternalPki.UseVaultPki = true
 	s.nodeMgr.InternalDomain = "mobiledgex.net"
 	_, _, err := s.nodeMgr.Init(node.NodeTypeController, node.NoTlsClientIssuer, node.WithRegion(region), node.WithVaultConfig(vc))

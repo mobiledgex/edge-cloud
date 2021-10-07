@@ -14,8 +14,9 @@ func TestJwk(t *testing.T) {
 		Common: process.Common{
 			Name: "vault",
 		},
-		DmeSecret: "123456",
-		Regions:   "local",
+		DmeSecret:  "123456",
+		Regions:    "local",
+		ListenAddr: "http://127.0.0.1:8300",
 	}
 	vroles, err := vault.StartLocalRoles()
 	require.Nil(t, err, "start local vault")
@@ -24,8 +25,9 @@ func TestJwk(t *testing.T) {
 	roles := vroles.RegionRoles["local"]
 
 	// this represents a dme process accessing vault
+	vaultAddr := vault.ListenAddr
 	dmeAuth := NewAppRoleAuth(roles.DmeRoleID, roles.DmeSecretID)
-	dmeConfig := NewConfig(process.VaultAddress, dmeAuth)
+	dmeConfig := NewConfig(vaultAddr, dmeAuth)
 	jwks := JWKS{}
 	jwks.Init(dmeConfig, "local", "dme")
 	// vault local process puts two secrets to start
@@ -52,7 +54,7 @@ func TestJwk(t *testing.T) {
 
 	// put a new secret to rotate secrets
 	rotatorAuth := NewAppRoleAuth(roles.RotatorRoleID, roles.RotatorSecretID)
-	rotatorConfig := NewConfig(process.VaultAddress, rotatorAuth)
+	rotatorConfig := NewConfig(vaultAddr, rotatorAuth)
 	newSecret := "abcdefg"
 	err = PutSecret(rotatorConfig, "local", "dme", newSecret, "1m")
 	require.Nil(t, err, "put secret")

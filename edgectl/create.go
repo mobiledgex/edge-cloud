@@ -45,10 +45,10 @@ func runCreate(c *cli.Command, args []string) error {
 	gencmd.CreateTrustPolicys(c, data.TrustPolicies, &err)
 	gencmd.CreateTrustPolicyExceptions(c, data.TrustPolicyExceptions, &err)
 	gencmd.CreateTrustPolicyExceptionResponses(c, data.TrustPolicyExceptionResponses, &err)
+	gencmd.CreateNetworks(c, data.Networks, &err)
 	gencmd.CreateClusterInsts(c, data.ClusterInsts, &err)
 	gencmd.CreateAppInsts(c, data.AppInstances, &err)
 	gencmd.CreateAlertPolicys(c, data.AlertPolicies, &err)
-
 	return err
 }
 
@@ -72,6 +72,7 @@ func runDelete(c *cli.Command, args []string) error {
 	gencmd.DeleteTrustPolicys(c, data.TrustPolicies, &err)
 	gencmd.DeleteTrustPolicyExceptions(c, data.TrustPolicyExceptions, &err)
 	gencmd.DeleteTrustPolicyExceptionResponses(c, data.TrustPolicyExceptionResponses, &err)
+	gencmd.DeleteNetworks(c, data.Networks, &err)
 	gencmd.DeleteApps(c, data.Apps, &err)
 	gencmd.DeleteAutoProvPolicys(c, data.AutoProvPolicies, &err)
 	gencmd.DeleteAutoScalePolicys(c, data.AutoScalePolicies, &err)

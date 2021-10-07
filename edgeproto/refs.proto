@@ -108,6 +108,8 @@ message AppInstRefs {
   AppKey key = 1 [(gogoproto.nullable) = false];
   // AppInsts for App (key is JSON of AppInst Key)
   map<string, uint32> insts = 2 [(gogoproto.nullable) = false];
+  // AppInsts being deleted (key is JSON of AppInst Key)
+  map<string, uint32> delete_requested_insts = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

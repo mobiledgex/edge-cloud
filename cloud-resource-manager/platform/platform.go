@@ -52,7 +52,7 @@ type Caches struct {
 	VMPoolCache               *edgeproto.VMPoolCache
 	VMPoolInfoCache           *edgeproto.VMPoolInfoCache
 	GPUDriverCache            *edgeproto.GPUDriverCache
-
+	NetworkCache              *edgeproto.NetworkCache
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
 	VMPoolMux *sync.Mutex
@@ -70,6 +70,7 @@ type Features struct {
 	SupportsImageTypeOVF          bool // Supports OVF images for VM deployments
 	IsVMPool                      bool // cloudlet is just a pool of pre-existing VMs
 	IsFake                        bool // Just for unit-testing/e2e-testing
+	SupportsAdditionalNetworks    bool // Additional networks can be added
 }
 
 // Platform abstracts the underlying cloudlet platform.
@@ -120,8 +121,8 @@ type Platform interface {
 	GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error)
 	// Set power state of the AppInst
 	SetPowerState(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst, updateCallback edgeproto.CacheUpdateCallback) error
-	// Create Cloudlet
-	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error
+	// Create Cloudlet returns cloudletResourcesCreated, error
+	CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, flavor *edgeproto.Flavor, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) (bool, error)
 	UpdateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet
 	DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *Caches, accessApi AccessApi, updateCallback edgeproto.CacheUpdateCallback) error

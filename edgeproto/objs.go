@@ -120,6 +120,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.MaxReqsRateLimitSettings[:], func(i, j int) bool {
 		return a.MaxReqsRateLimitSettings[i].Key.GetKeyString() < a.MaxReqsRateLimitSettings[j].Key.GetKeyString()
 	})
+	sort.Slice(a.Networks[:], func(i, j int) bool {
+		return a.Networks[i].Key.GetKeyString() < a.Networks[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
@@ -415,7 +418,7 @@ func (key *CloudletPoolKey) ValidateKey() error {
 		return errors.New("Invalid organization name")
 	}
 	if !util.ValidName(key.Name) {
-		return errors.New("Invalid Cloudlet Pool name")
+		return fmt.Errorf("Invalid Cloudlet Pool name %q", key.Name)
 	}
 	return nil
 }
@@ -760,6 +763,35 @@ func (s *Device) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (key *NetworkKey) ValidateKey() error {
+	if err := key.CloudletKey.ValidateKey(); err != nil {
+		return err
+	}
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid network name")
+	}
+	return nil
+}
+func (s *Network) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	if s.ConnectionType == NetworkConnectionType_UNDEFINED {
+		return errors.New("Invalid connection type")
+	}
+	for _, route := range s.Routes {
+		_, _, err := net.ParseCIDR(route.DestinationCidr)
+		if err != nil {
+			return errors.New("Invalid route destination cidr")
+		}
+		ip := net.ParseIP(route.NextHopIp)
+		if ip == nil {
+			return errors.New("Invalid next hop")
+		}
+	}
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {
@@ -920,6 +952,24 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 		appports = append(appports, p)
 	}
 	return appports, nil
+}
+
+func DoPortsOverlap(a dme.AppPort, b dme.AppPort) bool {
+	lastPortA := a.EndPort
+	if lastPortA == 0 {
+		lastPortA = a.InternalPort
+	}
+	lastPortB := b.EndPort
+	if lastPortB == 0 {
+		lastPortB = b.InternalPort
+	}
+	if a.Proto != b.Proto ||
+		a.InternalPort > lastPortB ||
+		lastPortA < b.InternalPort {
+		// no overlap
+		return false
+	}
+	return true
 }
 
 func CmpSortDebugReply(a DebugReply, b DebugReply) bool {

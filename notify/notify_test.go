@@ -184,6 +184,7 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[1], 16)
 	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[2], 17)
 	serverHandler.AppInstCache.Update(ctx, &testutil.AppInstData[3], 18)
+	serverHandler.NetworkCache.Update(ctx, &testutil.NetworkData[0], 19)
 	// trigger updates with CloudletInfo update after updating other
 	// data, otherwise the updates here plus the updates triggered by
 	// updating CloudletInfo can cause updates to get sent twice,
@@ -192,20 +193,15 @@ func TestNotifyBasic(t *testing.T) {
 	crmHandler.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[0], 0)
 	// Note: only ClusterInsts and AppInsts with cloudlet keys that
 	// match the CRM's cloudletinfo will be sent.
-	crmHandler.WaitForCloudlets(1)
-	crmHandler.WaitForFlavors(3)
-	crmHandler.WaitForClusterInsts(2)
-	crmHandler.WaitForApps(1)
-	crmHandler.WaitForAppInsts(2)
-	crmHandler.WaitForVMPools(1)
-	crmHandler.WaitForGPUDrivers(1)
-	require.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
-	require.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
-	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
-	require.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
-	require.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
-	require.Equal(t, 1, len(crmHandler.VMPoolCache.Objs), "num vmPools")
-	require.Equal(t, 1, len(crmHandler.GPUDriverCache.Objs), "num gpuDrivers")
+	require.Nil(t, crmHandler.WaitForCloudlets(1), "num cloudlets")
+	require.Nil(t, crmHandler.WaitForFlavors(3), "num flavors")
+	require.Nil(t, crmHandler.WaitForClusterInsts(2), "num clusterInsts")
+	require.Nil(t, crmHandler.WaitForApps(1), "num apps")
+	require.Nil(t, crmHandler.WaitForAppInsts(2), "num appInsts")
+	require.Nil(t, crmHandler.WaitForVMPools(1), "num vmPools")
+	require.Nil(t, crmHandler.WaitForGPUDrivers(1), "num gpuDrivers")
+	require.Nil(t, crmHandler.WaitForNetworks(1), "num networks")
+
 	// verify modRef values
 	appBuf := edgeproto.App{}
 	flavorBuf := edgeproto.Flavor{}

@@ -36,9 +36,9 @@ enum MaxReqsRateLimitAlgorithm {
 message FlowSettings {
   // Flow Rate Limit algorithm
   FlowRateLimitAlgorithm flow_algorithm = 1;
-  // requests per second for flow rate limiting
+  // Requests per second for flow rate limiting
   double reqs_per_second = 2;
-  // burst size for flow rate limiting (required for TokenBucketAlgorithm)
+  // Burst size for flow rate limiting (required for TokenBucketAlgorithm)
   int64 burst_size = 3;
   option (protogen.generate_matches) = true;
 }

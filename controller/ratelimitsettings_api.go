@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/ratelimit"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -114,7 +115,7 @@ func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSett
 		return err
 	}
 
-	ratelimitsettings := buildRateLimitSettings(flowsettings, maxreqssettings)
+	ratelimitsettings := ratelimit.DbToUserSettings(flowsettings, maxreqssettings)
 	for _, settings := range ratelimitsettings {
 		if err = cb.Send(settings); err != nil {
 			return err
@@ -122,44 +123,6 @@ func (r *RateLimitSettingsApi) ShowRateLimitSettings(in *edgeproto.RateLimitSett
 	}
 
 	return nil
-}
-
-func buildRateLimitSettings(fsettings []*edgeproto.FlowRateLimitSettings, msettings []*edgeproto.MaxReqsRateLimitSettings) []*edgeproto.RateLimitSettings {
-	settingsmap := make(map[edgeproto.RateLimitSettingsKey]*edgeproto.RateLimitSettings)
-
-	for _, fsetting := range fsettings {
-		key := fsetting.Key.RateLimitKey
-		ratelimitsetting, ok := settingsmap[key]
-		if !ok || ratelimitsetting == nil {
-			ratelimitsetting = &edgeproto.RateLimitSettings{
-				Key:             key,
-				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
-				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
-			}
-			settingsmap[key] = ratelimitsetting
-		}
-		ratelimitsetting.FlowSettings[fsetting.Key.FlowSettingsName] = &fsetting.Settings
-	}
-
-	for _, msetting := range msettings {
-		key := msetting.Key.RateLimitKey
-		ratelimitsetting, ok := settingsmap[key]
-		if !ok || ratelimitsetting == nil {
-			ratelimitsetting = &edgeproto.RateLimitSettings{
-				Key:             key,
-				FlowSettings:    make(map[string]*edgeproto.FlowSettings),
-				MaxReqsSettings: make(map[string]*edgeproto.MaxReqsSettings),
-			}
-			settingsmap[key] = ratelimitsetting
-		}
-		ratelimitsetting.MaxReqsSettings[msetting.Key.MaxReqsSettingsName] = &msetting.Settings
-	}
-
-	ratelimitsettings := make([]*edgeproto.RateLimitSettings, 0)
-	for _, settings := range settingsmap {
-		ratelimitsettings = append(ratelimitsettings, settings)
-	}
-	return ratelimitsettings
 }
 
 // Create FlowRateLimitSettings for the specified RateLimitSettings. If no RateLimitSettings exists, create a new one
@@ -210,24 +173,12 @@ func (r *RateLimitSettingsApi) UpdateFlowRateLimitSettings(ctx context.Context, 
 	cur := edgeproto.FlowRateLimitSettings{}
 	err = r.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !r.flowstore.STMGet(stm, &in.Key, &cur) {
-			return in.Key.RateLimitKey.NotFoundError()
+			return in.Key.NotFoundError()
 		}
 
-		old := cur
 		changes := cur.CopyInFields(in)
 		if changes == 0 {
 			return nil
-		}
-
-		// set the values that were set to defaults
-		if cur.Settings.FlowAlgorithm == edgeproto.FlowRateLimitAlgorithm_UNKNOWN_FLOW_ALGORITHM {
-			cur.Settings.FlowAlgorithm = old.Settings.FlowAlgorithm
-		}
-		if cur.Settings.ReqsPerSecond == 0 {
-			cur.Settings.ReqsPerSecond = old.Settings.ReqsPerSecond
-		}
-		if cur.Settings.BurstSize == 0 {
-			cur.Settings.BurstSize = old.Settings.BurstSize
 		}
 
 		// Validate fields before storing
@@ -329,21 +280,9 @@ func (r *RateLimitSettingsApi) UpdateMaxReqsRateLimitSettings(ctx context.Contex
 			return in.Key.RateLimitKey.NotFoundError()
 		}
 
-		old := cur
 		changes := cur.CopyInFields(in)
 		if changes == 0 {
 			return nil
-		}
-
-		// set the values that were set to defaults
-		if cur.Settings.MaxReqsAlgorithm == edgeproto.MaxReqsRateLimitAlgorithm_UNKNOWN_MAX_REQS_ALGORITHM {
-			cur.Settings.MaxReqsAlgorithm = old.Settings.MaxReqsAlgorithm
-		}
-		if cur.Settings.MaxRequests == 0 {
-			cur.Settings.MaxRequests = old.Settings.MaxRequests
-		}
-		if cur.Settings.Interval == 0 {
-			cur.Settings.Interval = old.Settings.Interval
 		}
 
 		// Validate fields before storing

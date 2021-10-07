@@ -13,6 +13,7 @@ import "autoprovpolicy.proto";
 import "autoscalepolicy.proto";
 import "trustpolicy.proto";
 import "trustpolicyexception.proto";
+import "network.proto";
 import "clusterinst.proto";
 import "app.proto";
 import "appinst.proto";
@@ -36,6 +37,7 @@ message AllData {
   repeated OperatorCode operator_codes = 4 [(gogoproto.nullable) = false];
   repeated ResTagTable res_tag_tables = 6 [(gogoproto.nullable) = false];
   repeated TrustPolicy trust_policies = 14 [(gogoproto.nullable) = false];
+  repeated Network networks = 25 [(gogoproto.nullable) = false];
   repeated Cloudlet cloudlets = 7 [(gogoproto.nullable) = false];
   repeated CloudletInfo cloudlet_infos = 8 [(gogoproto.nullable) = false];
   repeated CloudletPool cloudlet_pools = 9 [(gogoproto.nullable) = false];
@@ -52,8 +54,8 @@ message AllData {
   repeated AlertPolicy alert_policies = 22 [(gogoproto.nullable) = false];
   repeated FlowRateLimitSettings flow_rate_limit_settings = 23 [(gogoproto.nullable) = false];
   repeated MaxReqsRateLimitSettings max_reqs_rate_limit_settings = 24 [(gogoproto.nullable) = false];
-  repeated TrustPolicyException trust_policy_exceptions = 25 [(gogoproto.nullable) = false];
-  repeated TrustPolicyExceptionResponse trust_policy_exception_responses = 26 [(gogoproto.nullable) = false];
+  repeated TrustPolicyException trust_policy_exceptions = 26 [(gogoproto.nullable) = false];
+  repeated TrustPolicyExceptionResponse trust_policy_exception_responses = 27 [(gogoproto.nullable) = false];
 
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
