@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
@@ -726,6 +727,7 @@ func ValidateSecurityRules(rules []SecurityRule) error {
 				return fmt.Errorf("Port range must be empty for icmp")
 			}
 		} else {
+			log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "rule", r)
 			if r.PortRangeMin < minPort || r.PortRangeMin > maxPort {
 				return fmt.Errorf("Invalid min port: %d", r.PortRangeMin)
 			}
@@ -1333,6 +1335,7 @@ func (s *TrustPolicy) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
+	log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "TrustPolicy:", s.GetKey().Name)
 	return ValidateSecurityRules(s.OutboundSecurityRules)
 }
 
@@ -1352,6 +1355,7 @@ func (s *TrustPolicyException) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().ValidateKey(); err != nil {
 		return err
 	}
+	log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "TrustPolicyException:", s.GetKey().Name)
 	return ValidateSecurityRules(s.OutboundSecurityRules)
 }
 

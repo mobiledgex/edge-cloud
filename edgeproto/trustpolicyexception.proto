@@ -51,9 +51,9 @@ message TrustPolicyException {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;  
-  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
+  option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
   option (protogen.uses_org) = "key=AppKey.Organization";
 }
@@ -61,33 +61,30 @@ message TrustPolicyException {
 service TrustPolicyExceptionApi {
 
   // Create a Trust Policy Exception, by App Developer Organization
-  rpc CreateTrustPolicyException(TrustPolicyException) returns (stream Result) {
+  rpc CreateTrustPolicyException(TrustPolicyException) returns (Result) {
     option (google.api.http) = {
       post: "/create/trustpolicyexception"
       body: "*"
     };
-    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
   // Update a Trust Policy Exception, by App Developer Organization
-  rpc UpdateTrustPolicyException(TrustPolicyException) returns (stream Result) {
+  rpc UpdateTrustPolicyException(TrustPolicyException) returns (Result) {
     option (google.api.http) = {
       post: "/update/trustpolicyexception"
       body: "*"
     };
-    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
 
   // Delete a Trust Policy Exception, by App Developer Organization
-  rpc DeleteTrustPolicyException(TrustPolicyException) returns (stream Result) {
+  rpc DeleteTrustPolicyException(TrustPolicyException) returns (Result) {
     option (google.api.http) = {
       post: "/delete/trustpolicyexception"
       body: "*"
     };
-    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
   }
   // Show Trust Policy Exceptions. Any fields specified will be used to filter results.
@@ -110,7 +107,6 @@ message TrustPolicyExceptionResponse {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;  
-  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
@@ -119,35 +115,32 @@ message TrustPolicyExceptionResponse {
 
 service TrustPolicyExceptionResponseApi {
   // Approve or reject a Trust Policy Exception, by Cloudlet Operator Organization 
-  rpc CreateTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+  rpc CreateTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (Result) {
     option (google.api.http) = {
       post: "/create/trustpolicyexceptionresponse"
       body: "*"
     };
-    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.CloudletPoolKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
     option (protogen.method_also_required) = "State";
   }
   
   // Update a Trust Policy Exception response, by Cloudlet Operator Organization
-  rpc UpdateTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+  rpc UpdateTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (Result) {
     option (google.api.http) = {
       post: "/update/trustpolicyexceptionresponse"
       body: "*"
     };
-     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
   }
 
   // Delete a Trust Policy Exception response, by Cloudlet Operator Organization
-  rpc DeleteTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (stream Result) {
+  rpc DeleteTrustPolicyExceptionResponse(TrustPolicyExceptionResponse) returns (Result) {
     option (google.api.http) = {
       post: "/delete/trustpolicyexceptionresponse"
       body: "*"
     };
-    option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
   }
 

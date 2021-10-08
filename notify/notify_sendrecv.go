@@ -170,10 +170,6 @@ func (s *SendRecv) registerSend(send NotifySend) {
 		s.appInstSend = v
 	case *TrustPolicySend:
 		s.TrustPolicySend = v
-	case *TrustPolicyExceptionSend:
-		s.TrustPolicyExceptionSend = v
-	case *CloudletPoolSend:
-		s.CloudletPoolSend = v
 	}
 }
 

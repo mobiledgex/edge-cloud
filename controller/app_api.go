@@ -66,7 +66,11 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	}
 }
 
-func CheckAppCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
+func validateAppExists(key *edgeproto.AppKey) bool {
+	return appApi.HasApp(key)
+}
+
+func CheckAppCompatibleWithTrustPolicy(ctx context.Context, ckey *edgeproto.CloudletKey, app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
 	if !app.Trusted {
 		return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), trustPolicy.Key.String())
 	}
@@ -76,18 +80,20 @@ func CheckAppCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, app *edgepro
 	if err == nil {
 		for _, cloudletPoolKey := range list {
 			rules := trustPolicyExceptionApi.GetTrustPolicyExceptionRules(&cloudletPoolKey, &app.Key)
-			log.DebugLog(log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() GetTrustPolicyExceptionRules returned", "rules", rules)
+			log.SpanLog(ctx, log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() GetTrustPolicyExceptionRules returned", "rules", rules)
 
 			allowedRules = append(allowedRules, rules...)
 		}
 	} else {
-		log.DebugLog(log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() returned", "err", err)
+		log.SpanLog(ctx, log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() returned", "err", err)
 	}
 	// Combine the trustPolicy rules with the trustPolicyException rules.
-	for _, r := range trustPolicy.OutboundSecurityRules {
-		allowedRules = append(allowedRules, &r)
+	for i, r := range trustPolicy.OutboundSecurityRules {
+		log.SpanLog(ctx, log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy()  trustPolicy:", "rule", r)
+		allowedRules = append(allowedRules, &trustPolicy.OutboundSecurityRules[i])
 	}
 	for _, r := range app.RequiredOutboundConnections {
+		log.SpanLog(ctx, log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy()  Checking for app:", "rule", r)
 		policyMatchFound := false
 		_, appNet, err := net.ParseCIDR(r.RemoteCidr)
 		if err != nil {
@@ -274,6 +280,11 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	}
 	if err := validateAppConfigsForDeployment(ctx, in.Configs, in.Deployment); err != nil {
 		return err
+	}
+	for i, r := range in.RequiredOutboundConnections {
+		if r.PortRangeMax == 0 {
+			in.RequiredOutboundConnections[i].PortRangeMax = r.PortRangeMin
+		}
 	}
 	if err := validateRequiredOutboundConnections(in.RequiredOutboundConnections); err != nil {
 		return err
@@ -621,7 +632,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				edgeproto.AppInstKeyStringParse(k, &inst.Key)
 				appInstKeys[inst.Key] = struct{}{}
 			}
-			err = cloudletApi.VerifyTrustPoliciesForAppInsts(&cur, appInstKeys)
+			err = cloudletApi.VerifyTrustPoliciesForAppInsts(ctx, &cur, appInstKeys)
 			if err != nil {
 				if TrustedSpecified && !in.Trusted {
 					// override the usual errmsg to be clear for this scenario
@@ -653,6 +664,9 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !appApi.HasApp(&in.Key) {
 		// key doesn't exist
 		return &edgeproto.Result{}, in.Key.NotFoundError()
+	}
+	if TrustPolicyExceptionForAppKeyExists(&in.Key) {
+		return &edgeproto.Result{}, errors.New("Application in use by Trust Policy Exception")
 	}
 
 	// set state to prevent new AppInsts from being created from this App

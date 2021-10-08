@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -48,6 +49,9 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 }
 
 func (s *CloudletPoolApi) DeleteCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {
+	if TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
+		return &edgeproto.Result{}, errors.New("CloudletPool in use by Trust Policy Exception")
+	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.NotFoundError()
@@ -73,6 +77,9 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		}
 		if err := s.checkCloudletsExist(stm, &cur); err != nil {
 			return err
+		}
+		if TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
+			return fmt.Errorf("Not allowed to update CloudletPool when TrustPolicyException is applied")
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
@@ -180,23 +187,13 @@ func (s *CloudletPoolApi) cloudletDeleted(ctx context.Context, key *edgeproto.Cl
 }
 
 func (s *CloudletPoolApi) GetCloudletPoolKeysForCloudletKey(in *edgeproto.CloudletKey) ([]edgeproto.CloudletPoolKey, error) {
-	var cloudletPoolKeys []edgeproto.CloudletPoolKey
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	found := false
-	for _, data := range s.cache.Objs {
-		if in.Organization != data.Obj.Key.Organization {
-			continue
-		}
-		for _, cname := range data.Obj.Cloudlets {
-			if cname == in.Name {
-				cloudletPoolKeys = append(cloudletPoolKeys, data.Obj.Key)
-				found = true
-			}
-		}
-	}
-	if found == false {
-		return cloudletPoolKeys, fmt.Errorf("No cloudletPool found")
-	}
-	return cloudletPoolKeys, nil
+	return s.cache.GetPoolsForCloudletKey(in)
+}
+
+func (s *CloudletPoolApi) HasCloudletPool(key *edgeproto.CloudletPoolKey) bool {
+	return s.cache.HasKey(key)
+}
+
+func validateCloudletPoolExists(key *edgeproto.CloudletPoolKey) bool {
+	return cloudletPoolApi.HasCloudletPool(key)
 }

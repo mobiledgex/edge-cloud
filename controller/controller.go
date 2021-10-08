@@ -627,7 +627,6 @@ func InitApis(sync *Sync) {
 	InitResTagTableApi(sync)
 	InitTrustPolicyApi(sync)
 	InitTrustPolicyExceptionApi(sync)
-	InitTrustPolicyExceptionResponseApi(sync)
 	InitSettingsApi(sync)
 	InitRateLimitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
@@ -650,9 +649,11 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendVMPoolCache(&vmPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
 	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
-	notify.ServerMgrOne.RegisterSendCloudletPoolCache(cloudletPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(cloudletApi.cache)
+	// Be careful on dependencies.
+	// CloudletPools must be sent after cloudlets, because they reference cloudlets.
+	notify.ServerMgrOne.RegisterSendCloudletPoolCache(cloudletPoolApi.cache)
+
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
@@ -664,7 +665,8 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&userAlertApi.cache)
-
+	// TrustPolicyExceptions depend on App and Cloudlet so must be sent after them.
+	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)

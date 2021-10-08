@@ -40,8 +40,8 @@ type AllDataOut struct {
 	AlertPolicies                 []edgeproto.Result
 	FlowRateLimitSettings         []edgeproto.Result
 	MaxReqsRateLimitSettings      []edgeproto.Result
-	TrustPolicyExceptions         [][]edgeproto.Result
-	TrustPolicyExceptionResponses [][]edgeproto.Result
+	TrustPolicyExceptions         []edgeproto.Result
+	TrustPolicyExceptionResponses []edgeproto.Result
 	Errors                        []Err
 }
 

@@ -384,8 +384,9 @@ apps:
   trusted: true
   requiredoutboundconnections:
   - protocol: tcp
-    port: 2222
-    remoteip: 35.247.68.151
+    remotecidr: "35.247.68.151/24"
+    portrangemin: 2222
+    portrangemax: 2222
 appinstances:
 - key:
     appkey:
