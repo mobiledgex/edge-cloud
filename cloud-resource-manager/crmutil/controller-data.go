@@ -116,7 +116,6 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.TrustPolicyExceptionCache.SetUpdatedCb(cd.trustPolicyExceptionChanged)
 	cd.TrustPolicyExceptionCache.SetDeletedCb(cd.trustPolicyExceptionDeleted)
 
-	cd.CloudletPoolCache.SetUpdatedCb(cd.cloudletPoolChanged)
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
 
@@ -976,10 +975,6 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
 		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKey)
 	}
-}
-
-func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeproto.CloudletPool, new *edgeproto.CloudletPool) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "CloudletPoolChanged", "CloudletPool:", new)
 }
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
