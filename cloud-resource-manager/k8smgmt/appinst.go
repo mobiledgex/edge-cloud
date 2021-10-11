@@ -207,6 +207,15 @@ func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *Ku
 			break
 		}
 		if lbip == "" {
+			// it could be old cluster where we just patch "External IPs"
+			for _, extIp := range s.Spec.ExternalIPs {
+				if strings.Contains(extIp, "pending") || extIp == "" {
+					continue
+				}
+				lbip = extIp
+			}
+		}
+		if lbip == "" {
 			continue
 		}
 		ports := s.Spec.Ports
