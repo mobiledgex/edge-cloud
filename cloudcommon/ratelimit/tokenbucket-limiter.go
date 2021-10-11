@@ -32,7 +32,7 @@ func NewTokenBucketLimiter(tokensPerSecond float64, bucketSize int) *TokenBucket
 func (t *TokenBucketLimiter) Limit(ctx context.Context, info *CallerInfo) error {
 	tokenAvailable := t.limiter.Allow()
 	if !tokenAvailable {
-		return fmt.Errorf("Exceeded rate of %.2f requests per second", t.tokensPerSecond)
+		return fmt.Errorf("Exceeded rate of %f requests per second", t.tokensPerSecond)
 	} else {
 		return nil
 	}
