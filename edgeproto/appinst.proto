@@ -15,6 +15,7 @@ import "cluster.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 import "gogoproto/gogo.proto";
+import "edgeprotogen.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -63,27 +64,27 @@ message AppInstKey {
 // 10: `POWER_STATE_ERROR`
 enum PowerState {
   // Unknown
-  POWER_STATE_UNKNOWN = 0 [(distributed_match_engine.enum_backend) = true];
+  POWER_STATE_UNKNOWN = 0 [(edgeprotogen.enum_backend) = true];
   // Power On Requested
-  POWER_ON_REQUESTED = 1 [(distributed_match_engine.enum_backend) = true];
+  POWER_ON_REQUESTED = 1 [(edgeprotogen.enum_backend) = true];
   // Powering On
-  POWERING_ON = 2 [(distributed_match_engine.enum_backend) = true];
+  POWERING_ON = 2 [(edgeprotogen.enum_backend) = true];
   // Power On
   POWER_ON = 3;
   // Power Off Requested
-  POWER_OFF_REQUESTED = 4 [(distributed_match_engine.enum_backend) = true];
+  POWER_OFF_REQUESTED = 4 [(edgeprotogen.enum_backend) = true];
   // Powering Off
-  POWERING_OFF = 5 [(distributed_match_engine.enum_backend) = true];
+  POWERING_OFF = 5 [(edgeprotogen.enum_backend) = true];
   // Power Off
   POWER_OFF = 6;
   // Reboot Requested
-  REBOOT_REQUESTED = 7 [(distributed_match_engine.enum_backend) = true];
+  REBOOT_REQUESTED = 7 [(edgeprotogen.enum_backend) = true];
   // Rebooting
-  REBOOTING = 8 [(distributed_match_engine.enum_backend) = true];
+  REBOOTING = 8 [(edgeprotogen.enum_backend) = true];
   // Reboot
   REBOOT = 9;
   // Error
-  POWER_STATE_ERROR = 10 [(distributed_match_engine.enum_backend) = true];
+  POWER_STATE_ERROR = 10 [(edgeprotogen.enum_backend) = true];
 }
 
 // Application Instance
