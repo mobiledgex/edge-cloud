@@ -5,6 +5,10 @@ tlscerts:
     - 127.0.0.1
     - 0.0.0.0
 
+dockernetworks:
+- name: e2e-logging
+  hostname: "127.0.0.1"
+
 vaults:
 - name: vault
   hostname: "127.0.0.1"
@@ -148,36 +152,46 @@ dmes:
     ES_SERVER_URLS: https://localhost:9201
     E2ETEST_TLS: true
 
-traefiks:
-- name: traefik-e2e
-  tls:
-    servercert: "{{tlsoutdir}}/mex-server.crt"
-    serverkey: "{{tlsoutdir}}/mex-server.key"
-    cacert: "{{tlsoutdir}}/mex-ca.crt"
-  hostname: "127.0.0.1"
-
 elasticsearchs:
 - name: elasticsearch-e2e
   hostname: "127.0.0.1"
+  dockernetwork: e2e-logging
 - name: kibana-e2e
   type: kibana
-  links:
-  - elasticsearch-e2e:elasticsearch
+  dockernetwork: e2e-logging
   hostname: "127.0.0.1"
+  dockerenvvars:
+    ELASTICSEARCH_HOSTS: http://elasticsearch-e2e:9200
+
+nginxproxys:
 - name: es-proxy
-  type: nginx-proxy
-  links:
-  - elasticsearch-e2e
+  dockernetwork: e2e-logging
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-    cacert: "{{tlsoutdir}}/mex-ca.crt"
+  proxys:
+  - servername: es-proxy
+    tlsport: 9201
+    target: http://elasticsearch-e2e:9200
+  hostname: "127.0.0.1"
+- name: jaeger-proxy
+  dockernetwork: e2e-logging
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    serverkey: "{{tlsoutdir}}/mex-server.key"
+  proxys:
+  - servername: jaeger-ui
+    port: 16687
+    tlsport: 16686
+    target: http://jaeger-e2e:16686
+  - servername: jaeger-collector
+    tlsport: 14268
+    target: http://jaeger-e2e:14268
   hostname: "127.0.0.1"
 
 jaegers:
 - name: jaeger-e2e
-  links:
-  - elasticsearch-e2e
+  dockernetwork: e2e-logging
   hostname: "127.0.0.1"
   dockerenvvars:
     SPAN_STORAGE_TYPE: elasticsearch
