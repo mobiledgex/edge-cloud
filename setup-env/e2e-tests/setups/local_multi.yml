@@ -152,15 +152,6 @@ dmes:
     ES_SERVER_URLS: https://localhost:9201
     E2ETEST_TLS: true
 
-#traefiks:
-#- name: traefik-e2e
-#  dockernetwork: e2e-logging
-#  tls:
-#    servercert: "{{tlsoutdir}}/mex-server.crt"
-#    serverkey: "{{tlsoutdir}}/mex-server.key"
-#    cacert: "{{tlsoutdir}}/mex-ca.crt"
-#  hostname: "127.0.0.1"
-
 elasticsearchs:
 - name: elasticsearch-e2e
   hostname: "127.0.0.1"
