@@ -359,6 +359,12 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 			log.Printf("cleaning etcd %+v", p)
 			p.ResetData()
 		}
+		for _, dn := range util.Deployment.DockerNetworks {
+			log.Printf("Removing docker network %+v\n", dn)
+			if err := dn.Delete(); err != nil {
+				log.Printf("%s\n", err)
+			}
+		}
 	}
 	return true
 }
@@ -487,6 +493,18 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		opts = append(opts, process.WithExtraArgs(args))
 	}
 
+	for _, dn := range util.Deployment.DockerNetworks {
+		if processName != "" && dn.Name != processName {
+			continue
+		}
+		if !IsLocalIP(dn.Hostname) {
+			continue
+		}
+		if err := dn.Create(); err != nil {
+			log.Printf("%s\n", err)
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Influxs {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
@@ -514,6 +532,11 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.Traefiks {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.NginxProxys {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
