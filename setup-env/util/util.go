@@ -112,6 +112,7 @@ type TLSCertInfo struct {
 
 type DeploymentData struct {
 	TLSCerts       []*TLSCertInfo           `yaml:"tlscerts"`
+	DockerNetworks []*process.DockerNetwork `yaml:"dockernetworks"`
 	Locsims        []*process.LocApiSim     `yaml:"locsims"`
 	Toksims        []*process.TokSrvSim     `yaml:"toksims"`
 	Vaults         []*process.Vault         `yaml:"vaults"`
@@ -124,6 +125,7 @@ type DeploymentData struct {
 	Crms           []*process.Crm           `yaml:"crms"`
 	Jaegers        []*process.Jaeger        `yaml:"jaegers"`
 	Traefiks       []*process.Traefik       `yaml:"traefiks"`
+	NginxProxys    []*process.NginxProxy    `yaml:"nginxproxys"`
 	NotifyRoots    []*process.NotifyRoot    `yaml:"notifyroots"`
 	EdgeTurns      []*process.EdgeTurn      `yaml:"edgeturns"`
 	ElasticSearchs []*process.ElasticSearch `yaml:"elasticsearchs"`
@@ -165,6 +167,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.Jaegers {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.NginxProxys {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.Traefiks {
