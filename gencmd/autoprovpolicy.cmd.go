@@ -585,7 +585,7 @@ var AutoProvInfoComments = map[string]string{
 	"key.organization": "Organization of the cloudlet site",
 	"key.name":         "Name of the cloudlet",
 	"notifyid":         "Id of client assigned by server (internal use only)",
-	"maintenancestate": "failover result state, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
+	"maintenancestate": "failover result state, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"completed":        "Failover actions done if any",
 	"errors":           "Errors if any",
 }
