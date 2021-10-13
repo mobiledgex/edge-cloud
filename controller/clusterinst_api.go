@@ -898,16 +898,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
-		for _, n := range in.Networks {
-			network := edgeproto.Network{}
-			networkKey := edgeproto.NetworkKey{
-				Name:        n,
-				CloudletKey: in.Key.CloudletKey,
-			}
-			if !networkApi.store.STMGet(stm, &networkKey, &network) {
-				return networkKey.NotFoundError()
-			}
-		}
 
 		if in.Flavor.Name == "" {
 			return errors.New("No Flavor specified")
@@ -971,6 +961,25 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		in.IpAccess, err = validateAndDefaultIPAccess(ctx, in, cloudlet.PlatformType, features, cb)
 		if err != nil {
 			return err
+		}
+		for _, n := range in.Networks {
+			if !features.SupportsAdditionalNetworks {
+				platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+				return fmt.Errorf("Additional cluster networks not supported on platform: %s", platName)
+			}
+			network := edgeproto.Network{}
+			networkKey := edgeproto.NetworkKey{
+				Name:        n,
+				CloudletKey: in.Key.CloudletKey,
+			}
+			if !networkApi.store.STMGet(stm, &networkKey, &network) {
+				return networkKey.NotFoundError()
+			}
+			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
+				if network.ConnectionType == edgeproto.NetworkConnectionType_CONNECT_TO_LOAD_BALANCER || network.ConnectionType == edgeproto.NetworkConnectionType_CONNECT_TO_ALL {
+					return fmt.Errorf("Cannot specify an additional cluster network of ConnectionType ConnectToLoadBalancer or ConnectToAll with IpAccessShared")
+				}
+			}
 		}
 		err = validateResources(ctx, stm, in, nil, nil, &cloudlet, &info, &refs, GenResourceAlerts)
 		if err != nil {
