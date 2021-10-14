@@ -169,7 +169,7 @@ nginxproxys:
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-  proxys:
+  servers:
   - servername: es-proxy
     tlsport: 9201
     target: http://elasticsearch-e2e:9200
@@ -179,7 +179,7 @@ nginxproxys:
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     serverkey: "{{tlsoutdir}}/mex-server.key"
-  proxys:
+  servers:
   - servername: jaeger-ui
     port: 16687
     tlsport: 16686
@@ -196,7 +196,6 @@ jaegers:
   dockerenvvars:
     SPAN_STORAGE_TYPE: elasticsearch
     ES_SERVER_URLS: http://elasticsearch-e2e:9200
-    ES_INDEX_PREFIX: main
 
 notifyroots:
 - name: notifyroot
