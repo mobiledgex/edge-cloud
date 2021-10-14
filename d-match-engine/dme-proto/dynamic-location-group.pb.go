@@ -505,7 +505,7 @@ func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) err
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid DlgMessage_DlgAck value %q", str)
 	}
 	*e = DlgMessage_DlgAck(val)
 	return nil
@@ -536,7 +536,7 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid DlgMessage_DlgAck value %q", str)
 		}
 		*e = DlgMessage_DlgAck(val)
 		return nil
@@ -544,10 +544,14 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := DlgMessage_DlgAck_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid DlgMessage_DlgAck value %d", val)
+		}
 		*e = DlgMessage_DlgAck(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid DlgMessage_DlgAck value %v", b)
 }
 
 /*

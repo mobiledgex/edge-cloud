@@ -45,6 +45,16 @@ func GetActionParam(a string) (string, string) {
 	return action, actionParam
 }
 
+func GetCtrlNameFromCrmStartArgs(args []string) string {
+	for ii := range args {
+		act, param := GetActionParam(args[ii])
+		if act == "ctrl" {
+			return param
+		}
+	}
+	return ""
+}
+
 // Change "cluster-svc1 scrapeInterval=30s updateAll" int []{"cluster-svc1", "scrapeInterval=30s", "updateApp"}
 func GetActionArgs(a string) []string {
 	argSlice := strings.Fields(a)
@@ -349,6 +359,12 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 			log.Printf("cleaning etcd %+v", p)
 			p.ResetData()
 		}
+		for _, dn := range util.Deployment.DockerNetworks {
+			log.Printf("Removing docker network %+v\n", dn)
+			if err := dn.Delete(); err != nil {
+				log.Printf("%s\n", err)
+			}
+		}
 	}
 	return true
 }
@@ -477,6 +493,18 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		opts = append(opts, process.WithExtraArgs(args))
 	}
 
+	for _, dn := range util.Deployment.DockerNetworks {
+		if processName != "" && dn.Name != processName {
+			continue
+		}
+		if !IsLocalIP(dn.Hostname) {
+			continue
+		}
+		if err := dn.Create(); err != nil {
+			log.Printf("%s\n", err)
+			return false
+		}
+	}
 	for _, p := range util.Deployment.Influxs {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
@@ -504,6 +532,11 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 		}
 	}
 	for _, p := range util.Deployment.Traefiks {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.NginxProxys {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false
 		}
@@ -627,8 +660,17 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 			actionArgs = actionArgs[1:]
 		}
 		if actionSubtype == "crm" {
+			// extract the action param and action args
+			actionArgs = GetActionArgs(actionParam)
+			ctrlName := ""
+			if len(actionArgs) > 0 {
+				actionParam = actionArgs[0]
+				actionArgs = actionArgs[1:]
+				ctrlName = GetCtrlNameFromCrmStartArgs(actionArgs)
+			}
+			log.Printf("Starting CRM %s connected to ctrl %s\n", actionParam, ctrlName)
 			// read the apifile and start crm with the details
-			err := apis.StartCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir)
+			err := apis.StartCrmsLocal(ctx, actionParam, ctrlName, spec.ApiFile, spec.ApiFileVars, outputDir)
 			if err != nil {
 				errors = append(errors, err.Error())
 			}

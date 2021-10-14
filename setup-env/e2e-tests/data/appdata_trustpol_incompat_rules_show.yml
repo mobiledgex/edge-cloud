@@ -53,7 +53,7 @@ settings:
   clusterautoscaleretrydelay: 1m
   alertpolicymintriggertime: 30s
   disableratelimit: true
-  maxnumperipratelimiters: 10000
+  ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
 trustpolicies:
 - key:

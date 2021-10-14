@@ -19,6 +19,8 @@ type AlertApi struct {
 	sourceCache edgeproto.AlertCache // source of truth from crm/etc
 }
 
+var ControllerCreatedAlerts = "ControllerCreatedAlerts"
+
 var alertApi = AlertApi{}
 
 func InitAlertApi(sync *Sync) {
@@ -148,13 +150,20 @@ func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
 func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// Add a region label
 	in.Labels["region"] = *region
-	s.sourceCache.DeleteCondFunc(ctx, in, rev, func(old *edgeproto.Alert) bool {
-		if old.NotifyId != in.NotifyId {
-			// already updated by another thread, don't delete
-			return false
-		}
-		return true
-	})
+	// Controller created alerts, so delete directly
+	_, ok := ctx.Value(ControllerCreatedAlerts).(*string)
+	if ok {
+		s.sourceCache.Delete(ctx, in, rev)
+		s.store.Delete(ctx, in, s.sync.syncWait)
+	} else {
+		s.sourceCache.DeleteCondFunc(ctx, in, rev, func(old *edgeproto.Alert) bool {
+			if old.NotifyId != in.NotifyId {
+				// already updated by another thread, don't delete
+				return false
+			}
+			return true
+		})
+	}
 	// Note that any further actions should done as part of StoreDelete.
 }
 

@@ -18,8 +18,13 @@ func (f *FlowSettings) Validate() error {
 				return fmt.Errorf("Invalid BurstSize %d, must be greater than 0", f.BurstSize)
 			}
 		}
+		if f.FlowAlgorithm == FlowRateLimitAlgorithm_LEAKY_BUCKET_ALGORITHM {
+			if f.BurstSize != 0 {
+				return fmt.Errorf("BurstSize does not apply for the leaky bucket algorithm")
+			}
+		}
 	} else {
-		return fmt.Errorf("Invalid FlowAlgorithm %v", f.FlowAlgorithm)
+		return fmt.Errorf("Invalid FlowAlgorithm")
 	}
 	return nil
 }
@@ -34,7 +39,7 @@ func (m *MaxReqsSettings) Validate() error {
 			return fmt.Errorf("Invalid Interval %d, must be greater than 0", m.Interval)
 		}
 	} else {
-		return fmt.Errorf("Invalid MaxReqsAlgorithm %v", m.MaxReqsAlgorithm)
+		return fmt.Errorf("Invalid MaxReqsAlgorithm")
 	}
 	return nil
 }

@@ -6,7 +6,6 @@ package edgeproto
 import (
 	context "context"
 	"encoding/json"
-	"errors"
 	fmt "fmt"
 	"github.com/coreos/etcd/clientv3/concurrency"
 	_ "github.com/gogo/googleapis/google/api"
@@ -1255,7 +1254,7 @@ func (e *StreamState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		}
 	}
 	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+		return fmt.Errorf("Invalid StreamState value %q", str)
 	}
 	*e = StreamState(val)
 	return nil
@@ -1286,7 +1285,7 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return errors.New(fmt.Sprintf("No enum value for %s", str))
+			return fmt.Errorf("Invalid StreamState value %q", str)
 		}
 		*e = StreamState(val)
 		return nil
@@ -1294,10 +1293,14 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
+		_, ok := StreamState_CamelName[val]
+		if !ok {
+			return fmt.Errorf("Invalid StreamState value %d", val)
+		}
 		*e = StreamState(val)
 		return nil
 	}
-	return fmt.Errorf("No enum value for %v", b)
+	return fmt.Errorf("Invalid StreamState value %v", b)
 }
 
 /*
