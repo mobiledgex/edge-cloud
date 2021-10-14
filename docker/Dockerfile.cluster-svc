@@ -4,3 +4,4 @@ FROM $ALLINONE as allinone
 FROM gcr.io/distroless/base-debian10:debug
 
 COPY --from=allinone /usr/local/bin/cluster-svc /usr/local/bin/cluster-svc
+COPY --from=allinone /plugins/platforms.so /plugins/
