@@ -39,8 +39,8 @@ func (s *Xind) UpdateTrustPolicyException(ctx context.Context, TrustPolicyExcept
 	return nil
 }
 
-func (s *Xind) DeleteTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "delete xind TrustPolicyException", "policy", TrustPolicyException)
+func (s *Xind) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "delete xind TrustPolicyException", "policyKey", TrustPolicyExceptionKey)
 	return nil
 }
 

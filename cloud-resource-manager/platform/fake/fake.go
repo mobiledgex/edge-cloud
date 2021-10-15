@@ -561,8 +561,8 @@ func (s *Platform) UpdateTrustPolicyException(ctx context.Context, TrustPolicyEx
 	return nil
 }
 
-func (s *Platform) DeleteTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "fake DeleteTrustPolicyException", "policy", TrustPolicyException)
+func (s *Platform) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "fake DeleteTrustPolicyException", "policyKey", TrustPolicyExceptionKey)
 	return nil
 }
 

@@ -960,21 +960,21 @@ func (cd *ControllerData) notifyControllerConnect() {
 
 func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *edgeproto.TrustPolicyException, new *edgeproto.TrustPolicyException) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionChanged()", "trustPolicyException", new)
-	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
+	if old != nil && old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 		new.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-		tpeKey := edgeproto.TrustPolicyException{Key: new.Key}
-		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKey)
+		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, new.Key)
 	}
 }
 
 func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *edgeproto.TrustPolicyException) {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionDeleted()", "TrustPolicyException:", old)
-	tpeKey := edgeproto.TrustPolicyException{Key: old.Key}
 
 	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKey)
+		log.SpanLog(ctx, log.DebugLevelInfra, "calling deleteTrustPolicyExceptionKeyWorkers")
+		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, old.Key)
 	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "done trustPolicyExceptionDeleted")
 }
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
@@ -1425,35 +1425,33 @@ func (cd *ControllerData) UpdateTrustPolicyException(ctx context.Context, k inte
 	log.SetContextTags(ctx, tpeKey.GetTags())
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateTrustPolicyException", "TrustPolicyExceptionKey", tpeKey)
 
-	var TrustPolicyException edgeproto.TrustPolicyException
-	if !cd.TrustPolicyExceptionCache.Get(&tpeKey, &TrustPolicyException) {
-		log.FatalLog("failed to fetch TrustPolicyException from cache for Update")
-		return
-	}
+	err := cd.TrustPolicyExceptionCache.Show(&edgeproto.TrustPolicyException{Key: tpeKey}, func(tpe *edgeproto.TrustPolicyException) error {
+		log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", tpe)
+		err1 := cd.platform.UpdateTrustPolicyException(ctx, tpe)
+		if err1 != nil {
+			errstr := fmt.Sprintf("UpdateTrustPolicyException failed: %s", err1)
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateTrustPolicyException", "error", errstr, "key", tpe)
+			return err1
+		}
+		return nil
+	})
 
-	log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", TrustPolicyException)
-	err := cd.platform.UpdateTrustPolicyException(ctx, &TrustPolicyException)
 	log.SpanLog(ctx, log.DebugLevelInfra, "Update TrustPolicyException Done", "err", err)
 }
 
 func (cd *ControllerData) DeleteTrustPolicyException(ctx context.Context, k interface{}) {
 	tpeKey, ok := k.(edgeproto.TrustPolicyExceptionKey)
 	if !ok {
-		log.SpanLog(ctx, log.DebugLevelInfra, "Unexpected failure, key not TrustPolicyExceptionKey", "TrustPolicyExceptionKey", tpeKey)
+		log.SpanLog(ctx, log.DebugLevelInfra, "DeleteTrustPolicyException: Unexpected failure, key not TrustPolicyExceptionKey", "TrustPolicyExceptionKey", tpeKey)
 		return
 	}
 	log.SetContextTags(ctx, tpeKey.GetTags())
 	log.SpanLog(ctx, log.DebugLevelInfra, "DeleteTrustPolicyException", "TrustPolicyExceptionKey", tpeKey)
 
-	var TrustPolicyException edgeproto.TrustPolicyException
-	if !cd.TrustPolicyExceptionCache.Get(&tpeKey, &TrustPolicyException) {
-		log.FatalLog("failed to fetch TrustPolicyException from cache for Delete")
-		return
-	}
+	// Note In this task-worker approach, you won't actually have the TrustPolicyException object that was deleted - you'll only have the key.
+	err := cd.platform.DeleteTrustPolicyException(ctx, &tpeKey)
 
-	log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicyException", "TrustPolicyException", TrustPolicyException)
-	err := cd.platform.DeleteTrustPolicyException(ctx, &TrustPolicyException)
-	log.SpanLog(ctx, log.DebugLevelInfra, "Delete TrustPolicyException Done", "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "platform.DeleteTrustPolicyException Done", "err", err)
 }
 
 func (cd *ControllerData) GetTrustPolicyExceptionFromKey(tpeKey *edgeproto.TrustPolicyExceptionKey) (bool, *edgeproto.TrustPolicyException) {

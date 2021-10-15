@@ -55,12 +55,12 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", in.State)
 
 	_, err := s.store.Create(ctx, in, s.sync.syncWait)
-	return nil, err
+	return &edgeproto.Result{}, err
 
 }
 
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
-	return nil, fmt.Errorf("Not allowed to update TrustPolicyException")
+	return &edgeproto.Result{}, fmt.Errorf("Not allowed to update TrustPolicyException")
 }
 
 func (s *TrustPolicyExceptionApi) DeleteTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
@@ -68,7 +68,7 @@ func (s *TrustPolicyExceptionApi) DeleteTrustPolicyException(ctx context.Context
 		return nil, in.Key.NotFoundError()
 	}
 	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
-	return nil, err
+	return &edgeproto.Result{}, err
 }
 
 func (s *TrustPolicyExceptionApi) ShowTrustPolicyException(in *edgeproto.TrustPolicyException, cb edgeproto.TrustPolicyExceptionApi_ShowTrustPolicyExceptionServer) error {
@@ -187,15 +187,15 @@ func (s *TrustPolicyExceptionResponseApi) CreateTrustPolicyExceptionResponse(ctx
 		// If App is already deployed and TrustPolicyException is created later and approved now, we should automatically program the TrustPolicyException rules
 		// FIXME TO DO
 	}
-	return nil, nil
+	return &edgeproto.Result{}, nil
 }
 
 func (s *TrustPolicyExceptionResponseApi) UpdateTrustPolicyExceptionResponse(ctx context.Context, in *edgeproto.TrustPolicyExceptionResponse) (*edgeproto.Result, error) {
-	return nil, nil
+	return &edgeproto.Result{}, nil
 }
 
 func (s *TrustPolicyExceptionResponseApi) DeleteTrustPolicyExceptionResponse(ctx context.Context, in *edgeproto.TrustPolicyExceptionResponse) (*edgeproto.Result, error) {
-	return nil, nil
+	return &edgeproto.Result{}, nil
 }
 
 func (s *TrustPolicyExceptionResponseApi) ShowTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_ShowTrustPolicyExceptionResponseServer) error {
