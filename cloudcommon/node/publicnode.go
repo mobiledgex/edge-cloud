@@ -80,6 +80,10 @@ func NewPublicCertManager(commonName string, getPublicCertApi cloudcommon.GetPub
 	return mgr, nil
 }
 
+func (s *PublicCertManager) TLSMode() mextls.TLSMode {
+	return s.tlsMode
+}
+
 func (s *PublicCertManager) updateCert(ctx context.Context) error {
 	if s.tlsMode == mextls.NoTLS || !s.useGetPublicCertApi {
 		// If no tls or using command line certs, do not update
