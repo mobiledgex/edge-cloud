@@ -346,11 +346,11 @@ func RemoveApp(ctx context.Context, in *edgeproto.App) {
 		app.Lock()
 		delete(tbl.Apps, in.Key)
 		app.Unlock()
-	}
-	// Clear auto-prov stats for App
-	if autoProvStats != nil {
-		for name, _ := range app.AutoProvPolicies {
-			autoProvStats.Clear(&in.Key, name)
+		// Clear auto-prov stats for App
+		if autoProvStats != nil {
+			for name, _ := range app.AutoProvPolicies {
+				autoProvStats.Clear(&in.Key, name)
+			}
 		}
 	}
 }
