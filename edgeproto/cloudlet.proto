@@ -480,6 +480,7 @@ message Cloudlet {
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.mc2_target_cloudlet) = "Key";
   option (protogen.uses_org) = "key=Organization";
 }
 
