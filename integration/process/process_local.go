@@ -49,7 +49,7 @@ func (s *TLSCerts) AddInternalPkiArgs(args []string) []string {
 	if s.ServerCert != "" {
 		args = append(args, "--itlsCert", s.ServerCert)
 	}
-	if s.ServerCert != "" {
+	if s.ServerKey != "" {
 		args = append(args, "--itlsKey", s.ServerKey)
 	}
 	if s.CACert != "" {
