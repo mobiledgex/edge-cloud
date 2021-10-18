@@ -22,10 +22,6 @@ var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
 var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
 var dockerNameMatch = regexp.MustCompile(`^[0-9a-zA-Z][a-zA-Z0-9_.-]+$`)
 
-// Same as nameMatch except that '.' is not allowed. This is required for Federation.
-// We use '.' as separate between cloudlet name and federation ID `<cloudletName>.<federationID>`
-var cloudletNameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z &,!]*$") // no '.' allowed
-
 const maxHostnameLength = 63
 
 // region names are used in Vault approle names, which are very
@@ -44,10 +40,6 @@ func ValidateNames(names map[string]string) error {
 		}
 	}
 	return nil
-}
-
-func ValidCloudletName(name string) bool {
-	return cloudletNameMatch.MatchString(name)
 }
 
 func ValidName(name string) bool {
