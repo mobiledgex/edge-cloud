@@ -91,7 +91,7 @@ func addResourceLimits(ctx context.Context, template *v1.PodTemplateSpec, config
 	// This assumes there's only one container.
 	// Kubernetes does not give a way to specify resource limits per pod.
 	// It's either per container, or per namespace.
-	cpu, err := resource.ParseQuantity(fmt.Sprintf("%.3f", config.Vcpus))
+	cpu, err := resource.ParseQuantity(config.Vcpus.DecString())
 	if err != nil {
 		return err
 	}

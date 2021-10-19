@@ -691,8 +691,10 @@ func (m *AllData) DeepCopyIn(src *AllData) {
 
 // Helper method to check that enums have valid values
 func (m *AllData) ValidateEnums() error {
-	if err := m.Settings.ValidateEnums(); err != nil {
-		return err
+	if m.Settings != nil {
+		if err := m.Settings.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	for _, e := range m.Flavors {
 		if err := e.ValidateEnums(); err != nil {
@@ -769,8 +771,10 @@ func (m *AllData) ValidateEnums() error {
 			return err
 		}
 	}
-	if err := m.IdleReservableClusterInsts.ValidateEnums(); err != nil {
-		return err
+	if m.IdleReservableClusterInsts != nil {
+		if err := m.IdleReservableClusterInsts.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	for _, e := range m.GpuDrivers {
 		if err := e.ValidateEnums(); err != nil {
