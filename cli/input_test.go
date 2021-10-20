@@ -17,13 +17,16 @@ import (
 
 // protobuf tags are for testing GetSpecifiedFieldsData()
 type TestObj struct {
-	Inner1     InnerObj          `protobuf:"bytes,1"`
-	Inner2     *InnerObj         `protobuf:"bytes,2"`
-	unexported string            `protobuf:"bytes,3"`
-	Arr        []string          `protobuf:"bytes,4"`
-	Mmm        map[string]string `protobuf:"bytes,5"`
-	ObjArr     []InnerObj        `protobuf:"bytes,6"`
-	ObjArr2    []InnerObj        `protobuf:"bytes,7"`
+	Inner1      InnerObj          `protobuf:"bytes,1"`
+	Inner2      *InnerObj         `protobuf:"bytes,2"`
+	unexported  string            `protobuf:"bytes,3"`
+	Arr         []string          `protobuf:"bytes,4"`
+	Mmm         map[string]string `protobuf:"bytes,5"`
+	ObjArr      []InnerObj        `protobuf:"bytes,6"`
+	ObjArr2     []InnerObj        `protobuf:"bytes,7"`
+	DecVal      edgeproto.Udec64  `protobuf:"bytes,8"`
+	PtrDecVal   *edgeproto.Udec64 `protobuf:"bytes,9"`
+	WholeDecVal edgeproto.Udec64  `protobuf:"bytes,10"`
 }
 
 type InnerObj struct {
@@ -51,6 +54,7 @@ func TestParseArgs(t *testing.T) {
 
 	input := &cli.Input{
 		SpecialArgs: &spargs,
+		DecodeHook:  edgeproto.DecodeHook,
 	}
 
 	ex := TestObj{
@@ -93,9 +97,20 @@ func TestParseArgs(t *testing.T) {
 				Val:  4,
 			},
 		},
+		DecVal: edgeproto.Udec64{
+			Whole: 2,
+			Nanos: 500 * edgeproto.DecMillis,
+		},
+		PtrDecVal: &edgeproto.Udec64{
+			Whole: 3,
+			Nanos: 600 * edgeproto.DecMillis,
+		},
+		WholeDecVal: edgeproto.Udec64{
+			Whole: 5,
+		},
 	}
 
-	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2", "inner1.mmm=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=keyCapital=valCapital", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", `mmm=spaces="Value with spaces"`, "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "inner1.sublist:0.name=sublist0", "inner1.sublist:1.name=sublist1"}
+	args = []string{"inner1.name=name1", "inner1.val=1", "inner2.name=name2", "inner2.val=2", "inner1.mmm=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=keyCapital=valCapital", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", `mmm=spaces="Value with spaces"`, "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "inner1.sublist:0.name=sublist0", "inner1.sublist:1.name=sublist1", "decval=2.5", "ptrdecval=3.6", "wholedecval=5"}
 	testConversion(t, input, &ex, &TestObj{}, &TestObj{}, args)
 
 	// test with alias args
@@ -110,8 +125,9 @@ func TestParseArgs(t *testing.T) {
 			"mmm2=inner2.mmm",
 			"sublist1:#.name=inner1.sublist:#.name",
 		},
+		DecodeHook: edgeproto.DecodeHook,
 	}
-	args = []string{"name1=name1", "val1=1", "name2=name2", "val2=2", "mmm1=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "mmm=keyCapital=valCapital", `mmm=spaces="Value with spaces"`, "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "sublist1:0.name=sublist0", "sublist1:1.name=sublist1"}
+	args = []string{"name1=name1", "val1=1", "name2=name2", "val2=2", "mmm1=xkey=xx", "arr=foo", "arr=bar", "arr=baz", "mmm=key1=val1", "mmm=key.with.dot=val.with.dot", "mmm=keye=val=with=equals", "mmm=keyCapital=valCapital", `mmm=spaces="Value with spaces"`, "objarr:0.name=arrin1", "objarr:0.val=3", "objarr:1.name=arrin2", "objarr:1.val=4", "sublist1:0.name=sublist0", "sublist1:1.name=sublist1", "decval=2.5", "ptrdecval=3.6", "wholedecval=5"}
 	testConversion(t, inputAliased, &ex, &TestObj{}, &TestObj{}, args)
 
 	rf := edgeproto.Flavor{

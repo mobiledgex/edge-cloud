@@ -1,0 +1,23 @@
+// Decimal
+
+syntax = "proto3";
+package edgeproto;
+
+import "gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+// Udec64
+//
+// Udec64 is an unsigned decimal with whole number values
+// as uint64, and decimal values in nanos.
+message Udec64 {
+  // Whole number value
+  uint64 whole = 1;
+  // Decimal value in nanos
+  uint32 nanos = 2;
+  option (protogen.custom_yaml_json_marshalers) = true;
+}

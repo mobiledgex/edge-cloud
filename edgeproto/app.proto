@@ -8,6 +8,7 @@ import "result.proto";
 import "cloudletkey.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
+import "decimal.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
@@ -231,8 +232,8 @@ message App {
 }
 
 message ServerlessConfig {
-  // Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
-  float vcpus = 1;
+  // Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001
+  Udec64 vcpus = 1 [(gogoproto.nullable) = false];
   // RAM allocation in megabytes per container when serverless
   uint64 ram = 2;
   // Minimum number of replicas when serverless

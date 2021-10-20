@@ -1197,8 +1197,10 @@ func (m *IncludeMessage) DeepCopyIn(src *IncludeMessage) {
 
 // Helper method to check that enums have valid values
 func (m *IncludeMessage) ValidateEnums() error {
-	if err := m.NestedMsg.ValidateEnums(); err != nil {
-		return err
+	if m.NestedMsg != nil {
+		if err := m.NestedMsg.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -3037,14 +3039,18 @@ func (m *TestGen) ValidateEnums() error {
 	if _, ok := TestGen_InnerEnum_name[int32(m.InnerEn)]; !ok {
 		return errors.New("invalid InnerEn")
 	}
-	if err := m.IncludeMsg.ValidateEnums(); err != nil {
-		return err
+	if m.IncludeMsg != nil {
+		if err := m.IncludeMsg.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	if err := m.IncludeMsgNonnull.ValidateEnums(); err != nil {
 		return err
 	}
-	if err := m.IncludeFields.ValidateEnums(); err != nil {
-		return err
+	if m.IncludeFields != nil {
+		if err := m.IncludeFields.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	if err := m.IncludeFieldsNonnull.ValidateEnums(); err != nil {
 		return err
