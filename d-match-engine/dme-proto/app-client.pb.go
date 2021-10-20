@@ -5193,8 +5193,10 @@ func (m *FindCloudletRequest) DeepCopyIn(src *FindCloudletRequest) {
 
 // Helper method to check that enums have valid values
 func (m *FindCloudletRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -5378,8 +5380,10 @@ func (m *FindCloudletReply) ValidateEnums() error {
 			return err
 		}
 	}
-	if err := m.CloudletLocation.ValidateEnums(); err != nil {
-		return err
+	if m.CloudletLocation != nil {
+		if err := m.CloudletLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -5492,8 +5496,10 @@ func (m *VerifyLocationRequest) DeepCopyIn(src *VerifyLocationRequest) {
 
 // Helper method to check that enums have valid values
 func (m *VerifyLocationRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -5712,8 +5718,10 @@ func (m *GetLocationReply) ValidateEnums() error {
 	if _, ok := GetLocationReply_LocStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
-	if err := m.NetworkLocation.ValidateEnums(); err != nil {
-		return err
+	if m.NetworkLocation != nil {
+		if err := m.NetworkLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -5826,8 +5834,10 @@ func (m *AppInstListRequest) DeepCopyIn(src *AppInstListRequest) {
 
 // Helper method to check that enums have valid values
 func (m *AppInstListRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -5989,8 +5999,10 @@ func (m *CloudletLocation) DeepCopyIn(src *CloudletLocation) {
 
 // Helper method to check that enums have valid values
 func (m *CloudletLocation) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	for _, e := range m.Appinstances {
 		if err := e.ValidateEnums(); err != nil {
@@ -6319,8 +6331,10 @@ func (m *AppOfficialFqdnRequest) DeepCopyIn(src *AppOfficialFqdnRequest) {
 
 // Helper method to check that enums have valid values
 func (m *AppOfficialFqdnRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -6589,8 +6603,10 @@ func (m *QosPosition) DeepCopyIn(src *QosPosition) {
 
 // Helper method to check that enums have valid values
 func (m *QosPosition) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -6779,8 +6795,10 @@ func (m *QosPositionRequest) ValidateEnums() error {
 			return err
 		}
 	}
-	if err := m.BandSelection.ValidateEnums(); err != nil {
-		return err
+	if m.BandSelection != nil {
+		if err := m.BandSelection.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -6900,8 +6918,10 @@ func (m *QosPositionKpiResult) DeepCopyIn(src *QosPositionKpiResult) {
 
 // Helper method to check that enums have valid values
 func (m *QosPositionKpiResult) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -7141,19 +7161,25 @@ func (m *ClientEdgeEvent) ValidateEnums() error {
 	if _, ok := ClientEdgeEvent_ClientEventType_name[int32(m.EventType)]; !ok {
 		return errors.New("invalid EventType")
 	}
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
+	if m.GpsLocation != nil {
+		if err := m.GpsLocation.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	for _, e := range m.Samples {
 		if err := e.ValidateEnums(); err != nil {
 			return err
 		}
 	}
-	if err := m.DeviceInfoStatic.ValidateEnums(); err != nil {
-		return err
+	if m.DeviceInfoStatic != nil {
+		if err := m.DeviceInfoStatic.ValidateEnums(); err != nil {
+			return err
+		}
 	}
-	if err := m.DeviceInfoDynamic.ValidateEnums(); err != nil {
-		return err
+	if m.DeviceInfoDynamic != nil {
+		if err := m.DeviceInfoDynamic.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -7368,11 +7394,15 @@ func (m *ServerEdgeEvent) ValidateEnums() error {
 	if _, ok := HealthCheck_name[int32(m.HealthCheck)]; !ok {
 		return errors.New("invalid HealthCheck")
 	}
-	if err := m.Statistics.ValidateEnums(); err != nil {
-		return err
+	if m.Statistics != nil {
+		if err := m.Statistics.ValidateEnums(); err != nil {
+			return err
+		}
 	}
-	if err := m.NewCloudlet.ValidateEnums(); err != nil {
-		return err
+	if m.NewCloudlet != nil {
+		if err := m.NewCloudlet.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

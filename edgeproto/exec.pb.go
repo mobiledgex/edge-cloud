@@ -916,8 +916,10 @@ func (m *RunCmd) DeepCopyIn(src *RunCmd) {
 
 // Helper method to check that enums have valid values
 func (m *RunCmd) ValidateEnums() error {
-	if err := m.CloudletMgmtNode.ValidateEnums(); err != nil {
-		return err
+	if m.CloudletMgmtNode != nil {
+		if err := m.CloudletMgmtNode.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1139,14 +1141,20 @@ func (m *ExecRequest) ValidateEnums() error {
 	if err := m.AppInstKey.ValidateEnums(); err != nil {
 		return err
 	}
-	if err := m.Cmd.ValidateEnums(); err != nil {
-		return err
+	if m.Cmd != nil {
+		if err := m.Cmd.ValidateEnums(); err != nil {
+			return err
+		}
 	}
-	if err := m.Log.ValidateEnums(); err != nil {
-		return err
+	if m.Log != nil {
+		if err := m.Log.ValidateEnums(); err != nil {
+			return err
+		}
 	}
-	if err := m.Console.ValidateEnums(); err != nil {
-		return err
+	if m.Console != nil {
+		if err := m.Console.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

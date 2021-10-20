@@ -789,7 +789,7 @@ var AppComments = map[string]string{
 	"requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
 	"allowserverless":                        "App is allowed to deploy as serverless containers",
-	"serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
@@ -808,7 +808,7 @@ var ServerlessConfigOptionalArgs = []string{
 }
 var ServerlessConfigAliasArgs = []string{}
 var ServerlessConfigComments = map[string]string{
-	"vcpus":       "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"vcpus":       "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"ram":         "RAM allocation in megabytes per container when serverless",
 	"minreplicas": "Minimum number of replicas when serverless",
 }
@@ -932,7 +932,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.requiredoutboundconnections:#.port":     "TCP or UDP port",
 	"app.requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
 	"app.allowserverless":                        "App is allowed to deploy as serverless containers",
-	"app.serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"app.serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"app.serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
 	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
 	"app.vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",

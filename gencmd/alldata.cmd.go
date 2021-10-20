@@ -126,6 +126,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].CompatibilityVersion = 0
 		}
+		for i1 := 0; i1 < len(in.CloudletInfos[i0].NodeInfos); i1++ {
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 		if _, found := tags["timestamp"]; found {
@@ -517,6 +519,11 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.trustpolicystate",
 	"cloudletinfos:#.compatibilityversion",
 	"cloudletinfos:#.properties",
+	"cloudletinfos:#.nodeinfos:#.name",
+	"cloudletinfos:#.nodeinfos:#.allocatable:#.key",
+	"cloudletinfos:#.nodeinfos:#.allocatable:#.value",
+	"cloudletinfos:#.nodeinfos:#.capacity:#.key",
+	"cloudletinfos:#.nodeinfos:#.capacity:#.value",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -985,6 +992,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.trustpolicystate":                                              "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletinfos:#.compatibilityversion":                                          "Version for compatibility tracking",
 	"cloudletinfos:#.properties":                                                    "Cloudlet properties",
+	"cloudletinfos:#.nodeinfos:#.name":                                              "Node name",
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
@@ -1096,7 +1104,7 @@ var AllDataComments = map[string]string{
 	"apps:#.requiredoutboundconnections:#.port":                                     "TCP or UDP port",
 	"apps:#.requiredoutboundconnections:#.remoteip":                                 "remote IP X.X.X.X",
 	"apps:#.allowserverless":                                                        "App is allowed to deploy as serverless containers",
-	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"apps:#.vmappostype":                                                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",

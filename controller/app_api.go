@@ -410,21 +410,18 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		if in.ServerlessConfig == nil {
 			in.ServerlessConfig = &edgeproto.ServerlessConfig{}
 		}
-		if in.ServerlessConfig.Vcpus == 0 {
-			in.ServerlessConfig.Vcpus = float32(flavor.Vcpus)
+		if in.ServerlessConfig.Vcpus.IsZero() {
+			in.ServerlessConfig.Vcpus.Set(flavor.Vcpus, 0)
 		}
 		if in.ServerlessConfig.Ram == 0 {
 			in.ServerlessConfig.Ram = flavor.Ram
 		}
-		if in.ServerlessConfig.Vcpus < 0.001 {
-			return fmt.Errorf("Serverless config vcpus cannot be less than 0.001")
+		if in.ServerlessConfig.Vcpus.Nanos%(edgeproto.DecMillis) != 0 {
+			return fmt.Errorf("Serverless config vcpus cannot have precision less than 0.001")
 		}
 		if in.ServerlessConfig.MinReplicas == 0 {
 			in.ServerlessConfig.MinReplicas = 1
 		}
-		// truncate any precision beyond 0.001
-		mvcpus := uint64(in.ServerlessConfig.Vcpus * 1000)
-		in.ServerlessConfig.Vcpus = float32(mvcpus) / 1000.0
 	} else {
 		if in.ServerlessConfig != nil {
 			return fmt.Errorf("Serverless config cannot be specified without allow serverless true")
