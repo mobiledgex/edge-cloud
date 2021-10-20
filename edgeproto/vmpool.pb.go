@@ -1450,8 +1450,10 @@ func (m *VM) ValidateEnums() error {
 	if _, ok := VMState_name[int32(m.State)]; !ok {
 		return errors.New("invalid State")
 	}
-	if err := m.Flavor.ValidateEnums(); err != nil {
-		return err
+	if m.Flavor != nil {
+		if err := m.Flavor.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

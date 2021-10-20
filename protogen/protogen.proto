@@ -94,6 +94,8 @@ extend google.protobuf.MessageOptions {
   string generate_lookup_by_sublist = 51048;
   // generate a reverse lookup cache (val is comma separated list of subfield paths)
   string generate_lookup_by_subfield = 51049;
+  // message has custom yaml/json marshalers
+  bool custom_yaml_json_marshalers = 51052;
 }
 
 extend google.protobuf.EnumOptions {
