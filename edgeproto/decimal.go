@@ -10,7 +10,6 @@ import (
 // Decimal types allow for handling integer based
 // decimal numbers without the inaccuracy associated with floats.
 
-//var DecNanos uint32 = 1000 * 1000 * 1000
 var DecNanos uint32 = 1
 var DecMicros uint32 = 1000 * DecNanos
 var DecMillis uint32 = 1000 * DecMicros
@@ -153,7 +152,7 @@ func ParseUdec64(str string) (*Udec64, error) {
 	}
 	return &Udec64{
 		Whole: whole,
-		Nanos: uint32(nanos),
+		Nanos: nanos,
 	}, nil
 }
 

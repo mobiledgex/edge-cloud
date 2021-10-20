@@ -416,7 +416,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		if in.ServerlessConfig.Ram == 0 {
 			in.ServerlessConfig.Ram = flavor.Ram
 		}
-		if in.ServerlessConfig.Vcpus.Nanos%(1000*1000) != 0 {
+		if in.ServerlessConfig.Vcpus.Nanos%(edgeproto.DecMillis) != 0 {
 			return fmt.Errorf("Serverless config vcpus cannot have precision less than 0.001")
 		}
 		if in.ServerlessConfig.MinReplicas == 0 {
