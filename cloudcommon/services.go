@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -128,6 +129,7 @@ func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformCon
 }
 
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
+var trackedProcessMux sync.Mutex
 
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key)
@@ -153,7 +155,9 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 
 	// track all local crm processes
+	trackedProcessMux.Lock()
 	trackedProcess[cloudlet.Key] = nil
+	trackedProcessMux.Unlock()
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig)
 	if err != nil {
 		return err
@@ -165,7 +169,9 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName(), "pfConfig", pfConfig)
+	trackedProcessMux.Lock()
 	trackedProcess[cloudlet.Key] = crmProc
+	trackedProcessMux.Unlock()
 
 	return nil
 }
@@ -192,6 +198,7 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "stopped crmserver", "msg", <-c)
 
 	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
+	trackedProcessMux.Lock()
 	if cloudlet != nil {
 		if cmdProc, ok := trackedProcess[cloudlet.Key]; ok {
 			// Wait is in a goroutine as it is blocking call if
@@ -205,6 +212,7 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet) error {
 		}
 		trackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
 	}
+	trackedProcessMux.Unlock()
 	return nil
 }
 
@@ -239,12 +247,16 @@ func GetCloudletLog(ctx context.Context, key *edgeproto.CloudletKey) (string, er
 }
 
 func CrmServiceWait(key edgeproto.CloudletKey) error {
-	if _, ok := trackedProcess[key]; ok {
-		err := trackedProcess[key].Wait()
+	trackedProcessMux.Lock()
+	p, ok := trackedProcess[key]
+	delete(trackedProcess, key)
+	trackedProcessMux.Unlock()
+
+	if ok {
+		err := p.Wait()
 		if err != nil && strings.Contains(err.Error(), "Wait was already called") {
 			return nil
 		}
-		delete(trackedProcess, key)
 		if err != nil {
 			return fmt.Errorf("Crm Service Stopped: %v", err)
 		}
