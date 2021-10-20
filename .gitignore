@@ -12,11 +12,11 @@ link-gogo-protobuf
 link-grpc-gateway
 version/version.go
 d-match-engine/dme-proto/*.proto
-cloudcommon/node/*.csr
-cloudcommon/node/*.pem
 cloudcommon/node/vault.log
 cloudcommon/node/vault_pki
 cloudcommon/node/roles.yaml
+edgeprotogen/edgeprotogen.proto
+edgeprotogen/edgeprotogen.pb.go
 vault/*.csr
 vault/*.pem
 vault/vault.log
@@ -29,4 +29,7 @@ envoy/certs/envoyTlsCerts.crt
 controller/envoy/certs/envoyTlsCerts.crt
 controller/data_test.json
 controller/etcdLocal_data/*
+controller/influxdb.log
+controller/influxq_client/.influxdb
+controller/influxq_client/influxdb.log
 cloud-resource-manager/cmd/crmserver/envoy/*

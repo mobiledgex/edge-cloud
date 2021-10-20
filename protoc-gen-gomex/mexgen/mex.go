@@ -2460,6 +2460,10 @@ func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *
 				m.P("for _, e := range m.", generator.CamelCase(*field.Name), " {")
 				m.generateMessageEnumCheck("e")
 				m.P("}")
+			} else if gogoproto.IsNullable(field) {
+				m.P("if m.", generator.CamelCase(*field.Name), " != nil {")
+				m.generateMessageEnumCheck("m." + generator.CamelCase(*field.Name))
+				m.P("}")
 			} else {
 				m.generateMessageEnumCheck("m." + generator.CamelCase(*field.Name))
 			}
