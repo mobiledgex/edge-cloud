@@ -270,3 +270,12 @@ func IgnoreSpanTag(tag string) bool {
 	}
 	return false
 }
+
+func SpanTraceID(ctx context.Context) string {
+	span := SpanFromContext(ctx)
+	jspan, ok := span.(*Span)
+	if !ok {
+		panic("non-jaeger span not supported")
+	}
+	return jspan.SpanContext().TraceID().String()
+}
