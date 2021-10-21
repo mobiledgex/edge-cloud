@@ -97,7 +97,7 @@ var AppData = []edgeproto.App{
 		DefaultFlavor:   FlavorData[0].Key,
 		AllowServerless: true,
 		ServerlessConfig: &edgeproto.ServerlessConfig{
-			Vcpus: 0.5,
+			Vcpus: *edgeproto.NewUdec64(0, 500*edgeproto.DecMillis),
 			Ram:   20,
 		},
 	},
@@ -203,7 +203,7 @@ var AppData = []edgeproto.App{
 		DelOpt:          edgeproto.DeleteType_AUTO_DELETE,
 		AllowServerless: true,
 		ServerlessConfig: &edgeproto.ServerlessConfig{
-			Vcpus: 0.2,
+			Vcpus: *edgeproto.NewUdec64(0, 200*edgeproto.DecMillis),
 			Ram:   10,
 		},
 		InternalPorts: true,
@@ -259,7 +259,7 @@ var AppData = []edgeproto.App{
 		DefaultFlavor:   FlavorData[0].Key,
 		AllowServerless: true,
 		ServerlessConfig: &edgeproto.ServerlessConfig{
-			Vcpus: 0.5,
+			Vcpus: *edgeproto.NewUdec64(0, 500*edgeproto.DecMillis),
 			Ram:   20,
 		},
 	},
@@ -275,7 +275,7 @@ var AppData = []edgeproto.App{
 		DefaultFlavor:   FlavorData[0].Key,
 		AllowServerless: true,
 		ServerlessConfig: &edgeproto.ServerlessConfig{
-			Vcpus: 0.5,
+			Vcpus: *edgeproto.NewUdec64(0, 500*edgeproto.DecMillis),
 			Ram:   20,
 		},
 	},

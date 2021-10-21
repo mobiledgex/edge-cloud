@@ -4,7 +4,8 @@ GOPATH		= ../../../..
 GW		= $(shell go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
 APIS		= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/googleapis)
 GOGO		= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
-INCLUDE		= -I. -I${GW} -I${APIS} -I${GOGO} -I${GOPATH}
+EDGEPROTODIR	= ${GOPATH}/github.com/mobiledgex/edge-proto/edgeprotogen
+INCLUDE		= -I. -I${GW} -I${APIS} -I${GOGO} -I${GOPATH} -I${EDGEPROTODIR}
 BUILTIN		= Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api,Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types,Mgoogle/protobuf/any.proto=github.com/gogo/protobuf/types,Mgogoproto/gogo.proto=github.com/gogo/protobuf/gogoproto
 
 build:
@@ -23,4 +24,3 @@ doc: build
 external-doc: build
 	mkdir -p ./external-doc
 	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true,config_file=swagger_config.yaml:./external-doc  *.proto
-

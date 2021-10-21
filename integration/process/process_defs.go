@@ -132,9 +132,13 @@ type ClusterSvc struct {
 type DockerGeneric struct {
 	Common        `yaml:",inline"`
 	Links         []string
+	DockerNetwork string
 	DockerEnvVars map[string]string
 	TLS           TLSCerts
 	cmd           *exec.Cmd
+}
+type DockerNetwork struct {
+	Common `yaml:",inline"`
 }
 type Jaeger struct {
 	DockerGeneric `yaml:",inline"`
@@ -143,10 +147,21 @@ type ElasticSearch struct {
 	DockerGeneric `yaml:",inline"`
 	Type          string
 }
+type NginxProxy struct {
+	DockerGeneric `yaml:",inline"`
+	Servers       []NginxServerConfig
+}
+type NginxServerConfig struct {
+	ServerName string
+	Port       string
+	TlsPort    string
+	Target     string
+}
 type Traefik struct {
-	Common `yaml:",inline"`
-	TLS    TLSCerts
-	cmd    *exec.Cmd
+	Common        `yaml:",inline"`
+	DockerNetwork string
+	TLS           TLSCerts
+	cmd           *exec.Cmd
 }
 type NotifyRoot struct {
 	Common     `yaml:",inline"`

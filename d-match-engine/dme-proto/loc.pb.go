@@ -627,8 +627,10 @@ func (m *Loc) DeepCopyIn(src *Loc) {
 
 // Helper method to check that enums have valid values
 func (m *Loc) ValidateEnums() error {
-	if err := m.Timestamp.ValidateEnums(); err != nil {
-		return err
+	if m.Timestamp != nil {
+		if err := m.Timestamp.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -687,8 +689,10 @@ func (m *Sample) DeepCopyIn(src *Sample) {
 
 // Helper method to check that enums have valid values
 func (m *Sample) ValidateEnums() error {
-	if err := m.Timestamp.ValidateEnums(); err != nil {
-		return err
+	if m.Timestamp != nil {
+		if err := m.Timestamp.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -754,8 +758,10 @@ func (m *Statistics) DeepCopyIn(src *Statistics) {
 
 // Helper method to check that enums have valid values
 func (m *Statistics) ValidateEnums() error {
-	if err := m.Timestamp.ValidateEnums(); err != nil {
-		return err
+	if m.Timestamp != nil {
+		if err := m.Timestamp.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
