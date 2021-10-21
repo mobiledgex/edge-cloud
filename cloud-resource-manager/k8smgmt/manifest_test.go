@@ -65,7 +65,7 @@ func TestEnvVars(t *testing.T) {
 	names.MultitenantNamespace = "app-ns"
 	app.AllowServerless = true
 	app.ServerlessConfig = &edgeproto.ServerlessConfig{
-		Vcpus:       0.5,
+		Vcpus:       *edgeproto.NewUdec64(0, 500*edgeproto.DecMillis),
 		Ram:         20,
 		MinReplicas: 2,
 	}

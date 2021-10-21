@@ -660,7 +660,7 @@ func main() {
 			dme.RegisterMatchEngineApiHandler,
 		},
 	}
-	if clientTlsConfig != nil {
+	if clientTlsConfig != nil && publicCertManager.TLSMode() != tls.NoTLS {
 		gwcfg.GetCertificate = clientTlsConfig.GetClientCertificate
 	}
 

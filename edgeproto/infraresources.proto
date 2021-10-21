@@ -6,6 +6,7 @@ package edgeproto;
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "cluster.proto";
+import "decimal.proto";
 import "app.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
@@ -73,6 +74,18 @@ message InfraResource {
   string units = 6;
   // Generate alert when more than threshold percentage of resource is used
   int32 alert_threshold = 7;
+}
+
+// NodeInfo
+//
+// NodeInfo is information about a Kubernetes node
+message NodeInfo {
+  // Node name
+  string name = 1;
+  // Maximum allocatable resources on the node (capacity - overhead)
+  map<string, Udec64> allocatable = 2;
+  // Capacity of underlying resources on the node
+  map<string, Udec64> capacity = 3;
 }
 
 // ClusterInst Ref Key

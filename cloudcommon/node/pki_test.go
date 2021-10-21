@@ -1,3 +1,5 @@
+// Note file package is not node, so avoids node package having
+// dependencies on process package.
 package node_test
 
 import (
@@ -27,8 +29,16 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-// Note file package is not node, so avoids node package having
-// dependencies on process package.
+// Local certs generated as:
+// > certstrap init --common-name foo-ca --passphrase="" --expires="10 years"
+// Created out/foo-ca.key
+// Created out/foo-ca.crt
+// Created out/foo-ca.crl
+// > certstrap request-cert --domain ctrl.mobiledgex.net --passphrase=""
+// Created out/ctrl.mobiledgex.net.key
+// Created out/ctrl.mobiledgex.net.csr
+// > certstrap sign --CA foo-ca ctrl.mobiledgex.net --expires="10 years"
+// Created out/ctrl.mobiledgex.net.crt from out/ctrl.mobiledgex.net.csr signed by out/foo-ca.key
 
 func TestInternalPki(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelApi)
@@ -371,16 +381,16 @@ func TestInternalPki(t *testing.T) {
 	nodeFileOnly := &PkiConfig{
 		Region:   "us",
 		Type:     node.NodeTypeController,
-		CertFile: "./ctrl.crt",
-		CertKey:  "./ctrl.key",
-		CAFile:   "./mex-ca.crt",
+		CertFile: "./out/ctrl.mobiledgex.net.crt",
+		CertKey:  "./out/ctrl.mobiledgex.net.key",
+		CAFile:   "./out/foo-ca.crt",
 	}
 	nodePhase2 := &PkiConfig{
 		Region:      "us",
 		Type:        node.NodeTypeController,
-		CertFile:    "./ctrl.crt",
-		CertKey:     "./ctrl.key",
-		CAFile:      "./mex-ca.crt",
+		CertFile:    "./out/ctrl.mobiledgex.net.crt",
+		CertKey:     "./out/ctrl.mobiledgex.net.key",
+		CAFile:      "./out/foo-ca.crt",
 		UseVaultPki: true,
 		LocalIssuer: node.CertIssuerRegional,
 		RemoteCAs: []node.MatchCA{

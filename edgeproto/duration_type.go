@@ -85,6 +85,8 @@ func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
 			return dur, nil
 		case reflect.TypeOf(time.Time{}):
 			return time.Parse(time.RFC3339, data.(string))
+		case reflect.TypeOf(Udec64{}):
+			return ParseUdec64(data.(string))
 		}
 	}
 

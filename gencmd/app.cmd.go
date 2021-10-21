@@ -797,7 +797,7 @@ var ServerlessConfigOptionalArgs = []string{
 }
 var ServerlessConfigAliasArgs = []string{}
 var ServerlessConfigComments = map[string]string{
-	"vcpus":       "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"vcpus":       "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"ram":         "RAM allocation in megabytes per container when serverless",
 	"minreplicas": "Minimum number of replicas when serverless",
 }

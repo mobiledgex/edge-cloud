@@ -1020,8 +1020,10 @@ func (m *VMResource) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
 		return err
 	}
-	if err := m.VmFlavor.ValidateEnums(); err != nil {
-		return err
+	if m.VmFlavor != nil {
+		if err := m.VmFlavor.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	if _, ok := AccessType_name[int32(m.AppAccessType)]; !ok {
 		return errors.New("invalid AppAccessType")

@@ -5,7 +5,6 @@ package edgeproto
 
 import (
 	context "context"
-	encoding_binary "encoding/binary"
 	"encoding/json"
 	"errors"
 	fmt "fmt"
@@ -402,8 +401,8 @@ func (m *App) XXX_DiscardUnknown() {
 var xxx_messageInfo_App proto.InternalMessageInfo
 
 type ServerlessConfig struct {
-	// Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001
-	Vcpus float32 `protobuf:"fixed32,1,opt,name=vcpus,proto3" json:"vcpus,omitempty"`
+	// Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001
+	Vcpus Udec64 `protobuf:"bytes,1,opt,name=vcpus,proto3" json:"vcpus"`
 	// RAM allocation in megabytes per container when serverless
 	Ram uint64 `protobuf:"varint,2,opt,name=ram,proto3" json:"ram,omitempty"`
 	// Minimum number of replicas when serverless
@@ -1650,12 +1649,16 @@ func (m *ServerlessConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x10
 	}
-	if m.Vcpus != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Vcpus))))
-		i--
-		dAtA[i] = 0xd
+	{
+		size, err := m.Vcpus.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintApp(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -2177,6 +2180,8 @@ const AppFieldRequiredOutboundConnectionsRemoteCidr = "38.4"
 const AppFieldAllowServerless = "39"
 const AppFieldServerlessConfig = "40"
 const AppFieldServerlessConfigVcpus = "40.1"
+const AppFieldServerlessConfigVcpusWhole = "40.1.1"
+const AppFieldServerlessConfigVcpusNanos = "40.1.2"
 const AppFieldServerlessConfigRam = "40.2"
 const AppFieldServerlessConfigMinReplicas = "40.3"
 const AppFieldVmAppOsType = "41"
@@ -2221,7 +2226,8 @@ var AppAllFields = []string{
 	AppFieldRequiredOutboundConnectionsPortRangeMax,
 	AppFieldRequiredOutboundConnectionsRemoteCidr,
 	AppFieldAllowServerless,
-	AppFieldServerlessConfigVcpus,
+	AppFieldServerlessConfigVcpusWhole,
+	AppFieldServerlessConfigVcpusNanos,
 	AppFieldServerlessConfigRam,
 	AppFieldServerlessConfigMinReplicas,
 	AppFieldVmAppOsType,
@@ -2477,7 +2483,13 @@ func (m *App) DiffFields(o *App, fields map[string]struct{}) {
 		fields[AppFieldAllowServerless] = struct{}{}
 	}
 	if m.ServerlessConfig != nil && o.ServerlessConfig != nil {
-		if m.ServerlessConfig.Vcpus != o.ServerlessConfig.Vcpus {
+		if m.ServerlessConfig.Vcpus.Whole != o.ServerlessConfig.Vcpus.Whole {
+			fields[AppFieldServerlessConfigVcpusWhole] = struct{}{}
+			fields[AppFieldServerlessConfigVcpus] = struct{}{}
+			fields[AppFieldServerlessConfig] = struct{}{}
+		}
+		if m.ServerlessConfig.Vcpus.Nanos != o.ServerlessConfig.Vcpus.Nanos {
+			fields[AppFieldServerlessConfigVcpusNanos] = struct{}{}
 			fields[AppFieldServerlessConfigVcpus] = struct{}{}
 			fields[AppFieldServerlessConfig] = struct{}{}
 		}
@@ -2798,9 +2810,17 @@ func (m *App) CopyInFields(src *App) int {
 		if src.ServerlessConfig != nil {
 			m.ServerlessConfig = &ServerlessConfig{}
 			if _, set := fmap["40.1"]; set {
-				if m.ServerlessConfig.Vcpus != src.ServerlessConfig.Vcpus {
-					m.ServerlessConfig.Vcpus = src.ServerlessConfig.Vcpus
-					changed++
+				if _, set := fmap["40.1.1"]; set {
+					if m.ServerlessConfig.Vcpus.Whole != src.ServerlessConfig.Vcpus.Whole {
+						m.ServerlessConfig.Vcpus.Whole = src.ServerlessConfig.Vcpus.Whole
+						changed++
+					}
+				}
+				if _, set := fmap["40.1.2"]; set {
+					if m.ServerlessConfig.Vcpus.Nanos != src.ServerlessConfig.Vcpus.Nanos {
+						m.ServerlessConfig.Vcpus.Nanos = src.ServerlessConfig.Vcpus.Nanos
+						changed++
+					}
 				}
 			}
 			if _, set := fmap["40.2"]; set {
@@ -3586,8 +3606,10 @@ func (m *App) ValidateEnums() error {
 			return err
 		}
 	}
-	if err := m.ServerlessConfig.ValidateEnums(); err != nil {
-		return err
+	if m.ServerlessConfig != nil {
+		if err := m.ServerlessConfig.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	if _, ok := VmAppOsType_name[int32(m.VmAppOsType)]; !ok {
 		return errors.New("invalid VmAppOsType")
@@ -3627,8 +3649,12 @@ func IgnoreAppFields(taglist string) cmp.Option {
 
 func (m *ServerlessConfig) CopyInFields(src *ServerlessConfig) int {
 	changed := 0
-	if m.Vcpus != src.Vcpus {
-		m.Vcpus = src.Vcpus
+	if m.Vcpus.Whole != src.Vcpus.Whole {
+		m.Vcpus.Whole = src.Vcpus.Whole
+		changed++
+	}
+	if m.Vcpus.Nanos != src.Vcpus.Nanos {
+		m.Vcpus.Nanos = src.Vcpus.Nanos
 		changed++
 	}
 	if m.Ram != src.Ram {
@@ -3643,13 +3669,16 @@ func (m *ServerlessConfig) CopyInFields(src *ServerlessConfig) int {
 }
 
 func (m *ServerlessConfig) DeepCopyIn(src *ServerlessConfig) {
-	m.Vcpus = src.Vcpus
+	m.Vcpus.DeepCopyIn(&src.Vcpus)
 	m.Ram = src.Ram
 	m.MinReplicas = src.MinReplicas
 }
 
 // Helper method to check that enums have valid values
 func (m *ServerlessConfig) ValidateEnums() error {
+	if err := m.Vcpus.ValidateEnums(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -3872,8 +3901,12 @@ func (m *DeploymentCloudletRequest) CopyInFields(src *DeploymentCloudletRequest)
 		}
 		if src.App.ServerlessConfig != nil {
 			m.App.ServerlessConfig = &ServerlessConfig{}
-			if m.App.ServerlessConfig.Vcpus != src.App.ServerlessConfig.Vcpus {
-				m.App.ServerlessConfig.Vcpus = src.App.ServerlessConfig.Vcpus
+			if m.App.ServerlessConfig.Vcpus.Whole != src.App.ServerlessConfig.Vcpus.Whole {
+				m.App.ServerlessConfig.Vcpus.Whole = src.App.ServerlessConfig.Vcpus.Whole
+				changed++
+			}
+			if m.App.ServerlessConfig.Vcpus.Nanos != src.App.ServerlessConfig.Vcpus.Nanos {
+				m.App.ServerlessConfig.Vcpus.Nanos = src.App.ServerlessConfig.Vcpus.Nanos
 				changed++
 			}
 			if m.App.ServerlessConfig.Ram != src.App.ServerlessConfig.Ram {
@@ -3928,8 +3961,10 @@ func (m *DeploymentCloudletRequest) DeepCopyIn(src *DeploymentCloudletRequest) {
 
 // Helper method to check that enums have valid values
 func (m *DeploymentCloudletRequest) ValidateEnums() error {
-	if err := m.App.ValidateEnums(); err != nil {
-		return err
+	if m.App != nil {
+		if err := m.App.ValidateEnums(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -4673,9 +4708,8 @@ func (m *ServerlessConfig) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Vcpus != 0 {
-		n += 5
-	}
+	l = m.Vcpus.Size()
+	n += 1 + l + sovApp(uint64(l))
 	if m.Ram != 0 {
 		n += 1 + sovApp(uint64(m.Ram))
 	}
@@ -6077,16 +6111,38 @@ func (m *ServerlessConfig) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 5 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Vcpus", wireType)
 			}
-			var v uint32
-			if (iNdEx + 4) > l {
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApp
+			}
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.Vcpus = float32(math.Float32frombits(v))
+			if err := m.Vcpus.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Ram", wireType)

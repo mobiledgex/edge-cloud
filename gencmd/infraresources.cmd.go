@@ -90,6 +90,19 @@ var InfraResourceComments = map[string]string{
 	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var InfraResourceSpecialArgs = map[string]string{}
+var NodeInfoRequiredArgs = []string{}
+var NodeInfoOptionalArgs = []string{
+	"name",
+	"allocatable:#.key",
+	"allocatable:#.value",
+	"capacity:#.key",
+	"capacity:#.value",
+}
+var NodeInfoAliasArgs = []string{}
+var NodeInfoComments = map[string]string{
+	"name": "Node name",
+}
+var NodeInfoSpecialArgs = map[string]string{}
 var ClusterInstRefKeyRequiredArgs = []string{}
 var ClusterInstRefKeyOptionalArgs = []string{
 	"clusterkey.name",

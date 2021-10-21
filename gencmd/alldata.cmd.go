@@ -126,6 +126,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].CompatibilityVersion = 0
 		}
+		for i1 := 0; i1 < len(in.CloudletInfos[i0].NodeInfos); i1++ {
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
 		if _, found := tags["timestamp"]; found {
@@ -521,6 +523,11 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.trustpolicystate",
 	"cloudletinfos:#.compatibilityversion",
 	"cloudletinfos:#.properties",
+	"cloudletinfos:#.nodeinfos:#.name",
+	"cloudletinfos:#.nodeinfos:#.allocatable:#.key",
+	"cloudletinfos:#.nodeinfos:#.allocatable:#.value",
+	"cloudletinfos:#.nodeinfos:#.capacity:#.key",
+	"cloudletinfos:#.nodeinfos:#.capacity:#.value",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -934,7 +941,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.infraconfig.externalnetworkname":                                   "Infra specific external network name",
 	"cloudlets:#.infraconfig.flavorname":                                            "Infra specific flavor name",
 	"cloudlets:#.chefclientkey":                                                     "Chef client key",
-	"cloudlets:#.maintenancestate":                                                  "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
+	"cloudlets:#.maintenancestate":                                                  "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudlets:#.overridepolicycontainerversion":                                    "Override container version from policy file",
 	"cloudlets:#.vmpool":                                                            "VM Pool",
 	"cloudlets:#.crmaccesspublickey":                                                "CRM access public key",
@@ -975,7 +982,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.osimages:#.properties":                                         "image properties/metadata",
 	"cloudletinfos:#.osimages:#.diskformat":                                         "format qcow2, img, etc",
 	"cloudletinfos:#.controllercachereceived":                                       "Indicates all controller data has been sent to CRM",
-	"cloudletinfos:#.maintenancestate":                                              "State for maintenance, one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance",
+	"cloudletinfos:#.maintenancestate":                                              "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
 	"cloudletinfos:#.resourcessnapshot.platformvms:#.name":                          "Virtual machine name",
 	"cloudletinfos:#.resourcessnapshot.platformvms:#.type":                          "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"cloudletinfos:#.resourcessnapshot.platformvms:#.status":                        "Runtime status of the VM",
@@ -1002,6 +1009,7 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.trustpolicystate":                                              "Trust Policy State, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudletinfos:#.compatibilityversion":                                          "Version for compatibility tracking",
 	"cloudletinfos:#.properties":                                                    "Cloudlet properties",
+	"cloudletinfos:#.nodeinfos:#.name":                                              "Node name",
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
@@ -1114,7 +1122,7 @@ var AllDataComments = map[string]string{
 	"apps:#.requiredoutboundconnections:#.portrangemax":                             "TCP or UDP port range end",
 	"apps:#.requiredoutboundconnections:#.remotecidr":                               "remote CIDR X.X.X.X/X",
 	"apps:#.allowserverless":                                                        "App is allowed to deploy as serverless containers",
-	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be fractional in increments of 0.001",
+	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"apps:#.vmappostype":                                                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
@@ -1157,7 +1165,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.configs:#.config":                                               "Config file contents or URI reference",
 	"appinstances:#.healthcheck":                                                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
 	"appinstances:#.privacypolicy":                                                  "Optional privacy policy name",
-	"appinstances:#.powerstate":                                                     "Power State of the AppInst, one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError",
+	"appinstances:#.powerstate":                                                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"appinstances:#.externalvolumesize":                                             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances:#.availabilityzone":                                               "Optional Availability Zone if any",
 	"appinstances:#.vmflavor":                                                       "OS node flavor to use",
@@ -1174,7 +1182,7 @@ var AllDataComments = map[string]string{
 	"vmpools:#.vms:#.netinfo.externalip":                                            "External IP",
 	"vmpools:#.vms:#.netinfo.internalip":                                            "Internal IP",
 	"vmpools:#.vms:#.groupname":                                                     "VM Group Name",
-	"vmpools:#.vms:#.state":                                                         "VM State, one of Free, InProgress, InUse, Add, Remove, Update, ForceFree",
+	"vmpools:#.vms:#.state":                                                         "VM State, one of ForceFree",
 	"vmpools:#.vms:#.updatedat.seconds":                                             "Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.",
 	"vmpools:#.vms:#.updatedat.nanos":                                               "Non-negative fractions of a second at nanosecond resolution. Negative second values with fractions must still have non-negative nanos values that count forward in time. Must be from 0 to 999,999,999 inclusive.",
 	"vmpools:#.vms:#.internalname":                                                  "VM Internal Name",

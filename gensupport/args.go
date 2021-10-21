@@ -285,6 +285,10 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 				}
 				name = name + ":#"
 			}
+			if GetCustomYamlJsonMarshalers(subDesc.DescriptorProto) {
+				allargs = append(allargs, arg)
+				continue
+			}
 			subArgs, subSpecialArgs := GetArgs(g, support, append(parents, name), subDesc, isUpdate)
 			allargs = append(allargs, subArgs...)
 			for k, v := range subSpecialArgs {
@@ -422,4 +426,8 @@ func GetInputRequired(method *descriptor.MethodDescriptorProto) bool {
 
 func GetAlias(message *descriptor.DescriptorProto) string {
 	return GetStringExtension(message.Options, protogen.E_Alias, "")
+}
+
+func GetCustomYamlJsonMarshalers(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_CustomYamlJsonMarshalers, false)
 }
