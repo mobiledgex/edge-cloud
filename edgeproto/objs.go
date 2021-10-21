@@ -1358,10 +1358,3 @@ func (s *TrustPolicyException) Validate(fields map[string]struct{}) error {
 	log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "TrustPolicyException:", s.GetKey().Name)
 	return ValidateSecurityRules(s.OutboundSecurityRules)
 }
-
-func (s *TrustPolicyExceptionResponse) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().ValidateKey(); err != nil {
-		return err
-	}
-	return nil
-}

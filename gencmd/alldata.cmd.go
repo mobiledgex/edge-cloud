@@ -300,8 +300,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.TrustPolicyExceptions[i0].OutboundSecurityRules); i1++ {
 		}
 	}
-	for i0 := 0; i0 < len(in.TrustPolicyExceptionResponses); i0++ {
-	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -803,19 +801,11 @@ var AllDataOptionalArgs = []string{
 	"trustpolicyexceptions:#.key.cloudletpoolkey.organization",
 	"trustpolicyexceptions:#.key.cloudletpoolkey.name",
 	"trustpolicyexceptions:#.key.name",
+	"trustpolicyexceptions:#.state",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr",
-	"trustpolicyexceptions:#.state",
-	"trustpolicyexceptionresponses:#.fields",
-	"trustpolicyexceptionresponses:#.key.appkey.organization",
-	"trustpolicyexceptionresponses:#.key.appkey.name",
-	"trustpolicyexceptionresponses:#.key.appkey.version",
-	"trustpolicyexceptionresponses:#.key.cloudletpoolkey.organization",
-	"trustpolicyexceptionresponses:#.key.cloudletpoolkey.name",
-	"trustpolicyexceptionresponses:#.key.name",
-	"trustpolicyexceptionresponses:#.state",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -1245,19 +1235,11 @@ var AllDataComments = map[string]string{
 	"trustpolicyexceptions:#.key.cloudletpoolkey.organization":                      "Name of the organization this pool belongs to",
 	"trustpolicyexceptions:#.key.cloudletpoolkey.name":                              "CloudletPool Name",
 	"trustpolicyexceptions:#.key.name":                                              "TrustPolicyExceptionKey name",
+	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol":                      "tcp, udp, icmp",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin":                  "TCP or UDP port range start",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax":                  "TCP or UDP port range end",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr":                    "remote CIDR X.X.X.X/X",
-	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
-	"trustpolicyexceptionresponses:#.fields":                                        "Fields are used for the Update API to specify which fields to apply",
-	"trustpolicyexceptionresponses:#.key.appkey.organization":                       "App developer organization",
-	"trustpolicyexceptionresponses:#.key.appkey.name":                               "App name",
-	"trustpolicyexceptionresponses:#.key.appkey.version":                            "App version",
-	"trustpolicyexceptionresponses:#.key.cloudletpoolkey.organization":              "Name of the organization this pool belongs to",
-	"trustpolicyexceptionresponses:#.key.cloudletpoolkey.name":                      "CloudletPool Name",
-	"trustpolicyexceptionresponses:#.key.name":                                      "TrustPolicyExceptionKey name",
-	"trustpolicyexceptionresponses:#.state":                                         "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
 }
 var AllDataSpecialArgs = map[string]string{
 	"alertpolicies:#.annotations":             "StringToString",
@@ -1304,7 +1286,6 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
 	"trustpolicies:#.fields":                  "StringArray",
-	"trustpolicyexceptionresponses:#.fields":  "StringArray",
 	"trustpolicyexceptions:#.fields":          "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",

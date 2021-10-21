@@ -19,30 +19,29 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 type AllDataOut struct {
-	Flavors                       []edgeproto.Result
-	Settings                      *edgeproto.Result
-	OperatorCodes                 []edgeproto.Result
-	ResTagTables                  []edgeproto.Result
-	TrustPolicies                 [][]edgeproto.Result
-	Networks                      [][]edgeproto.Result
-	Cloudlets                     [][]edgeproto.Result
-	CloudletInfos                 []edgeproto.Result
-	CloudletPools                 []edgeproto.Result
-	AutoProvPolicies              []edgeproto.Result
-	AutoProvPolicyCloudlets       []edgeproto.Result
-	AutoScalePolicies             []edgeproto.Result
-	IdleReservableClusterInsts    *edgeproto.Result
-	ClusterInsts                  [][]edgeproto.Result
-	Apps                          []edgeproto.Result
-	AppInstances                  [][]edgeproto.Result
-	VmPools                       []edgeproto.Result
-	GpuDrivers                    [][]edgeproto.Result
-	AlertPolicies                 []edgeproto.Result
-	FlowRateLimitSettings         []edgeproto.Result
-	MaxReqsRateLimitSettings      []edgeproto.Result
-	TrustPolicyExceptions         []edgeproto.Result
-	TrustPolicyExceptionResponses []edgeproto.Result
-	Errors                        []Err
+	Flavors                    []edgeproto.Result
+	Settings                   *edgeproto.Result
+	OperatorCodes              []edgeproto.Result
+	ResTagTables               []edgeproto.Result
+	TrustPolicies              [][]edgeproto.Result
+	Networks                   [][]edgeproto.Result
+	Cloudlets                  [][]edgeproto.Result
+	CloudletInfos              []edgeproto.Result
+	CloudletPools              []edgeproto.Result
+	AutoProvPolicies           []edgeproto.Result
+	AutoProvPolicyCloudlets    []edgeproto.Result
+	AutoScalePolicies          []edgeproto.Result
+	IdleReservableClusterInsts *edgeproto.Result
+	ClusterInsts               [][]edgeproto.Result
+	Apps                       []edgeproto.Result
+	AppInstances               [][]edgeproto.Result
+	VmPools                    []edgeproto.Result
+	GpuDrivers                 [][]edgeproto.Result
+	AlertPolicies              []edgeproto.Result
+	FlowRateLimitSettings      []edgeproto.Result
+	MaxReqsRateLimitSettings   []edgeproto.Result
+	TrustPolicyExceptions      []edgeproto.Result
+	Errors                     []Err
 }
 
 // used to intersperse other creates/deletes/checks
@@ -96,14 +95,10 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("maxreqsratelimitsettings")
 	run.TrustPolicyExceptionApi(&in.TrustPolicyExceptions, inMap["trustpolicyexceptions"], &out.TrustPolicyExceptions)
 	apicb("trustpolicyexceptions")
-	run.TrustPolicyExceptionResponseApi(&in.TrustPolicyExceptionResponses, inMap["trustpolicyexceptionresponses"], &out.TrustPolicyExceptionResponses)
-	apicb("trustpolicyexceptionresponses")
 	out.Errors = run.Errs
 }
 
 func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut, apicb RunAllDataApiCallback) {
-	apicb("trustpolicyexceptionresponses")
-	run.TrustPolicyExceptionResponseApi(&in.TrustPolicyExceptionResponses, inMap["trustpolicyexceptionresponses"], &out.TrustPolicyExceptionResponses)
 	apicb("trustpolicyexceptions")
 	run.TrustPolicyExceptionApi(&in.TrustPolicyExceptions, inMap["trustpolicyexceptions"], &out.TrustPolicyExceptions)
 	apicb("maxreqsratelimitsettings")
@@ -174,5 +169,4 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, nil, &out.FlowRateLimitSettings)
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, nil, &out.MaxReqsRateLimitSettings)
 	run.TrustPolicyExceptionApi(&in.TrustPolicyExceptions, nil, &out.TrustPolicyExceptions)
-	run.TrustPolicyExceptionResponseApi(&in.TrustPolicyExceptionResponses, nil, &out.TrustPolicyExceptionResponses)
 }

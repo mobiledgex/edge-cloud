@@ -427,7 +427,6 @@ func startServices() error {
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
 	edgeproto.RegisterTrustPolicyExceptionApiServer(server, &trustPolicyExceptionApi)
-	edgeproto.RegisterTrustPolicyExceptionResponseApiServer(server, &trustPolicyExceptionResponseApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
@@ -470,7 +469,6 @@ func startServices() error {
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterTrustPolicyApiHandler,
 			edgeproto.RegisterTrustPolicyExceptionApiHandler,
-			edgeproto.RegisterTrustPolicyExceptionResponseApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterRateLimitSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,

@@ -60,7 +60,37 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 }
 
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, fmt.Errorf("Not allowed to update TrustPolicyException")
+	cur := edgeproto.TrustPolicyException{}
+
+	err := trustPolicyExceptionApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !trustPolicyExceptionApi.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if in.State == cur.State {
+			return fmt.Errorf("Current state is already %s", in.State.String())
+		}
+		if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
+			in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
+			return fmt.Errorf("New state must be either Active or Rejected")
+		}
+		if cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
+			return fmt.Errorf("Not allowed to change TrustPolicyExceptionResponse in state:%s", cur.State.String())
+		}
+		cur.State = in.State
+		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionResponseState", "state:", cur.State)
+		trustPolicyExceptionApi.store.STMPut(stm, &cur)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+		// If App is already deployed and TrustPolicyException is created later and approved now, we should automatically program the TrustPolicyException rules
+		// FIXME TO DO
+	}
+	return &edgeproto.Result{}, nil
 }
 
 func (s *TrustPolicyExceptionApi) DeleteTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
@@ -149,55 +179,4 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForAppKey(appKey *edgep
 
 func TrustPolicyExceptionForAppKeyExists(appKey *edgeproto.AppKey) bool {
 	return trustPolicyExceptionApi.GetTrustPolicyExceptionForAppKey(appKey) != nil
-}
-
-type TrustPolicyExceptionResponseApi struct {
-}
-
-var trustPolicyExceptionResponseApi = TrustPolicyExceptionResponseApi{}
-
-func (s *TrustPolicyExceptionResponseApi) CreateTrustPolicyExceptionResponse(ctx context.Context, in *edgeproto.TrustPolicyExceptionResponse) (*edgeproto.Result, error) {
-	cur := edgeproto.TrustPolicyException{}
-
-	err := trustPolicyExceptionApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !trustPolicyExceptionApi.store.STMGet(stm, &in.Key, &cur) {
-			return in.Key.NotFoundError()
-		}
-		if in.State == cur.State {
-			return fmt.Errorf("Current state is already %s", in.State.String())
-		}
-		if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
-			in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-			return fmt.Errorf("New state must be either Active or Rejected")
-		}
-		if cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
-			return fmt.Errorf("Not allowed to change TrustPolicyExceptionResponse in state:%s", cur.State.String())
-		}
-		cur.State = in.State
-		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionResponseState", "state:", cur.State)
-		trustPolicyExceptionApi.store.STMPut(stm, &cur)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-		// If App is already deployed and TrustPolicyException is created later and approved now, we should automatically program the TrustPolicyException rules
-		// FIXME TO DO
-	}
-	return &edgeproto.Result{}, nil
-}
-
-func (s *TrustPolicyExceptionResponseApi) UpdateTrustPolicyExceptionResponse(ctx context.Context, in *edgeproto.TrustPolicyExceptionResponse) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
-}
-
-func (s *TrustPolicyExceptionResponseApi) DeleteTrustPolicyExceptionResponse(ctx context.Context, in *edgeproto.TrustPolicyExceptionResponse) (*edgeproto.Result, error) {
-	return &edgeproto.Result{}, nil
-}
-
-func (s *TrustPolicyExceptionResponseApi) ShowTrustPolicyExceptionResponse(in *edgeproto.TrustPolicyExceptionResponse, cb edgeproto.TrustPolicyExceptionResponseApi_ShowTrustPolicyExceptionResponseServer) error {
-	return nil
 }

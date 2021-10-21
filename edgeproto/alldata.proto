@@ -55,8 +55,6 @@ message AllData {
   repeated FlowRateLimitSettings flow_rate_limit_settings = 23 [(gogoproto.nullable) = false];
   repeated MaxReqsRateLimitSettings max_reqs_rate_limit_settings = 24 [(gogoproto.nullable) = false];
   repeated TrustPolicyException trust_policy_exceptions = 26 [(gogoproto.nullable) = false];
-  repeated TrustPolicyExceptionResponse trust_policy_exception_responses = 27 [(gogoproto.nullable) = false];
-
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }
