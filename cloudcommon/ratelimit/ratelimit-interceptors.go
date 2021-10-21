@@ -76,7 +76,7 @@ func GetDmeStreamRateLimiterInterceptor(limiter Limiter) grpc.StreamServerInterc
 		if err != nil {
 			errMsg := fmt.Sprintf("Request for %s rate limited, please retry later.", info.FullMethod)
 			if err != nil {
-				errMsg += fmt.Sprintf(" error is %s.", err.Error())
+				errMsg += fmt.Sprintf(" Error is: %s.", err.Error())
 			}
 			log.SpanLog(cctx, log.DebugLevelDmereq, "Stream Dme API Rate limited", "api", method, "err", errMsg)
 			return status.Errorf(codes.ResourceExhausted, errMsg)
