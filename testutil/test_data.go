@@ -1652,6 +1652,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 			},
 			Name: "trust-policyexception1",
 		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
 				Protocol:     "tcp",
@@ -1674,6 +1675,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 			},
 			Name: "trust-policyexception2",
 		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
 				Protocol:     "tcp",
@@ -1688,7 +1690,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 			AppKey: edgeproto.AppKey{
 				Organization: DevData[0],
 				Name:         "Pokemon Go!",
-				Version:      "3.0.0",
+				Version:      "1.0.0",
 			},
 			CloudletPoolKey: edgeproto.CloudletPoolKey{
 				Organization: OperatorData[2],
@@ -1696,6 +1698,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 			},
 			Name: "trust-policyexception3",
 		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
 				Protocol:     "tcp",
@@ -1720,7 +1723,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 				Organization: OperatorData[2],
 				Name:         "test-and-dev",
 			},
-			Name: "trust-policyexception1",
+			Name: "trust-policyexception11",
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1743,7 +1746,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 				Organization: OperatorData[2],
 				Name:         "test-and-dev",
 			},
-			Name: "trust-policyexception2",
+			Name: "trust-policyexception12",
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
@@ -1766,7 +1769,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 				Organization: OperatorData[2],
 				Name:         "test-and-dev",
 			},
-			Name: "trust-policyexception3",
+			Name: "trust-policyexception13",
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{

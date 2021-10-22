@@ -26,8 +26,25 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	//testutil.InternalTrustPolicyExceptionTest(t, "cud", &trustPolicyExceptionApi, testutil.TrustPolicyExceptionData)
-	// error cases
+	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
+		&appInstInfoApi, &clusterInstInfoApi)
+
+	// create supporting data
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
+	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
+	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
+	testutil.InternalAppInstCreate(t, &appInstApi, testutil.AppInstData)
+	testutil.InternalCloudletPoolTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolData)
+
+	// CUD for Trust Policy Exception
+	testutil.InternalTrustPolicyExceptionTest(t, "cud", &trustPolicyExceptionApi, testutil.TrustPolicyExceptionData)
+
+	// error cases for Trust Policy Exception
 	expectCreatePolicyExceptionError(t, ctx, &testutil.TrustPolicyExceptionErrorData[0], "cannot be higher than max")
 	expectCreatePolicyExceptionError(t, ctx, &testutil.TrustPolicyExceptionErrorData[1], "invalid CIDR")
 	expectCreatePolicyExceptionError(t, ctx, &testutil.TrustPolicyExceptionErrorData[2], "Invalid min port")

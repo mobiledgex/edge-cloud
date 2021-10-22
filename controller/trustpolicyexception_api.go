@@ -56,7 +56,6 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 
 	_, err := s.store.Create(ctx, in, s.sync.syncWait)
 	return &edgeproto.Result{}, err
-
 }
 
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
@@ -112,13 +111,11 @@ func (s *TrustPolicyExceptionApi) ShowTrustPolicyException(in *edgeproto.TrustPo
 func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionRules(ckey *edgeproto.CloudletPoolKey, appKey *edgeproto.AppKey) []*edgeproto.SecurityRule {
 	var rules []*edgeproto.SecurityRule
 
-	filterKey := edgeproto.TrustPolicyExceptionKey{
-		CloudletPoolKey: *ckey,
-		AppKey:          *appKey,
-	}
-
 	filter := edgeproto.TrustPolicyException{
-		Key: filterKey,
+		Key: edgeproto.TrustPolicyExceptionKey{
+			CloudletPoolKey: *ckey,
+			AppKey:          *appKey,
+		},
 	}
 
 	s.cache.Show(&filter, func(pol *edgeproto.TrustPolicyException) error {
@@ -137,12 +134,10 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForCloudletPoolKey(cKey
 
 	var TrustPolicyException *edgeproto.TrustPolicyException
 
-	filterKey := edgeproto.TrustPolicyExceptionKey{
-		CloudletPoolKey: *cKey,
-	}
-
 	filter := edgeproto.TrustPolicyException{
-		Key: filterKey,
+		Key: edgeproto.TrustPolicyExceptionKey{
+			CloudletPoolKey: *cKey,
+		},
 	}
 
 	s.cache.Show(&filter, func(tpe *edgeproto.TrustPolicyException) error {
@@ -161,12 +156,10 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForAppKey(appKey *edgep
 
 	var TrustPolicyException *edgeproto.TrustPolicyException
 
-	filterKey := edgeproto.TrustPolicyExceptionKey{
-		AppKey: *appKey,
-	}
-
 	filter := edgeproto.TrustPolicyException{
-		Key: filterKey,
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: *appKey,
+		},
 	}
 
 	s.cache.Show(&filter, func(tpe *edgeproto.TrustPolicyException) error {
