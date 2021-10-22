@@ -30,6 +30,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/mobiledgex/edge-cloud/vmspec"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
 
@@ -697,6 +698,7 @@ func (c *ControllerMetricsReceiver) RecvMetric(ctx context.Context, metric *edge
 
 const (
 	ToggleFlavorMatchVerbose = "toggle-flavormatch-verbose"
+	ShowControllers          = "show-controllers"
 )
 
 func initDebug(ctx context.Context, nodeMgr *node.NodeMgr) {
@@ -704,6 +706,20 @@ func initDebug(ctx context.Context, nodeMgr *node.NodeMgr) {
 		func(ctx context.Context, req *edgeproto.DebugRequest) string {
 			return vmspec.ToggleFlavorMatchVerbose()
 		})
+	nodeMgr.Debug.AddDebugFunc(ShowControllers, showControllers)
+}
+
+func showControllers(ctx context.Context, req *edgeproto.DebugRequest) string {
+	objs := []edgeproto.Controller{}
+	controllerApi.cache.Show(&edgeproto.Controller{}, func(obj *edgeproto.Controller) error {
+		objs = append(objs, *obj)
+		return nil
+	})
+	out, err := yaml.Marshal(objs)
+	if err != nil {
+		return fmt.Sprintf("Failed to marshal objs, %v", err)
+	}
+	return string(out)
 }
 
 func initContinuousQueries() {
