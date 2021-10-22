@@ -2,13 +2,17 @@ package k8smgmt
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	ssh "github.com/mobiledgex/golang-ssh"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 type NoScheduleMasterTaintAction string
@@ -211,4 +215,80 @@ func ClearClusterConfig(ctx context.Context, client ssh.Client, configDir, names
 		return fmt.Errorf("error removing config dir, %s: %s, %s", cmd, out, err)
 	}
 	return nil
+}
+
+type Nodes struct {
+	ApiVersion string    `json:"apiVersion"`
+	Items      []v1.Node `json:"items"`
+}
+
+func GetNodeInfos(ctx context.Context, client ssh.Client, kconfEnv string) ([]*edgeproto.NodeInfo, error) {
+	cmd := fmt.Sprintf("%s kubectl get nodes --output=json", kconfEnv)
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetNodeInfo", "cmd", cmd)
+	out, err := client.Output(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("get nodes failed, %s, %v", out, err)
+	}
+	nodes := Nodes{}
+	err = json.Unmarshal([]byte(out), &nodes)
+	if err != nil {
+		return nil, err
+	}
+	info := []*edgeproto.NodeInfo{}
+	for _, item := range nodes.Items {
+		nodeInfo := &edgeproto.NodeInfo{}
+		nodeInfo.Name = item.Name
+		nodeInfo.Allocatable = make(map[string]*edgeproto.Udec64)
+		nodeInfo.Capacity = make(map[string]*edgeproto.Udec64)
+		for res, quantity := range item.Status.Allocatable {
+			name, dec, err := convertNodeResource(res, quantity)
+			if err == nil && name == unsupportedResource {
+				continue
+			}
+			if err != nil {
+				return nil, err
+			}
+			nodeInfo.Allocatable[name] = dec
+		}
+		for res, quantity := range item.Status.Capacity {
+			name, dec, err := convertNodeResource(res, quantity)
+			if err == nil && name == unsupportedResource {
+				continue
+			}
+			if err != nil {
+				return nil, err
+			}
+			nodeInfo.Capacity[name] = dec
+		}
+		info = append(info, nodeInfo)
+	}
+	return info, nil
+}
+
+var unsupportedResource = "unsupported"
+
+func convertNodeResource(res v1.ResourceName, quantity resource.Quantity) (string, *edgeproto.Udec64, error) {
+	var name string
+	scale := uint64(1)
+	switch res {
+	case v1.ResourceCPU:
+		name = cloudcommon.ResourceVcpus
+	case v1.ResourceMemory:
+		name = cloudcommon.ResourceRamMb
+		scale = 1024 * 1024
+	case v1.ResourceEphemeralStorage:
+		name = cloudcommon.ResourceDisk
+		scale = 1024 * 1024 * 1024
+	default:
+		// unsupported
+		return unsupportedResource, nil, nil
+	}
+	dec, err := QuantityToUdec64(quantity)
+	if err != nil {
+		return name, nil, fmt.Errorf("Resource %s, %v", name, err)
+	}
+	if scale != 1 {
+		dec.Whole /= scale
+	}
+	return name, dec, nil
 }
