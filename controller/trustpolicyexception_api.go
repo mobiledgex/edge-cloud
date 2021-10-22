@@ -85,10 +85,6 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 		return nil, err
 	}
 
-	if in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-		// If App is already deployed and TrustPolicyException is created later and approved now, we should automatically program the TrustPolicyException rules
-		// FIXME TO DO
-	}
 	return &edgeproto.Result{}, nil
 }
 
