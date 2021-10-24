@@ -12,6 +12,7 @@ import "vmpool.proto";
 import "autoprovpolicy.proto";
 import "autoscalepolicy.proto";
 import "trustpolicy.proto";
+import "trustpolicyexception.proto";
 import "network.proto";
 import "clusterinst.proto";
 import "app.proto";
@@ -53,6 +54,7 @@ message AllData {
   repeated AlertPolicy alert_policies = 22 [(gogoproto.nullable) = false];
   repeated FlowRateLimitSettings flow_rate_limit_settings = 23 [(gogoproto.nullable) = false];
   repeated MaxReqsRateLimitSettings max_reqs_rate_limit_settings = 24 [(gogoproto.nullable) = false];
+  repeated TrustPolicyException trust_policy_exceptions = 26 [(gogoproto.nullable) = false];
   option (protogen.e2edata) = true;
   option (protogen.generate_copy_in_fields) = false;
 }

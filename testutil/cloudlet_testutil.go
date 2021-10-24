@@ -1666,25 +1666,6 @@ func (r *Run) CloudletMetricsApi(data *[]edgeproto.CloudletMetrics, dataMap inte
 	}
 }
 
-type ResultStream interface {
-	Recv() (*edgeproto.Result, error)
-}
-
-func ResultReadStream(stream ResultStream) ([]edgeproto.Result, error) {
-	output := []edgeproto.Result{}
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return output, fmt.Errorf("read Result stream failed, %v", err)
-		}
-		output = append(output, *obj)
-	}
-	return output, nil
-}
-
 func (s *ApiClient) CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error) {
 	api := edgeproto.NewGPUDriverApiClient(s.Conn)
 	stream, err := api.CreateGPUDriver(ctx, in)

@@ -298,6 +298,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.MaxReqsRateLimitSettings); i0++ {
 	}
+	for i0 := 0; i0 < len(in.TrustPolicyExceptions); i0++ {
+		for i1 := 0; i1 < len(in.TrustPolicyExceptions[i0].OutboundSecurityRules); i1++ {
+		}
+	}
 }
 
 var AllDataRequiredArgs = []string{}
@@ -656,8 +660,9 @@ var AllDataOptionalArgs = []string{
 	"apps:#.updatedat.nanos",
 	"apps:#.trusted",
 	"apps:#.requiredoutboundconnections:#.protocol",
-	"apps:#.requiredoutboundconnections:#.port",
-	"apps:#.requiredoutboundconnections:#.remoteip",
+	"apps:#.requiredoutboundconnections:#.portrangemin",
+	"apps:#.requiredoutboundconnections:#.portrangemax",
+	"apps:#.requiredoutboundconnections:#.remotecidr",
 	"apps:#.allowserverless",
 	"apps:#.serverlessconfig.vcpus",
 	"apps:#.serverlessconfig.ram",
@@ -796,6 +801,18 @@ var AllDataOptionalArgs = []string{
 	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm",
 	"maxreqsratelimitsettings:#.settings.maxrequests",
 	"maxreqsratelimitsettings:#.settings.interval",
+	"trustpolicyexceptions:#.fields",
+	"trustpolicyexceptions:#.key.appkey.organization",
+	"trustpolicyexceptions:#.key.appkey.name",
+	"trustpolicyexceptions:#.key.appkey.version",
+	"trustpolicyexceptions:#.key.cloudletpoolkey.organization",
+	"trustpolicyexceptions:#.key.cloudletpoolkey.name",
+	"trustpolicyexceptions:#.key.name",
+	"trustpolicyexceptions:#.state",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr",
 }
 var AllDataAliasArgs = []string{}
 var AllDataComments = map[string]string{
@@ -1100,9 +1117,10 @@ var AllDataComments = map[string]string{
 	"apps:#.templatedelimiter":                                                      "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                                            "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002",
 	"apps:#.trusted":                                                                "Indicates that an instance of this app can be started on a trusted cloudlet",
-	"apps:#.requiredoutboundconnections:#.protocol":                                 "tcp, udp or icmp",
-	"apps:#.requiredoutboundconnections:#.port":                                     "TCP or UDP port",
-	"apps:#.requiredoutboundconnections:#.remoteip":                                 "remote IP X.X.X.X",
+	"apps:#.requiredoutboundconnections:#.protocol":                                 "tcp, udp, icmp",
+	"apps:#.requiredoutboundconnections:#.portrangemin":                             "TCP or UDP port range start",
+	"apps:#.requiredoutboundconnections:#.portrangemax":                             "TCP or UDP port range end",
+	"apps:#.requiredoutboundconnections:#.remotecidr":                               "remote CIDR X.X.X.X/X",
 	"apps:#.allowserverless":                                                        "App is allowed to deploy as serverless containers",
 	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
@@ -1218,6 +1236,18 @@ var AllDataComments = map[string]string{
 	"maxreqsratelimitsettings:#.settings.maxreqsalgorithm":                          "MaxReqs Rate Limit Algorithm, one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm",
 	"maxreqsratelimitsettings:#.settings.maxrequests":                               "Maximum number of requests for the given Interval",
 	"maxreqsratelimitsettings:#.settings.interval":                                  "Time interval",
+	"trustpolicyexceptions:#.fields":                                                "Fields are used for the Update API to specify which fields to apply",
+	"trustpolicyexceptions:#.key.appkey.organization":                               "App developer organization",
+	"trustpolicyexceptions:#.key.appkey.name":                                       "App name",
+	"trustpolicyexceptions:#.key.appkey.version":                                    "App version",
+	"trustpolicyexceptions:#.key.cloudletpoolkey.organization":                      "Name of the organization this pool belongs to",
+	"trustpolicyexceptions:#.key.cloudletpoolkey.name":                              "CloudletPool Name",
+	"trustpolicyexceptions:#.key.name":                                              "TrustPolicyExceptionKey name",
+	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol":                      "tcp, udp, icmp",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin":                  "TCP or UDP port range start",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax":                  "TCP or UDP port range end",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr":                    "remote CIDR X.X.X.X/X",
 }
 var AllDataSpecialArgs = map[string]string{
 	"alertpolicies:#.annotations":             "StringToString",
@@ -1264,6 +1294,7 @@ var AllDataSpecialArgs = map[string]string{
 	"restagtables:#.tags":                     "StringToString",
 	"settings.fields":                         "StringArray",
 	"trustpolicies:#.fields":                  "StringArray",
+	"trustpolicyexceptions:#.fields":          "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
 	"vmpools:#.status.msgs":                   "StringArray",

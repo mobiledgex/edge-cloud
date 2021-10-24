@@ -426,6 +426,7 @@ func startServices() error {
 	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
 	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
 	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
+	edgeproto.RegisterTrustPolicyExceptionApiServer(server, &trustPolicyExceptionApi)
 	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
 	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
@@ -467,6 +468,7 @@ func startServices() error {
 			edgeproto.RegisterAutoProvPolicyApiHandler,
 			edgeproto.RegisterResTagTableApiHandler,
 			edgeproto.RegisterTrustPolicyApiHandler,
+			edgeproto.RegisterTrustPolicyExceptionApiHandler,
 			edgeproto.RegisterSettingsApiHandler,
 			edgeproto.RegisterRateLimitSettingsApiHandler,
 			edgeproto.RegisterAppInstClientApiHandler,
@@ -622,6 +624,7 @@ func InitApis(sync *Sync) {
 	InitAutoProvInfoApi(sync)
 	InitResTagTableApi(sync)
 	InitTrustPolicyApi(sync)
+	InitTrustPolicyExceptionApi(sync)
 	InitSettingsApi(sync)
 	InitRateLimitSettingsApi(sync)
 	InitAppInstClientKeyApi(sync)
@@ -645,6 +648,10 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
 	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(cloudletApi.cache)
+	// Be careful on dependencies.
+	// CloudletPools must be sent after cloudlets, because they reference cloudlets.
+	notify.ServerMgrOne.RegisterSendCloudletPoolCache(cloudletPoolApi.cache)
+
 	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
@@ -656,7 +663,8 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&userAlertApi.cache)
-
+	// TrustPolicyExceptions depend on App and Cloudlet so must be sent after them.
+	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)

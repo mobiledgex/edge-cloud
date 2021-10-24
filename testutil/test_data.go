@@ -1638,6 +1638,149 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 	},
 }
 
+var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception1",
+		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.1.0.0/16",
+				PortRangeMin: 201,
+				PortRangeMax: 210,
+			},
+		},
+	},
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception2",
+		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.0.0.0/8",
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+			},
+		},
+	},
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception3",
+		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "47.186.0.0/16",
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+			},
+		},
+	},
+}
+
+var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
+	// Failure case, max port > min port
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception11",
+		},
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.1.0.0/16",
+				PortRangeMin: 201,
+				PortRangeMax: 110,
+			},
+		},
+	},
+	// Failure case, bad CIDR
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "2.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception12",
+		},
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.0.0.0/50",
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+			},
+		},
+	},
+	// Failure case, missing min port but max port present
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "3.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception13",
+		},
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "47.186.0.0/16",
+				PortRangeMax: 22,
+			},
+		},
+	},
+}
+
 var AppInstClientKeyData = []edgeproto.AppInstClientKey{
 	edgeproto.AppInstClientKey{
 		AppInstKey: AppInstData[0].Key,
