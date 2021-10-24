@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
@@ -716,30 +717,28 @@ func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (s *TrustPolicy) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().ValidateKey(); err != nil {
-		return err
-	}
-	for _, o := range s.OutboundSecurityRules {
-		if o.Protocol != "tcp" && o.Protocol != "udp" && o.Protocol != "icmp" {
+func ValidateSecurityRules(rules []SecurityRule) error {
+	for _, r := range rules {
+		if r.Protocol != "tcp" && r.Protocol != "udp" && r.Protocol != "icmp" {
 			return fmt.Errorf("Protocol must be one of: (tcp,udp,icmp)")
 		}
-		if o.Protocol == "icmp" {
-			if o.PortRangeMin != 0 || o.PortRangeMax != 0 {
+		if r.Protocol == "icmp" {
+			if r.PortRangeMin != 0 || r.PortRangeMax != 0 {
 				return fmt.Errorf("Port range must be empty for icmp")
 			}
 		} else {
-			if o.PortRangeMin < minPort || o.PortRangeMin > maxPort {
-				return fmt.Errorf("Invalid min port range: %d", o.PortRangeMin)
+			log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "rule", r)
+			if r.PortRangeMin < minPort || r.PortRangeMin > maxPort {
+				return fmt.Errorf("Invalid min port: %d", r.PortRangeMin)
 			}
-			if o.PortRangeMax > maxPort {
-				return fmt.Errorf("Invalid max port range: %d", o.PortRangeMax)
+			if r.PortRangeMax > maxPort {
+				return fmt.Errorf("Invalid max port: %d", r.PortRangeMax)
 			}
-			if o.PortRangeMin > o.PortRangeMax {
-				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", o.PortRangeMin, o.PortRangeMax)
+			if r.PortRangeMin > r.PortRangeMax {
+				return fmt.Errorf("Min port range: %d cannot be higher than max: %d", r.PortRangeMin, r.PortRangeMax)
 			}
 		}
-		_, _, err := net.ParseCIDR(o.RemoteCidr)
+		_, _, err := net.ParseCIDR(r.RemoteCidr)
 		if err != nil {
 			return err
 		}
@@ -1330,4 +1329,32 @@ func (app *App) AppAlertPoliciesDifferent(other *App) bool {
 		}
 	}
 	return alertsDiff
+}
+
+func (s *TrustPolicy) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "TrustPolicy:", s.GetKey().Name)
+	return ValidateSecurityRules(s.OutboundSecurityRules)
+}
+
+func (key *TrustPolicyExceptionKey) ValidateKey() error {
+	if err := key.AppKey.ValidateKey(); err != nil {
+		errstring := err.Error()
+		return fmt.Errorf("Invalid AppKey in TrustPolicyExceptionKey, " + errstring)
+	}
+	if err := key.CloudletPoolKey.ValidateKey(); err != nil {
+		errstring := err.Error()
+		return fmt.Errorf("Invalid CloudletKey in TrustPolicyExceptionKey, " + errstring)
+	}
+	return nil
+}
+
+func (s *TrustPolicyException) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().ValidateKey(); err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "TrustPolicyException:", s.GetKey().Name)
+	return ValidateSecurityRules(s.OutboundSecurityRules)
 }

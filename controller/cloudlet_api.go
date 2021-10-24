@@ -711,7 +711,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	return err
 }
 
-func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(app *edgeproto.App, appInsts map[edgeproto.AppInstKey]struct{}) error {
+func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(ctx context.Context, app *edgeproto.App, appInsts map[edgeproto.AppInstKey]struct{}) error {
 	TrustPolicies := make(map[edgeproto.PolicyKey]*edgeproto.TrustPolicy)
 	trustPolicyApi.GetTrustPolicies(TrustPolicies)
 	s.cache.Mux.Lock()
@@ -735,7 +735,7 @@ func (s *CloudletApi) VerifyTrustPoliciesForAppInsts(app *edgeproto.App, appInst
 			if !policyFound {
 				return fmt.Errorf("Unable to find trust policy in cache: %s", pkey.String())
 			}
-			err := CheckAppCompatibleWithTrustPolicy(app, policy)
+			err := CheckAppCompatibleWithTrustPolicy(ctx, &akey.ClusterInstKey.CloudletKey, app, policy)
 			if err != nil {
 				return err
 			}
@@ -1031,7 +1031,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				if err := trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
 					return err
 				}
-				if err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(&in.Key, &policy); err != nil {
+				if err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(ctx, &in.Key, &policy); err != nil {
 					return err
 				}
 			}
@@ -1923,7 +1923,7 @@ func (s *CloudletApi) ValidateCloudletsUsingTrustPolicy(ctx context.Context, tru
 	}
 	s.cache.Mux.Unlock()
 	for k := range cloudletKeys {
-		err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(k, trustPolicy)
+		err := appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(ctx, k, trustPolicy)
 		if err != nil {
 			return fmt.Errorf("AppInst on cloudlet %s not compatible with trust policy - %s", strings.TrimSpace(k.String()), err.Error())
 		}

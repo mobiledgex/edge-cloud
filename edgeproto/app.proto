@@ -6,6 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "cloudletkey.proto";
+import "trustpolicy.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "flavor.proto";
 import "decimal.proto";
@@ -15,16 +16,6 @@ import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
-
-
-message RemoteConnection {
-  // tcp, udp or icmp
-  string protocol = 1;
-  // TCP or UDP port
-  uint32 port = 2;  
-  // remote IP X.X.X.X
-  string remote_ip = 4;
-}
 
 // It is important that embedded key structs are not referenced by a
 // pointer, otherwise the enclosing struct cannot properly function
@@ -209,7 +200,7 @@ message App {
   // Indicates that an instance of this app can be started on a trusted cloudlet
   bool trusted = 37;
   // Connections this app require to determine if the app is compatible with a trust policy
-  repeated RemoteConnection required_outbound_connections = 38;
+  repeated SecurityRule required_outbound_connections = 38 [(gogoproto.nullable) = false];
   // App is allowed to deploy as serverless containers
   bool allow_serverless = 39;
   // Configuration when deployed as serverless containers

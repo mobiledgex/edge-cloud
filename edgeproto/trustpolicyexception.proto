@@ -1,0 +1,100 @@
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "gogoproto/gogo.proto";
+import "app.proto";
+import "cloudletpool.proto";
+import "trustpolicy.proto";
+
+
+option (gogoproto.goproto_unrecognized_all) = false;
+option (gogoproto.goproto_unkeyed_all) = false;
+option (gogoproto.goproto_sizecache_all) = false;
+
+enum TrustPolicyExceptionState {
+  // Unknown state
+  TRUST_POLICY_EXCEPTION_STATE_UNKNOWN = 0;
+  // Created, Awaiting approval
+  TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED = 1;
+  // Approved by Operator and active
+  TRUST_POLICY_EXCEPTION_STATE_ACTIVE = 2;
+  // Rejected by Operator
+  TRUST_POLICY_EXCEPTION_STATE_REJECTED = 3;
+}
+
+
+message TrustPolicyExceptionKey {
+  // App Key
+  AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.keytag) = "appkey"];
+  // CloudletPool Key
+  CloudletPoolKey cloudlet_pool_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletpoolkey"];
+  // TrustPolicyExceptionKey name
+  string Name = 3 [(protogen.keytag) = "name"]; 
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message TrustPolicyException {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique Key composed of App and CloudletPool key
+  TrustPolicyExceptionKey key = 2 [(gogoproto.nullable) = false];
+  // State of the exception within the approval process
+  TrustPolicyExceptionState state = 3;
+  // List of outbound security rules for whitelisting traffic
+  repeated SecurityRule outbound_security_rules = 4 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;  
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_custom_update) = true;
+  option (protogen.alias) = "name=Key.Name,app-name=Key.AppKey.Name,app-org=Key.AppKey.Organization,app-ver=Key.AppKey.Version,cloudletpool-org=Key.CloudletPoolKey.Organization,cloudletpool-name=Key.CloudletPoolKey.Name";
+  option (protogen.uses_org) = "key=AppKey.Organization";
+}
+
+service TrustPolicyExceptionApi {
+
+  // Create a Trust Policy Exception, by App Developer Organization
+  rpc CreateTrustPolicyException(TrustPolicyException) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/trustpolicyexception"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
+  }
+  // Update a Trust Policy Exception, by Operator Organization
+  rpc UpdateTrustPolicyException(TrustPolicyException) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/trustpolicyexception"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.CloudletPoolKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
+    option (protogen.mc2_custom_authz) = true;
+    option (protogen.method_also_required) = "State";
+  }
+
+  // Delete a Trust Policy Exception, by App Developer Organization
+  rpc DeleteTrustPolicyException(TrustPolicyException) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/trustpolicyexception"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
+  }
+  // Show Trust Policy Exceptions. Any fields specified will be used to filter results.
+  rpc ShowTrustPolicyException(TrustPolicyException) returns (stream TrustPolicyException) {
+    option (google.api.http) = {
+      post: "/show/trustpolicyexception"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceApps,ActionView,Key.AppKey.Organization";
+    option (protogen.mc2_custom_authz) = true;
+  }
+}

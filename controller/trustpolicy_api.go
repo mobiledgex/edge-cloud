@@ -50,7 +50,7 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
-			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin, "TrustPolicy:", in.GetKey().Name)
 			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
 		}
 	}

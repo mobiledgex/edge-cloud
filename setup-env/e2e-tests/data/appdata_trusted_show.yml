@@ -431,13 +431,15 @@ apps:
   trusted: true
   requiredoutboundconnections:
   - protocol: tcp
-    port: 443
-    remoteip: 35.247.68.151
+    remotecidr: "35.247.68.151/32"
+    portrangemin: 443
+    portrangemax: 443
   - protocol: udp
-    port: 53
-    remoteip: 1.1.1.1
+    remotecidr: "1.1.1.1/24"
+    portrangemin: 53
+    portrangemax: 53
   - protocol: icmp
-    remoteip: 8.8.8.8
+    remotecidr: "8.8.8.8/24"
 - key:
     organization: AcmeAppCo
     name: nontrustedapp

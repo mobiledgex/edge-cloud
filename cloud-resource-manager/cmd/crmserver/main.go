@@ -188,18 +188,20 @@ func main() {
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
 		caches := pf.Caches{
-			FlavorCache:           &controllerData.FlavorCache,
-			TrustPolicyCache:      &controllerData.TrustPolicyCache,
-			ClusterInstCache:      &controllerData.ClusterInstCache,
-			AppCache:              &controllerData.AppCache,
-			AppInstCache:          &controllerData.AppInstCache,
-			ResTagTableCache:      &controllerData.ResTagTableCache,
-			CloudletCache:         controllerData.CloudletCache,
-			CloudletInternalCache: &controllerData.CloudletInternalCache,
-			VMPoolCache:           &controllerData.VMPoolCache,
-			VMPoolInfoCache:       &controllerData.VMPoolInfoCache,
-			GPUDriverCache:        &controllerData.GPUDriverCache,
-			NetworkCache:          &controllerData.NetworkCache,
+			FlavorCache:               &controllerData.FlavorCache,
+			TrustPolicyCache:          &controllerData.TrustPolicyCache,
+			TrustPolicyExceptionCache: &controllerData.TrustPolicyExceptionCache,
+			CloudletPoolCache:         controllerData.CloudletPoolCache,
+			ClusterInstCache:          &controllerData.ClusterInstCache,
+			AppCache:                  &controllerData.AppCache,
+			AppInstCache:              &controllerData.AppInstCache,
+			ResTagTableCache:          &controllerData.ResTagTableCache,
+			CloudletCache:             controllerData.CloudletCache,
+			CloudletInternalCache:     &controllerData.CloudletInternalCache,
+			VMPoolCache:               &controllerData.VMPoolCache,
+			VMPoolInfoCache:           &controllerData.VMPoolInfoCache,
+			GPUDriverCache:            &controllerData.GPUDriverCache,
+			NetworkCache:              &controllerData.NetworkCache,
 		}
 
 		features := platform.GetFeatures()

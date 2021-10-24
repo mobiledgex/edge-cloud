@@ -1183,6 +1183,13 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := VMAction_CamelValue["VmAction"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(TrustPolicyExceptionState(0)):
+		if en, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(NetworkConnectionType(0)):
 		if en, ok := NetworkConnectionType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
@@ -1236,6 +1243,8 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowFlavor":                    struct{}{},
 	"ShowOperatorCode":              struct{}{},
 	"ShowResTagTable":               struct{}{},
+	"ShowAutoScalePolicy":           struct{}{},
+	"ShowTrustPolicy":               struct{}{},
 	"ShowApp":                       struct{}{},
 	"ShowCloudletsForAppDeployment": struct{}{},
 	"ShowGPUDriver":                 struct{}{},
@@ -1244,11 +1253,10 @@ var ShowMethodNames = map[string]struct{}{
 	"ShowCloudletMetrics":           struct{}{},
 	"ShowCloudletPool":              struct{}{},
 	"ShowVMPool":                    struct{}{},
-	"ShowAutoScalePolicy":           struct{}{},
 	"ShowClusterInst":               struct{}{},
 	"ShowClusterInstInfo":           struct{}{},
 	"ShowAutoProvPolicy":            struct{}{},
-	"ShowTrustPolicy":               struct{}{},
+	"ShowTrustPolicyException":      struct{}{},
 	"ShowNetwork":                   struct{}{},
 	"ShowAppInst":                   struct{}{},
 	"ShowAppInstInfo":               struct{}{},
@@ -1293,6 +1301,7 @@ var AllKeyTags = []string{
 	"gpudriver",
 	"gpudriverorg",
 	"maxreqssettingsname",
+	"name",
 	"network",
 	"node",
 	"noderegion",
@@ -1331,6 +1340,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"gpudriver":           struct{}{},
 	"gpudriverorg":        struct{}{},
 	"maxreqssettingsname": struct{}{},
+	"name":                struct{}{},
 	"network":             struct{}{},
 	"node":                struct{}{},
 	"noderegion":          struct{}{},

@@ -446,3 +446,27 @@ func (s *CloudletInfoCache) SetStatusStep(ctx context.Context, key *CloudletKey,
 	info.Status.SetStep(stepName)
 	s.Update(ctx, &info, 0)
 }
+
+func (s *CloudletPoolCache) GetPoolsForCloudletKey(in *CloudletKey) ([]CloudletPoolKey, error) {
+	var cloudletPoolKeys []CloudletPoolKey
+
+	log.DebugLog(log.DebugLevelApi, "GetPoolsForCloudletKey()", "len(CloudletPoolCache.Objs):", len(s.Objs), "CloudletKey:", in)
+
+	cloudletPoolKeyFilter := CloudletPoolKey{
+		Organization: in.Organization,
+	}
+	cloudletPoolFilter := CloudletPool{
+		Key:       cloudletPoolKeyFilter,
+		Cloudlets: []string{in.Name},
+	}
+	s.Show(&cloudletPoolFilter, func(obj *CloudletPool) error {
+		cloudletPoolKeys = append(cloudletPoolKeys, obj.Key)
+		log.DebugLog(log.DebugLevelApi, "GetPoolsForCloudletKey() found ", "CloudletPoolCache key:", obj.Key)
+		return nil
+	})
+
+	if len(cloudletPoolKeys) == 0 {
+		log.DebugLog(log.DebugLevelApi, "GetPoolsForCloudletKey() not found ", "CloudletKey:", in)
+	}
+	return cloudletPoolKeys, nil
+}

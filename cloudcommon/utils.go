@@ -161,3 +161,18 @@ func DeleteFile(filePath string) error {
 	}
 	return nil
 }
+
+// CidrContainsCidr returns true only if the first CIDR fully contains the second CIDR
+func CidrContainsCidr(n1, n2 *net.IPNet) bool {
+	size1, _ := n1.Mask.Size()
+	size2, _ := n2.Mask.Size()
+	if size1 > size2 {
+		return false
+	}
+	for i := range n1.IP {
+		if n1.IP[i]&n1.Mask[i] != n2.IP[i]&n2.Mask[i]&n1.Mask[i] {
+			return false
+		}
+	}
+	return true
+}

@@ -33,6 +33,7 @@ func InitClientNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterSend(sendMetric)
 	client.RegisterSendAlertCache(&cd.AlertCache)
 	client.RegisterRecvTrustPolicyCache(&cd.TrustPolicyCache)
+	client.RegisterRecvTrustPolicyExceptionCache(&cd.TrustPolicyExceptionCache)
 	client.RegisterRecvAutoProvPolicyCache(&cd.AutoProvPolicyCache)
 	client.RegisterRecvAutoScalePolicyCache(&cd.AutoScalePolicyCache)
 	client.RegisterRecvAlertPolicyCache(&cd.AlertPolicyCache)
