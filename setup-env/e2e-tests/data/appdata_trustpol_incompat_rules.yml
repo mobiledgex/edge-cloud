@@ -108,5 +108,5 @@ apps:
   trusted: true
   requiredoutboundconnections:
   - protocol: tcp
-    remoteip: 35.247.68.151
-    port: 2222 
+    remotecidr: "35.247.68.151/24"
+    portrangemin: 2222

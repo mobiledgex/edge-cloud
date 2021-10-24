@@ -158,6 +158,13 @@ gpudrivers:
     name: gpudriver2
   type: GpuTypeVgpu
 
+cloudletpools:
+- key:
+    organization: DMUUS
+    name: cloud2-pool
+  cloudlets:
+  - cloud2
+
 networks:
 - key:
     cloudletkey:
@@ -284,6 +291,10 @@ func TestCRM(t *testing.T) {
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
+	for ii := range data.CloudletPools {
+		ctrlHandler.CloudletPoolCache.Update(ctx, &data.CloudletPools[ii], 0)
+	}
+
 	for ii := range data.Networks {
 		ctrlHandler.NetworkCache.Update(ctx, &data.Networks[ii], 0)
 	}
@@ -295,6 +306,9 @@ func TestCRM(t *testing.T) {
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 2))
 	// ensure that only vmpool object associated with cloudlet is received
 	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 1))
+
+	require.Nil(t, notify.WaitFor(controllerData.CloudletPoolCache, 1))
+
 	// ensure that only gpudriver object associated with cloudlet is received
 	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 1))
 	require.Nil(t, notify.WaitFor(&controllerData.NetworkCache, 1))
@@ -307,6 +321,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
 	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
+	require.Equal(t, 1, len(controllerData.CloudletPoolCache.Objs))
 	require.Equal(t, 1, len(controllerData.NetworkCache.Objs))
 
 	testVMPoolUpdates(t, ctx, &data.VmPools[0], ctrlHandler)
@@ -327,6 +342,10 @@ func TestCRM(t *testing.T) {
 	for ii := range data.Flavors {
 		ctrlHandler.FlavorCache.Delete(ctx, &data.Flavors[ii], 0)
 	}
+	for ii := range data.CloudletPools {
+		ctrlHandler.CloudletPoolCache.Delete(ctx, &data.CloudletPools[ii], 0)
+	}
+
 	for ii := range data.Networks {
 		ctrlHandler.NetworkCache.Delete(ctx, &data.Networks[ii], 0)
 	}
@@ -335,6 +354,7 @@ func TestCRM(t *testing.T) {
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 0))
+	require.Nil(t, notify.WaitFor(controllerData.CloudletPoolCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.NetworkCache, 0))
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
@@ -343,6 +363,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.VMPoolCache.Objs))
 	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
+	require.Equal(t, 0, len(controllerData.CloudletPoolCache.Objs))
 	require.Equal(t, 0, len(controllerData.NetworkCache.Objs))
 }
 

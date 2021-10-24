@@ -668,19 +668,6 @@ var AppApiCmds = []*cobra.Command{
 	ShowCloudletsForAppDeploymentCmd.GenCmd(),
 }
 
-var RemoteConnectionRequiredArgs = []string{}
-var RemoteConnectionOptionalArgs = []string{
-	"protocol",
-	"port",
-	"remoteip",
-}
-var RemoteConnectionAliasArgs = []string{}
-var RemoteConnectionComments = map[string]string{
-	"protocol": "tcp, udp or icmp",
-	"port":     "TCP or UDP port",
-	"remoteip": "remote IP X.X.X.X",
-}
-var RemoteConnectionSpecialArgs = map[string]string{}
 var AppKeyRequiredArgs = []string{}
 var AppKeyOptionalArgs = []string{
 	"organization",
@@ -737,8 +724,9 @@ var AppOptionalArgs = []string{
 	"trusted",
 	"requiredoutboundconnections:empty",
 	"requiredoutboundconnections:#.protocol",
-	"requiredoutboundconnections:#.port",
-	"requiredoutboundconnections:#.remoteip",
+	"requiredoutboundconnections:#.portrangemin",
+	"requiredoutboundconnections:#.portrangemax",
+	"requiredoutboundconnections:#.remotecidr",
 	"allowserverless",
 	"serverlessconfig.vcpus",
 	"serverlessconfig.ram",
@@ -785,15 +773,16 @@ var AppComments = map[string]string{
 	"skiphcports":                            "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002",
 	"trusted":                                "Indicates that an instance of this app can be started on a trusted cloudlet",
 	"requiredoutboundconnections:empty":      "Connections this app require to determine if the app is compatible with a trust policy, specify requiredoutboundconnections:empty=true to clear",
-	"requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
-	"requiredoutboundconnections:#.port":     "TCP or UDP port",
-	"requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
-	"allowserverless":                        "App is allowed to deploy as serverless containers",
-	"serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
-	"serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
-	"serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
-	"vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"alertpolicies":                          "Alert Policies, specify alertpolicies:empty=true to clear",
+	"requiredoutboundconnections:#.protocol": "tcp, udp, icmp",
+	"requiredoutboundconnections:#.portrangemin": "TCP or UDP port range start",
+	"requiredoutboundconnections:#.portrangemax": "TCP or UDP port range end",
+	"requiredoutboundconnections:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"allowserverless":              "App is allowed to deploy as serverless containers",
+	"serverlessconfig.vcpus":       "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
+	"serverlessconfig.ram":         "RAM allocation in megabytes per container when serverless",
+	"serverlessconfig.minreplicas": "Minimum number of replicas when serverless",
+	"vmappostype":                  "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
+	"alertpolicies":                "Alert Policies, specify alertpolicies:empty=true to clear",
 }
 var AppSpecialArgs = map[string]string{
 	"alertpolicies":    "StringArray",
@@ -882,8 +871,9 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.skiphcports",
 	"app.trusted",
 	"app.requiredoutboundconnections:#.protocol",
-	"app.requiredoutboundconnections:#.port",
-	"app.requiredoutboundconnections:#.remoteip",
+	"app.requiredoutboundconnections:#.portrangemin",
+	"app.requiredoutboundconnections:#.portrangemax",
+	"app.requiredoutboundconnections:#.remotecidr",
 	"app.allowserverless",
 	"app.serverlessconfig.vcpus",
 	"app.serverlessconfig.ram",
@@ -928,17 +918,18 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.templatedelimiter":   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"app.skiphcports":         "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002",
 	"app.trusted":             "Indicates that an instance of this app can be started on a trusted cloudlet",
-	"app.requiredoutboundconnections:#.protocol": "tcp, udp or icmp",
-	"app.requiredoutboundconnections:#.port":     "TCP or UDP port",
-	"app.requiredoutboundconnections:#.remoteip": "remote IP X.X.X.X",
-	"app.allowserverless":                        "App is allowed to deploy as serverless containers",
-	"app.serverlessconfig.vcpus":                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
-	"app.serverlessconfig.ram":                   "RAM allocation in megabytes per container when serverless",
-	"app.serverlessconfig.minreplicas":           "Minimum number of replicas when serverless",
-	"app.vmappostype":                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"app.alertpolicies":                          "Alert Policies",
-	"dryrundeploy":                               "Attempt to qualify cloudlet resources for deployment",
-	"numnodes":                                   "Optional number of worker VMs in dry run K8s Cluster, default = 2",
+	"app.requiredoutboundconnections:#.protocol":     "tcp, udp, icmp",
+	"app.requiredoutboundconnections:#.portrangemin": "TCP or UDP port range start",
+	"app.requiredoutboundconnections:#.portrangemax": "TCP or UDP port range end",
+	"app.requiredoutboundconnections:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"app.allowserverless":                            "App is allowed to deploy as serverless containers",
+	"app.serverlessconfig.vcpus":                     "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
+	"app.serverlessconfig.ram":                       "RAM allocation in megabytes per container when serverless",
+	"app.serverlessconfig.minreplicas":               "Minimum number of replicas when serverless",
+	"app.vmappostype":                                "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
+	"app.alertpolicies":                              "Alert Policies",
+	"dryrundeploy":                                   "Attempt to qualify cloudlet resources for deployment",
+	"numnodes":                                       "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }
 var DeploymentCloudletRequestSpecialArgs = map[string]string{
 	"app.alertpolicies":    "StringArray",

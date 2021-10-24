@@ -2,4 +2,4 @@ errors:
 - desc: TrustPolicyApi[0]
   msg: 'read Result stream failed, rpc error: code = Unknown desc = AppInst on cloudlet
     organization:"dmuus" name:"cloudlet1" not compatible with trust policy - No outbound
-    rule in policy to match required connection tcp:35.247.68.151:443 for App {"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"}'
+    rule in policy or exception to match required connection tcp:35.247.68.151/32:443-443 for App {"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"}'

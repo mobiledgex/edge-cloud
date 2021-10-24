@@ -82,7 +82,7 @@ func (s *AppInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.Cloud
 	return nil
 }
 
-func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgeproto.CloudletKey, TrustPolicy *edgeproto.TrustPolicy) error {
+func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ctx context.Context, ckey *edgeproto.CloudletKey, TrustPolicy *edgeproto.TrustPolicy) error {
 	apps := make(map[edgeproto.AppKey]*edgeproto.App)
 	appApi.GetAllApps(apps)
 	s.cache.Mux.Lock()
@@ -96,7 +96,7 @@ func (s *AppInstApi) CheckCloudletAppinstsCompatibleWithTrustPolicy(ckey *edgepr
 		if !found {
 			return fmt.Errorf("App not found: %s", val.Key.AppKey.String())
 		}
-		err := CheckAppCompatibleWithTrustPolicy(app, TrustPolicy)
+		err := CheckAppCompatibleWithTrustPolicy(ctx, ckey, app, TrustPolicy)
 		if err != nil {
 			return err
 		}
@@ -716,7 +716,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !trustPolicyApi.store.STMGet(stm, &tpKey, &trustPolicy) {
 				return errors.New("Trust Policy for cloudlet not found")
 			}
-			err = CheckAppCompatibleWithTrustPolicy(&app, &trustPolicy)
+			err = CheckAppCompatibleWithTrustPolicy(ctx, &cloudlet.Key, &app, &trustPolicy)
 			if err != nil {
 				return fmt.Errorf("App is not compatible with cloudlet trust policy: %v", err)
 			}

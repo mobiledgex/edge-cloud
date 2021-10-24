@@ -40,6 +40,7 @@ type AllDataOut struct {
 	AlertPolicies              []edgeproto.Result
 	FlowRateLimitSettings      []edgeproto.Result
 	MaxReqsRateLimitSettings   []edgeproto.Result
+	TrustPolicyExceptions      []edgeproto.Result
 	Errors                     []Err
 }
 
@@ -92,10 +93,14 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("flowratelimitsettings")
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, inMap["maxreqsratelimitsettings"], &out.MaxReqsRateLimitSettings)
 	apicb("maxreqsratelimitsettings")
+	run.TrustPolicyExceptionApi(&in.TrustPolicyExceptions, inMap["trustpolicyexceptions"], &out.TrustPolicyExceptions)
+	apicb("trustpolicyexceptions")
 	out.Errors = run.Errs
 }
 
 func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{}, out *AllDataOut, apicb RunAllDataApiCallback) {
+	apicb("trustpolicyexceptions")
+	run.TrustPolicyExceptionApi(&in.TrustPolicyExceptions, inMap["trustpolicyexceptions"], &out.TrustPolicyExceptions)
 	apicb("maxreqsratelimitsettings")
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, inMap["maxreqsratelimitsettings"], &out.MaxReqsRateLimitSettings)
 	apicb("flowratelimitsettings")
@@ -163,4 +168,5 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.AlertPolicyApi(&in.AlertPolicies, nil, &out.AlertPolicies)
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, nil, &out.FlowRateLimitSettings)
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, nil, &out.MaxReqsRateLimitSettings)
+	run.TrustPolicyExceptionApi(&in.TrustPolicyExceptions, nil, &out.TrustPolicyExceptions)
 }
