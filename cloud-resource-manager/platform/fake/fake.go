@@ -556,6 +556,16 @@ func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto
 	return nil
 }
 
+func (s *Platform) UpdateTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "fake UpdateTrustPolicyException", "policy", TrustPolicyException)
+	return nil
+}
+
+func (s *Platform) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "fake DeleteTrustPolicyException", "policyKey", TrustPolicyExceptionKey)
+	return nil
+}
+
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")

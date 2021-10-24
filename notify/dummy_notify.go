@@ -14,26 +14,28 @@ import (
 )
 
 type DummyHandler struct {
-	AppCache             edgeproto.AppCache
-	AppInstCache         edgeproto.AppInstCache
-	CloudletCache        edgeproto.CloudletCache
-	VMPoolCache          edgeproto.VMPoolCache
-	GPUDriverCache       edgeproto.GPUDriverCache
-	FlavorCache          edgeproto.FlavorCache
-	ClusterInstCache     edgeproto.ClusterInstCache
-	AppInstInfoCache     edgeproto.AppInstInfoCache
-	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
-	CloudletInfoCache    edgeproto.CloudletInfoCache
-	VMPoolInfoCache      edgeproto.VMPoolInfoCache
-	AlertCache           edgeproto.AlertCache
-	NodeCache            edgeproto.NodeCache
-	AutoScalePolicyCache edgeproto.AutoScalePolicyCache
-	AutoProvPolicyCache  edgeproto.AutoProvPolicyCache
-	TrustPolicyCache     edgeproto.TrustPolicyCache
-	DeviceCache          edgeproto.DeviceCache
-	frClusterInsts       edgeproto.FreeReservableClusterInstCache
-	SettingsCache        edgeproto.SettingsCache
-	NetworkCache         edgeproto.NetworkCache
+	AppCache                  edgeproto.AppCache
+	AppInstCache              edgeproto.AppInstCache
+	CloudletCache             edgeproto.CloudletCache
+	VMPoolCache               edgeproto.VMPoolCache
+	GPUDriverCache            edgeproto.GPUDriverCache
+	FlavorCache               edgeproto.FlavorCache
+	ClusterInstCache          edgeproto.ClusterInstCache
+	AppInstInfoCache          edgeproto.AppInstInfoCache
+	ClusterInstInfoCache      edgeproto.ClusterInstInfoCache
+	CloudletInfoCache         edgeproto.CloudletInfoCache
+	VMPoolInfoCache           edgeproto.VMPoolInfoCache
+	AlertCache                edgeproto.AlertCache
+	NodeCache                 edgeproto.NodeCache
+	AutoScalePolicyCache      edgeproto.AutoScalePolicyCache
+	AutoProvPolicyCache       edgeproto.AutoProvPolicyCache
+	TrustPolicyCache          edgeproto.TrustPolicyCache
+	TrustPolicyExceptionCache edgeproto.TrustPolicyExceptionCache
+	CloudletPoolCache         edgeproto.CloudletPoolCache
+	DeviceCache               edgeproto.DeviceCache
+	frClusterInsts            edgeproto.FreeReservableClusterInstCache
+	SettingsCache             edgeproto.SettingsCache
+	NetworkCache              edgeproto.NetworkCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -55,6 +57,8 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitAutoScalePolicyCache(&h.AutoScalePolicyCache)
 	edgeproto.InitAutoProvPolicyCache(&h.AutoProvPolicyCache)
 	edgeproto.InitTrustPolicyCache(&h.TrustPolicyCache)
+	edgeproto.InitTrustPolicyExceptionCache(&h.TrustPolicyExceptionCache)
+	edgeproto.InitCloudletPoolCache(&h.CloudletPoolCache)
 	edgeproto.InitDeviceCache(&h.DeviceCache)
 	edgeproto.InitNetworkCache(&h.NetworkCache)
 	h.frClusterInsts.Init()
@@ -67,6 +71,8 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendVMPoolCache(&s.VMPoolCache)
 	mgr.RegisterSendGPUDriverCache(&s.GPUDriverCache)
 	mgr.RegisterSendTrustPolicyCache(&s.TrustPolicyCache)
+	mgr.RegisterSendTrustPolicyExceptionCache(&s.TrustPolicyExceptionCache)
+	mgr.RegisterSendCloudletPoolCache(&s.CloudletPoolCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
 	mgr.RegisterSendAutoScalePolicyCache(&s.AutoScalePolicyCache)

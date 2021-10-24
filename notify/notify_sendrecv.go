@@ -105,33 +105,35 @@ const (
 )
 
 type SendRecv struct {
-	cliserv            string // client or server
-	peerAddr           string
-	peer               string
-	sendlist           []NotifySend
-	recvmap            map[string]NotifyRecv
-	started            bool
-	done               bool
-	localWanted        []string
-	remoteWanted       map[string]struct{}
-	filterCloudletKeys bool
-	cloudletKeys       map[edgeproto.CloudletKey]struct{}
-	cloudletReady      bool
-	appSend            *AppSend
-	cloudletSend       *CloudletSend
-	clusterInstSend    *ClusterInstSend
-	appInstSend        *AppInstSend
-	vmPoolSend         *VMPoolSend
-	gpuDriverSend      *GPUDriverSend
-	TrustPolicySend    *TrustPolicySend
-	sendRunning        chan struct{}
-	recvRunning        chan struct{}
-	signal             chan bool
-	stats              Stats
-	mux                sync.Mutex
-	sendAllEnd         bool
-	manualSendAllEnd   bool
-	sendAllRecvHandler SendAllRecv
+	cliserv                  string // client or server
+	peerAddr                 string
+	peer                     string
+	sendlist                 []NotifySend
+	recvmap                  map[string]NotifyRecv
+	started                  bool
+	done                     bool
+	localWanted              []string
+	remoteWanted             map[string]struct{}
+	filterCloudletKeys       bool
+	cloudletKeys             map[edgeproto.CloudletKey]struct{}
+	cloudletReady            bool
+	appSend                  *AppSend
+	cloudletSend             *CloudletSend
+	clusterInstSend          *ClusterInstSend
+	appInstSend              *AppInstSend
+	vmPoolSend               *VMPoolSend
+	gpuDriverSend            *GPUDriverSend
+	TrustPolicySend          *TrustPolicySend
+	TrustPolicyExceptionSend *TrustPolicyExceptionSend
+	CloudletPoolSend         *CloudletPoolSend
+	sendRunning              chan struct{}
+	recvRunning              chan struct{}
+	signal                   chan bool
+	stats                    Stats
+	mux                      sync.Mutex
+	sendAllEnd               bool
+	manualSendAllEnd         bool
+	sendAllRecvHandler       SendAllRecv
 }
 
 func (s *SendRecv) init(cliserv string) {
