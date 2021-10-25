@@ -304,14 +304,14 @@ func dumpStackTrace(ctx context.Context, req *edgeproto.DebugRequest) string {
 	printToLog := false
 	args := strings.Split(req.Args, ",")
 	if len(args) > 0 {
-		if val, err := strconv.Atoi(args[0]); err == nil {
+		if val, err := strconv.Atoi(strings.TrimSpace(args[0])); err == nil {
 			bufSizeKb = val
 		} else {
 			return help
 		}
 	}
 	if len(args) > 1 {
-		if b, err := strconv.ParseBool(args[1]); err == nil {
+		if b, err := strconv.ParseBool(strings.TrimSpace(args[1])); err == nil {
 			printToLog = b
 		} else {
 			return help
