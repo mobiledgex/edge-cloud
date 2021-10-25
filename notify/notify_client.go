@@ -181,6 +181,7 @@ func (s *Client) connect() (StreamNotify, error) {
 func (s *Client) connectCleanup() {
 	s.mux.Lock()
 	s.conn.Close()
+	s.sendrecv.peer = ""
 	s.cancel()
 	s.cancel = cancelNoop
 	s.mux.Unlock()
@@ -309,4 +310,26 @@ func ClientStreamInterceptors(i ...grpc.StreamClientInterceptor) ClientOp {
 	return func(opts *ClientOptions) {
 		opts.streamInterceptors = append(opts.streamInterceptors, i...)
 	}
+}
+
+type ClientState struct {
+	Name              string
+	Peer              string
+	NegotiatedVersion uint32
+	Stats             Stats
+}
+
+func (s *Client) GetState() *ClientState {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	state := ClientState{}
+	state.Name = s.name
+	if s.sendrecv.peer != "" {
+		state.Peer = s.sendrecv.peer
+	} else {
+		state.Peer = "not connected"
+	}
+	state.NegotiatedVersion = s.version
+	state.Stats = s.sendrecv.stats
+	return &state
 }

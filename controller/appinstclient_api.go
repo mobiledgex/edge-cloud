@@ -121,7 +121,11 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 	s.appInstClients = append(s.appInstClients, client)
 	for _, c := range sendList {
 		if c != nil {
-			c <- *client
+			select {
+			case c <- *client:
+			default:
+				// channel full, ignore client, don't block
+			}
 		} else {
 			log.SpanLog(ctx, log.DebugLevelApi, "Nil Channel")
 		}
@@ -146,6 +150,7 @@ func (s *AppInstClientApi) StreamAppInstClientsLocal(in *edgeproto.AppInstClient
 			done = true
 		case appInstClient := <-recvCh:
 			if err := cb.Send(&appInstClient); err != nil {
+				log.SpanLog(cb.Context(), log.DebugLevelApi, "StreamAppInstClientsLocal recv err", "err", err)
 				done = true
 			}
 		}
