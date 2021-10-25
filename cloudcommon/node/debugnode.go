@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 var DefaultDebugTimeout = 10 * time.Second
@@ -32,15 +34,18 @@ const (
 	EnableSampleLog      = "enable-sample-logging"
 	DumpCloudletPools    = "dump-cloudlet-pools"
 	DumpStackTrace       = "dump-stack-trace"
+	DumpNotifyConns      = "dump-notify-state"
 )
 
 type DebugNode struct {
-	mgr         *NodeMgr
-	sendReply   *notify.DebugReplySend
-	sendRequest *notify.DebugRequestSendMany
-	funcs       map[string]DebugFunc
-	requests    map[uint64]*debugCall
-	mux         sync.Mutex
+	mgr              *NodeMgr
+	sendReply        *notify.DebugReplySend
+	sendRequest      *notify.DebugRequestSendMany
+	funcs            map[string]DebugFunc
+	requests         map[uint64]*debugCall
+	mux              sync.Mutex
+	notifyClients    []*notify.Client
+	notifyServerMgrs []*notify.ServerMgr
 }
 
 type debugCall struct {
@@ -54,6 +59,8 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 	s.mgr = mgr
 	s.requests = make(map[uint64]*debugCall)
 	s.funcs = make(map[string]DebugFunc)
+	s.notifyClients = make([]*notify.Client, 0)
+	s.notifyServerMgrs = make([]*notify.ServerMgr, 0)
 	s.AddDebugFunc(EnableDebugLevels, enableDebugLevels)
 	s.AddDebugFunc(DisableDebugLevels, disableDebugLevels)
 	s.AddDebugFunc(ShowDebugLevels, showDebugLevels)
@@ -85,14 +92,8 @@ func (s *DebugNode) Init(mgr *NodeMgr) {
 			}
 			return string(out)
 		})
-	s.AddDebugFunc(DumpStackTrace,
-		func(ctx context.Context, req *edgeproto.DebugRequest) string {
-			buf := make([]byte, 8192)
-			runtime.Stack(buf, true)
-			// dump to log file in case notify-send is broken.
-			fmt.Println(string(buf))
-			return string(buf)
-		})
+	s.AddDebugFunc(DumpStackTrace, dumpStackTrace)
+	s.AddDebugFunc(DumpNotifyConns, s.dumpNotifyState)
 }
 
 func (s *DebugNode) AddDebugFunc(cmd string, f DebugFunc) {
@@ -105,12 +106,18 @@ func (s *DebugNode) RegisterClient(client *notify.Client) {
 	s.sendReply = notify.NewDebugReplySend()
 	client.RegisterRecv(notify.NewDebugRequestRecv(s))
 	client.RegisterSend(s.sendReply)
+	s.mux.Lock()
+	s.notifyClients = append(s.notifyClients, client)
+	s.mux.Unlock()
 }
 
 func (s *DebugNode) RegisterServer(server *notify.ServerMgr) {
 	s.sendRequest = notify.NewDebugRequestSendMany()
 	server.RegisterSend(s.sendRequest)
 	server.RegisterRecv(notify.NewDebugReplyRecvMany(s))
+	s.mux.Lock()
+	s.notifyServerMgrs = append(s.notifyServerMgrs, server)
+	s.mux.Unlock()
 }
 
 // Handle DebugRequest received via the notify framework.
@@ -283,4 +290,59 @@ func disableSampledLogging(ctx context.Context, req *edgeproto.DebugRequest) str
 func enableSampledLogging(ctx context.Context, req *edgeproto.DebugRequest) string {
 	log.SamplingEnabled = true
 	return "enabled log sampling"
+}
+
+func dumpStackTrace(ctx context.Context, req *edgeproto.DebugRequest) string {
+	help := "Args should indicate buffer size in KB and whether to write to log file, i.e. 100,false. Defaults are 100,false."
+	if strings.ToLower(req.Args) == "help" {
+		return help
+	}
+	// Default to 100Kb stack trace buffer.
+	// Controller may have lots of threads, QA controller
+	// had a stack trace that used up 513Kb.
+	bufSizeKb := 100
+	printToLog := false
+	args := strings.Split(req.Args, ",")
+	if len(args) > 0 {
+		if val, err := strconv.Atoi(strings.TrimSpace(args[0])); err == nil {
+			bufSizeKb = val
+		} else {
+			return help
+		}
+	}
+	if len(args) > 1 {
+		if b, err := strconv.ParseBool(strings.TrimSpace(args[1])); err == nil {
+			printToLog = b
+		} else {
+			return help
+		}
+	}
+	buf := make([]byte, bufSizeKb*1024)
+	runtime.Stack(buf, true)
+	if printToLog {
+		fmt.Println(string(buf))
+	}
+	return string(buf)
+}
+
+type NotifyState struct {
+	ClientStates    []*notify.ClientState
+	ServerMgrStates []*notify.ServerMgrState
+}
+
+func (s *DebugNode) dumpNotifyState(ctx context.Context, req *edgeproto.DebugRequest) string {
+	s.mux.Lock()
+	state := NotifyState{}
+	for _, client := range s.notifyClients {
+		state.ClientStates = append(state.ClientStates, client.GetState())
+	}
+	for _, serverMgr := range s.notifyServerMgrs {
+		state.ServerMgrStates = append(state.ServerMgrStates, serverMgr.GetState())
+	}
+	s.mux.Unlock()
+	out, err := yaml.Marshal(state)
+	if err != nil {
+		return fmt.Sprintf("Failed to marshal data, %s", err)
+	}
+	return string(out)
 }
