@@ -257,7 +257,7 @@ func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
 func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc")
 
-	type SecurityRuleV0 struct {
+	type RemoteConnection struct {
 		// tcp, udp, icmp
 		Protocol string `json:"protocol,omitempty"`
 		// port
@@ -266,8 +266,8 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 		RemoteIp string `json:"remote_ip,omitempty"`
 	}
 
-	type AppV0SecRule struct {
-		RequiredOutboundConnections []*SecurityRuleV0 `json:"required_outbound_connections,omitempty"`
+	type AppV0RemoteConn struct {
+		RequiredOutboundConnections []*RemoteConnection `json:"required_outbound_connections,omitempty"`
 	}
 
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
@@ -278,7 +278,7 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
 			return err2
 		}
-		var appV0 AppV0SecRule
+		var appV0 AppV0RemoteConn
 		err2 = json.Unmarshal(val, &appV0)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal app old remote connection", "val", string(val), "err", err2, "app old", appV0)
@@ -286,11 +286,17 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 		}
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
 		if len(appV0.RequiredOutboundConnections) > 0 {
-			for ii, conn := range appV0.RequiredOutboundConnections {
-				app.RequiredOutboundConnections[ii].PortRangeMin = conn.Port
-				app.RequiredOutboundConnections[ii].PortRangeMax = conn.Port
-				app.RequiredOutboundConnections[ii].RemoteCidr = conn.RemoteIp + "/32"
+			newReqdConns := []SecurityRule{}
+			for _, conn := range appV0.RequiredOutboundConnections {
+				secRule := SecurityRule{
+					Protocol:     conn.Protocol,
+					PortRangeMin: conn.Port,
+					PortRangeMax: conn.Port,
+					RemoteCidr:   conn.RemoteIp + "/32",
+				}
+				newReqdConns = append(newReqdConns, secRule)
 			}
+			app.RequiredOutboundConnections = newReqdConns
 			val, err2 = json.Marshal(app)
 			if err2 != nil {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
