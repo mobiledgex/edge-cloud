@@ -1369,7 +1369,10 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	}
 
 	rateLimiter := RateLimitMgr.GetApiEndPointLimiter(edgeproto.PersistentConnectionApiName)
-	log.SpanLog(ctx, log.DebugLevelDmereq, "BDA PersistentConnection pre-loop", "rateLimiter", rateLimiter, "rateLimiter.Type()", rateLimiter.Type())
+	if rateLimiter == nil {
+		// Should never happen, as we define this in ratelimit.go.
+		return errors.New("unable to get rate limiter for " + edgeproto.PersistentConnectionApiName)
+	}
 
 	// Loop while persistent connection is up
 loop:
