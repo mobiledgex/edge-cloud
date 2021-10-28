@@ -271,3 +271,6 @@ func GetClusterContainerNames(ctx context.Context, client ssh.Client, clusterNam
 	}
 	return nodes, nil
 }
+
+func (s *Platform) BecomeActive(ctx context.Context, activeInstance string) {
+}

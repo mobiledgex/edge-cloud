@@ -100,7 +100,7 @@ func TestAccessClientServer(t *testing.T) {
 	err = dc.UpdateKey(ctx, tc1.Cloudlet.Key)
 	require.Nil(t, err)
 	// init client
-	err = tc1.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc1.Cloudlet.Key, deploymentTag)
+	err = tc1.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc1.Cloudlet.Key, deploymentTag, false)
 	require.Nil(t, err)
 	// API calls should succeed
 	clientConn = startClient(t, ctx, tc1.KeyClient)
@@ -146,7 +146,7 @@ func TestAccessClientServer(t *testing.T) {
 	tc2.Cloudlet.CrmAccessKeyUpgradeRequired = true
 	dc.Cache.Update(ctx, &tc2.Cloudlet, 0)
 	// run init (upgrade)
-	err = tc2.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc2.Cloudlet.Key, deploymentTag)
+	err = tc2.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc2.Cloudlet.Key, deploymentTag, false)
 	require.Nil(t, err)
 	// check that backup file exists and contains old key
 	dat, err := ioutil.ReadFile(tc2.KeyClient.backupKeyFile())
@@ -177,12 +177,12 @@ func TestAccessClientServer(t *testing.T) {
 	vaultSecret = "secret"
 	// init client will fail because no access key, and controller cannot
 	// login to Vault with crm credentials.
-	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag)
+	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag, false)
 	require.NotNil(t, err)
 	// Set server vault creds to correct credentials, init should now succeed
 	vaultRole = vaultLoginRole
 	vaultSecret = vaultLoginSecret
-	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag)
+	err = tc3.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc3.Cloudlet.Key, deploymentTag, false)
 	require.Nil(t, err)
 	// access key should now exist
 	_, err = os.Stat(tc3.KeyClient.AccessKeyFile)
@@ -202,13 +202,13 @@ func TestAccessClientServer(t *testing.T) {
 	// save current private key
 	privKey = tc4.privateKeyPEM
 	// init client, should succeed to verify access key
-	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key, deploymentTag)
+	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key, deploymentTag, false)
 	require.Nil(t, err)
 	// mark key for upgrade
 	tc4.Cloudlet.CrmAccessKeyUpgradeRequired = true
 	dc.Cache.Update(ctx, &tc4.Cloudlet, 0)
 	// init client, should fail because upgrade required
-	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key, deploymentTag)
+	err = tc4.KeyClient.init(initCtx, NodeTypeDME, CertIssuerRegionalCloudlet, tc4.Cloudlet.Key, deploymentTag, false)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "upgrade required")
 	// non crm should not touch private key, make sure it's still the same
@@ -225,7 +225,7 @@ func TestAccessClientServer(t *testing.T) {
 	err = dc.UpdateKey(ctx, tc5.Cloudlet.Key)
 	require.Nil(t, err)
 	// init client
-	err = tc5.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc5.Cloudlet.Key, deploymentTag)
+	err = tc5.KeyClient.init(initCtx, NodeTypeCRM, CertIssuerRegionalCloudlet, tc5.Cloudlet.Key, deploymentTag, false)
 	require.Nil(t, err)
 	// GetAccessData should fail
 	clientConn = startClient(t, ctx, tc5.KeyClient)
@@ -359,6 +359,10 @@ func (s *DummyController) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
 }
 
+func (s *DummyController) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+	return s.KeyServer.UpgradeAccessKey(stream, s.commitSecondaryKey)
+}
+
 func (s *DummyController) GetAccessData(ctx context.Context, req *edgeproto.AccessDataRequest) (*edgeproto.AccessDataReply, error) {
 	return &edgeproto.AccessDataReply{}, nil
 }
@@ -378,6 +382,17 @@ func (s *DummyController) commitKey(ctx context.Context, key *edgeproto.Cloudlet
 	}
 	tc.Cloudlet.CrmAccessPublicKey = pubPEM
 	tc.Cloudlet.CrmAccessKeyUpgradeRequired = false
+	s.Cache.Update(ctx, &tc.Cloudlet, 0)
+	return nil
+}
+
+func (s *DummyController) commitSecondaryKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+	tc, ok := s.Cloudlets[*key]
+	if !ok {
+		return fmt.Errorf("test cloudlet key %v not found", key)
+	}
+	tc.Cloudlet.CrmSecondaryAccessPublicKey = pubPEM
+	tc.Cloudlet.CrmSecondaryAccessKeyUpgradeRequired = false
 	s.Cache.Update(ctx, &tc.Cloudlet, 0)
 	return nil
 }

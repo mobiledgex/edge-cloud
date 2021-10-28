@@ -71,6 +71,7 @@ func GetAvailablePort(ipaddr string) (string, error) {
 	// Get non-conflicting port only if actual port is 0
 	ipobj := strings.Split(ipaddr, ":")
 	if len(ipobj) != 2 {
+		log.WarnLog("INVALID ADDR", "ipaddr", ipaddr)
 		return "", fmt.Errorf("invalid address format")
 	}
 	if ipobj[1] != "0" {

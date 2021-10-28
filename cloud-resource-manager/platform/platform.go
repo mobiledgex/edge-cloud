@@ -53,6 +53,7 @@ type Caches struct {
 	VMPoolInfoCache           *edgeproto.VMPoolInfoCache
 	GPUDriverCache            *edgeproto.GPUDriverCache
 	NetworkCache              *edgeproto.NetworkCache
+	CloudletInfoCache         *edgeproto.CloudletInfoCache
 	// VMPool object managed by CRM
 	VMPool    *edgeproto.VMPool
 	VMPoolMux *sync.Mutex
@@ -60,17 +61,18 @@ type Caches struct {
 
 // Features that the platform supports or enables
 type Features struct {
-	SupportsMultiTenantCluster    bool
-	SupportsSharedVolume          bool
-	SupportsTrustPolicy           bool
-	SupportsKubernetesOnly        bool // does not support docker/VM
-	KubernetesRequiresWorkerNodes bool // k8s cluster cannot be master only
-	CloudletServicesLocal         bool // cloudlet services running locally to controller
-	IPAllocatedPerService         bool // Every k8s service gets a public IP (GCP/etc)
-	SupportsImageTypeOVF          bool // Supports OVF images for VM deployments
-	IsVMPool                      bool // cloudlet is just a pool of pre-existing VMs
-	IsFake                        bool // Just for unit-testing/e2e-testing
-	SupportsAdditionalNetworks    bool // Additional networks can be added
+	SupportsMultiTenantCluster       bool
+	SupportsSharedVolume             bool
+	SupportsTrustPolicy              bool
+	SupportsKubernetesOnly           bool // does not support docker/VM
+	KubernetesRequiresWorkerNodes    bool // k8s cluster cannot be master only
+	CloudletServicesLocal            bool // cloudlet services running locally to controller
+	IPAllocatedPerService            bool // Every k8s service gets a public IP (GCP/etc)
+	SupportsImageTypeOVF             bool // Supports OVF images for VM deployments
+	IsVMPool                         bool // cloudlet is just a pool of pre-existing VMs
+	IsFake                           bool // Just for unit-testing/e2e-testing
+	SupportsAdditionalNetworks       bool // Additional networks can be added
+	SupportsPlatformHighAvailability bool // Platform H/A
 }
 
 // Platform abstracts the underlying cloudlet platform.
@@ -152,6 +154,8 @@ type Platform interface {
 	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
 	// Get RootLB Flavor
 	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
+	// Called when the platform instance becomes active
+	BecomeActive(ctx context.Context, activeInstance string)
 }
 
 type ClusterSvc interface {

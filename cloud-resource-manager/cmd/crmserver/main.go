@@ -13,6 +13,8 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
+
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	proxycerts "github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy/certs"
@@ -53,6 +55,7 @@ var cacheDir = flag.String("cacheDir", "/tmp/", "Cache used by CRM to store freq
 // from a file. The rest of the data is extraced from Openstack.
 var myCloudletInfo edgeproto.CloudletInfo //XXX this effectively makes one CRM per cloudlet
 var nodeMgr node.NodeMgr
+var highAvailabilityManager redundancy.HighAvailabilityManager
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
@@ -71,6 +74,7 @@ const (
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
+	highAvailabilityManager.InitFlags()
 	flag.Parse()
 
 	if strings.Contains(*debugLevels, "mexos") {
@@ -85,7 +89,27 @@ func main() {
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
 	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
-	ctx, span, err := nodeMgr.Init(node.NodeTypeCRM, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
+
+	haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
+	initCtx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
+	err := highAvailabilityManager.Init(haKey)
+	highAvail := false
+	if err != nil {
+		if strings.Contains(err.Error(), redundancy.HighAvailabilityManagerDisabled) {
+			log.SpanLog(initCtx, log.DebugLevelInfo, "high availability disabled", "err", err)
+		} else {
+			log.FatalLog(err.Error())
+		}
+	} else {
+		highAvail = true
+	}
+
+	nodeType := node.NodeTypeCRM
+	if highAvailabilityManager.HARole == cloudcommon.HARoleSecondary {
+		nodeType = node.NodeTypeCRMSecondary
+	}
+
+	ctx, span, err := nodeMgr.Init(nodeType, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
 	if err != nil {
 		log.FatalLog(err.Error())
 	}
@@ -126,8 +150,21 @@ func main() {
 		case edgeproto.UpdateStep:
 			myCloudletInfo.Status.SetStep(value)
 		}
+
+	}
+	if highAvail {
+		log.InfoLog("XXX HA", "highAvail", highAvail, "role", highAvailabilityManager.HARole)
+		highAvailabilityManager.SetPlatform(platform)
+		if highAvailabilityManager.TryActive(ctx) {
+			log.InfoLog("XXX tryactive true", "highAvail", highAvail, "role", highAvailabilityManager.HARole)
+			myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
+			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		}
+		go highAvailabilityManager.CheckActiveLoop(ctx)
+	} else {
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 	}
+	log.InfoLog("XXX done ha", "highAvail", highAvail, "role", highAvailabilityManager.HARole, "active", redundancy.PlatformInstanceActive)
 
 	//ctl notify
 	addrs := strings.Split(*notifyAddrs, ",")
@@ -152,6 +189,7 @@ func main() {
 	)
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
+
 	notifyClient.Start()
 	defer notifyClient.Stop()
 
@@ -171,7 +209,15 @@ func main() {
 
 		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
-		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		if redundancy.PlatformInstanceActive {
+			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		} else {
+			log.InfoLog("XXXX I am not active")
+			myCloudletInfo.StandbyCrm = true
+			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+
+			//	controllerData.ControllerWait <- true
+		}
 
 		var cloudlet edgeproto.Cloudlet
 		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudletInfo.Key)
@@ -202,6 +248,7 @@ func main() {
 			VMPoolInfoCache:           &controllerData.VMPoolInfoCache,
 			GPUDriverCache:            &controllerData.GPUDriverCache,
 			NetworkCache:              &controllerData.NetworkCache,
+			CloudletInfoCache:         &controllerData.CloudletInfoCache,
 		}
 
 		features := platform.GetFeatures()
@@ -286,9 +333,8 @@ func main() {
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 			}
 		}
-
-		log.SpanLog(ctx, log.DebugLevelInfo, "sending cloudlet info cache update")
 		// trigger send of info upstream to controller
+		myCloudletInfo.StandbyCrm = !redundancy.PlatformInstanceActive
 		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
 		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion

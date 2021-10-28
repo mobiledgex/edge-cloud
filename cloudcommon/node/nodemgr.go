@@ -18,6 +18,7 @@ import (
 )
 
 var NodeTypeCRM = "crm"
+var NodeTypeCRMSecondary = "crmsecondary"
 var NodeTypeDME = "dme"
 var NodeTypeController = "controller"
 var NodeTypeClusterSvc = "cluster-svc"
@@ -102,7 +103,8 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.CloudletPoolLookup = opts.cloudletPoolLookup
 	s.CloudletLookup = opts.cloudletLookup
 
-	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
+	secondary := nodeType == NodeTypeCRMSecondary
+	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag, secondary); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
 		return initCtx, nil, err
 	}

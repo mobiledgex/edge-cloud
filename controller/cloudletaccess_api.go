@@ -53,6 +53,12 @@ func (s *CloudletApi) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_Upg
 	return s.accessKeyServer.UpgradeAccessKey(stream, s.commitAccessPublicKey)
 }
 
+func (s *CloudletApi) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+	ctx := stream.Context()
+	log.SpanLog(ctx, log.DebugLevelApi, "upgrade secondary key")
+	return s.accessKeyServer.UpgradeAccessKey(stream, s.commitSecondaryAccessPublicKey)
+}
+
 func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
 	return s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := edgeproto.Cloudlet{}
@@ -63,6 +69,21 @@ func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.
 		log.SpanLog(ctx, log.DebugLevelApi, "commit upgraded key")
 		cloudlet.CrmAccessPublicKey = pubPEM
 		cloudlet.CrmAccessKeyUpgradeRequired = false
+		s.store.STMPut(stm, &cloudlet)
+		return nil
+	})
+}
+
+func (s *CloudletApi) commitSecondaryAccessPublicKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+	return s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cloudlet := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, key, &cloudlet) {
+			// deleted
+			return nil
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "commit upgraded secondarymkey")
+		cloudlet.CrmSecondaryAccessPublicKey = pubPEM
+		cloudlet.CrmSecondaryAccessKeyUpgradeRequired = false
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})

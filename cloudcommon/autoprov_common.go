@@ -18,6 +18,7 @@ const (
 	AutoProvPolicyName     = "auto-prov-policy-name"
 	AccessKeyData          = "access-key-data"
 	AccessKeySig           = "access-key-sig"
+	AccessKeySecondarySig  = "access-key-secondary-sig"
 	VaultKeySig            = "vault-key-sig"
 )
 

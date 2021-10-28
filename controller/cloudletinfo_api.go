@@ -52,7 +52,12 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	var err error
+	log.SpanLog(ctx, log.DebugLevelNotify, "Cloudlet Info Update", "in", in)
 	// for now assume all fields have been specified
+	if in.StandbyCrm {
+		log.SpanLog(ctx, log.DebugLevelNotify, "skipping due to info from standby CRM")
+		return
+	}
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
@@ -102,8 +107,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			newState = edgeproto.TrackedState_CREATE_ERROR
 		}
 	default:
-		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
-		return
+		51871		return
 	}
 
 	// update only diff of status msgs
@@ -326,6 +330,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 				cloudletReady = (cloudlet.State == edgeproto.TrackedState_READY)
 			}
 			info.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
+			log.WarnLog("GO OFFLINE", "info.NotifyId", info.NotifyId, "notifyid", notifyId)
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
 			s.store.STMPut(stm, &info)
 			return nil

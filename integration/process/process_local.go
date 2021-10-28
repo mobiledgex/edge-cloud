@@ -508,6 +508,11 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cacheDir")
 		args = append(args, p.CacheDir)
 	}
+	if p.HARole != "" {
+		args = append(args, "--HARole")
+		args = append(args, p.HARole)
+
+	}
 
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

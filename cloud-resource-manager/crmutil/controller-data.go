@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
+
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -334,6 +336,9 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring cluster change because not active")
+	}
 	// store clusterInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
 		cd.ClusterInstInfoCache.RefreshObj(ctx, new)
@@ -571,7 +576,9 @@ func (cd *ControllerData) addTrustPolicyExceptionRules(ctx context.Context, appI
 
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
 	var err error
-
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring appInst change because not active")
+	}
 	if old != nil && old.State == new.State {
 		return
 	}
@@ -948,6 +955,8 @@ func (cd *ControllerData) appInstInfoCheckState(ctx context.Context, key *edgepr
 }
 
 func (cd *ControllerData) notifyControllerConnect() {
+	log.InfoLog("XXX notifyControllerConnect")
+
 	// Notify controller connect only if:
 	// * started manually and not by controller
 	// * if started by controller, then notify on INITOK
@@ -960,6 +969,9 @@ func (cd *ControllerData) notifyControllerConnect() {
 
 func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *edgeproto.TrustPolicyException, new *edgeproto.TrustPolicyException) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionChanged()", "trustPolicyException", new)
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy change because not active")
+	}
 	if old != nil && old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 		new.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, new.Key)
@@ -969,7 +981,9 @@ func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *
 func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *edgeproto.TrustPolicyException) {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionDeleted()", "TrustPolicyException:", old)
-
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy deleted because not active")
+	}
 	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
 		log.SpanLog(ctx, log.DebugLevelInfra, "calling deleteTrustPolicyExceptionKeyWorkers")
 		cd.deleteTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, old.Key)
@@ -979,7 +993,12 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
-	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
+	log.SpanLog(ctx, log.DebugLevelInfra, "XXX cloudletChanged", "old", old, "new", new)
+
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "doing notify controller connect cloudlet changed because not active")
+		cd.notifyControllerConnect()
+	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
@@ -1108,6 +1127,9 @@ func (cd *ControllerData) UpdateVMPoolInfo(ctx context.Context, state edgeproto.
 
 func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPool, new *edgeproto.VMPool) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "newvmpool", new, "oldvmpool", old)
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring VM Pool changed because not active")
+	}
 	if old == nil || old.State == new.State {
 		return
 	}
@@ -1510,6 +1532,10 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 				count++
 				log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread refreshing", "cloudlet", cloudletInfo.Key, "count",
 					count, "ThreadIdleTime", cd.settings.ResourceSnapshotThreadInterval)
+				if !redundancy.PlatformInstanceActive {
+					log.SpanLog(ctx, log.DebugLevelInfra, "Skipping resource thread vmResourceAction because not active")
+					continue
+				}
 				cd.vmResourceActionBegin()
 				cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
 				span.Finish()

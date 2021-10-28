@@ -15,3 +15,6 @@ type Platform struct {
 func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
 	return s.Xind.Init(ctx, platformConfig, caches, s, updateCallback)
 }
+
+func (s *Platform) BecomeActive(ctx context.Context, activeInstance string) {
+}

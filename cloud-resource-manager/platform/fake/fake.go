@@ -25,6 +25,7 @@ import (
 type Platform struct {
 	consoleServer *httptest.Server
 	caches        *platform.Caches
+	cloudletKey   *edgeproto.CloudletKey
 }
 
 var (
@@ -124,6 +125,7 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
 	s.caches = caches
+	s.cloudletKey = platformConfig.CloudletKey
 	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
@@ -145,12 +147,13 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 
 func (s *Platform) GetFeatures() *platform.Features {
 	return &platform.Features{
-		SupportsMultiTenantCluster: true,
-		SupportsSharedVolume:       true,
-		SupportsTrustPolicy:        true,
-		CloudletServicesLocal:      true,
-		IsFake:                     true,
-		SupportsAdditionalNetworks: true,
+		SupportsMultiTenantCluster:       true,
+		SupportsSharedVolume:             true,
+		SupportsTrustPolicy:              true,
+		CloudletServicesLocal:            true,
+		IsFake:                           true,
+		SupportsAdditionalNetworks:       true,
+		SupportsPlatformHighAvailability: true,
 	}
 }
 
@@ -535,10 +538,25 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	}
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
-		return true, err
+	if cloudlet.PlatformHighAvailability {
+		log.SpanLog(ctx, log.DebugLevelInfra, "creating 2 instances for H/A", "key", cloudlet.Key)
+		for i, id := range []string{cloudcommon.HARolePrimary, cloudcommon.HARoleSecondary} {
+			err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, id)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "id", id, "err", err)
+				return true, err
+			}
+			if i == 0 {
+				// give the first some time so we have consistent ordering for tests
+				time.Sleep(time.Second * 30)
+			}
+		}
+	} else {
+		err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, "")
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
+			return true, err
+		}
 	}
 	return true, nil
 }
@@ -673,4 +691,20 @@ func (s *Platform) GetVersionProperties() map[string]string {
 
 func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
 	return &RootLBFlavor, nil
+}
+
+func (s *Platform) BecomeActive(ctx context.Context, activeInstance string) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "BecomeActive")
+	var cloudletInfo edgeproto.CloudletInfo
+	if s.caches == nil || s.caches.CloudletCache == nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "cannot update cloudlet info due to nil cache")
+		return
+	}
+	if !s.caches.CloudletInfoCache.Get(s.cloudletKey, &cloudletInfo) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update cloudlet redundancy instance, missing cloudletinfo", "cloudletKey", s.cloudletKey)
+	} else {
+		cloudletInfo.ActiveCrmInstance = activeInstance
+		cloudletInfo.StandbyCrm = false
+		s.caches.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
 }

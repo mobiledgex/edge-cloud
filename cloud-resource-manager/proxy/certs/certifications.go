@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -124,6 +125,10 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName 
 func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
 	var err error
 	tls := access.TLSCert{}
+	if !redundancy.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "skipping lb certs update for standby CRM")
+		return
+	}
 	if commercialCerts {
 		err = getCertFromVault(ctx, &tls, commonName)
 	} else {
