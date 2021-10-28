@@ -55,7 +55,7 @@ flowratelimitsettings:
     reqspersecond: 25000
     burstsize: 250
 - key:
-    flowsettingsname: persistentconnectionallreqs1:
+    flowsettingsname: persistentconnectionallreqs1
     ratelimitkey:
       apiname: PersistentConnection
       apiendpointtype: Dme
