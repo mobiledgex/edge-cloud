@@ -252,3 +252,53 @@ func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
 	})
 	return err
 }
+
+// TrustPolicyException upgrade func
+func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc")
+
+	type SecurityRuleV0 struct {
+		// tcp, udp, icmp
+		Protocol string `json:"protocol,omitempty"`
+		// port
+		Port uint32 `json:"port,omitempty"`
+		// remote IP
+		RemoteIp string `json:"remote_ip,omitempty"`
+	}
+
+	type AppV0SecRule struct {
+		RequiredOutboundConnections []*SecurityRuleV0 `json:"required_outbound_connections,omitempty"`
+	}
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var app App
+		err2 := json.Unmarshal(val, &app)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
+			return err2
+		}
+		var appV0 AppV0SecRule
+		err2 = json.Unmarshal(val, &appV0)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal app old remote connection", "val", string(val), "err", err2, "app old", appV0)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
+		if len(appV0.RequiredOutboundConnections) > 0 {
+			for ii, conn := range appV0.RequiredOutboundConnections {
+				app.RequiredOutboundConnections[ii].PortRangeMin = conn.Port
+				app.RequiredOutboundConnections[ii].PortRangeMax = conn.Port
+				app.RequiredOutboundConnections[ii].RemoteCidr = conn.RemoteIp + "/32"
+			}
+			val, err2 = json.Marshal(app)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+				return err2
+			}
+			objStore.Put(ctx, string(key), string(val))
+		}
+		return nil
+	})
+	return err
+}
