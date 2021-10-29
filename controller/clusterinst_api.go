@@ -866,7 +866,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
 			in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 		}
-		log.SpanLog(ctx, log.DebugLevelInfo, "createClusterInst1")
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")

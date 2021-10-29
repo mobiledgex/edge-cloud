@@ -865,7 +865,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	_, singleKubernetesClusterOwnerSet := fmap[edgeproto.CloudletFieldSingleKubernetesClusterOwner]
 	if singleKubernetesClusterOwnerSet {
-		// TODO: to support this, we need refs tracking on the cluster
+		// TODO: to support this, we need to use the ClusterRefs
 		// to make sure no AppInsts exist, and then we need to delete
 		// the current default single cluster and create a new one with
 		// the new org.
