@@ -46,13 +46,6 @@ func (r *RateLimitManager) CreateApiEndpointLimiter(api string, allRequestsRateL
 	r.limitsPerApi[api] = newApiEndpointLimiter(api, apiEndpointRateLimitSettings, r.maxTrackedIps, r.maxTrackedUsers)
 }
 
-// Look up and return the limiter based on the API-keyed map.
-func (r *RateLimitManager) GetApiEndPointLimiter(api string) *apiEndpointLimiter {
-	r.Lock()
-	defer r.Unlock()
-	return r.limitsPerApi[api]
-}
-
 // Update the flow rate limit settings for API that use the rate limit settings associated with the specified RateLimitSettingsKey
 func (r *RateLimitManager) UpdateFlowRateLimitSettings(flowRateLimitSettings *edgeproto.FlowRateLimitSettings) {
 	r.Lock()
