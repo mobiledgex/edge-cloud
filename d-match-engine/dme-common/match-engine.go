@@ -1364,14 +1364,8 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 		return errors.New("unable to get peer IP info")
 	}
 	callerInfo := &ratelimit.CallerInfo{
-		Api: "PersistentConnection",
+		Api: edgeproto.PersistentConnectionApiName,
 		Ip:  p.Addr.String(),
-	}
-
-	rateLimiter := RateLimitMgr.GetApiEndPointLimiter(edgeproto.PersistentConnectionApiName)
-	if rateLimiter == nil {
-		// Should never happen, as we define this in ratelimit.go.
-		return errors.New("unable to get rate limiter for " + edgeproto.PersistentConnectionApiName)
 	}
 
 	// Loop while persistent connection is up
@@ -1381,7 +1375,7 @@ loop:
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
 		// Rate limit
-		err = rateLimiter.Limit(ctx, callerInfo)
+		err = RateLimitMgr.Limit(ctx, callerInfo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Limiting client messages", "err", err)
 			sendErrorEventToClient(ctx, fmt.Sprintf("Limiting client messages. Most recent ClientEdgeEvent will not be processed: %v. Error is: %s", cupdate, err), *appInstKey, *sessionCookieKey)
