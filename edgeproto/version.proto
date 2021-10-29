@@ -38,6 +38,7 @@ enum VersionHash {
   HASH_b7c6a74ce2f30b3bda179e00617459cf = 30 [(protogen.upgrade_func) = "AppInstRefsDR"];
   HASH_911d86a4eb2bbfbff1173ffbdd197a8c = 31;
   HASH_99349a696d0b5872542f81b4b0b4788e = 32;
+  HASH_264850a5c1f7a054b4de1a87e5d28dcc = 33 [(protogen.upgrade_func) = "TrustPolicyExceptionUpgradeFunc"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "2";
+  option (protogen.version_hash_salt) = "1";
 }
