@@ -2486,6 +2486,7 @@ var CloudletOptionalArgs = []string{
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
+	"singlekubernetesclusterowner",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
@@ -2515,7 +2516,7 @@ var CloudletComments = map[string]string{
 	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
+	"platformtype":                        "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
 	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
 	"flavor.name":                         "Flavor name",
 	"physicalname":                        "Physical infrastructure cloudlet name",
@@ -2573,6 +2574,7 @@ var CloudletComments = map[string]string{
 	"gpuconfig.properties":                "Properties to identify specifics of GPU, specify gpuconfig.properties:empty=true to clear",
 	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
 	"allianceorgs":                        "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet, specify allianceorgs:empty=true to clear",
+	"singlekubernetesclusterowner":        "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",
@@ -2647,7 +2649,7 @@ var CloudletPropsOptionalArgs = []string{
 }
 var CloudletPropsAliasArgs = []string{}
 var CloudletPropsComments = map[string]string{
-	"platformtype":                   "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
+	"platformtype":                   "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
 	"properties:#.value.name":        "Name of the property",
 	"properties:#.value.description": "Description of the property",
 	"properties:#.value.value":       "Default value of the property",
@@ -2671,7 +2673,7 @@ var CloudletResourceQuotaPropsOptionalArgs = []string{
 }
 var CloudletResourceQuotaPropsAliasArgs = []string{}
 var CloudletResourceQuotaPropsComments = map[string]string{
-	"platformtype":                "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
+	"platformtype":                "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
 	"properties:#.name":           "Resource name",
 	"properties:#.value":          "Resource value",
 	"properties:#.inframaxvalue":  "Resource infra max value",
@@ -2995,6 +2997,7 @@ var CreateCloudletOptionalArgs = []string{
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
+	"singlekubernetesclusterowner",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -3043,6 +3046,7 @@ var DeleteCloudletOptionalArgs = []string{
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
+	"singlekubernetesclusterowner",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -3080,6 +3084,7 @@ var UpdateCloudletOptionalArgs = []string{
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
+	"singlekubernetesclusterowner",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
@@ -3128,6 +3133,7 @@ var ShowCloudletOptionalArgs = []string{
 	"gpuconfig.properties",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
+	"singlekubernetesclusterowner",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",

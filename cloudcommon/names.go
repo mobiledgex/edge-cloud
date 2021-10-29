@@ -23,6 +23,7 @@ var OrganizationEdgeBox = "EdgeBox"
 
 const DefaultCluster string = "DefaultCluster"
 const DefaultMultiTenantCluster string = "defaultmtclust"
+const DefaultClust string = "defaultclust"
 
 // platform apps
 var SamsungEnablingLayer = "SamsungEnablingLayer"
