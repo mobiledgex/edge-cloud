@@ -94,7 +94,9 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -125,7 +127,9 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -218,7 +222,9 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudletrefs", refs)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -247,7 +253,9 @@ func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "AppInstRefs", refs)
 			return err2
 		}
-		objStore.Put(ctx, string(key), string(val))
+		if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+			return perr
+		}
 		return nil
 	})
 	return err
@@ -302,7 +310,9 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
