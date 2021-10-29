@@ -94,7 +94,9 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -125,7 +127,9 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -218,7 +222,9 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudletrefs", refs)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -247,7 +253,67 @@ func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "AppInstRefs", refs)
 			return err2
 		}
-		objStore.Put(ctx, string(key), string(val))
+		if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+			return perr
+		}
+		return nil
+	})
+	return err
+}
+
+// TrustPolicyException upgrade func
+func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc")
+
+	type RemoteConnection struct {
+		// tcp, udp, icmp
+		Protocol string `json:"protocol,omitempty"`
+		// port
+		Port uint32 `json:"port,omitempty"`
+		// remote IP
+		RemoteIp string `json:"remote_ip,omitempty"`
+	}
+
+	type AppV0RemoteConn struct {
+		RequiredOutboundConnections []*RemoteConnection `json:"required_outbound_connections,omitempty"`
+	}
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var app App
+		err2 := json.Unmarshal(val, &app)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
+			return err2
+		}
+		var appV0 AppV0RemoteConn
+		err2 = json.Unmarshal(val, &appV0)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal app old remote connection", "val", string(val), "err", err2, "app old", appV0)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
+		if len(appV0.RequiredOutboundConnections) > 0 {
+			newReqdConns := []SecurityRule{}
+			for _, conn := range appV0.RequiredOutboundConnections {
+				secRule := SecurityRule{
+					Protocol:     conn.Protocol,
+					PortRangeMin: conn.Port,
+					PortRangeMax: conn.Port,
+					RemoteCidr:   conn.RemoteIp + "/32",
+				}
+				newReqdConns = append(newReqdConns, secRule)
+			}
+			app.RequiredOutboundConnections = newReqdConns
+			val, err2 = json.Marshal(app)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+				return err2
+			}
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
+		}
 		return nil
 	})
 	return err
