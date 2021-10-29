@@ -159,6 +159,38 @@ storageClass:
   defaultClass: true
 `
 
+var errCheckString = "is upgrading"
+
+// A retry mechanism for appInst creation, to be invoked as a goroutine, when cloudlet is upgrading.
+func createClusterServices(pFunc func(context.Context, grpc.DialOption, *edgeproto.ClusterInst, *edgeproto.App) error, ctx context.Context, newClusterInstKey edgeproto.ClusterInstKey, app *edgeproto.App) {
+
+	var VerifyRetry = 60
+	var VerifyDelay time.Duration = time.Second * 15
+
+	for ii := 0; ii < VerifyRetry; ii++ {
+		time.Sleep(VerifyDelay)
+		log.SpanLog(ctx, log.DebugLevelInfo, "Prometheus-operator", "try#", ii)
+
+		cluster := edgeproto.ClusterInst{}
+		found := ClusterInstCache.Get(&newClusterInstKey, &cluster)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Unable to find cluster", "cluster", newClusterInstKey)
+			return
+		}
+		err := pFunc(ctx, dialOpts, &cluster, app)
+		if err == nil {
+			return
+		}
+		if strings.Contains(err.Error(), errCheckString) {
+			continue
+		}
+		// Do not retry if some other error
+		log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
+			newClusterInstKey, "error", err.Error())
+		return
+	}
+}
+
 // Process updates from notify framework about cluster instances
 // Create app/appInst when clusterInst transitions to a 'ready' state
 func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgeproto.ClusterInst) {
@@ -169,16 +201,25 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 	}
 	log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", new.Key.ClusterKey.Name,
 		"cloudlet", new.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(new.State)])
+
 	// Need to create a connection to server, as passed to us by commands
 	if new.State == edgeproto.TrackedState_READY {
 		// Create Prometheus on the cluster after creation
 		if err = createMEXPromInst(ctx, dialOpts, new, nil); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
+			if strings.Contains(err.Error(), errCheckString) {
+				// Spawn a goroutine so we don't stall notify framework
+				go createClusterServices(createMEXPromInst, ctx, new.Key, nil)
+			}
 		}
-		if err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, new); err != nil {
+		if err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, new, nil); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "NFS Auto provision inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
+			if strings.Contains(err.Error(), errCheckString) {
+				// Spawn a goroutine so we don't stall notify framework
+				go createClusterServices(createNFSAutoProvAppInstIfRequired, ctx, new.Key, nil)
+			}
 		}
 	}
 }
@@ -539,7 +580,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		clearAlertAppInst(ctx, &platformAppInst)
 	} else {
 		// Generate an alert
-		createAlertAppInst(ctx, &platformAppInst)
+		createAlertAppInst(ctx, &platformAppInst, err.Error())
 	}
 	return err
 
@@ -549,7 +590,7 @@ func createMEXPromInst(ctx context.Context, dialOpts grpc.DialOption, inst *edge
 	return createAppInstCommon(ctx, dialOpts, inst, app, &MEXPrometheusApp)
 }
 
-func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
+func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst, errStr string) {
 	alert := edgeproto.Alert{}
 	alert.State = "firing"
 	alert.ActiveAt = dme.Timestamp{}
@@ -562,7 +603,7 @@ func createAlertAppInst(ctx context.Context, in *edgeproto.AppInst) {
 	alert.Annotations = make(map[string]string)
 	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertClusterSvcAppInstFailure
 	alert.Annotations[cloudcommon.AlertAnnotationDescription] = cloudcommon.AlertClusterSvcAppInstFailureDescription
-
+	alert.Annotations[cloudcommon.AlertAnnotationErrorString] = errStr
 	alertCache.Update(ctx, &alert, 0)
 }
 
@@ -583,7 +624,7 @@ func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 	return labels
 }
 
-func createNFSAutoProvAppInstIfRequired(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
+func createNFSAutoProvAppInstIfRequired(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst, app *edgeproto.App) error {
 	if inst.SharedVolumeSize != 0 {
 		return createAppInstCommon(ctx, dialOpts, inst, nil, &NFSAutoProvisionApp)
 	}
