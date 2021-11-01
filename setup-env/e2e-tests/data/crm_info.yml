@@ -722,3 +722,58 @@ appinstrefs:
     : 1
     ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"reservable1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"MobiledgeX"}}'
     : 1
+clusterrefs:
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: reservable0
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: reservable0
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: reservable1

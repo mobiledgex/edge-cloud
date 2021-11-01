@@ -272,6 +272,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.AppInstRefs); i0++ {
 	}
+	for i0 := 0; i0 < len(in.ClusterRefs); i0++ {
+		for i1 := 0; i1 < len(in.ClusterRefs[i0].Apps); i1++ {
+		}
+	}
 	for i0 := 0; i0 < len(in.VmPools); i0++ {
 		for i1 := 0; i1 < len(in.VmPools[i0].Vms); i1++ {
 			if _, found := tags["timestamp"]; found {
@@ -465,6 +469,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.gpuconfig.properties",
 	"cloudlets:#.enabledefaultserverlesscluster",
 	"cloudlets:#.allianceorgs",
+	"cloudlets:#.singlekubernetesclusterowner",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -726,6 +731,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.updatedat.nanos",
 	"appinstances:#.realclustername",
 	"appinstances:#.internalporttolbip",
+	"appinstances:#.dedicatedip",
 	"appinstrefs:#.key.organization",
 	"appinstrefs:#.key.name",
 	"appinstrefs:#.key.version",
@@ -733,6 +739,14 @@ var AllDataOptionalArgs = []string{
 	"appinstrefs:#.insts:#.value",
 	"appinstrefs:#.deleterequestedinsts:#.key",
 	"appinstrefs:#.deleterequestedinsts:#.value",
+	"clusterrefs:#.key.clusterkey.name",
+	"clusterrefs:#.key.cloudletkey.organization",
+	"clusterrefs:#.key.cloudletkey.name",
+	"clusterrefs:#.key.organization",
+	"clusterrefs:#.apps:#.appkey.organization",
+	"clusterrefs:#.apps:#.appkey.name",
+	"clusterrefs:#.apps:#.appkey.version",
+	"clusterrefs:#.apps:#.vclustername",
 	"vmpools:#.fields",
 	"vmpools:#.key.organization",
 	"vmpools:#.key.name",
@@ -905,7 +919,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                                             "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudlets:#.crmoverride":                                                       "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                                   "Deploy cloudlet services locally",
-	"cloudlets:#.platformtype":                                                      "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra",
+	"cloudlets:#.platformtype":                                                      "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
 	"cloudlets:#.notifysrvaddr":                                                     "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                                       "Flavor name",
 	"cloudlets:#.physicalname":                                                      "Physical infrastructure cloudlet name",
@@ -961,6 +975,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.gpuconfig.properties":                                              "Properties to identify specifics of GPU",
 	"cloudlets:#.enabledefaultserverlesscluster":                                    "Enable experimental default multitenant (serverless) cluster",
 	"cloudlets:#.allianceorgs":                                                      "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet",
+	"cloudlets:#.singlekubernetesclusterowner":                                      "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
@@ -1172,9 +1187,18 @@ var AllDataComments = map[string]string{
 	"appinstances:#.optres":                                                         "Optional Resources required by OS flavor if any",
 	"appinstances:#.realclustername":                                                "Real ClusterInst name",
 	"appinstances:#.internalporttolbip":                                             "mapping of ports to load balancer IPs",
+	"appinstances:#.dedicatedip":                                                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
 	"appinstrefs:#.key.organization":                                                "App developer organization",
 	"appinstrefs:#.key.name":                                                        "App name",
 	"appinstrefs:#.key.version":                                                     "App version",
+	"clusterrefs:#.key.clusterkey.name":                                             "Cluster name",
+	"clusterrefs:#.key.cloudletkey.organization":                                    "Organization of the cloudlet site",
+	"clusterrefs:#.key.cloudletkey.name":                                            "Name of the cloudlet",
+	"clusterrefs:#.key.organization":                                                "Name of Developer organization that this cluster belongs to",
+	"clusterrefs:#.apps:#.appkey.organization":                                      "App developer organization",
+	"clusterrefs:#.apps:#.appkey.name":                                              "App name",
+	"clusterrefs:#.apps:#.appkey.version":                                           "App version",
+	"clusterrefs:#.apps:#.vclustername":                                             "Virtual cluster name",
 	"vmpools:#.fields":                                                              "Fields are used for the Update API to specify which fields to apply",
 	"vmpools:#.key.organization":                                                    "Organization of the vmpool",
 	"vmpools:#.key.name":                                                            "Name of the vmpool",

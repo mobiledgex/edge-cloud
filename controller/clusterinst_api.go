@@ -261,6 +261,9 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 			return fmt.Errorf("Invalid cluster name, format \"%s[digits]\" is reserved for internal use", cloudcommon.ReservableClusterPrefix)
 		}
 	}
+	if in.Key.ClusterKey.Name == cloudcommon.DefaultClust {
+		return fmt.Errorf("Invalid cluster name, %s is reserved for internal use", cloudcommon.DefaultClust)
+	}
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
@@ -881,6 +884,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if features.SupportsKubernetesOnly && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 			return fmt.Errorf("Platform %s only supports kubernetes-based deployments", cloudlet.PlatformType.String())
 		}
+		if features.IsSingleKubernetesCluster {
+			return fmt.Errorf("Single kubernetes cluster platform %s only supports AppInst creates", cloudlet.PlatformType.String())
+		}
 		if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
 			err = validateNumNodesForKubernetes(ctx, cloudlet.PlatformType, features, in.NumNodes)
 			if err != nil {
@@ -1354,6 +1360,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			clusterRefsApi.deleteRef(stm, &in.Key)
 			// delete associated streamobj as well
 			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
 			streamObjApi.store.STMDel(stm, &streamKey)
@@ -1515,6 +1522,7 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		clusterRefsApi.deleteRef(stm, &in.Key)
 
 		// delete associated streamobj as well
 		streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
@@ -1538,6 +1546,7 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 		}
 		if newState == edgeproto.TrackedState_NOT_PRESENT {
 			s.store.STMDel(stm, &in.Key)
+			clusterRefsApi.deleteRef(stm, &in.Key)
 		} else {
 			inst.State = newState
 			inst.Errors = nil
@@ -1774,4 +1783,38 @@ func getDefaultMTClustKey(cloudletKey edgeproto.CloudletKey) *edgeproto.ClusterI
 		},
 		Organization: cloudcommon.OrganizationMobiledgeX,
 	}
+}
+
+func getDefaultClustKey(cloudletKey edgeproto.CloudletKey, ownerOrg string) *edgeproto.ClusterInstKey {
+	if ownerOrg == "" {
+		ownerOrg = cloudcommon.OrganizationMobiledgeX
+	}
+	return &edgeproto.ClusterInstKey{
+		CloudletKey: cloudletKey,
+		ClusterKey: edgeproto.ClusterKey{
+			Name: cloudcommon.DefaultClust,
+		},
+		Organization: ownerOrg,
+	}
+}
+
+// The cloudlet singular cluster is a software-only cluster that represents
+// the singular infra k8s cluster that already exists and is the entire cloudlet.
+func createCloudletSingularCluster(stm concurrency.STM, key *edgeproto.CloudletKey, ownerOrg string) {
+	clusterInst := edgeproto.ClusterInst{}
+	multiTenant := false
+	if ownerOrg == "" {
+		multiTenant = true
+	}
+	clusterInst.Key = *getDefaultClustKey(*key, ownerOrg)
+	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
+	clusterInst.MultiTenant = multiTenant
+	clusterInst.State = edgeproto.TrackedState_READY
+	clusterInstApi.store.STMPut(stm, &clusterInst)
+}
+
+func deleteCloudletSingularCluster(stm concurrency.STM, key *edgeproto.CloudletKey, ownerOrg string) {
+	clusterInstKey := getDefaultClustKey(*key, ownerOrg)
+	clusterInstApi.store.STMDel(stm, clusterInstKey)
+	clusterRefsApi.deleteRef(stm, clusterInstKey)
 }

@@ -445,3 +445,40 @@ appinstrefs:
     : 1
     ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"someapplication1"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-2"},"organization":"AcmeAppCo"}}'
     : 1
+clusterrefs:
+- key:
+    clusterkey:
+      name: someapplication1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: someapplication1
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: someapplication1
+- key:
+    clusterkey:
+      name: someapplication1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: someapplication1
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: someapplication1

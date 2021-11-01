@@ -10,6 +10,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -322,6 +323,7 @@ func TestAppInstApi(t *testing.T) {
 
 	testAppFlavorRequest(t, ctx, commonApi, responder)
 	testDeprecatedSharedRootLBFQDN(t, ctx)
+	testSingleKubernetesCloudlet(t, ctx)
 
 	// cleanup unused reservable auto clusters
 	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
@@ -805,4 +807,192 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 	responder.SetSimulateAppDeleteFailure(false)
 	responder.SetSimulateClusterDeleteFailure(false)
 
+}
+
+func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
+	var err error
+	var found bool
+	// Single kubernetes cloudlets can be either multi-tenant,
+	// or dedicated to a particular organization (which removes all
+	// of the multi-tenant deployment restrictions on namespaces, etc).
+	cloudletMT := edgeproto.Cloudlet{
+		Key: edgeproto.CloudletKey{
+			Organization: "unittest",
+			Name:         "singlek8sMT",
+		},
+		IpSupport:     edgeproto.IpSupport_IP_SUPPORT_DYNAMIC,
+		NumDynamicIps: 10,
+		Location: dme.Loc{
+			Latitude:  37.1231,
+			Longitude: 94.123,
+		},
+		PlatformType: edgeproto.PlatformType_PLATFORM_TYPE_FAKE_SINGLE_CLUSTER,
+		CrmOverride:  edgeproto.CRMOverride_IGNORE_CRM,
+	}
+	cloudletMTInfo := edgeproto.CloudletInfo{
+		Key:                  cloudletMT.Key,
+		State:                dme.CloudletState_CLOUDLET_STATE_READY,
+		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
+	}
+	mtOrg := cloudcommon.OrganizationMobiledgeX
+	stOrg := testutil.AppInstData[0].Key.AppKey.Organization
+
+	cloudletST := cloudletMT
+	cloudletST.Key.Name = "singlek8sST"
+	cloudletST.SingleKubernetesClusterOwner = stOrg
+	cloudletSTInfo := cloudletMTInfo
+	cloudletSTInfo.Key = cloudletST.Key
+
+	setupTests := []struct {
+		desc         string
+		cloudlet     *edgeproto.Cloudlet
+		cloudletInfo *edgeproto.CloudletInfo
+		ownerOrg     string
+		mt           bool
+	}{
+		{"mt setup", &cloudletMT, &cloudletMTInfo, "", true},
+		{"st setup", &cloudletST, &cloudletSTInfo, stOrg, false},
+	}
+	for _, test := range setupTests {
+		clusterInstKey := getDefaultClustKey(test.cloudlet.Key, test.ownerOrg)
+		// create cloudlet
+		err = cloudletApi.CreateCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		require.Nil(t, err, test.desc)
+		cloudletInfoApi.Update(ctx, test.cloudletInfo, 0)
+		// creating cloudlet also creates singleton cluster for cloudlet
+		clusterInst := edgeproto.ClusterInst{}
+		found = clusterInstApi.Get(clusterInstKey, &clusterInst)
+		require.True(t, found, test.desc)
+		require.Equal(t, clusterInst.MultiTenant, test.mt)
+
+		// trying to create clusterinst against cloudlets should fail
+		tryClusterInst := edgeproto.ClusterInst{
+			Key: edgeproto.ClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: "someclust",
+				},
+				Organization: "foo",
+			},
+			Flavor:     testutil.FlavorData[0].Key,
+			NumMasters: 1,
+			NumNodes:   2,
+		}
+		tryClusterInst.Key.CloudletKey = test.cloudlet.Key
+		err = clusterInstApi.CreateClusterInst(&tryClusterInst, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, test.desc)
+		require.Contains(t, err.Error(), "only supports AppInst creates", test.desc)
+	}
+
+	// AppInst negative and positive tests
+	// TODO: resource allocation failure...
+	PASS := "PASS"
+	appInstCreateTests := []struct {
+		desc            string
+		aiIdx           int
+		cloudlet        *edgeproto.Cloudlet
+		clusterName     string
+		clusterOrg      string
+		realClusterName string
+		errStr          string
+	}{{
+		"MT non-serverless app",
+		3, &cloudletMT, "clust", mtOrg, "",
+		"Target cloudlet platform only supports serverless Apps",
+	}, {
+		"MT bad cluster org",
+		0, &cloudletMT, "clust", "foo", "",
+		"ClusterInst organization must be set to MobiledgeX",
+	}, {
+		"MT bad real cluster name",
+		0, &cloudletMT, "autocluster", mtOrg, "foo",
+		"Invalid RealClusterName for single kubernetes cluster cloudlet, should be left blank",
+	}, {
+		"ST bad cluster org", 0,
+		&cloudletST, "clust", "foo", "",
+		"ClusterInst organization must be set to " + stOrg,
+	}, {
+		"ST bad real cluster name",
+		0, &cloudletST, "autocluster", stOrg, "foo",
+		"Invalid RealClusterName for single kubernetes cluster cloudlet, should be left blank",
+	}, {
+		"MT any clust name",
+		0, &cloudletMT, "clust", mtOrg, "", PASS,
+	}, {
+		"MT auto clust name",
+		0, &cloudletMT, "autocluster", mtOrg, "", PASS,
+	}, {
+		"ST any clust name",
+		0, &cloudletST, "clust", stOrg, "", PASS,
+	}, {
+		"ST auto clust name",
+		0, &cloudletST, "autocluster", stOrg, "", PASS,
+	}}
+	for _, test := range appInstCreateTests {
+		ai := testutil.AppInstData[test.aiIdx]
+		ai.Key.ClusterInstKey.CloudletKey = test.cloudlet.Key
+		ai.Key.ClusterInstKey.ClusterKey.Name = test.clusterName
+		ai.Key.ClusterInstKey.Organization = test.clusterOrg
+		ai.RealClusterName = test.realClusterName
+		err = appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		if test.errStr == PASS {
+			require.Nil(t, err, test.desc)
+			// clean up
+			err = appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+			require.Nil(t, err, test.desc)
+		} else {
+			require.NotNil(t, err, test.desc)
+			require.Contains(t, err.Error(), test.errStr, test.desc)
+		}
+	}
+
+	cleanupTests := []struct {
+		desc     string
+		cloudlet *edgeproto.Cloudlet
+		ownerOrg string
+	}{
+		{"mt cleanup test", &cloudletMT, ""},
+		{"st cleanup test", &cloudletST, stOrg},
+	}
+	for _, test := range cleanupTests {
+		clusterInstKey := getDefaultClustKey(test.cloudlet.Key, test.ownerOrg)
+		// Create AppInst
+		ai := testutil.AppInstData[0]
+		ai.Key.ClusterInstKey.CloudletKey = test.cloudlet.Key
+		ai.Key.ClusterInstKey.ClusterKey.Name = "blocker"
+		ai.Key.ClusterInstKey.Organization = clusterInstKey.Organization
+		ai.RealClusterName = ""
+		err = appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, test.desc)
+
+		// check refs
+		refs := edgeproto.ClusterRefs{}
+		found = clusterRefsApi.cache.Get(clusterInstKey, &refs)
+		require.True(t, found, test.desc)
+		require.Equal(t, 1, len(refs.Apps), test.desc)
+		refAiKey := edgeproto.AppInstKey{}
+		refAiKey.FromClusterRefsAppInstKey(&refs.Apps[0], clusterInstKey)
+		require.Equal(t, ai.Key, refAiKey, test.desc)
+
+		// Test that delete cloudlet fails if AppInst exists
+		test.cloudlet.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+		err = cloudletApi.DeleteCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		require.NotNil(t, err, test.desc)
+		require.Contains(t, err.Error(), "Cloudlet in use by AppInst", test.desc)
+
+		// delete AppInst
+		err = appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		require.Nil(t, err, test.desc)
+
+		// now delete cloudlet should succeed
+		test.cloudlet.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+		err = cloudletApi.DeleteCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		require.Nil(t, err, test.desc)
+
+		// check that cluster and refs don't exist
+		clusterInst := edgeproto.ClusterInst{}
+		found = clusterInstApi.Get(clusterInstKey, &clusterInst)
+		require.False(t, found, test.desc)
+		found = clusterRefsApi.cache.Get(clusterInstKey, &refs)
+		require.False(t, found, test.desc)
+	}
 }

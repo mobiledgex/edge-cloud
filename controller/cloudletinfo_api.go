@@ -382,7 +382,7 @@ func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.C
 	}
 	info := edgeproto.CloudletInfo{}
 	if !cloudletInfoApi.store.STMGet(stm, key, &info) {
-		return key.NotFoundError()
+		return fmt.Errorf("CloudletInfo not found for Cloudlet %s", key.GetKeyString())
 	}
 	if info.State == dme.CloudletState_CLOUDLET_STATE_READY {
 		return nil

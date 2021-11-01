@@ -33,18 +33,10 @@ type KubeNames struct {
 	ImagePaths                 []string
 	IsUriIPAddr                bool
 	MultitenantNamespace       string // for apps launched in a multi-tenant cluster
-	VirtualClusterNamespace    string // for virtual clusters created independently from apps
 	BaseKconfName              string
 }
 
 type KubeNamesOp func(k *KubeNames) error
-
-func WithVirtualClusterNamespace(namespace string) KubeNamesOp {
-	return func(kn *KubeNames) error {
-		kn.VirtualClusterNamespace = namespace
-		return nil
-	}
-}
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
 	return fmt.Sprintf("%s.%s.kubeconfig",

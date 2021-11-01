@@ -261,3 +261,17 @@ appinstrefs:
     organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
+clusterrefs:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: SmallCluster

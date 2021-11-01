@@ -71,6 +71,8 @@ type Features struct {
 	IsVMPool                      bool // cloudlet is just a pool of pre-existing VMs
 	IsFake                        bool // Just for unit-testing/e2e-testing
 	SupportsAdditionalNetworks    bool // Additional networks can be added
+	IsSingleKubernetesCluster     bool // Entire platform is just a single K8S cluster
+	SupportsAppInstDedicatedIP    bool // Supports per AppInst dedicated IPs
 }
 
 // Platform abstracts the underlying cloudlet platform.

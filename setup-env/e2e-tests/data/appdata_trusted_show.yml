@@ -647,3 +647,40 @@ appinstrefs:
   insts:
     ? '{"app_key":{"organization":"AcmeAppCo","name":"nontrustedapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
     : 1
+clusterrefs:
+- key:
+    clusterkey:
+      name: cluster1
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: cluster1
+  - appkey:
+      organization: AcmeAppCo
+      name: trustedapp
+      version: "1.0"
+    vclustername: cluster1
+- key:
+    clusterkey:
+      name: cluster2
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet2
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: cluster2
+  - appkey:
+      organization: AcmeAppCo
+      name: nontrustedapp
+      version: "1.0"
+    vclustername: cluster2

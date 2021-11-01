@@ -429,3 +429,17 @@ appinstrefs:
     organization: AcmeAppCo
     name: trustedapp
     version: "1.0"
+clusterrefs:
+- key:
+    clusterkey:
+      name: cluster1
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: cluster1
