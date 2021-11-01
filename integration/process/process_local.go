@@ -508,10 +508,9 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cacheDir")
 		args = append(args, p.CacheDir)
 	}
-	if p.HARole != "" {
+	if p.HARole != HARoleNone {
 		args = append(args, "--HARole")
-		args = append(args, p.HARole)
-
+		args = append(args, string(p.HARole))
 	}
 
 	options := StartOptions{}
@@ -547,7 +546,15 @@ func (p *Crm) Wait() error {
 
 func (p *Crm) GetExeName() string { return "crmserver" }
 
-func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
+func (p *Crm) LookupArgs() string {
+	retval := "--cloudletKey " + p.CloudletKey
+	return retval
+}
+
+func LookupArgsForHARole(haRole HARole) string {
+	retval := "--HARole " + string(haRole)
+	return retval
+}
 
 func (p *Crm) String(opts ...StartOp) string {
 	cmd_str := p.GetExeName()
@@ -1263,6 +1270,17 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 			break
 		}
 	}
+	return err
+}
+
+func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
+	args := p.GetRunArgs()
+	args = append(args,
+		"-p", "6379:6379",
+		"redis",
+	)
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
 

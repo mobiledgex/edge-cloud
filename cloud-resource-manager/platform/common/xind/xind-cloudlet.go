@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/integration/process"
+
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -48,7 +50,7 @@ func (s *Xind) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet,
 	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
-	err := cloudcommon.StopCRMService(ctx, cloudlet)
+	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARoleNone)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet delete failed", "err", err)
 		return err

@@ -17,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -320,11 +321,11 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "stream cloudlet")
 	}()
 
-	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, cloudcommon.HARolePrimary)
+	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, process.HARolePrimary)
 	require.Nil(t, err, "start cloudlet")
 	defer func() {
 		// Delete CRM
-		err = cloudcommon.StopCRMService(ctx, &cloudlet)
+		err = cloudcommon.StopCRMService(ctx, &cloudlet, process.HARolePrimary)
 		require.Nil(t, err, "stop cloudlet")
 	}()
 

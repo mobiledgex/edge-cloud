@@ -129,6 +129,7 @@ type DeploymentData struct {
 	NotifyRoots    []*process.NotifyRoot    `yaml:"notifyroots"`
 	EdgeTurns      []*process.EdgeTurn      `yaml:"edgeturns"`
 	ElasticSearchs []*process.ElasticSearch `yaml:"elasticsearchs"`
+	RedisCaches    []*process.RedisCache    `yaml:"rediscaches"`
 }
 
 type errorReply struct {
@@ -182,6 +183,9 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.ElasticSearchs {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.RedisCaches {
 		all = append(all, p)
 	}
 	return all

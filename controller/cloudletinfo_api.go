@@ -107,7 +107,8 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			newState = edgeproto.TrackedState_CREATE_ERROR
 		}
 	default:
-		51871		return
+		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
+		return
 	}
 
 	// update only diff of status msgs

@@ -21,6 +21,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/mobiledgex/edge-cloud/vmspec"
@@ -534,8 +535,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return err
 		}
 		in.CrmSecondaryAccessPublicKey = secondaryAccessKey.PublicPEM
-		in.CrmSecondaryAccessKeyUpgradeRequired = true
-		pfConfig.CrmSecondaryAccessPrivateKey = secondaryAccessKey.PrivatePEM
+		if in.PlatformHighAvailability {
+			in.CrmSecondaryAccessKeyUpgradeRequired = true
+			pfConfig.CrmSecondaryAccessPrivateKey = secondaryAccessKey.PrivatePEM
+		}
 	}
 
 	vmPool := edgeproto.VMPool{}
@@ -620,7 +623,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
-		err = cloudcommon.StartCRMService(ctx, in, pfConfig, cloudcommon.HARolePrimary)
+		err = cloudcommon.StartCRMService(ctx, in, pfConfig, process.HARolePrimary)
 	} else {
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err == nil {
@@ -1297,7 +1300,7 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 	}
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-		return cloudcommon.StopCRMService(ctx, in)
+		return cloudcommon.StopCRMService(ctx, in, process.HARoleNone)
 	}
 
 	// Some platform types require caches

@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
@@ -105,7 +106,7 @@ func main() {
 	}
 
 	nodeType := node.NodeTypeCRM
-	if highAvailabilityManager.HARole == cloudcommon.HARoleSecondary {
+	if highAvailabilityManager.HARole == string(process.HARoleSecondary) {
 		nodeType = node.NodeTypeCRMSecondary
 	}
 

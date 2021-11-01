@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	uutil "github.com/mobiledgex/edge-cloud/util"
@@ -328,7 +329,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 }
 
 // Walk through all the secified cloudlets and stop CRM procecess for them
-func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string) error {
+func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string, haRole process.HARole) error {
 	if apiFile == "" {
 		log.Println("Error: Cannot run RunCommand API without API file")
 		return fmt.Errorf("Error: Cannot run controller APIs without API file")
@@ -336,7 +337,7 @@ func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, api
 	readAppDataFile(apiFile, apiFileVars)
 
 	for _, c := range appData.Cloudlets {
-		if err := cloudcommon.StopCRMService(ctx, &c); err != nil {
+		if err := cloudcommon.StopCRMService(ctx, &c, haRole); err != nil {
 			return err
 		}
 	}

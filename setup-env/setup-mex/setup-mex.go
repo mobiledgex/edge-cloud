@@ -23,6 +23,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	edgeutil "github.com/mobiledgex/edge-cloud/util"
+
 	uutil "github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -344,6 +346,18 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 		go process.StopProcess(allprocs[ii], maxWait, c)
 		count++
 	}
+	if strings.HasPrefix(processName, "crm-") {
+		s := strings.Split(processName, "-")
+		if len(s) != 2 {
+			log.Printf("Error: cannot parse CRM process name with HA Role %v\n", processName)
+			return false
+		}
+		haRole := process.HARole(s[1])
+		maxwait := 10 * time.Millisecond
+		args := edgeutil.EscapeJson(process.LookupArgsForHARole(haRole))
+		go process.KillProcessesByName("crmserver", maxwait, args, c)
+		count++
+	}
 	if processName != "" && count == 0 {
 		log.Printf("Error: unable to find process name %v in setup\n", processName)
 		return false
@@ -608,11 +622,16 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.RedisCaches {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	return true
 }
 
 func Cleanup(ctx context.Context) error {
-	err := cloudcommon.StopCRMService(ctx, nil)
+	err := cloudcommon.StopCRMService(ctx, nil, process.HARoleNone)
 	if err != nil {
 		return err
 	}
@@ -696,7 +715,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 		}
 	case "stop":
 		if actionSubtype == "crm" {
-			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars); err != nil {
+			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, process.HARoleNone); err != nil {
 				errors = append(errors, err.Error())
 			}
 		} else {

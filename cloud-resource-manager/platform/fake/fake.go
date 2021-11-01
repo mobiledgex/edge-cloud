@@ -17,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -540,15 +541,15 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	if cloudlet.PlatformHighAvailability {
 		log.SpanLog(ctx, log.DebugLevelInfra, "creating 2 instances for H/A", "key", cloudlet.Key)
-		for i, id := range []string{cloudcommon.HARolePrimary, cloudcommon.HARoleSecondary} {
+		for i, id := range []process.HARole{process.HARolePrimary, process.HARoleSecondary} {
 			err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, id)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "id", id, "err", err)
 				return true, err
 			}
 			if i == 0 {
-				// give the first some time so we have consistent ordering for tests
-				time.Sleep(time.Second * 30)
+				// give the first instance a little time before starting the next one so we have consistent ordering for tests
+				time.Sleep(time.Second * 1)
 			}
 		}
 	} else {
@@ -588,7 +589,7 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
-	err := cloudcommon.StopCRMService(ctx, cloudlet)
+	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARoleNone)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet delete failed", "err", err)
 		return err

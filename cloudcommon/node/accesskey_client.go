@@ -330,7 +330,9 @@ func (s *AccessKeyClient) AddAccessKeySig(ctx context.Context) context.Context {
 		cloudcommon.AccessKeyData, s.cloudletKeyStr,
 		cloudcommon.AccessKeySig, sigb64,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "adding access key to signature", "sig", sigb64, "pkey", s.accessPrivKey, "cloudletstr", s.cloudletKeyStr)
+	log.WarnLog("XX adding access key to signature", "s.accessPrivKey", s.accessPrivKey, "s.cloudletKeyStr", s.cloudletKeyStr)
+	oldval := ctx.Value(cloudcommon.AccessKeySig)
+	log.SpanLog(ctx, log.DebugLevelApi, "adding access key to signature", "sig", sigb64, "pkey", s.accessPrivKey, "cloudletstr", s.cloudletKeyStr, "oldsig", oldval)
 	return metadata.AppendToOutgoingContext(ctx, kvPairs...)
 }
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-redis/redis"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -18,6 +18,7 @@ const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 
 const ActiveDuration = time.Second * 10
 const ActivePollInterval = time.Second * 3
+const MaxRedisWait = time.Second * 30
 
 var PlatformInstanceActive bool
 
@@ -31,7 +32,7 @@ type HighAvailabilityManager struct {
 
 func (s *HighAvailabilityManager) InitFlags() {
 	flag.StringVar(&s.RedisAddr, "redisAddr", "127.0.0.1:6379", "redis address")
-	flag.StringVar(&s.HARole, "HARole", cloudcommon.HARolePrimary, cloudcommon.HARolePrimary+" or "+cloudcommon.HARoleSecondary)
+	flag.StringVar(&s.HARole, "HARole", "", string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
 func (s *HighAvailabilityManager) SetPlatform(platform pf.Platform) {
@@ -40,13 +41,13 @@ func (s *HighAvailabilityManager) SetPlatform(platform pf.Platform) {
 
 func (s *HighAvailabilityManager) Init(nodeGroupKey string) error {
 	ctx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
-	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init")
+	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole)
 
 	if s.HARole == "" {
 		PlatformInstanceActive = true
 		return fmt.Errorf("%s HA Role not specified", HighAvailabilityManagerDisabled)
 	}
-	if s.HARole != cloudcommon.HARolePrimary && s.HARole != cloudcommon.HARoleSecondary {
+	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid node type")
 	}
 	if s.RedisAddr == "" {
@@ -86,7 +87,24 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 	s.RedisClient = redis.NewClient(&redis.Options{
 		Addr: s.RedisAddr,
 	})
-	return s.pingRedis(ctx)
+	start := time.Now()
+	var err error
+	for {
+		err = s.pingRedis(ctx)
+		if err == nil {
+			return nil
+		}
+		elapsed := time.Since(start)
+		if elapsed >= (MaxRedisWait) {
+			// for now we will return no errors when we time out.  In future we will use some other state or status
+			// field to reflect this and employ health checks to track these appinsts
+			log.InfoLog("redis wait timed out")
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "pingRedis failed", "err", err)
+	return fmt.Errorf("pingRedis failed - %v", err)
 }
 
 func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {

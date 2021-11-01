@@ -42,6 +42,12 @@ type Common struct {
 	EnvVars     map[string]string
 }
 
+type HARole string
+
+var HARoleNone HARole = ""
+var HARolePrimary HARole = "primary"
+var HARoleSecondary HARole = "secondary"
+
 func (c *Common) GetName() string {
 	return c.Name
 }

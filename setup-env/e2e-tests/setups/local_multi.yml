@@ -8,6 +8,8 @@ tlscerts:
 dockernetworks:
 - name: e2e-logging
   hostname: "127.0.0.1"
+- name: redis-net
+  hostname: "127.0.0.1"
 
 vaults:
 - name: vault
@@ -196,6 +198,11 @@ jaegers:
   dockerenvvars:
     SPAN_STORAGE_TYPE: elasticsearch
     ES_SERVER_URLS: http://elasticsearch-e2e:9200
+
+rediscaches:
+- name: redis-e2e
+  dockernetwork: redis-net
+  hostname: "127.0.0.1"
 
 notifyroots:
 - name: notifyroot
