@@ -30,7 +30,7 @@ func TestTrustPolicyApi(t *testing.T) {
 	// error cases
 	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[0], "cannot be higher than max")
 	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[1], "invalid CIDR")
-	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[2], "Invalid min port range")
+	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[2], "Invalid min port: 0")
 
 	dummy.Stop()
 }

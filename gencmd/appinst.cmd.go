@@ -799,6 +799,7 @@ var AppInstOptionalArgs = []string{
 	"privacypolicy",
 	"powerstate",
 	"realclustername",
+	"dedicatedip",
 }
 var AppInstAliasArgs = []string{
 	"app-org=key.appkey.organization",
@@ -858,6 +859,7 @@ var AppInstComments = map[string]string{
 	"optres":                         "Optional Resources required by OS flavor if any",
 	"realclustername":                "Real ClusterInst name",
 	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
+	"dedicatedip":                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -1032,6 +1034,7 @@ var CreateAppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"realclustername",
+	"dedicatedip",
 }
 var DeleteAppInstRequiredArgs = []string{
 	"app-org",
@@ -1052,6 +1055,7 @@ var DeleteAppInstOptionalArgs = []string{
 	"healthcheck",
 	"privacypolicy",
 	"realclustername",
+	"dedicatedip",
 }
 var RefreshAppInstRequiredArgs = []string{
 	"app-org",
@@ -1068,6 +1072,7 @@ var RefreshAppInstOptionalArgs = []string{
 	"updatemultiple",
 	"privacypolicy",
 	"realclustername",
+	"dedicatedip",
 }
 var UpdateAppInstRequiredArgs = []string{
 	"app-org",
@@ -1086,4 +1091,5 @@ var UpdateAppInstOptionalArgs = []string{
 	"privacypolicy",
 	"powerstate",
 	"realclustername",
+	"dedicatedip",
 }

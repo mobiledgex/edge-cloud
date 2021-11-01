@@ -39,6 +39,7 @@ enum VersionHash {
   HASH_911d86a4eb2bbfbff1173ffbdd197a8c = 31;
   HASH_99349a696d0b5872542f81b4b0b4788e = 32;
   HASH_264850a5c1f7a054b4de1a87e5d28dcc = 33 [(protogen.upgrade_func) = "TrustPolicyExceptionUpgradeFunc"];
+  HASH_748b47eaf414b0f2c15e4c6a9298b5f1 = 34 [(protogen.upgrade_func) = "AddClusterRefs"];
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "1";
 }
