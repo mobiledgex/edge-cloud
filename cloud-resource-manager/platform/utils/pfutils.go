@@ -23,6 +23,8 @@ func GetPlatform(ctx context.Context, plat string, setVersionProps func(context.
 		return &dind.Platform{}, nil
 	} else if plat == "PLATFORM_TYPE_FAKE" {
 		return &fake.Platform{}, nil
+	} else if plat == "PLATFORM_TYPE_FAKE_SINGLE_CLUSTER" {
+		return &fake.PlatformSingleCluster{}, nil
 	} else if plat == "PLATFORM_TYPE_KIND" {
 		return &kind.Platform{}, nil
 	}
