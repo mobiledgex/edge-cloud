@@ -1313,6 +1313,7 @@ var AllKeyTags = []string{
 	"restagtableorg",
 	"uniqueid",
 	"uniqueidtype",
+	"vcluster",
 	"vmpool",
 	"vmpoolorg",
 }
@@ -1352,6 +1353,7 @@ var AllKeyTagsMap = map[string]struct{}{
 	"restagtableorg":      struct{}{},
 	"uniqueid":            struct{}{},
 	"uniqueidtype":        struct{}{},
+	"vcluster":            struct{}{},
 	"vmpool":              struct{}{},
 	"vmpoolorg":           struct{}{},
 }

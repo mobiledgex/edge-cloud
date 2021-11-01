@@ -45,7 +45,7 @@
     appver: "1.0"
     cloudlet: dmuus-cloud-1
     cloudletorg: dmuus
-    cluster: DefaultCluster
+    cluster: defaultclust
     clusterorg: AcmeAppCo1
     region: local
     scope: Application

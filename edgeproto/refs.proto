@@ -63,6 +63,20 @@ message CloudletRefs {
   option (protogen.uses_org) = "none";
 }
 
+// ClusterRefs AppInst Key
+//
+// ClusterRefsAppInstKey is an app instance key without the cluster inst key,
+// but including the virtual cluster name. This is used by the ClusterRefs
+// to track AppInsts instantiated in the cluster.
+message ClusterRefsAppInstKey {
+  // App key
+  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  // Virtual cluster name
+  string v_cluster_name = 2 [(protogen.keytag) = "vcluster"];
+  option (protogen.obj_key) = true;
+  option (protogen.generate_matches) = true;
+}
+
 // Track app insts created on a ClusterInst.
 // These are used to calculated used resources.
 // Note that since CloudletKey will be the same for all app insts,
@@ -73,13 +87,7 @@ message ClusterRefs {
   // Cluster Instance key
   ClusterInstKey key = 1 [(gogoproto.nullable) = false];
   // Apps instances in the Cluster Instance
-  repeated AppKey apps = 2 [(gogoproto.nullable) = false];
-  // Used RAM in MB
-  uint64 used_ram = 4;
-  // Used VCPU cores
-  uint64 used_vcores = 5;
-  // Used disk in GB
-  uint64 used_disk = 6;
+  repeated ClusterRefsAppInstKey apps = 2 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
@@ -99,7 +107,7 @@ service CloudletRefsApi {
 service ClusterRefsApi {
   // Show ClusterRefs (debug only)
   rpc ShowClusterRefs(ClusterRefs) returns (stream ClusterRefs) {
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Organization";
   }
 }
 

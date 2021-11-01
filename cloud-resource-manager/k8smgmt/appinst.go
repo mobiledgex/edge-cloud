@@ -163,8 +163,6 @@ func WaitForAppInst(ctx context.Context, client ssh.Client, names *KubeNames, ap
 			if namespace == "" {
 				if names.MultitenantNamespace != "" {
 					namespace = names.MultitenantNamespace
-				} else if names.VirtualClusterNamespace != "" {
-					namespace = names.VirtualClusterNamespace
 				} else {
 					namespace = DefaultNamespace
 				}
@@ -445,8 +443,6 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, names *KubeNames,
 		if namespace == "" {
 			if names.MultitenantNamespace != "" {
 				namespace = names.MultitenantNamespace
-			} else if names.VirtualClusterNamespace != "" {
-				namespace = names.VirtualClusterNamespace
 			} else {
 				namespace = DefaultNamespace
 			}

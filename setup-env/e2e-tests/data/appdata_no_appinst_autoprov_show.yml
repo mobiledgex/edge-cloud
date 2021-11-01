@@ -760,3 +760,61 @@ appinstrefs:
     organization: AcmeAppCo
     name: someapplication1
     version: "1.0"
+clusterrefs:
+- key:
+    clusterkey:
+      name: ReservableCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: ReservableCluster
+- key:
+    clusterkey:
+      name: ReservableCluster2
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: ReservableCluster2
+  - appkey:
+      organization: AcmeAppCo
+      name: autoprovapp
+      version: "1.0"
+    vclustername: autocluster-autoprov
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: SmallCluster
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: SmallCluster

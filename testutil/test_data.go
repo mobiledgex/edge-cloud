@@ -2242,7 +2242,7 @@ func CreatedAppInstData() []edgeproto.AppInst {
 			appInst.RealClusterName = ClusterInstAutoData[2].Key.ClusterKey.Name
 		case 11:
 			appInst.Key.ClusterInstKey.Organization = appInst.Key.AppKey.Organization
-			appInst.Key.ClusterInstKey.ClusterKey.Name = "DefaultCluster"
+			appInst.Key.ClusterInstKey.ClusterKey.Name = "defaultclust"
 		}
 		insts = append(insts, appInst)
 	}

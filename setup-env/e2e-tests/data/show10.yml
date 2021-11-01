@@ -1914,3 +1914,264 @@ appinstrefs:
     : 1
     ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-8"},"organization":"MobiledgeX"}}'
     : 1
+clusterrefs:
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-7
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-3
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-4
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: azure
+      name: azure-cloud-9
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: azure
+      name: azure-cloud-9
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: gcp
+      name: gcp-cloud-10
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: gcp
+      name: gcp-cloud-10
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-4
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-5
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-8
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-8
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-5
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-6
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-6
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-7
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-3
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2

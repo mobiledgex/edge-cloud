@@ -338,6 +338,21 @@ var CloudletRefsComments = map[string]string{
 	"vmappinsts:#.clusterinstkey.organization":    "Name of Developer organization that this cluster belongs to",
 }
 var CloudletRefsSpecialArgs = map[string]string{}
+var ClusterRefsAppInstKeyRequiredArgs = []string{}
+var ClusterRefsAppInstKeyOptionalArgs = []string{
+	"appkey.organization",
+	"appkey.name",
+	"appkey.version",
+	"vclustername",
+}
+var ClusterRefsAppInstKeyAliasArgs = []string{}
+var ClusterRefsAppInstKeyComments = map[string]string{
+	"appkey.organization": "App developer organization",
+	"appkey.name":         "App name",
+	"appkey.version":      "App version",
+	"vclustername":        "Virtual cluster name",
+}
+var ClusterRefsAppInstKeySpecialArgs = map[string]string{}
 var ClusterRefsRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.organization",
@@ -345,12 +360,10 @@ var ClusterRefsRequiredArgs = []string{
 	"key.organization",
 }
 var ClusterRefsOptionalArgs = []string{
-	"apps:#.organization",
-	"apps:#.name",
-	"apps:#.version",
-	"usedram",
-	"usedvcores",
-	"useddisk",
+	"apps:#.appkey.organization",
+	"apps:#.appkey.name",
+	"apps:#.appkey.version",
+	"apps:#.vclustername",
 }
 var ClusterRefsAliasArgs = []string{}
 var ClusterRefsComments = map[string]string{
@@ -358,12 +371,10 @@ var ClusterRefsComments = map[string]string{
 	"key.cloudletkey.organization": "Organization of the cloudlet site",
 	"key.cloudletkey.name":         "Name of the cloudlet",
 	"key.organization":             "Name of Developer organization that this cluster belongs to",
-	"apps:#.organization":          "App developer organization",
-	"apps:#.name":                  "App name",
-	"apps:#.version":               "App version",
-	"usedram":                      "Used RAM in MB",
-	"usedvcores":                   "Used VCPU cores",
-	"useddisk":                     "Used disk in GB",
+	"apps:#.appkey.organization":   "App developer organization",
+	"apps:#.appkey.name":           "App name",
+	"apps:#.appkey.version":        "App version",
+	"apps:#.vclustername":          "Virtual cluster name",
 }
 var ClusterRefsSpecialArgs = map[string]string{}
 var AppInstRefsRequiredArgs = []string{
