@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-redis/redis"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 
 	"github.com/mobiledgex/edge-cloud/log"
@@ -16,18 +17,19 @@ import (
 const RedisPingFail string = "Redis Ping Fail"
 const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 
-const ActiveDuration = time.Second * 10
-const ActivePollInterval = time.Second * 3
 const MaxRedisWait = time.Second * 30
+const CheckActiveLogInterval = time.Second * 10
 
 var PlatformInstanceActive bool
 
 type HighAvailabilityManager struct {
-	RedisAddr    string
-	NodeGroupKey string
-	RedisClient  *redis.Client
-	HARole       string
-	Platform     pf.Platform
+	RedisAddr          string
+	NodeGroupKey       string
+	RedisClient        *redis.Client
+	HARole             string
+	Platform           pf.Platform
+	activeDuration     time.Duration
+	activePollInterval time.Duration
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
@@ -39,9 +41,11 @@ func (s *HighAvailabilityManager) SetPlatform(platform pf.Platform) {
 	s.Platform = platform
 }
 
-func (s *HighAvailabilityManager) Init(nodeGroupKey string) error {
+func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, activePollInterval edgeproto.Duration) error {
 	ctx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
-	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole)
+	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
+	s.activeDuration = activeDuration.TimeDuration()
+	s.activePollInterval = activePollInterval.TimeDuration()
 
 	if s.HARole == "" {
 		PlatformInstanceActive = true
@@ -101,29 +105,27 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 			log.InfoLog("redis wait timed out")
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "pingRedis failed", "err", err)
 	return fmt.Errorf("pingRedis failed - %v", err)
 }
 
 func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
-	log.SpanLog(ctx, log.DebugLevelInfo, "TryActive")
-
-	cmd := s.RedisClient.SetNX(s.NodeGroupKey, s.HARole, ActiveDuration)
-	v, e := cmd.Result()
-	log.SpanLog(ctx, log.DebugLevelInfo, "TryActive setNX result", "key", s.NodeGroupKey, "cmd", cmd, "v", v, "e", e)
+	cmd := s.RedisClient.SetNX(s.NodeGroupKey, s.HARole, s.activeDuration)
+	v, err := cmd.Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "TryActive setNX error", "key", s.NodeGroupKey, "cmd", cmd, "v", v, "err", err)
+	}
 	PlatformInstanceActive = v
 	return v
 }
 
 func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire")
-
-	cmd := s.RedisClient.Set(s.NodeGroupKey, s.HARole, ActiveDuration)
+	cmd := s.RedisClient.Set(s.NodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
-	log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire result", "key", s.NodeGroupKey, "cmd", cmd, "v", v, "err", err)
 	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire error", "key", s.NodeGroupKey, "cmd", cmd, "v", v, "err", err)
 		return err
 	}
 	if v != "OK" {
@@ -134,9 +136,14 @@ func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
 
 func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "CheckActiveLoop")
-	//....if redis dies and active, remain active..
+	timeSinceLog := time.Now() // log only once every X seconds in this loop
 	for {
+		elaspsed := time.Since(timeSinceLog)
 		if !PlatformInstanceActive {
+			if elaspsed >= CheckActiveLogInterval {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Platform inactive, doing TryActive")
+				timeSinceLog = time.Now()
+			}
 			newActive := s.TryActive(ctx)
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Platform became active")
@@ -146,6 +153,10 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				}
 			}
 		} else {
+			if elaspsed >= CheckActiveLogInterval {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Platform active, doing BumpActiveExpire")
+				timeSinceLog = time.Now()
+			}
 			err := s.BumpActiveExpire(ctx)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire failed, retry", "err", err)
@@ -155,6 +166,6 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				}
 			}
 		}
-		time.Sleep(ActivePollInterval)
+		time.Sleep(s.activePollInterval)
 	}
 }

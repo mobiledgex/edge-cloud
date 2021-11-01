@@ -137,6 +137,14 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.ResourceSnapshotThreadInterval = edgeproto.GetDefaultSettings().ResourceSnapshotThreadInterval
 			modified = true
 		}
+		if cur.PlatformHaInstanceActiveExpireTime == 0 {
+			cur.PlatformHaInstanceActiveExpireTime = edgeproto.GetDefaultSettings().PlatformHaInstanceActiveExpireTime
+			modified = true
+		}
+		if cur.PlatformHaInstancePollInterval == 0 {
+			cur.PlatformHaInstancePollInterval = edgeproto.GetDefaultSettings().PlatformHaInstancePollInterval
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}

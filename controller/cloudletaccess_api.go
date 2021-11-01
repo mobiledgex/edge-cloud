@@ -53,7 +53,7 @@ func (s *CloudletApi) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_Upg
 	return s.accessKeyServer.UpgradeAccessKey(stream, s.commitAccessPublicKey)
 }
 
-func (s *CloudletApi) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+func (s *CloudletApi) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeSecondaryAccessKeyServer) error {
 	ctx := stream.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "upgrade secondary key")
 	return s.accessKeyServer.UpgradeAccessKey(stream, s.commitSecondaryAccessPublicKey)

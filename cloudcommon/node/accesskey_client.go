@@ -234,7 +234,7 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 	client := edgeproto.NewCloudletAccessKeyApiClient(clientConn)
 	var stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyClient
 	if secondaryInstance {
-		stream, err = client.UpgradeAccessKey(ctx)
+		stream, err = client.UpgradeSecondaryAccessKey(ctx)
 	} else {
 		stream, err = client.UpgradeAccessKey(ctx)
 	}
@@ -330,9 +330,6 @@ func (s *AccessKeyClient) AddAccessKeySig(ctx context.Context) context.Context {
 		cloudcommon.AccessKeyData, s.cloudletKeyStr,
 		cloudcommon.AccessKeySig, sigb64,
 	}
-	log.WarnLog("XX adding access key to signature", "s.accessPrivKey", s.accessPrivKey, "s.cloudletKeyStr", s.cloudletKeyStr)
-	oldval := ctx.Value(cloudcommon.AccessKeySig)
-	log.SpanLog(ctx, log.DebugLevelApi, "adding access key to signature", "sig", sigb64, "pkey", s.accessPrivKey, "cloudletstr", s.cloudletKeyStr, "oldsig", oldval)
 	return metadata.AppendToOutgoingContext(ctx, kvPairs...)
 }
 

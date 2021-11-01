@@ -91,20 +91,6 @@ func main() {
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
 	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 
-	haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
-	initCtx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
-	err := highAvailabilityManager.Init(haKey)
-	highAvail := false
-	if err != nil {
-		if strings.Contains(err.Error(), redundancy.HighAvailabilityManagerDisabled) {
-			log.SpanLog(initCtx, log.DebugLevelInfo, "high availability disabled", "err", err)
-		} else {
-			log.FatalLog(err.Error())
-		}
-	} else {
-		highAvail = true
-	}
-
 	nodeType := node.NodeTypeCRM
 	if highAvailabilityManager.HARole == string(process.HARoleSecondary) {
 		nodeType = node.NodeTypeCRMSecondary
@@ -153,19 +139,6 @@ func main() {
 		}
 
 	}
-	if highAvail {
-		log.InfoLog("XXX HA", "highAvail", highAvail, "role", highAvailabilityManager.HARole)
-		highAvailabilityManager.SetPlatform(platform)
-		if highAvailabilityManager.TryActive(ctx) {
-			log.InfoLog("XXX tryactive true", "highAvail", highAvail, "role", highAvailabilityManager.HARole)
-			myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
-			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-		}
-		go highAvailabilityManager.CheckActiveLoop(ctx)
-	} else {
-		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-	}
-	log.InfoLog("XXX done ha", "highAvail", highAvail, "role", highAvailabilityManager.HARole, "active", redundancy.PlatformInstanceActive)
 
 	//ctl notify
 	addrs := strings.Split(*notifyAddrs, ",")
@@ -207,6 +180,24 @@ func main() {
 		} else {
 			cloudletContainerVersion = *containerVersion
 		}
+		haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
+		haEnabled, err := controllerData.StartHAManager(ctx, &highAvailabilityManager, haKey, platform)
+		if err != nil {
+			log.FatalLog(err.Error())
+		}
+		if haEnabled {
+			log.SpanLog(ctx, log.DebugLevelInfra, "HA enabled", "role", highAvailabilityManager.HARole)
+			if highAvailabilityManager.TryActive(ctx) {
+				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is active", "role", highAvailabilityManager.HARole)
+				myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
+				//	controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+			} else {
+				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is not active", "role", highAvailabilityManager.HARole)
+			}
+
+		} else {
+			//	controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		}
 
 		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
@@ -216,8 +207,6 @@ func main() {
 			log.InfoLog("XXXX I am not active")
 			myCloudletInfo.StandbyCrm = true
 			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-
-			//	controllerData.ControllerWait <- true
 		}
 
 		var cloudlet edgeproto.Cloudlet

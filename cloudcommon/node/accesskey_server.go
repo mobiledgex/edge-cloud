@@ -27,6 +27,7 @@ import (
 
 var BadAuthDelay = 3 * time.Second
 var UpgradeAccessKeyMethod = "/edgeproto.CloudletAccessKeyApi/UpgradeAccessKey"
+var UpgradeSecondaryAccessKeyMethod = "/edgeproto.CloudletAccessKeyApi/UpgradeSecondaryAccessKey"
 var GetAccessDataMethod = "/edgeproto.CloudletAccessApi/GetAccessData"
 
 type accessKeyVerifiedTagType string
@@ -128,12 +129,14 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 			return nil, fmt.Errorf("No crm access public key registered for cloudlet %s", data)
 		}
 		upgradeRequired := cloudlet.CrmAccessKeyUpgradeRequired
+		upgradeMethod := UpgradeAccessKeyMethod
 		err = s.verifyPublicKey(ctx, cloudlet.CrmAccessPublicKey, data[0], sig)
 		if err != nil {
 			if cloudlet.CrmSecondaryAccessPublicKey != "" {
 				log.SpanLog(ctx, log.DebugLevelApi, "failed to decode primary access key, try secondary", "err", err)
 				err = s.verifyPublicKey(ctx, cloudlet.CrmSecondaryAccessPublicKey, data[0], sig)
 				upgradeRequired = cloudlet.CrmSecondaryAccessKeyUpgradeRequired
+				upgradeMethod = UpgradeSecondaryAccessKeyMethod
 			}
 		}
 		if err != nil {
@@ -141,7 +144,7 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 		}
 
 		log.SpanLog(ctx, log.DebugLevelApi, "verified access key", "CloudletKey", verified.Key)
-		if upgradeRequired && method != UpgradeAccessKeyMethod {
+		if upgradeRequired && method != upgradeMethod {
 			return nil, fmt.Errorf("access key requires upgrade, does not allow api call %s", method)
 		}
 		verified.UpgradeRequired = upgradeRequired
@@ -259,6 +262,7 @@ func (s *AccessKeyServer) isTlsAccessKeyRequired(ctx context.Context) (bool, err
 
 func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error) error {
 	ctx := stream.Context()
+	log.WarnLog("XXXX UpgradeAccessKey", "commitfunc addr", fmt.Sprintf("%+v", &commitKeyFunc))
 	verified := ContextGetAccessKeyVerified(ctx)
 	if verified == nil {
 		// this should never happen, the interceptor should error out first
@@ -387,12 +391,13 @@ func (s *BasicUpgradeHandler) UpgradeAccessKey(stream edgeproto.CloudletAccessKe
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
 }
 
-func (s *BasicUpgradeHandler) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+func (s *BasicUpgradeHandler) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeSecondaryAccessKeyServer) error {
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitSecondaryKey)
 }
 
 func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
 	// Not thread safe, unit-test only.
+	log.WarnLog("XXX COMMITKEY", "pubpem", pubPEM)
 	cloudlet := &edgeproto.Cloudlet{}
 	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
 		return key.NotFoundError()
@@ -405,6 +410,8 @@ func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.Clou
 
 func (s *BasicUpgradeHandler) commitSecondaryKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
 	// Not thread safe, unit-test only.
+	log.WarnLog("XXX COMMITSECONDARYKEY", "pubpem", pubPEM)
+
 	cloudlet := &edgeproto.Cloudlet{}
 	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
 		return key.NotFoundError()

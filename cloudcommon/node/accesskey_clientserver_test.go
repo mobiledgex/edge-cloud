@@ -359,7 +359,7 @@ func (s *DummyController) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
 }
 
-func (s *DummyController) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer) error {
+func (s *DummyController) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeSecondaryAccessKeyServer) error {
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitSecondaryKey)
 }
 

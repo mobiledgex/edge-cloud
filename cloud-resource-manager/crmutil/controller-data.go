@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -335,7 +336,6 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	}
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
-
 	if !redundancy.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring cluster change because not active")
 	}
@@ -836,6 +836,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 func (cd *ControllerData) appInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstDeleted", "AppInst", old)
+
 	info := edgeproto.AppInstInfo{Key: old.Key}
 	cd.AppInstInfoCache.Delete(ctx, &info, 0)
 }
@@ -955,8 +956,6 @@ func (cd *ControllerData) appInstInfoCheckState(ctx context.Context, key *edgepr
 }
 
 func (cd *ControllerData) notifyControllerConnect() {
-	log.InfoLog("XXX notifyControllerConnect")
-
 	// Notify controller connect only if:
 	// * started manually and not by controller
 	// * if started by controller, then notify on INITOK
@@ -993,20 +992,19 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
-	log.SpanLog(ctx, log.DebugLevelInfra, "XXX cloudletChanged", "old", old, "new", new)
 
-	if !redundancy.PlatformInstanceActive {
-		log.SpanLog(ctx, log.DebugLevelInfra, "doing notify controller connect cloudlet changed because not active")
-		cd.notifyControllerConnect()
-	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
 		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 		return
 	}
-
-	if new.State == edgeproto.TrackedState_CRM_INITOK {
+	if !redundancy.PlatformInstanceActive {
+		// the cloudlet state can be anything if this is an inactive CRM
+		log.SpanLog(ctx, log.DebugLevelInfra, "doing notify controller connect cloudlet changed because not currently active", "newstate", new.State, "cloudinfo state", cloudletInfo.State)
+		cd.notifyControllerConnect()
+		return
+	} else if new.State == edgeproto.TrackedState_CRM_INITOK {
 		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_INIT {
 			cd.notifyControllerConnect()
 		}
@@ -1548,5 +1546,21 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 
 func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 	close(cd.finishInfraResourceThread)
+}
 
+// StartHAManager returns haEnabled, error
+func (cd *ControllerData) StartHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "StartHAManager", "haKey", "haKey")
+	haEnabled := false
+	err := haMgr.Init(haKey, cd.settings.PlatformHaInstanceActiveExpireTime, cd.settings.PlatformHaInstancePollInterval)
+	if err == nil {
+		haEnabled = true
+		haMgr.SetPlatform(platform)
+		go haMgr.CheckActiveLoop(ctx)
+	} else if strings.Contains(err.Error(), redundancy.HighAvailabilityManagerDisabled) {
+		log.SpanLog(ctx, log.DebugLevelInfo, "high availability disabled", "err", err)
+	} else {
+		return false, err
+	}
+	return haEnabled, nil
 }

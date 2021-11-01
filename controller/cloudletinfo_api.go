@@ -331,7 +331,6 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 				cloudletReady = (cloudlet.State == edgeproto.TrackedState_READY)
 			}
 			info.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
-			log.WarnLog("GO OFFLINE", "info.NotifyId", info.NotifyId, "notifyid", notifyId)
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
 			s.store.STMPut(stm, &info)
 			return nil

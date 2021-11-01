@@ -541,15 +541,15 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	if cloudlet.PlatformHighAvailability {
 		log.SpanLog(ctx, log.DebugLevelInfra, "creating 2 instances for H/A", "key", cloudlet.Key)
-		for i, id := range []process.HARole{process.HARolePrimary, process.HARoleSecondary} {
-			err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, id)
+		for i, role := range []process.HARole{process.HARolePrimary, process.HARoleSecondary} {
+			err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, role)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "id", id, "err", err)
+				log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "role", role, "err", err)
 				return true, err
 			}
 			if i == 0 {
 				// give the first instance a little time before starting the next one so we have consistent ordering for tests
-				time.Sleep(time.Second * 1)
+				time.Sleep(time.Second * 30)
 			}
 		}
 	} else {
