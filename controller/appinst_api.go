@@ -510,7 +510,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
 		}
-		if cloudcommon.IsClusterInstReqd(&app) && in.Key.ClusterInstKey.ClusterKey.Name == cloudcommon.DefaultCluster {
+		if cloudcommon.IsClusterInstReqd(&app) && in.Key.ClusterInstKey.ClusterKey.Name == cloudcommon.DefaultClust {
 			return fmt.Errorf("Cannot use blank or default Cluster name when ClusterInst is required")
 		}
 		if in.Flavor.Name == "" {

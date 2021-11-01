@@ -713,7 +713,7 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context) {
 		clusters := make(map[edgeproto.ClusterInstKey]struct{})
 		resTypeVMAppCount := 0
 		for _, res := range allRes {
-			if res.Key.ClusterKey.Name == cloudcommon.DefaultCluster {
+			if res.Key.ClusterKey.Name == cloudcommon.DefaultClust {
 				resTypeVMAppCount++
 				continue
 			}

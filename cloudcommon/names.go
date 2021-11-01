@@ -21,9 +21,8 @@ var OrganizationSamsung = "Samsung"
 var OrganizationMobiledgeX = "MobiledgeX"
 var OrganizationEdgeBox = "EdgeBox"
 
-const DefaultCluster string = "DefaultCluster"
-const DefaultMultiTenantCluster string = "defaultmtclust"
 const DefaultClust string = "defaultclust"
+const DefaultMultiTenantCluster string = "defaultmtclust"
 
 // platform apps
 var SamsungEnablingLayer = "SamsungEnablingLayer"
@@ -358,7 +357,7 @@ func SetAppInstKeyDefaults(key *edgeproto.AppInstKey) (bool, bool) {
 		setClusterOrg = true
 	}
 	if key.ClusterInstKey.ClusterKey.Name == "" {
-		key.ClusterInstKey.ClusterKey.Name = DefaultCluster
+		key.ClusterInstKey.ClusterKey.Name = DefaultClust
 		setClusterName = true
 	}
 	return setClusterOrg, setClusterName
