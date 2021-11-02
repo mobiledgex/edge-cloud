@@ -119,6 +119,7 @@ var AlertPolicyCache edgeproto.AlertPolicyCache
 var settings *edgeproto.Settings = edgeproto.GetDefaultSettings()
 var nodeMgr node.NodeMgr
 var alertCache edgeproto.AlertCache
+var CloudletCache edgeproto.CloudletCache
 
 type promCustomizations struct {
 	Interval           string
@@ -159,37 +160,23 @@ storageClass:
   defaultClass: true
 `
 
-var errCheckString = "is upgrading"
+var isUpgradingErrorString = "is upgrading"
 
-// A retry mechanism for appInst creation, to be invoked as a goroutine, when cloudlet is upgrading.
-func createClusterServices(pFunc func(context.Context, grpc.DialOption, *edgeproto.ClusterInst, *edgeproto.App) error, ctx context.Context, newClusterInstKey edgeproto.ClusterInstKey, app *edgeproto.App) {
-
-	var VerifyRetry = 60
-	var VerifyDelay time.Duration = time.Second * 15
-
-	for ii := 0; ii < VerifyRetry; ii++ {
-		time.Sleep(VerifyDelay)
-		log.SpanLog(ctx, log.DebugLevelInfo, "Prometheus-operator", "try#", ii)
-
-		cluster := edgeproto.ClusterInst{}
-		found := ClusterInstCache.Get(&newClusterInstKey, &cluster)
-		if !found {
-			log.SpanLog(ctx, log.DebugLevelNotify, "Unable to find cluster", "cluster", newClusterInstKey)
-			return
-		}
-		err := pFunc(ctx, dialOpts, &cluster, app)
-		if err == nil {
-			return
-		}
-		if strings.Contains(err.Error(), errCheckString) {
-			continue
-		}
-		// Do not retry if some other error
-		log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
-			newClusterInstKey, "error", err.Error())
-		return
-	}
+type retryMapKey struct {
+	createTypeStr string
+	cloudletKey   edgeproto.CloudletKey
 }
+
+type retryMapValue struct {
+	clusterInstKey edgeproto.ClusterInstKey
+}
+
+var retryMap map[retryMapKey][]retryMapValue
+
+const (
+	retryCreateMexPromStr            = "createMEXPromInst"
+	retryCreateNFSAutoProvAppInstStr = "createNFSAutoProvAppInstIfRequired"
+)
 
 // Process updates from notify framework about cluster instances
 // Create app/appInst when clusterInst transitions to a 'ready' state
@@ -208,17 +195,25 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 		if err = createMEXPromInst(ctx, dialOpts, new, nil); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "Prometheus-operator inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
-			if strings.Contains(err.Error(), errCheckString) {
-				// Spawn a goroutine so we don't stall notify framework
-				go createClusterServices(createMEXPromInst, ctx, new.Key, nil)
+			if strings.Contains(err.Error(), isUpgradingErrorString) {
+				// Save (cloudlet Key => clusterInstKey) in retryMap, so we don't stall notify framework
+				key := retryMapKey{
+					createTypeStr: retryCreateMexPromStr,
+					cloudletKey:   new.Key.CloudletKey,
+				}
+				retryMap[key] = append(retryMap[key], retryMapValue{clusterInstKey: new.Key})
 			}
 		}
-		if err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, new, nil); err != nil {
+		if err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, new); err != nil {
 			log.SpanLog(ctx, log.DebugLevelApi, "NFS Auto provision inst create failed", "cluster",
 				new.Key.ClusterKey.Name, "error", err.Error())
-			if strings.Contains(err.Error(), errCheckString) {
-				// Spawn a goroutine so we don't stall notify framework
-				go createClusterServices(createNFSAutoProvAppInstIfRequired, ctx, new.Key, nil)
+			if strings.Contains(err.Error(), isUpgradingErrorString) {
+				// Save (cloudlet Key => clusterInstKey) in retryMap, so we don't stall notify framework
+				key := retryMapKey{
+					createTypeStr: retryCreateNFSAutoProvAppInstStr,
+					cloudletKey:   new.Key.CloudletKey,
+				}
+				retryMap[key] = append(retryMap[key], retryMapValue{clusterInstKey: new.Key})
 			}
 		}
 	}
@@ -381,11 +376,15 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	edgeproto.InitAppInstCache(&AppInstCache)
 	edgeproto.InitAlertPolicyCache(&AlertPolicyCache)
 	edgeproto.InitAppCache(&AppCache)
+	edgeproto.InitCloudletCache(&CloudletCache)
+
 	ClusterInstCache.SetUpdatedCb(clusterInstCb)
 	AutoScalePolicyCache.SetUpdatedCb(autoScalePolicyCb)
 	AppInstCache.SetUpdatedCb(appInstCb)
 	AppCache.SetUpdatedCb(appCb)
 	AlertPolicyCache.SetUpdatedCb(alertPolicyCb)
+	CloudletCache.SetUpdatedCb(cloudletUpdatedCb)
+
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
 }
@@ -624,7 +623,7 @@ func appInstToAlertLabels(appInst *edgeproto.AppInst) map[string]string {
 	return labels
 }
 
-func createNFSAutoProvAppInstIfRequired(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst, app *edgeproto.App) error {
+func createNFSAutoProvAppInstIfRequired(ctx context.Context, dialOpts grpc.DialOption, inst *edgeproto.ClusterInst) error {
 	if inst.SharedVolumeSize != 0 {
 		return createAppInstCommon(ctx, dialOpts, inst, nil, &NFSAutoProvisionApp)
 	}
@@ -872,6 +871,64 @@ func validateAppRevision(ctx context.Context, appkey *edgeproto.AppKey) error {
 	return nil
 }
 
+func retryCreateClusterServices(ctx context.Context, createTypeStr string, cloudlet *edgeproto.Cloudlet) {
+
+	if createTypeStr != retryCreateMexPromStr && createTypeStr != retryCreateNFSAutoProvAppInstStr {
+		log.SpanLog(ctx, log.DebugLevelApi, "retryCreateClusterServices", "Unknown createType", createTypeStr)
+		return
+	}
+
+	key := retryMapKey{
+		createTypeStr: createTypeStr,
+		cloudletKey:   cloudlet.Key,
+	}
+
+	retryMapValueArray, found := retryMap[key]
+	if !found {
+		return
+	}
+
+	for _, retryMapValue := range retryMapValueArray {
+		cluster := edgeproto.ClusterInst{}
+		found = ClusterInstCache.Get(&retryMapValue.clusterInstKey, &cluster)
+		if !found {
+			log.SpanLog(ctx, log.DebugLevelNotify, "retryMap Unable to find cluster", "cluster", retryMapValue.clusterInstKey)
+			continue
+		}
+		log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", retryMapValue.clusterInstKey)
+
+		var err error
+		err = nil
+		if createTypeStr == retryCreateMexPromStr {
+			err = createMEXPromInst(ctx, dialOpts, &cluster, nil)
+		} else if createTypeStr == retryCreateNFSAutoProvAppInstStr {
+			err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, &cluster)
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "Retried creating Cluster services", "ClusterInst", cluster.Key, "err:", err)
+	}
+	delete(retryMap, key)
+}
+
+func cloudletUpdatedCb(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
+	if len(retryMap) == 0 {
+		return
+	}
+
+	if new == nil {
+		return
+	}
+
+	if new.State != edgeproto.TrackedState_READY {
+		return
+	}
+
+	log.SpanLog(ctx, log.DebugLevelNotify, "cloudlet update",
+		"cloudlet", new.Key.Name, "state", edgeproto.TrackedState_name[int32(new.State)])
+
+	retryCreateClusterServices(ctx, retryCreateMexPromStr, new)
+	retryCreateClusterServices(ctx, retryCreateNFSAutoProvAppInstStr, new)
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
@@ -900,6 +957,8 @@ func main() {
 	}
 	dialOpts = tls.GetGrpcDialOption(clientTlsConfig)
 
+	retryMap = make(map[retryMapKey][]retryMapValue)
+
 	if err = validateAppRevision(ctx, &MEXPrometheusAppKey); err != nil {
 		log.FatalLog("Validate Prometheus version", "error", err)
 	}
@@ -924,6 +983,7 @@ func main() {
 	notifyClient.RegisterRecv(notify.GlobalSettingsRecv(settings, nil))
 	edgeproto.InitAlertCache(&alertCache)
 	notifyClient.RegisterSendAlertCache(&alertCache)
+	notifyClient.RegisterRecvCloudletCache(&CloudletCache)
 
 	nodeMgr.RegisterClient(notifyClient)
 	notifyClient.Start()
