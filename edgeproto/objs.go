@@ -112,6 +112,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.AppInstRefs[:], func(i, j int) bool {
 		return a.AppInstRefs[i].Key.GetKeyString() < a.AppInstRefs[j].Key.GetKeyString()
 	})
+	sort.Slice(a.ClusterRefs[:], func(i, j int) bool {
+		return a.ClusterRefs[i].Key.GetKeyString() < a.ClusterRefs[j].Key.GetKeyString()
+	})
 	sort.Slice(a.VmPools[:], func(i, j int) bool {
 		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
 	})
@@ -1019,6 +1022,7 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortAutoScalePolicy))
 	opts = append(opts, cmpopts.SortSlices(CmpSortResTagTable))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstRefs))
+	opts = append(opts, cmpopts.SortSlices(CmpSortClusterRefs))
 	return opts
 }
 
@@ -1208,6 +1212,20 @@ func (s *AppInstKey) FromAppInstRefKey(key *AppInstRefKey, clKey *CloudletKey) {
 	s.ClusterInstKey.ClusterKey = key.ClusterInstKey.ClusterKey
 	s.ClusterInstKey.Organization = key.ClusterInstKey.Organization
 	s.ClusterInstKey.CloudletKey = *clKey
+}
+
+func (s *AppInstKey) ClusterRefsAppInstKey() *ClusterRefsAppInstKey {
+	return &ClusterRefsAppInstKey{
+		AppKey:       s.AppKey,
+		VClusterName: s.ClusterInstKey.ClusterKey.Name,
+	}
+}
+
+func (s *AppInstKey) FromClusterRefsAppInstKey(key *ClusterRefsAppInstKey, cKey *ClusterInstKey) {
+	s.AppKey = key.AppKey
+	s.ClusterInstKey.ClusterKey.Name = key.VClusterName
+	s.ClusterInstKey.Organization = cKey.Organization
+	s.ClusterInstKey.CloudletKey = cKey.CloudletKey
 }
 
 func (s *StreamObj) Validate(fields map[string]struct{}) error {

@@ -9,6 +9,15 @@ settings:
       reqspersecond: 25000
       burstsize: 250
 - key:
+    apiname: PersistentConnection
+    apiendpointtype: Dme
+    ratelimittarget: AllRequests
+  flowsettings:
+    persistentconnectionallreqs1:
+      flowalgorithm: TokenBucketAlgorithm
+      reqspersecond: 100
+      burstsize: 10
+- key:
     apiname: VerifyLocation
     apiendpointtype: Dme
     ratelimittarget: AllRequests

@@ -3,8 +3,10 @@ package edgeproto
 import (
 	"encoding/json"
 	fmt "fmt"
+	"sort"
 	strings "strings"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -94,7 +96,9 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -125,7 +129,9 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -218,7 +224,9 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudletrefs", refs)
 				return err2
 			}
-			objStore.Put(ctx, string(key), string(val))
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
 		}
 		return nil
 	})
@@ -247,8 +255,157 @@ func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "AppInstRefs", refs)
 			return err2
 		}
-		objStore.Put(ctx, string(key), string(val))
+		if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+			return perr
+		}
 		return nil
 	})
 	return err
+}
+
+// TrustPolicyException upgrade func
+func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc")
+
+	type RemoteConnection struct {
+		// tcp, udp, icmp
+		Protocol string `json:"protocol,omitempty"`
+		// port
+		Port uint32 `json:"port,omitempty"`
+		// remote IP
+		RemoteIp string `json:"remote_ip,omitempty"`
+	}
+
+	type AppV0RemoteConn struct {
+		RequiredOutboundConnections []*RemoteConnection `json:"required_outbound_connections,omitempty"`
+	}
+
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		var app App
+		err2 := json.Unmarshal(val, &app)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
+			return err2
+		}
+		var appV0 AppV0RemoteConn
+		err2 = json.Unmarshal(val, &appV0)
+		if err2 != nil {
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal app old remote connection", "val", string(val), "err", err2, "app old", appV0)
+			return err2
+		}
+		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
+		if len(appV0.RequiredOutboundConnections) > 0 {
+			newReqdConns := []SecurityRule{}
+			for _, conn := range appV0.RequiredOutboundConnections {
+				secRule := SecurityRule{
+					Protocol:     conn.Protocol,
+					PortRangeMin: conn.Port,
+					PortRangeMax: conn.Port,
+					RemoteCidr:   conn.RemoteIp + "/32",
+				}
+				newReqdConns = append(newReqdConns, secRule)
+			}
+			app.RequiredOutboundConnections = newReqdConns
+			val, err2 = json.Marshal(app)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+				return err2
+			}
+			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
+				return perr
+			}
+		}
+		return nil
+	})
+	return err
+}
+
+// Initiate and back-populate cluster refs objects for existing AppInsts
+func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "ClusterRefs")
+
+	// Get all AppInsts
+	appInstKeys := make(map[string]struct{})
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		appInstKeys[string(key)] = struct{}{}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Use an STM to update refs to avoid conflicts with multiple
+	// controllers and to keep it idempotent
+	for aiKey, _ := range appInstKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get AppInst
+			appInstStr := stm.Get(aiKey)
+			if appInstStr == "" {
+				// must have been deleted in the meantime
+				return nil
+			}
+			appInst := AppInst{}
+			err := json.Unmarshal([]byte(appInstStr), &appInst)
+			if err != nil {
+				return fmt.Errorf("Unmarshal AppInst %s failed: %s", aiKey, err)
+			}
+			// get App, so we can skip VM AppInsts
+			appKey := objstore.DbKeyString("App", &appInst.Key.AppKey)
+			appStr := stm.Get(appKey)
+			if appStr == "" {
+				return fmt.Errorf("No App found for AppInst %s", aiKey)
+			}
+			app := App{}
+			err = json.Unmarshal([]byte(appStr), &app)
+			if err != nil {
+				return fmt.Errorf("Unmarshal App %s failed: %s", appKey, err)
+			}
+			if app.Deployment == "vm" {
+				// no ClusterInst so no refs
+				return nil
+			}
+			// add AppInst ref to ClusterRefs
+			clusterInstKey := appInst.ClusterInstKey()
+			refsKey := objstore.DbKeyString("ClusterRefs", clusterInstKey)
+			refsStr := stm.Get(refsKey)
+			refs := ClusterRefs{}
+			if refsStr != "" {
+				err = json.Unmarshal([]byte(refsStr), &refs)
+				if err != nil {
+					return fmt.Errorf("Unmarshal ClusterRefs %s failed: %s", refsKey, err)
+				}
+			} else {
+				refs.Key = *clusterInstKey
+			}
+			appRefKey := appInst.Key.ClusterRefsAppInstKey()
+			found := false
+			for _, k := range refs.Apps {
+				if k.Matches(appRefKey) {
+					found = true
+					break
+				}
+			}
+			if found {
+				// already there, no change needed
+				return nil
+			}
+			refs.Apps = append(refs.Apps, *appRefKey)
+			// sort for determinism for unit-test comparison
+			sort.Slice(refs.Apps, func(i, j int) bool {
+				return refs.Apps[i].GetKeyString() < refs.Apps[j].GetKeyString()
+			})
+			refsData, err := json.Marshal(refs)
+			if err != nil {
+				return fmt.Errorf("Marshal ClusterRefs %s failed: %s", refsKey, err)
+			}
+			stm.Put(refsKey, string(refsData))
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -45,7 +45,7 @@
     appver: "1.0"
     cloudlet: tmus-cloud-1
     cloudletorg: tmus
-    cluster: DefaultCluster
+    cluster: defaultclust
     clusterorg: AcmeAppCo1
     region: local
     scope: Application
