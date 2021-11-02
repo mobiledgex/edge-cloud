@@ -346,12 +346,12 @@ func FixAutoClusterIpAccessValue(ctx context.Context, objStore objstore.KVStore)
 				// must have been deleted in the meantime
 				return nil
 			}
-			// auto_cluster_ip_access value 2 does not exist and the field
-			// itself is deprecated, so it is safe to set it to 0
 			if !strings.Contains(appInstStr, `"auto_cluster_ip_access":"2"`) {
 				// nothing to update
 				return nil
 			}
+			// auto_cluster_ip_access value 2 does not exist and the field
+			// itself is deprecated, so it is safe to set it to 0
 			appInstStr = strings.ReplaceAll(appInstStr, `"auto_cluster_ip_access":"2"`, `"auto_cluster_ip_access":"0"`)
 			stm.Put(aiKey, appInstStr)
 			return nil
