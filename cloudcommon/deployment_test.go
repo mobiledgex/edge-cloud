@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -159,8 +160,67 @@ var gpuSubManifest = `
           limits:
              nvidia.com/gpu: 1`
 
+var svcManifest = `
+apiVersion: v1
+kind: Service
+metadata:
+  name: testapp-tcp-service1
+  labels:
+    run: testapp
+spec:
+  type: ClusterIP
+  ports:
+  - port: 1111
+    targetPort: 1111
+    protocol: TCP
+    name: g1111
+  selector:
+    run: testapp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: testapp-tcp-service2
+  labels:
+    run: testapp
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 2222
+    targetPort: 2222
+    protocol: TCP
+    name: g2222
+  - port: 3333
+    targetPort: 3333
+    name: g3333
+  selector:
+    run: testapp`
+
 func TestDeploymentManifest(t *testing.T) {
 	var err error
+
+	// ensure that empty protocol in svc manifest defaults to TCP
+	ports := []dme.AppPort{
+		{
+			Proto:        dme.LProto_L_PROTO_TCP,
+			InternalPort: int32(2222),
+		},
+		{
+			Proto:        dme.LProto_L_PROTO_TCP,
+			InternalPort: int32(3333),
+		},
+	}
+	err = IsValidDeploymentManifest(DeploymentTypeKubernetes, "", svcManifest, ports, &testutil.FlavorData[0])
+	require.Nil(t, err, "valid k8s svc manifest")
+
+	// clusterIP should not be considered while validating access ports
+	ports = append(ports, dme.AppPort{
+		Proto:        dme.LProto_L_PROTO_TCP,
+		InternalPort: int32(1111),
+	})
+	err = IsValidDeploymentManifest(DeploymentTypeKubernetes, "", svcManifest, ports, &testutil.FlavorData[0])
+	require.NotNil(t, err, "invalid k8s svc manifest")
+	require.Contains(t, err.Error(), "tcp:1111 defined in AccessPorts but missing from kubernetes manifest")
 
 	// gpu flavor with rescount as 1
 	flavor := &testutil.FlavorData[4]
