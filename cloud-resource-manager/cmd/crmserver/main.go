@@ -181,7 +181,7 @@ func main() {
 			cloudletContainerVersion = *containerVersion
 		}
 		haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
-		haEnabled, err := controllerData.StartHAManager(ctx, &highAvailabilityManager, haKey, platform)
+		haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey, platform)
 		if err != nil {
 			log.FatalLog(err.Error())
 		}
@@ -190,24 +190,17 @@ func main() {
 			if highAvailabilityManager.TryActive(ctx) {
 				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is active", "role", highAvailabilityManager.HARole)
 				myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
-				//	controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is not active", "role", highAvailabilityManager.HARole)
+				myCloudletInfo.StandbyCrm = true
 			}
-
-		} else {
-			//	controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+			controllerData.StartHAManagerActiveCheck(ctx, &highAvailabilityManager)
 		}
 
 		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
-		if redundancy.PlatformInstanceActive {
-			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-		} else {
-			log.InfoLog("XXXX I am not active")
-			myCloudletInfo.StandbyCrm = true
-			controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
-		}
+		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 
 		var cloudlet edgeproto.Cloudlet
 		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudletInfo.Key)

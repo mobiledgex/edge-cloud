@@ -154,6 +154,8 @@ message AppInst {
   string real_cluster_name = 37 [(protogen.backend) = true];
   // mapping of ports to load balancer IPs
   map <string, string> internal_port_to_lb_ip = 38 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Dedicated IP assigns an IP for this AppInst but requires platform support
+  bool dedicated_ip = 39;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

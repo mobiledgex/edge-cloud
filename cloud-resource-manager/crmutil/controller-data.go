@@ -1549,18 +1549,21 @@ func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 }
 
 // StartHAManager returns haEnabled, error
-func (cd *ControllerData) StartHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "StartHAManager", "haKey", "haKey")
+func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "InitHAManager", "haKey", haKey)
 	haEnabled := false
-	err := haMgr.Init(haKey, cd.settings.PlatformHaInstanceActiveExpireTime, cd.settings.PlatformHaInstancePollInterval)
+	err := haMgr.Init(haKey, cd.settings.PlatformHaInstanceActiveExpireTime, cd.settings.PlatformHaInstancePollInterval, platform, &cd.cloudletKey, &cd.CloudletInfoCache)
 	if err == nil {
 		haEnabled = true
-		haMgr.SetPlatform(platform)
-		go haMgr.CheckActiveLoop(ctx)
 	} else if strings.Contains(err.Error(), redundancy.HighAvailabilityManagerDisabled) {
 		log.SpanLog(ctx, log.DebugLevelInfo, "high availability disabled", "err", err)
 	} else {
 		return false, err
 	}
 	return haEnabled, nil
+}
+
+func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "StartHAManagerActiveCheck")
+	go haMgr.CheckActiveLoop(ctx)
 }

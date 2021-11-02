@@ -38,6 +38,8 @@ settings:
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
 flavors:
 - key:
     name: x1.tiny
@@ -133,6 +135,7 @@ cloudlets:
   physicalname: tmus-cloud-1
   containerversion: 2019-10-24
   defaultresourcealertthreshold: 80
+  platformhighavailability: true
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -252,8 +255,9 @@ cloudletinfos:
         version: "1.0"
       clusterinstkey:
         clusterkey:
-          name: DefaultCluster
+          name: defaultclust
         organization: AcmeAppCo1
+  activecrminstance: primary
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -315,7 +319,7 @@ cloudletinfos:
         version: "1.0"
       clusterinstkey:
         clusterkey:
-          name: DefaultCluster
+          name: defaultclust
         organization: AcmeAppCo1
 - key:
     organization: tmus
@@ -618,7 +622,7 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: DefaultCluster
+    name: defaultclust
   authpublickey: |
     -----BEGIN PUBLIC KEY-----
     MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij
@@ -641,7 +645,7 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: DefaultCluster
+    name: defaultclust
   deployment: vm
   accesstype: LoadBalancer
 - key:
@@ -831,7 +835,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: DefaultCluster
+        name: defaultclust
       cloudletkey:
         organization: tmus
         name: tmus-cloud-1
@@ -860,7 +864,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: DefaultCluster
+        name: defaultclust
       cloudletkey:
         organization: tmus
         name: tmus-cloud-2
@@ -931,14 +935,14 @@ appinstrefs:
     name: vmapp1
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo1"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp1","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"defaultclust"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo1"}}'
     : 1
 - key:
     organization: AcmeAppCo1
     name: vmapp2
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"DefaultCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo1"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo1","name":"vmapp2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"defaultclust"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo1"}}'
     : 1
 - key:
     organization: AcmeAppCo
@@ -963,3 +967,56 @@ appinstrefs:
   insts:
     ? '{"app_key":{"organization":"MobiledgeX","name":"NFSAutoProvision","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
+
+clusterrefs:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: tmus
+      name: tmus-cloud-1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: MobiledgeX
+      name: NFSAutoProvision
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: AcmeAppCo
+      name: helmApplication
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: AcmeAppCo
+      name: NoPortsApp
+      version: "1.0"
+    vclustername: SmallCluster
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: tmus
+      name: tmus-cloud-2
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: SmallCluster

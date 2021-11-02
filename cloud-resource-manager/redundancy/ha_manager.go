@@ -23,29 +23,30 @@ const CheckActiveLogInterval = time.Second * 10
 var PlatformInstanceActive bool
 
 type HighAvailabilityManager struct {
-	RedisAddr          string
-	NodeGroupKey       string
-	RedisClient        *redis.Client
+	redisAddr          string
+	nodeGroupKey       string
+	cloudletKey        *edgeproto.CloudletKey
+	redisClient        *redis.Client
 	HARole             string
-	Platform           pf.Platform
+	platform           pf.Platform
 	activeDuration     time.Duration
 	activePollInterval time.Duration
+	cloudletInfoCache  *edgeproto.CloudletInfoCache
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
-	flag.StringVar(&s.RedisAddr, "redisAddr", "127.0.0.1:6379", "redis address")
+	flag.StringVar(&s.redisAddr, "redisAddr", "127.0.0.1:6379", "redis address")
 	flag.StringVar(&s.HARole, "HARole", "", string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
-func (s *HighAvailabilityManager) SetPlatform(platform pf.Platform) {
-	s.Platform = platform
-}
-
-func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, activePollInterval edgeproto.Duration) error {
+func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, activePollInterval edgeproto.Duration, platform pf.Platform, cloudletKey *edgeproto.CloudletKey, cloudletInfoCache *edgeproto.CloudletInfoCache) error {
 	ctx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
 	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
 	s.activeDuration = activeDuration.TimeDuration()
 	s.activePollInterval = activePollInterval.TimeDuration()
+	s.platform = platform
+	s.cloudletKey = cloudletKey
+	s.cloudletInfoCache = cloudletInfoCache
 
 	if s.HARole == "" {
 		PlatformInstanceActive = true
@@ -54,11 +55,11 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, acti
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid node type")
 	}
-	if s.RedisAddr == "" {
+	if s.redisAddr == "" {
 		return fmt.Errorf("Redis address not specified")
 	}
-	s.NodeGroupKey = nodeGroupKey
-	if s.NodeGroupKey == "" {
+	s.nodeGroupKey = nodeGroupKey
+	if s.nodeGroupKey == "" {
 		return fmt.Errorf("group key node specified")
 	}
 	err := s.connectRedis(ctx)
@@ -71,7 +72,7 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, acti
 func (s *HighAvailabilityManager) pingRedis(ctx context.Context) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "pingRedis")
 
-	pong, err := s.RedisClient.Ping().Result()
+	pong, err := s.redisClient.Ping().Result()
 	log.SpanLog(ctx, log.DebugLevelInfo, "redis ping done", "pong", pong, "err", err)
 
 	if err != nil {
@@ -82,14 +83,14 @@ func (s *HighAvailabilityManager) pingRedis(ctx context.Context) error {
 
 func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "connectRedis")
-	if s.RedisAddr == "" {
+	if s.redisAddr == "" {
 		return fmt.Errorf("Redis address not specified")
 	}
-	if s.NodeGroupKey == "" {
+	if s.nodeGroupKey == "" {
 		return fmt.Errorf("group key node not specified")
 	}
-	s.RedisClient = redis.NewClient(&redis.Options{
-		Addr: s.RedisAddr,
+	s.redisClient = redis.NewClient(&redis.Options{
+		Addr: s.redisAddr,
 	})
 	start := time.Now()
 	var err error
@@ -112,25 +113,47 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 }
 
 func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
-	cmd := s.RedisClient.SetNX(s.NodeGroupKey, s.HARole, s.activeDuration)
+
+	if PlatformInstanceActive {
+		// this should not happen. Only 1 thread should be doing TryActive
+		log.FatalLog("Platform already active")
+		return true
+	}
+
+	cmd := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "TryActive setNX error", "key", s.NodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive result", "val", v)
 	}
 	PlatformInstanceActive = v
 	return v
 }
 
 func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
-	cmd := s.RedisClient.Set(s.NodeGroupKey, s.HARole, s.activeDuration)
+	cmd := s.redisClient.Set(s.nodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire error", "key", s.NodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
 		return err
 	}
 	if v != "OK" {
 		return fmt.Errorf("BumpActiveExpire returned unexpected value - %s", v)
 	}
+	return nil
+}
+func (s *HighAvailabilityManager) UpdateCloudletInfoForActive(ctx context.Context) error {
+	log.SpanLog(ctx, log.DebugLevelInfo, "UpdateCloudletInfoForActive")
+
+	var cloudletInfo edgeproto.CloudletInfo
+	if !s.cloudletInfoCache.Get(s.cloudletKey, &cloudletInfo) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update cloudlet info, cannot find in cache", "cloudletKey", s.cloudletKey)
+		return fmt.Errorf("Cannot find in cloudlet info in cache for key %s", s.cloudletKey.String())
+	}
+	cloudletInfo.ActiveCrmInstance = s.HARole
+	cloudletInfo.StandbyCrm = false
+	s.cloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 	return nil
 }
 
@@ -147,9 +170,12 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			newActive := s.TryActive(ctx)
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Platform became active")
-				PlatformInstanceActive = true
-				if s.Platform != nil {
-					s.Platform.BecomeActive(ctx, s.HARole)
+				if s.platform != nil {
+					err := s.UpdateCloudletInfoForActive(ctx)
+					if err != nil {
+						log.FatalLog("Unable to update cloudlet info", "err", err)
+					}
+					s.platform.BecomeActive(ctx, s.HARole)
 				}
 			}
 		} else {

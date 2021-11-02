@@ -1,3 +1,36 @@
+settings:
+  shepherdmetricscollectioninterval: 1s
+  autodeployintervalsec: 1
+  autodeployoffsetsec: 0.3
+  createappinsttimeout: 3s
+  updateappinsttimeout: 2s
+  deleteappinsttimeout: 2s
+  createclusterinsttimeout: 3s
+  updateclusterinsttimeout: 2s
+  deleteclusterinsttimeout: 2s
+  createcloudlettimeout: 10s
+  updatecloudlettimeout: 2s
+  updatetrustpolicytimeout: 5s
+  masternodeflavor: x1.small
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m
+  influxdbmetricsretention: 2h
+  cloudletmaintenancetimeout: 2s
+  dmeapimetricscollectioninterval: 1s
+  locationtilesidelengthkm: 2
+  edgeeventsmetricscollectioninterval: 1s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  influxdbdownsampledmetricsretention: 672h0m0s
+  edgeeventsmetricscontinuousqueriescollectionintervals:
+  - interval: 2s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m
+  alertpolicymintriggertime: 30s
+  disableratelimit: true
+  ratelimitmaxtrackedips: 10000
+  resourcesnapshotthreadinterval: 10m
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
 flavors:
 - key:
     name: x1.tiny
@@ -84,7 +117,7 @@ cloudlets:
     latitude: 31
     longitude: -91
   ipsupport: Dynamic
-  numdynamicips: 255
+  numdynamicips: 254
   platformtype: Fake
   platformhighavailability: true
 - key:

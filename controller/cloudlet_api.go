@@ -127,6 +127,8 @@ func (s *CloudletApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cloud
 		}
 		if newState == edgeproto.TrackedState_NOT_PRESENT {
 			s.store.STMDel(stm, &in.Key)
+			cloudletRefsApi.store.STMDel(stm, &in.Key)
+			deleteCloudletSingularCluster(stm, &in.Key, inst.SingleKubernetesClusterOwner)
 		} else {
 			inst.State = newState
 			inst.Errors = nil
@@ -376,9 +378,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 func getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *pf.Caches {
 	// Some platform types require caches
 	caches := pf.Caches{
-		SettingsCache: &settingsApi.cache,
-		FlavorCache:   &flavorApi.cache,
-		CloudletCache: cloudletApi.cache,
+		SettingsCache:     &settingsApi.cache,
+		FlavorCache:       &flavorApi.cache,
+		CloudletCache:     cloudletApi.cache,
+		CloudletInfoCache: &cloudletInfoApi.cache,
 	}
 	if vmPool != nil && vmPool.Key.Name != "" {
 		var vmPoolMux sync.Mutex
@@ -588,6 +591,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
 			return err
+		}
+		if features.IsSingleKubernetesCluster {
+			// create ClusterInst representation of Cloudlet
+			createCloudletSingularCluster(stm, &in.Key, in.SingleKubernetesClusterOwner)
 		}
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
@@ -872,6 +879,15 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		}
 		accessVars = in.AccessVars
 		in.AccessVars = nil
+	}
+
+	_, singleKubernetesClusterOwnerSet := fmap[edgeproto.CloudletFieldSingleKubernetesClusterOwner]
+	if singleKubernetesClusterOwnerSet {
+		// TODO: to support this, we need to use the ClusterRefs
+		// to make sure no AppInsts exist, and then we need to delete
+		// the current default single cluster and create a new one with
+		// the new org.
+		return fmt.Errorf("Changing the single kubernetes cluster owner is not supported yet")
 	}
 
 	_, kafkaClusterChanged := fmap[edgeproto.CloudletFieldKafkaCluster]
@@ -1344,6 +1360,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return fmt.Errorf("Cloudlet in use by AutoProvPolicy %s", strings.Join(strs, ", "))
 	}
 
+	var features *platform.Features
 	var prevState edgeproto.TrackedState
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
@@ -1351,17 +1368,24 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
-		var err error
+		features, err = GetCloudletFeatures(ctx, in.PlatformType)
+		if err != nil {
+			return fmt.Errorf("Failed to get features for platform: %s", err)
+		}
+		var defaultClustKey *edgeproto.ClusterInstKey
+		if features.IsSingleKubernetesCluster {
+			defaultClustKey = getDefaultClustKey(in.Key, in.SingleKubernetesClusterOwner)
+		}
 		refs := edgeproto.CloudletRefs{}
 		if cloudletRefsApi.store.STMGet(stm, &in.Key, &refs) {
 			err = clusterInstApi.deleteCloudletOk(stm, &refs, clDynInsts)
 			if err != nil {
 				return err
 			}
-			err = appInstApi.deleteCloudletOk(stm, &refs, dynInsts)
-			if err != nil {
-				return err
-			}
+		}
+		err = appInstApi.deleteCloudletOk(stm, &refs, defaultClustKey, dynInsts)
+		if err != nil {
+			return err
 		}
 		if err := validateDeleteState(cctx, "Cloudlet", in.State, in.Errors, cb.Send); err != nil {
 			return err
@@ -1475,6 +1499,9 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		s.store.STMDel(stm, &in.Key)
 		cloudletRefsApi.store.STMDel(stm, &in.Key)
+		if features.IsSingleKubernetesCluster {
+			deleteCloudletSingularCluster(stm, &in.Key, updateCloudlet.SingleKubernetesClusterOwner)
+		}
 		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 		return nil
 	})

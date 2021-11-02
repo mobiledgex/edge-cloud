@@ -352,9 +352,9 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 			log.Printf("Error: cannot parse CRM process name with HA Role %v\n", processName)
 			return false
 		}
-		haRole := process.HARole(s[1])
+		HARole := process.HARole(s[1])
 		maxwait := 10 * time.Millisecond
-		args := edgeutil.EscapeJson(process.LookupArgsForHARole(haRole))
+		args := edgeutil.EscapeJson(process.LookupArgsForHARole(HARole))
 		go process.KillProcessesByName("crmserver", maxwait, args, c)
 		count++
 	}

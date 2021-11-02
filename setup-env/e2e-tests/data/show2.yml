@@ -43,6 +43,8 @@ settings:
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
 operatorcodes:
 - code: wifi
   organization: tmus
@@ -445,3 +447,40 @@ appinstrefs:
     : 1
     ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"someapplication1"},"cloudlet_key":{"organization":"tmus","name":"tmus-cloud-2"},"organization":"AcmeAppCo"}}'
     : 1
+clusterrefs:
+- key:
+    clusterkey:
+      name: someapplication1
+    cloudletkey:
+      organization: tmus
+      name: tmus-cloud-1
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: someapplication1
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: someapplication1
+- key:
+    clusterkey:
+      name: someapplication1
+    cloudletkey:
+      organization: tmus
+      name: tmus-cloud-2
+    organization: AcmeAppCo
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: someapplication1
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: someapplication1

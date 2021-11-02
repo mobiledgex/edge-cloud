@@ -362,3 +362,33 @@ func ServerUnaryInterceptor(unaryInterceptor grpc.ServerOption) ServerOp {
 func ServerStreamInterceptor(streamInterceptor grpc.ServerOption) ServerOp {
 	return func(opts *ServerOptions) { opts.streamInterceptor = streamInterceptor }
 }
+
+type ServerMgrState struct {
+	Name        string
+	Connections []ConnState
+}
+
+type ConnState struct {
+	PeerName          string
+	PeerAddr          string
+	NegotiatedVersion uint32
+	Stats             Stats
+}
+
+func (s *ServerMgr) GetState() *ServerMgrState {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	state := ServerMgrState{}
+	state.Name = s.name
+	for _, server := range s.table {
+		conn := ConnState{}
+		server.mux.Lock()
+		conn.PeerName = server.sendrecv.peer
+		conn.PeerAddr = server.peerAddr
+		conn.NegotiatedVersion = server.version
+		conn.Stats = server.sendrecv.stats
+		state.Connections = append(state.Connections, conn)
+		server.mux.Unlock()
+	}
+	return &state
+}

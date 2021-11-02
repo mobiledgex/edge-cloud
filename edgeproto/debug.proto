@@ -38,6 +38,7 @@ message DebugReply {
   // Id used internally
   uint64 id = 3 [(protogen.backend) = true];
   option (protogen.notify_message) = true;
+  option (protogen.notify_print_send_recv) = false; // debug output can be large
 }
 
 service DebugApi {

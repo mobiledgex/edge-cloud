@@ -551,8 +551,8 @@ func (p *Crm) LookupArgs() string {
 	return retval
 }
 
-func LookupArgsForHARole(haRole HARole) string {
-	retval := "--HARole " + string(haRole)
+func LookupArgsForHARole(HARole HARole) string {
+	retval := "--HARole " + string(HARole)
 	return retval
 }
 

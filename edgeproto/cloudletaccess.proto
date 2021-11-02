@@ -75,4 +75,5 @@ service CloudletAccessApi {
 service CloudletAccessKeyApi {
   // Upgrade AccessKey for existing Vault-CRM, or one-time key
   rpc UpgradeAccessKey(stream UpgradeAccessKeyClientMsg) returns (stream UpgradeAccessKeyServerMsg);
+  rpc UpgradeSecondaryAccessKey(stream UpgradeAccessKeyClientMsg) returns (stream UpgradeAccessKeyServerMsg);
 }

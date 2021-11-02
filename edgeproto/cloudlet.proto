@@ -123,6 +123,7 @@ message PlatformConfig {
 // 12: `PLATFORM_TYPE_K8S_BARE_METAL`
 // 13: `PLATFORM_TYPE_KIND`
 // 14: `PLATFORM_TYPE_KINDINFRA`
+// 15: `PLATFORM_TYPE_FAKE_SINGLE_CLUSTER`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -154,6 +155,8 @@ enum PlatformType {
   PLATFORM_TYPE_KIND = 13;
   // KIND Infra Cloudlet
   PLATFORM_TYPE_KINDINFRA = 14;
+  // Fake Single Cluster Cloudlet
+  PLATFORM_TYPE_FAKE_SINGLE_CLUSTER = 15;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -471,14 +474,16 @@ message Cloudlet {
   bool enable_default_serverless_cluster = 46;
   // This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet
   repeated string alliance_orgs = 47;
+  // For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant
+  string single_kubernetes_cluster_owner = 48;
   // Enable platform H/A
-  bool platform_high_availability = 48;
-  // CRM secondary access public key
-  string crm_secondary_access_public_key = 49 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // CRM secondary access key upgrade required
-  bool crm_secondary_access_key_upgrade_required = 50 [(protogen.backend) = true];
+  bool platform_high_availability = 49;
+  // CRM secondary access public key for H/A
+  string crm_secondary_access_public_key = 50 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // CRM secondary access key upgrade required for H/A
+  bool crm_secondary_access_key_upgrade_required = 51 [(protogen.backend) = true];
   // Address for the secondary CRM notify listener to run on
-  string secondary_notify_srv_addr = 51 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string secondary_notify_srv_addr = 52 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

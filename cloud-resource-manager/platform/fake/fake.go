@@ -86,6 +86,8 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 	},
 }
 
+var maxPrimaryCrmStartupWait = 10 * time.Second
+
 func UpdateResourcesMax() error {
 	// Make fake resource limits configurable for QA testing
 	ramMax := os.Getenv("FAKE_RAM_MAX")
@@ -548,8 +550,24 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 				return true, err
 			}
 			if i == 0 {
-				// give the first instance a little time before starting the next one so we have consistent ordering for tests
-				time.Sleep(time.Second * 30)
+				// before starting the second instance, wait until some cloudlet info shows up from the first instance.
+				// This is needed to ensure consistent ordering for e2e tests
+				start := time.Now()
+				for {
+					var cloudletInfo edgeproto.CloudletInfo
+					time.Sleep(time.Millisecond * 200)
+					elapsed := time.Since(start)
+					if elapsed >= (maxPrimaryCrmStartupWait) {
+						return true, fmt.Errorf("timed out waiting for primary CRM to report cloudlet info")
+					}
+					if !caches.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo) {
+						log.SpanLog(ctx, log.DebugLevelInfra, "failed to get cloudlet info after starting primary CRM, will retry", "cloudletKey", s.cloudletKey)
+						time.Sleep(time.Millisecond * 200)
+					} else {
+						log.SpanLog(ctx, log.DebugLevelInfra, "got cloudlet info from primary CRM", "cloudletKey", cloudlet.Key, "active", cloudletInfo.ActiveCrmInstance, "ci", cloudletInfo)
+						break
+					}
+				}
 			}
 		}
 	} else {
@@ -695,17 +713,5 @@ func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, erro
 }
 
 func (s *Platform) BecomeActive(ctx context.Context, activeInstance string) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "BecomeActive")
-	var cloudletInfo edgeproto.CloudletInfo
-	if s.caches == nil || s.caches.CloudletCache == nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "cannot update cloudlet info due to nil cache")
-		return
-	}
-	if !s.caches.CloudletInfoCache.Get(s.cloudletKey, &cloudletInfo) {
-		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update cloudlet redundancy instance, missing cloudletinfo", "cloudletKey", s.cloudletKey)
-	} else {
-		cloudletInfo.ActiveCrmInstance = activeInstance
-		cloudletInfo.StandbyCrm = false
-		s.caches.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "BecomeActive", "activeInstance", activeInstance)
 }

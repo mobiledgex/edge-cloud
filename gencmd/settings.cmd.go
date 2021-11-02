@@ -236,6 +236,8 @@ var SettingsOptionalArgs = []string{
 	"disableratelimit",
 	"ratelimitmaxtrackedips",
 	"resourcesnapshotthreadinterval",
+	"platformhainstancepollinterval",
+	"platformhainstanceactiveexpiretime",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -280,6 +282,8 @@ var SettingsComments = map[string]string{
 	"disableratelimit":                                                  "Disable rate limiting for APIs (default is false)",
 	"ratelimitmaxtrackedips":                                            "Maximum number of IPs to track for rate limiting",
 	"resourcesnapshotthreadinterval":                                    "ResourceSnapshot Refresh thread run interval",
+	"platformhainstancepollinterval":                                    "Platform HA instance poll interval",
+	"platformhainstanceactiveexpiretime":                                "Platform HA instance active time",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

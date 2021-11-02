@@ -293,7 +293,9 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		if c.NotifySrvAddr == "" {
 			c.NotifySrvAddr = "127.0.0.1:51001"
 		}
-
+		if c.SecondaryNotifySrvAddr == "" {
+			c.SecondaryNotifySrvAddr = "127.0.0.1:51002"
+		}
 		if c.PhysicalName == "" {
 			c.PhysicalName = c.Key.Name
 		}
@@ -321,15 +323,26 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 			pfConfig.EnvVar[k] = v
 		}
 
-		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, ""); err != nil {
-			return err
+		if c.PlatformHighAvailability {
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary); err != nil {
+				return err
+			}
+			// wait briefly before starting the secondary for unit test consistency
+			time.Sleep(time.Second * 1)
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleSecondary); err != nil {
+				return err
+			}
+		} else {
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, ""); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // Walk through all the secified cloudlets and stop CRM procecess for them
-func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string, haRole process.HARole) error {
+func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string, HARole process.HARole) error {
 	if apiFile == "" {
 		log.Println("Error: Cannot run RunCommand API without API file")
 		return fmt.Errorf("Error: Cannot run controller APIs without API file")
@@ -337,7 +350,7 @@ func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, api
 	readAppDataFile(apiFile, apiFileVars)
 
 	for _, c := range appData.Cloudlets {
-		if err := cloudcommon.StopCRMService(ctx, &c, haRole); err != nil {
+		if err := cloudcommon.StopCRMService(ctx, &c, HARole); err != nil {
 			return err
 		}
 	}

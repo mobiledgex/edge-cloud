@@ -5,6 +5,7 @@ import (
 )
 
 var GlobalApiName = "Global"
+var PersistentConnectionApiName = "PersistentConnection"
 
 // TODO: VALIDATE ALL BASED ON FIELDS
 func (f *FlowSettings) Validate() error {
@@ -142,6 +143,20 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 			},
 		},
 	}
+	persistentConnectionAllReqs := &RateLimitSettings{
+		Key: RateLimitSettingsKey{
+			ApiEndpointType: ApiEndpointType_DME,
+			RateLimitTarget: RateLimitTarget_ALL_REQUESTS,
+			ApiName:         PersistentConnectionApiName,
+		},
+		FlowSettings: map[string]*FlowSettings{
+			"persistentconnectionallreqs1": &FlowSettings{
+				FlowAlgorithm: FlowRateLimitAlgorithm_TOKEN_BUCKET_ALGORITHM,
+				ReqsPerSecond: 100,
+				BurstSize:     10,
+			},
+		},
+	}
 	// Init all PerIp RateLimitSettings
 	dmeGlobalPerIp := &RateLimitSettings{
 		Key: RateLimitSettingsKey{
@@ -175,6 +190,7 @@ func GetDefaultRateLimitSettings() map[RateLimitSettingsKey]*RateLimitSettings {
 	rlMap := make(map[RateLimitSettingsKey]*RateLimitSettings)
 	rlMap[dmeGlobalAllReqs.Key] = dmeGlobalAllReqs
 	rlMap[verifyLocAllReqs.Key] = verifyLocAllReqs
+	rlMap[persistentConnectionAllReqs.Key] = persistentConnectionAllReqs
 	rlMap[dmeGlobalPerIp.Key] = dmeGlobalPerIp
 	rlMap[verifyLocPerIp.Key] = verifyLocPerIp
 

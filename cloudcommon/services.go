@@ -25,15 +25,15 @@ func GetLocalAccessKeyDir() string {
 	return "/tmp/accesskeys"
 }
 
-func GetLocalAccessKeyFile(filePrefix string, haRole string) string {
-	return GetLocalAccessKeyDir() + "/" + filePrefix + haRole + ".key"
+func GetLocalAccessKeyFile(filePrefix string, haRole process.HARole) string {
+	return GetLocalAccessKeyDir() + "/" + filePrefix + string(haRole) + ".key"
 }
 
 func GetCrmAccessKeyFile() string {
 	return "/root/accesskey/accesskey.pem"
 }
 
-func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole) (*process.Crm, []process.StartOp, error) {
+func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, HARole process.HARole) (*process.Crm, []process.StartOp, error) {
 	opts := []process.StartOp{}
 
 	cloudletKeyStr, err := json.Marshal(cloudlet.Key)
@@ -85,7 +85,7 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	opts = append(opts, process.WithDebug("api,infra,notify,info"))
 
 	notAddr := cloudlet.NotifySrvAddr
-	if haRole == process.HARoleSecondary {
+	if HARole == process.HARoleSecondary {
 		notAddr = cloudlet.SecondaryNotifySrvAddr
 	}
 	return &process.Crm{
@@ -119,12 +119,22 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 		AppDNSRoot:          appDNSRoot,
 		ChefServerPath:      chefServerPath,
 		CacheDir:            cacheDir,
-		HARole:              haRole,
+		HARole:              HARole,
 	}, opts, nil
 }
 
 var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
 var trackedProcessMux sync.Mutex
+
+func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole) ([]string, *map[string]string, error) {
+	crmProc, opts, err := getCrmProc(cloudlet, pfConfig, haRole)
+	if err != nil {
+		return nil, nil, err
+	}
+	crmProc.AccessKeyFile = GetCrmAccessKeyFile()
+
+	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
+}
 
 func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key, "haRole", haRole)
@@ -146,7 +156,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	if haRole == process.HARoleSecondary {
 		ak = pfConfig.CrmSecondaryAccessPrivateKey
 	}
-	accessKeyFile := GetLocalAccessKeyFile(cloudlet.Key.Name, string(haRole))
+	accessKeyFile := GetLocalAccessKeyFile(cloudlet.Key.Name, haRole)
 	if ak != "" {
 		// Write access key to local disk
 		err = os.MkdirAll(GetLocalAccessKeyDir(), 0744)
@@ -171,7 +181,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	crmProc.HARole = haRole
 
 	filePrefix := cloudlet.Key.Name
-	if haRole != "" {
+	if haRole != process.HARoleNone {
 		filePrefix += "-" + string(haRole)
 	}
 
@@ -189,11 +199,11 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 
 // StopCRMService stops the crmserver on the specified cloudlet, or kills any
 // crm process if the cloudlet specified is nil
-func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, haRole process.HARole) error {
+func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, HARole process.HARole) error {
 	args := ""
 	if cloudlet != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet.Key)
-		crmProc, _, err := getCrmProc(cloudlet, nil, haRole)
+		crmProc, _, err := getCrmProc(cloudlet, nil, HARole)
 		if err != nil {
 			return err
 		}
