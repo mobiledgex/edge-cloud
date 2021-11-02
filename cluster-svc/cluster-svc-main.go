@@ -167,11 +167,11 @@ type retryMapKey struct {
 	cloudletKey   edgeproto.CloudletKey
 }
 
-type retryMapValue struct {
-	clusterInstKey edgeproto.ClusterInstKey
-}
+type retryMapValue map[edgeproto.ClusterInstKey]struct{}
 
-var retryMap map[retryMapKey][]retryMapValue
+type retryMapT map[retryMapKey]retryMapValue
+
+var retryMap retryMapT
 
 const (
 	retryCreateMexPromStr            = "createMEXPromInst"
@@ -201,7 +201,11 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 					createTypeStr: retryCreateMexPromStr,
 					cloudletKey:   new.Key.CloudletKey,
 				}
-				retryMap[key] = append(retryMap[key], retryMapValue{clusterInstKey: new.Key})
+				mValue := make(retryMapValue)
+				clusterInstKey := new.Key
+				mValue[clusterInstKey] = struct{}{}
+
+				retryMap[key] = mValue
 			}
 		}
 		if err = createNFSAutoProvAppInstIfRequired(ctx, dialOpts, new); err != nil {
@@ -213,7 +217,11 @@ func clusterInstCb(ctx context.Context, old *edgeproto.ClusterInst, new *edgepro
 					createTypeStr: retryCreateNFSAutoProvAppInstStr,
 					cloudletKey:   new.Key.CloudletKey,
 				}
-				retryMap[key] = append(retryMap[key], retryMapValue{clusterInstKey: new.Key})
+				mValue := make(retryMapValue)
+				clusterInstKey := new.Key
+				mValue[clusterInstKey] = struct{}{}
+
+				retryMap[key] = mValue
 			}
 		}
 	}
@@ -384,6 +392,7 @@ func initNotifyClient(ctx context.Context, addrs string, tlsDialOption grpc.Dial
 	AppCache.SetUpdatedCb(appCb)
 	AlertPolicyCache.SetUpdatedCb(alertPolicyCb)
 	CloudletCache.SetUpdatedCb(cloudletUpdatedCb)
+	CloudletCache.SetDeletedCb(cloudletDeletedCb)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "notify client to", "addrs", addrs)
 	return notifyClient
@@ -883,19 +892,20 @@ func retryCreateClusterServices(ctx context.Context, createTypeStr string, cloud
 		cloudletKey:   cloudlet.Key,
 	}
 
-	retryMapValueArray, found := retryMap[key]
+	mValue, found := retryMap[key]
 	if !found {
 		return
 	}
 
-	for _, retryMapValue := range retryMapValueArray {
+	for k, _ := range mValue {
+		clusterInstKey := k
 		cluster := edgeproto.ClusterInst{}
-		found = ClusterInstCache.Get(&retryMapValue.clusterInstKey, &cluster)
+		found = ClusterInstCache.Get(&clusterInstKey, &cluster)
 		if !found {
-			log.SpanLog(ctx, log.DebugLevelNotify, "retryMap Unable to find cluster", "cluster", retryMapValue.clusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelNotify, "retryMap Unable to find cluster", "cluster", clusterInstKey)
 			continue
 		}
-		log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", retryMapValue.clusterInstKey)
+		log.SpanLog(ctx, log.DebugLevelNotify, "cluster update", "cluster", clusterInstKey)
 
 		var err error
 		err = nil
@@ -929,6 +939,35 @@ func cloudletUpdatedCb(ctx context.Context, old *edgeproto.Cloudlet, new *edgepr
 	retryCreateClusterServices(ctx, retryCreateNFSAutoProvAppInstStr, new)
 }
 
+func cloudletDeletedCb(ctx context.Context, old *edgeproto.Cloudlet) {
+	log.SpanLog(ctx, log.DebugLevelNotify, "cloudletDeletedCb",
+		"cloudlet", old.Key.Name)
+
+	if len(retryMap) == 0 || old == nil {
+		return
+	}
+
+	key := retryMapKey{
+		createTypeStr: retryCreateMexPromStr,
+		cloudletKey:   old.Key,
+	}
+
+	_, found := retryMap[key]
+	if found {
+		log.SpanLog(ctx, log.DebugLevelNotify, "cloudletDeletedCb",
+			"cloudlet", old.Key.Name, "deleting retryMap", key.createTypeStr)
+		delete(retryMap, key)
+	}
+
+	key.createTypeStr = retryCreateNFSAutoProvAppInstStr
+	_, found = retryMap[key]
+	if found {
+		log.SpanLog(ctx, log.DebugLevelNotify, "cloudletDeletedCb",
+			"cloudlet", old.Key.Name, "deleting retryMap", key.createTypeStr)
+		delete(retryMap, key)
+	}
+}
+
 func main() {
 	nodeMgr.InitFlags()
 	flag.Parse()
@@ -957,7 +996,7 @@ func main() {
 	}
 	dialOpts = tls.GetGrpcDialOption(clientTlsConfig)
 
-	retryMap = make(map[retryMapKey][]retryMapValue)
+	retryMap = make(retryMapT)
 
 	if err = validateAppRevision(ctx, &MEXPrometheusAppKey); err != nil {
 		log.FatalLog("Validate Prometheus version", "error", err)
