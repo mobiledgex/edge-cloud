@@ -321,6 +321,48 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 	return err
 }
 
+// AutoClusterIpAccess value 2 is no longer valid, update it to 0 as it is no longer used
+func FixAutoClusterIpAccessValue(ctx context.Context, objStore objstore.KVStore) error {
+	log.SpanLog(ctx, log.DebugLevelUpgrade, "FixAutoClusterIpAccessValue")
+
+	// Get all AppInsts
+	appInstKeys := make(map[string]struct{})
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		appInstKeys[string(key)] = struct{}{}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Use an STM to update refs to avoid conflicts with multiple
+	// controllers and to keep it idempotent
+	for aiKey, _ := range appInstKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get AppInst
+			appInstStr := stm.Get(aiKey)
+			if appInstStr == "" {
+				// must have been deleted in the meantime
+				return nil
+			}
+			// auto_cluster_ip_access value 2 does not exist and the field
+			// itself is deprecated, so it is safe to set it to 0
+			if !strings.Contains(appInstStr, `"auto_cluster_ip_access":"2"`) {
+				// nothing to update
+				return nil
+			}
+			appInstStr = strings.ReplaceAll(appInstStr, `"auto_cluster_ip_access":"2"`, `"auto_cluster_ip_access":"0"`)
+			stm.Put(aiKey, appInstStr)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Initiate and back-populate cluster refs objects for existing AppInsts
 func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "ClusterRefs")
