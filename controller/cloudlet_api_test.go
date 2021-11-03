@@ -321,11 +321,11 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, "stream cloudlet")
 	}()
 
-	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, process.HARolePrimary)
+	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, process.HARoleNone)
 	require.Nil(t, err, "start cloudlet")
 	defer func() {
 		// Delete CRM
-		err = cloudcommon.StopCRMService(ctx, &cloudlet, process.HARolePrimary)
+		err = cloudcommon.StopCRMService(ctx, &cloudlet, process.HARoleNone)
 		require.Nil(t, err, "stop cloudlet")
 	}()
 

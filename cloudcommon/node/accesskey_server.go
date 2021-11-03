@@ -83,7 +83,7 @@ func (s *AccessKeyServer) verifyPublicKey(ctx context.Context, pubKeyStr string,
 	}
 	ok := ed25519.Verify(pubKey, []byte(message), sig)
 	if !ok {
-		return fmt.Errorf("failed to verify access key signature")
+		return fmt.Errorf("Failed to verify cloudlet access key signature")
 	}
 	return nil
 }
@@ -140,7 +140,7 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 			}
 		}
 		if err != nil {
-			return nil, fmt.Errorf("failed to verify cloudlet public key")
+			return nil, err
 		}
 
 		log.SpanLog(ctx, log.DebugLevelApi, "verified access key", "CloudletKey", verified.Key)

@@ -124,8 +124,6 @@ func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
 	v, err := cmd.Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
-	} else {
-		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive result", "val", v)
 	}
 	PlatformInstanceActive = v
 	return v
