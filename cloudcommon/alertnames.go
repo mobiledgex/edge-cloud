@@ -19,6 +19,7 @@ const (
 const (
 	AlertAnnotationTitle       = "title"
 	AlertAnnotationDescription = "description"
+	AlertAnnotationErrorString = "error"
 	AlertScopeTypeTag          = "scope"
 	AlertSeverityLabel         = "severity"
 	AlertScopeApp              = "Application"
