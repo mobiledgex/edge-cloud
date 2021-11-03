@@ -836,7 +836,6 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 
 func (cd *ControllerData) appInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstDeleted", "AppInst", old)
-
 	info := edgeproto.AppInstInfo{Key: old.Key}
 	cd.AppInstInfoCache.Delete(ctx, &info, 0)
 }

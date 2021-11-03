@@ -95,7 +95,6 @@ func main() {
 	if highAvailabilityManager.HARole == string(process.HARoleSecondary) {
 		nodeType = node.NodeTypeCRMSecondary
 	}
-
 	ctx, span, err := nodeMgr.Init(nodeType, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
 	if err != nil {
 		log.FatalLog(err.Error())
@@ -137,7 +136,7 @@ func main() {
 		case edgeproto.UpdateStep:
 			myCloudletInfo.Status.SetStep(value)
 		}
-
+		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 	}
 
 	//ctl notify
@@ -163,7 +162,6 @@ func main() {
 	)
 	notifyClient.SetFilterByCloudletKey()
 	InitClientNotify(notifyClient, controllerData)
-
 	notifyClient.Start()
 	defer notifyClient.Stop()
 

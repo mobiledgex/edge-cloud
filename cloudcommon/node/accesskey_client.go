@@ -324,12 +324,11 @@ func (s *AccessKeyClient) AddAccessKeySig(ctx context.Context) context.Context {
 	sig := ed25519.Sign(s.accessPrivKey, []byte(s.cloudletKeyStr))
 	sigb64 := base64.StdEncoding.EncodeToString(sig)
 
-	var kvPairs []string
-
-	kvPairs = []string{
+	kvPairs := []string{
 		cloudcommon.AccessKeyData, s.cloudletKeyStr,
 		cloudcommon.AccessKeySig, sigb64,
 	}
+	log.SpanLog(ctx, log.DebugLevelApi, "adding access key to signature")
 	return metadata.AppendToOutgoingContext(ctx, kvPairs...)
 }
 
