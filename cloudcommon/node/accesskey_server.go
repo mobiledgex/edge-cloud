@@ -133,7 +133,7 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 		err = s.verifyPublicKey(ctx, cloudlet.CrmAccessPublicKey, data[0], sig)
 		if err != nil {
 			if cloudlet.CrmSecondaryAccessPublicKey != "" {
-				log.SpanLog(ctx, log.DebugLevelApi, "failed to decode primary access key, try secondary", "err", err)
+				log.SpanLog(ctx, log.DebugLevelApi, "failed to verify primary access key, try secondary", "err", err)
 				err = s.verifyPublicKey(ctx, cloudlet.CrmSecondaryAccessPublicKey, data[0], sig)
 				upgradeRequired = cloudlet.CrmSecondaryAccessKeyUpgradeRequired
 				upgradeMethod = UpgradeSecondaryAccessKeyMethod
@@ -396,7 +396,6 @@ func (s *BasicUpgradeHandler) UpgradeSecondaryAccessKey(stream edgeproto.Cloudle
 
 func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
 	// Not thread safe, unit-test only.
-	log.WarnLog("XXX COMMITKEY", "pubpem", pubPEM)
 	cloudlet := &edgeproto.Cloudlet{}
 	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
 		return key.NotFoundError()
@@ -409,8 +408,6 @@ func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.Clou
 
 func (s *BasicUpgradeHandler) commitSecondaryKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
 	// Not thread safe, unit-test only.
-	log.WarnLog("XXX COMMITSECONDARYKEY", "pubpem", pubPEM)
-
 	cloudlet := &edgeproto.Cloudlet{}
 	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
 		return key.NotFoundError()

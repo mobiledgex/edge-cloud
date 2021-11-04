@@ -126,7 +126,7 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 			}
 		}
 	} else {
-		// DME/Shepherd and standby CRM share access key, but it may take time for
+		// DME/Shepherd and CRM share access key, but it may take time for
 		// CRM to upgrade the access key. So retry until verified.
 		// Verify ensures the access key does not require upgrade,
 		// and thus will not be changed by the CRM doing upgrade.
@@ -328,7 +328,7 @@ func (s *AccessKeyClient) AddAccessKeySig(ctx context.Context) context.Context {
 		cloudcommon.AccessKeyData, s.cloudletKeyStr,
 		cloudcommon.AccessKeySig, sigb64,
 	}
-	log.SpanLog(ctx, log.DebugLevelApi, "adding access key to signature")
+	log.SpanLog(ctx, log.DebugLevelApi, "adding access key to signature", "sig", sigb64)
 	return metadata.AppendToOutgoingContext(ctx, kvPairs...)
 }
 
