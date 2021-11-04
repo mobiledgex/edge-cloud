@@ -7,24 +7,26 @@ import (
 )
 
 type AppInstInfoApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.AppInstInfoStore
 }
 
-var appInstInfoApi = AppInstInfoApi{}
-
-func InitAppInstInfoApi(sync *Sync) {
+func NewAppInstInfoApi(sync *Sync, all *AllApis) *AppInstInfoApi {
+	appInstInfoApi := AppInstInfoApi{}
+	appInstInfoApi.all = all
 	appInstInfoApi.sync = sync
 	appInstInfoApi.store = edgeproto.NewAppInstInfoStore(sync.store)
+	return &appInstInfoApi
 }
 
 func (s *AppInstInfoApi) Update(ctx context.Context, in *edgeproto.AppInstInfo, rev int64) {
-	appInstApi.UpdateFromInfo(ctx, in)
+	s.all.appInstApi.UpdateFromInfo(ctx, in)
 }
 
 func (s *AppInstInfoApi) Delete(ctx context.Context, in *edgeproto.AppInstInfo, rev int64) {
 	// for backwards compatibility
-	appInstApi.DeleteFromInfo(ctx, in)
+	s.all.appInstApi.DeleteFromInfo(ctx, in)
 }
 
 func (s *AppInstInfoApi) Flush(ctx context.Context, notifyId int64) {

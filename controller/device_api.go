@@ -10,18 +10,20 @@ import (
 )
 
 type DeviceApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.DeviceStore
 	cache edgeproto.DeviceCache
 }
 
-var deviceApi = DeviceApi{}
-
-func InitDeviceApi(sync *Sync) {
+func NewDeviceApi(sync *Sync, all *AllApis) *DeviceApi {
+	deviceApi := DeviceApi{}
+	deviceApi.all = all
 	deviceApi.sync = sync
 	deviceApi.store = edgeproto.NewDeviceStore(sync.store)
 	edgeproto.InitDeviceCache(&deviceApi.cache)
 	sync.RegisterCache(&deviceApi.cache)
+	return &deviceApi
 }
 
 func (s *DeviceApi) ShowDevice(in *edgeproto.Device, cb edgeproto.DeviceApi_ShowDeviceServer) error {

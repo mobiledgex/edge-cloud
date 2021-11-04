@@ -15,6 +15,7 @@ import (
 )
 
 type AutoProvPolicyApi struct {
+	all              *AllApis
 	sync             *Sync
 	store            edgeproto.AutoProvPolicyStore
 	cache            edgeproto.AutoProvPolicyCache
@@ -22,14 +23,15 @@ type AutoProvPolicyApi struct {
 	deployImmWorkers tasks.KeyWorkers
 }
 
-var autoProvPolicyApi = AutoProvPolicyApi{}
-
-func InitAutoProvPolicyApi(sync *Sync) {
+func NewAutoProvPolicyApi(sync *Sync, all *AllApis) *AutoProvPolicyApi {
+	autoProvPolicyApi := AutoProvPolicyApi{}
+	autoProvPolicyApi.all = all
 	autoProvPolicyApi.sync = sync
 	autoProvPolicyApi.store = edgeproto.NewAutoProvPolicyStore(sync.store)
 	edgeproto.InitAutoProvPolicyCache(&autoProvPolicyApi.cache)
 	sync.RegisterCache(&autoProvPolicyApi.cache)
-	autoProvPolicyApi.deployImmWorkers.Init("AutoProvDeployImmediate", deployImmediate)
+	autoProvPolicyApi.deployImmWorkers.Init("AutoProvDeployImmediate", autoProvPolicyApi.deployImmediate)
+	return &autoProvPolicyApi
 }
 
 func (s *AutoProvPolicyApi) SetInfluxQ(influxQ *influxq.InfluxQ) {
@@ -80,7 +82,7 @@ func (s *AutoProvPolicyApi) UpdateAutoProvPolicy(ctx context.Context, in *edgepr
 }
 
 func (s *AutoProvPolicyApi) DeleteAutoProvPolicy(ctx context.Context, in *edgeproto.AutoProvPolicy) (*edgeproto.Result, error) {
-	if appApi.UsesAutoProvPolicy(&in.Key) {
+	if s.all.appApi.UsesAutoProvPolicy(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Policy in use by App")
 	}
 	return s.store.Delete(ctx, in, s.sync.syncWait)
@@ -169,7 +171,7 @@ func (s *AutoProvPolicyApi) RecvAutoProvCounts(ctx context.Context, msg *edgepro
 	}
 }
 
-func deployImmediate(ctx context.Context, k interface{}) {
+func (s *AutoProvPolicyApi) deployImmediate(ctx context.Context, k interface{}) {
 	key, ok := k.(edgeproto.AppInstKey)
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelApi, "Unexpected failure, key not AppInstKey", "key", k)
@@ -189,7 +191,7 @@ func deployImmediate(ctx context.Context, k interface{}) {
 		ctx:      ctx,
 		debugLvl: log.DebugLevelApi,
 	}
-	err := appInstApi.createAppInstInternal(DefCallContext(), &appInst, &stream)
+	err := s.all.appInstApi.createAppInstInternal(DefCallContext(), &appInst, &stream)
 	log.SpanLog(ctx, log.DebugLevelApi, "auto prov now", "appInst", appInst.Key, "err", err)
 }
 
@@ -212,7 +214,7 @@ func (s *AutoProvPolicyApi) configureCloudlets(stm concurrency.STM, policy *edge
 	// make sure cloudlets exist and location is copied
 	for ii, _ := range policy.Cloudlets {
 		cloudlet := edgeproto.Cloudlet{}
-		if !cloudletApi.store.STMGet(stm, &policy.Cloudlets[ii].Key, &cloudlet) {
+		if !s.all.cloudletApi.store.STMGet(stm, &policy.Cloudlets[ii].Key, &cloudlet) {
 			return policy.Cloudlets[ii].Key.NotFoundError()
 		}
 		policy.Cloudlets[ii].Loc = cloudlet.Location
@@ -280,7 +282,7 @@ func (s *AutoProvPolicyApi) appInstCheck(ctx context.Context, stm concurrency.ST
 	}
 
 	refs := edgeproto.AppInstRefs{}
-	appInstRefsApi.store.STMGet(stm, &app.Key, &refs)
+	s.all.appInstRefsApi.store.STMGet(stm, &app.Key, &refs)
 
 	if action == cloudcommon.Create {
 		// Make sure that no AppInst already exists on the Cloudlet.
@@ -325,7 +327,7 @@ func (s *AutoProvPolicyApi) checkDemand(ctx context.Context, stm concurrency.STM
 	if action == cloudcommon.Delete {
 		// If the AppInst we are deleting is not online, then it will
 		// not affect the min active count so we can safely delete it.
-		online, err := autoProvAppInstOnline(ctx, stm, &inst.Key)
+		online, err := s.autoProvAppInstOnline(ctx, stm, &inst.Key)
 		if err != nil {
 			return err
 		}
@@ -339,7 +341,7 @@ func (s *AutoProvPolicyApi) checkDemand(ctx context.Context, stm concurrency.STM
 	// which is for any AppInst (regardless of online state).
 	// For delete, we are bounded by the MinActiveInstances value,
 	// which is for online AppInsts only.
-	countsByCloudlet, err := getAppInstCountsForAutoProv(ctx, stm, refs, onlineOnly)
+	countsByCloudlet, err := s.getAppInstCountsForAutoProv(ctx, stm, refs, onlineOnly)
 	if err != nil {
 		return err
 	}
@@ -391,7 +393,7 @@ func (s *AutoProvPolicyApi) checkMinMax(ctx context.Context, stm concurrency.STM
 	if action == cloudcommon.Create {
 		onlineOnly = true
 	}
-	countsByCloudlet, err := getAppInstCountsForAutoProv(ctx, stm, refs, onlineOnly)
+	countsByCloudlet, err := s.getAppInstCountsForAutoProv(ctx, stm, refs, onlineOnly)
 	if err != nil {
 		return err
 	}
@@ -447,14 +449,14 @@ func (s *AutoProvPolicyApi) checkOrphaned(ctx context.Context, stm concurrency.S
 	return nil
 }
 
-func getAppInstCountsForAutoProv(ctx context.Context, stm concurrency.STM, refs *edgeproto.AppInstRefs, onlineOnly bool) (map[edgeproto.CloudletKey]int, error) {
+func (s *AutoProvPolicyApi) getAppInstCountsForAutoProv(ctx context.Context, stm concurrency.STM, refs *edgeproto.AppInstRefs, onlineOnly bool) (map[edgeproto.CloudletKey]int, error) {
 	countsByCloudlet := make(map[edgeproto.CloudletKey]int)
 
 	for k, _ := range refs.Insts {
 		instKey := edgeproto.AppInstKey{}
 		edgeproto.AppInstKeyStringParse(k, &instKey)
 		inst := edgeproto.AppInst{}
-		if !appInstApi.store.STMGet(stm, &instKey, &inst) {
+		if !s.all.appInstApi.store.STMGet(stm, &instKey, &inst) {
 			// no inst?
 			continue
 		}
@@ -463,7 +465,7 @@ func getAppInstCountsForAutoProv(ctx context.Context, stm concurrency.STM, refs 
 			continue
 		}
 		if onlineOnly {
-			online, err := autoProvAppInstOnline(ctx, stm, &instKey)
+			online, err := s.autoProvAppInstOnline(ctx, stm, &instKey)
 			if err != nil {
 				return countsByCloudlet, err
 			}
@@ -476,17 +478,17 @@ func getAppInstCountsForAutoProv(ctx context.Context, stm concurrency.STM, refs 
 	return countsByCloudlet, nil
 }
 
-func autoProvAppInstOnline(ctx context.Context, stm concurrency.STM, key *edgeproto.AppInstKey) (bool, error) {
+func (s *AutoProvPolicyApi) autoProvAppInstOnline(ctx context.Context, stm concurrency.STM, key *edgeproto.AppInstKey) (bool, error) {
 	appInst := edgeproto.AppInst{}
-	if !appInstApi.store.STMGet(stm, key, &appInst) {
+	if !s.all.appInstApi.store.STMGet(stm, key, &appInst) {
 		return false, key.NotFoundError()
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
-	if !cloudletInfoApi.store.STMGet(stm, &key.ClusterInstKey.CloudletKey, &cloudletInfo) {
+	if !s.all.cloudletInfoApi.store.STMGet(stm, &key.ClusterInstKey.CloudletKey, &cloudletInfo) {
 		return false, key.ClusterInstKey.CloudletKey.NotFoundError()
 	}
 	cloudlet := edgeproto.Cloudlet{}
-	if !cloudletApi.store.STMGet(stm, &key.ClusterInstKey.CloudletKey, &cloudlet) {
+	if !s.all.cloudletApi.store.STMGet(stm, &key.ClusterInstKey.CloudletKey, &cloudlet) {
 		return false, key.ClusterInstKey.CloudletKey.NotFoundError()
 	}
 	return cloudcommon.AutoProvAppInstOnline(&appInst, &cloudletInfo, &cloudlet), nil

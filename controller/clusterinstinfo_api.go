@@ -7,24 +7,26 @@ import (
 )
 
 type ClusterInstInfoApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.ClusterInstInfoStore
 }
 
-var clusterInstInfoApi = ClusterInstInfoApi{}
-
-func InitClusterInstInfoApi(sync *Sync) {
+func NewClusterInstInfoApi(sync *Sync, all *AllApis) *ClusterInstInfoApi {
+	clusterInstInfoApi := ClusterInstInfoApi{}
+	clusterInstInfoApi.all = all
 	clusterInstInfoApi.sync = sync
 	clusterInstInfoApi.store = edgeproto.NewClusterInstInfoStore(sync.store)
+	return &clusterInstInfoApi
 }
 
 func (s *ClusterInstInfoApi) Update(ctx context.Context, in *edgeproto.ClusterInstInfo, rev int64) {
-	clusterInstApi.UpdateFromInfo(ctx, in)
+	s.all.clusterInstApi.UpdateFromInfo(ctx, in)
 }
 
 func (s *ClusterInstInfoApi) Delete(ctx context.Context, in *edgeproto.ClusterInstInfo, rev int64) {
 	// for backwards compatibility
-	clusterInstApi.DeleteFromInfo(ctx, in)
+	s.all.clusterInstApi.DeleteFromInfo(ctx, in)
 }
 
 func (s *ClusterInstInfoApi) Flush(ctx context.Context, notifyId int64) {

@@ -15,6 +15,7 @@ import (
 )
 
 type ExecApi struct {
+	all      *AllApis
 	requests map[string]*ExecReq
 	mux      sync.Mutex
 }
@@ -31,20 +32,22 @@ const (
 	LongTimeout = edgeproto.Duration(60 * time.Second)
 )
 
-var execApi = ExecApi{}
 var execRequestSendMany *notify.ExecRequestSendMany
 
-func InitExecApi() {
+func NewExecApi(all *AllApis) *ExecApi {
+	execApi := ExecApi{}
+	execApi.all = all
 	execApi.requests = make(map[string]*ExecReq)
 	execRequestSendMany = notify.NewExecRequestSendMany()
+	return &execApi
 }
 
 func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
 	cloudcommon.SetAppInstKeyDefaults(&req.AppInstKey)
-	if !appApi.Get(&req.AppInstKey.AppKey, app) {
+	if !s.all.appApi.Get(&req.AppInstKey.AppKey, app) {
 		return req.AppInstKey.AppKey.NotFoundError()
 	}
-	if !appInstApi.HasKey(&req.AppInstKey) {
+	if !s.all.appInstApi.HasKey(&req.AppInstKey) {
 		return req.AppInstKey.NotFoundError()
 	}
 	return nil
@@ -164,7 +167,7 @@ func (s *ExecApi) doExchange(ctx context.Context, req *edgeproto.ExecRequest) (*
 	// Forward the offer.
 	// Currently we don't know which controller has the CRM connected
 	// (or if it's even present), so just broadcast to all.
-	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
+	err := s.all.controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		var err error
 		var reply *edgeproto.ExecRequest
 		if addr == *externalApiAddr {
