@@ -123,7 +123,12 @@ func getCrmProc(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig
 	}, opts, nil
 }
 
-var trackedProcess = map[edgeproto.CloudletKey]*process.Crm{}
+type trackedProcessKey struct {
+	cloudletKey edgeproto.CloudletKey
+	haRole      process.HARole
+}
+
+var trackedProcess = map[trackedProcessKey]*process.Crm{}
 var trackedProcessMux sync.Mutex
 
 func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole) ([]string, *map[string]string, error) {
@@ -170,8 +175,12 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 
 	// track all local crm processes
+	procKey := trackedProcessKey{
+		cloudletKey: cloudlet.Key,
+		haRole:      haRole,
+	}
 	trackedProcessMux.Lock()
-	trackedProcess[cloudlet.Key] = nil
+	trackedProcess[procKey] = nil
 	trackedProcessMux.Unlock()
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig, haRole)
 	if err != nil {
@@ -191,7 +200,7 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "started "+crmProc.GetExeName(), "pfConfig", pfConfig)
 	trackedProcessMux.Lock()
-	trackedProcess[cloudlet.Key] = crmProc
+	trackedProcess[procKey] = crmProc
 	trackedProcessMux.Unlock()
 
 	return nil
@@ -199,11 +208,11 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 
 // StopCRMService stops the crmserver on the specified cloudlet, or kills any
 // crm process if the cloudlet specified is nil
-func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, HARole process.HARole) error {
+func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, haRole process.HARole) error {
 	args := ""
 	if cloudlet != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "stop crmserver", "cloudlet", cloudlet.Key)
-		crmProc, _, err := getCrmProc(cloudlet, nil, HARole)
+		crmProc, _, err := getCrmProc(cloudlet, nil, haRole)
 		if err != nil {
 			return err
 		}
@@ -220,17 +229,21 @@ func StopCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, HARole pr
 	// After above, processes will be in Zombie state. Hence use wait to cleanup the processes
 	trackedProcessMux.Lock()
 	if cloudlet != nil {
-		if cmdProc, ok := trackedProcess[cloudlet.Key]; ok {
+		procKey := trackedProcessKey{
+			cloudletKey: cloudlet.Key,
+			haRole:      haRole,
+		}
+		if cmdProc, ok := trackedProcess[procKey]; ok {
 			// Wait is in a goroutine as it is blocking call if
 			// process is not killed for some reasons
 			go cmdProc.Wait()
-			delete(trackedProcess, cloudlet.Key)
+			delete(trackedProcess, procKey)
 		}
 	} else {
 		for _, v := range trackedProcess {
 			go v.Wait()
 		}
-		trackedProcess = make(map[edgeproto.CloudletKey]*process.Crm)
+		trackedProcess = make(map[trackedProcessKey]*process.Crm)
 	}
 	trackedProcessMux.Unlock()
 	return nil
@@ -267,12 +280,28 @@ func GetCloudletLog(ctx context.Context, key *edgeproto.CloudletKey) (string, er
 }
 
 func CrmServiceWait(key edgeproto.CloudletKey) error {
-	trackedProcessMux.Lock()
-	p, ok := trackedProcess[key]
-	delete(trackedProcess, key)
-	trackedProcessMux.Unlock()
 
-	if ok {
+	roles := []process.HARole{
+		process.HARoleNone,
+		process.HARolePrimary,
+		process.HARoleSecondary,
+	}
+	// loop through all possible HA roles to find running CRMs
+	var crmProcs []*process.Crm
+	trackedProcessMux.Lock()
+	for _, r := range roles {
+		procKey := trackedProcessKey{
+			cloudletKey: key,
+			haRole:      r,
+		}
+		tp, ok := trackedProcess[procKey]
+		delete(trackedProcess, procKey)
+		if ok {
+			crmProcs = append(crmProcs, tp)
+		}
+	}
+	trackedProcessMux.Unlock()
+	for _, p := range crmProcs {
 		err := p.Wait()
 		if err != nil && strings.Contains(err.Error(), "Wait was already called") {
 			return nil

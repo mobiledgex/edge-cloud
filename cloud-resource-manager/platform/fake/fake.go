@@ -129,7 +129,7 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 
 	s.caches = caches
 	s.cloudletKey = platformConfig.CloudletKey
-	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
+	updateCallback(edgeproto.UpdateTask, "Done initializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
 	}))
@@ -543,37 +543,41 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	if cloudlet.PlatformHighAvailability {
 		log.SpanLog(ctx, log.DebugLevelInfra, "creating 2 instances for H/A", "key", cloudlet.Key)
-		for i, role := range []process.HARole{process.HARolePrimary, process.HARoleSecondary} {
-			err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, role)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "role", role, "err", err)
-				return true, err
-			}
-			if i == 0 {
-				// before starting the second instance, wait until some cloudlet info shows up from the first instance.
-				// This is needed to ensure consistent ordering for e2e tests
-				start := time.Now()
-				for {
-					var cloudletInfo edgeproto.CloudletInfo
+		err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start primary CRM", "err", err)
+			return true, err
+		}
+		// Pause before starting the secondary to let the primary become active first for the sake of
+		// e2e tests that need consistent ordering. Secondary will be started up in a separate thread after
+		// cloudletInfo shows up from the primary
+		go func() {
+			start := time.Now()
+			for {
+				var cloudletInfo edgeproto.CloudletInfo
+				time.Sleep(time.Millisecond * 200)
+				elapsed := time.Since(start)
+				if elapsed >= (maxPrimaryCrmStartupWait) {
+					log.SpanLog(ctx, log.DebugLevelInfra, "timed out waiting for primary CRM to report cloudlet info")
+					break
+				}
+				if !caches.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo) {
+					log.SpanLog(ctx, log.DebugLevelInfra, "failed to get cloudlet info after starting primary CRM, will retry", "cloudletKey", s.cloudletKey)
 					time.Sleep(time.Millisecond * 200)
-					elapsed := time.Since(start)
-					if elapsed >= (maxPrimaryCrmStartupWait) {
-						return true, fmt.Errorf("timed out waiting for primary CRM to report cloudlet info")
+				} else {
+					log.SpanLog(ctx, log.DebugLevelInfra, "got cloudlet info from primary CRM, will start secondary", "cloudletKey", cloudlet.Key, "active", cloudletInfo.ActiveCrmInstance, "ci", cloudletInfo)
+					err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleSecondary)
+					if err != nil {
+						log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start secondary CRM", "err", err)
 					}
-					if !caches.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo) {
-						log.SpanLog(ctx, log.DebugLevelInfra, "failed to get cloudlet info after starting primary CRM, will retry", "cloudletKey", s.cloudletKey)
-						time.Sleep(time.Millisecond * 200)
-					} else {
-						log.SpanLog(ctx, log.DebugLevelInfra, "got cloudlet info from primary CRM", "cloudletKey", cloudlet.Key, "active", cloudletInfo.ActiveCrmInstance, "ci", cloudletInfo)
-						break
-					}
+					break
 				}
 			}
-		}
+		}()
 	} else {
-		err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, "")
+		err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleNone)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start CRM", "err", err)
 			return true, err
 		}
 	}

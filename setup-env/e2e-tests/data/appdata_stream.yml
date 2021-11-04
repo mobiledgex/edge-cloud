@@ -139,7 +139,7 @@ streamobjs:
   - message: Creating Cloudlet
   - message: Starting CRMServer
   - message: Initializing platform
-  - message: Done intializing fake platform
+  - message: Done initializing fake platform
   - message: Gathering Cloudlet Info
   - message: Created Cloudlet successfully
 - key:
@@ -152,7 +152,7 @@ streamobjs:
   - message: Creating Cloudlet
   - message: Starting CRMServer
   - message: Initializing platform
-  - message: Done intializing fake platform
+  - message: Done initializing fake platform
   - message: Gathering Cloudlet Info
   - message: Created Cloudlet successfully
 - key:
@@ -165,7 +165,7 @@ streamobjs:
   - message: Creating Cloudlet
   - message: Starting CRMServer
   - message: Initializing platform
-  - message: Done intializing fake platform
+  - message: Done initializing fake platform
   - message: Gathering Cloudlet Info
   - message: Created Cloudlet successfully
 - key:
@@ -178,7 +178,7 @@ streamobjs:
   - message: Creating Cloudlet
   - message: Starting CRMServer
   - message: Initializing platform
-  - message: Done intializing fake platform
+  - message: Done initializing fake platform
   - message: Gathering Cloudlet Info
   - message: Created Cloudlet successfully
 - key:
@@ -191,6 +191,6 @@ streamobjs:
   - message: Creating Cloudlet
   - message: Starting CRMServer
   - message: Initializing platform
-  - message: Done intializing fake platform
+  - message: Done initializing fake platform
   - message: Gathering Cloudlet Info
   - message: Created Cloudlet successfully

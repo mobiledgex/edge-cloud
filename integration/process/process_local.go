@@ -1275,13 +1275,33 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 
 func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 	args := p.GetRunArgs()
+	redisPort := "6379"
+	redisAddr := "localhost:" + redisPort
 	args = append(args,
-		"-p", "6379:6379",
+		"-p", redisPort+":"+redisPort,
 		"redis",
 	)
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
-	return err
+	if err != nil {
+		return err
+	}
+	// wait for redis to become ready
+	maxRedisWait := 10 * time.Second
+	start := time.Now()
+	for {
+		conn, err := net.Dial("tcp", redisAddr)
+		if err == nil {
+			conn.Close()
+			break
+		}
+		elapsed := time.Since(start)
+		if elapsed > maxRedisWait {
+			return fmt.Errorf("Timed out try to connect to redis")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return nil
 }
 
 func (d *DockerNetwork) Create() error {

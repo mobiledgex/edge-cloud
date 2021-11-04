@@ -83,6 +83,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.CrmSecondaryAccessPublicKey = ""
 	}
 	if _, found := tags["nocmp"]; found {
+		in.CrmSecondaryAccessKeyUpgradeRequired = false
+	}
+	if _, found := tags["nocmp"]; found {
 		in.SecondaryNotifySrvAddr = ""
 	}
 }

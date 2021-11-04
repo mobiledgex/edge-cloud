@@ -481,7 +481,7 @@ message Cloudlet {
   // CRM secondary access public key for H/A
   string crm_secondary_access_public_key = 50 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // CRM secondary access key upgrade required for H/A
-  bool crm_secondary_access_key_upgrade_required = 51 [(protogen.backend) = true];
+  bool crm_secondary_access_key_upgrade_required = 51 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Address for the secondary CRM notify listener to run on
   string secondary_notify_srv_addr = 52 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;

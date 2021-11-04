@@ -262,7 +262,6 @@ func (s *AccessKeyServer) isTlsAccessKeyRequired(ctx context.Context) (bool, err
 
 func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error) error {
 	ctx := stream.Context()
-	log.WarnLog("XXXX UpgradeAccessKey", "commitfunc addr", fmt.Sprintf("%+v", &commitKeyFunc))
 	verified := ContextGetAccessKeyVerified(ctx)
 	if verified == nil {
 		// this should never happen, the interceptor should error out first

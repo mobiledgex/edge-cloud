@@ -342,7 +342,7 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
 	require.Equal(t, len(streamCloudlet.Msgs), 5, "progress messages")
-	cloudletMsgs := []string{"Setting up cloudlet", "Initializing platform", "Done intializing fake platform", "Gathering Cloudlet Info", "Cloudlet setup successfully"}
+	cloudletMsgs := []string{"Setting up cloudlet", "Initializing platform", "Done initializing fake platform", "Gathering Cloudlet Info", "Cloudlet setup successfully"}
 	for ii, msg := range cloudletMsgs {
 		require.Equal(t, streamCloudlet.Msgs[ii].Message, msg, "message matches")
 	}

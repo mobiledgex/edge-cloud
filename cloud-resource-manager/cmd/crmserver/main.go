@@ -188,7 +188,6 @@ func main() {
 			if highAvailabilityManager.TryActive(ctx) {
 				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is active", "role", highAvailabilityManager.HARole)
 				myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
-				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is not active", "role", highAvailabilityManager.HARole)
 				myCloudletInfo.StandbyCrm = true

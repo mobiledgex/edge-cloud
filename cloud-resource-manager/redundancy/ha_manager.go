@@ -70,10 +70,10 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, acti
 }
 
 func (s *HighAvailabilityManager) pingRedis(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfo, "pingRedis")
+	log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis")
 
 	pong, err := s.redisClient.Ping().Result()
-	log.SpanLog(ctx, log.DebugLevelInfo, "redis ping done", "pong", pong, "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "redis ping done", "pong", pong, "err", err)
 
 	if err != nil {
 		return fmt.Errorf("%s - %v", RedisPingFail, err)
@@ -82,7 +82,7 @@ func (s *HighAvailabilityManager) pingRedis(ctx context.Context) error {
 }
 
 func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfo, "connectRedis")
+	log.SpanLog(ctx, log.DebugLevelInfra, "connectRedis")
 	if s.redisAddr == "" {
 		return fmt.Errorf("Redis address not specified")
 	}
@@ -108,7 +108,7 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
-	log.SpanLog(ctx, log.DebugLevelInfo, "pingRedis failed", "err", err)
+	log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis failed", "err", err)
 	return fmt.Errorf("pingRedis failed - %v", err)
 }
 
@@ -117,9 +117,7 @@ func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
 	if PlatformInstanceActive {
 		// this should not happen. Only 1 thread should be doing TryActive
 		log.FatalLog("Platform already active")
-		return true
 	}
-
 	cmd := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
 	if err != nil {
@@ -133,7 +131,7 @@ func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
 	cmd := s.redisClient.Set(s.nodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
 		return err
 	}
 	if v != "OK" {
@@ -142,7 +140,7 @@ func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
 	return nil
 }
 func (s *HighAvailabilityManager) UpdateCloudletInfoForActive(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfo, "UpdateCloudletInfoForActive")
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoForActive")
 
 	var cloudletInfo edgeproto.CloudletInfo
 	if !s.cloudletInfoCache.Get(s.cloudletKey, &cloudletInfo) {
@@ -156,18 +154,18 @@ func (s *HighAvailabilityManager) UpdateCloudletInfoForActive(ctx context.Contex
 }
 
 func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
-	log.SpanLog(ctx, log.DebugLevelInfo, "CheckActiveLoop")
+	log.SpanLog(ctx, log.DebugLevelInfra, "CheckActiveLoop")
 	timeSinceLog := time.Now() // log only once every X seconds in this loop
 	for {
 		elaspsed := time.Since(timeSinceLog)
 		if !PlatformInstanceActive {
 			if elaspsed >= CheckActiveLogInterval {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Platform inactive, doing TryActive")
+				log.SpanLog(ctx, log.DebugLevelInfra, "Platform inactive, doing TryActive")
 				timeSinceLog = time.Now()
 			}
 			newActive := s.TryActive(ctx)
 			if newActive {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Platform became active")
+				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
 				if s.platform != nil {
 					err := s.UpdateCloudletInfoForActive(ctx)
 					if err != nil {
@@ -178,12 +176,12 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			}
 		} else {
 			if elaspsed >= CheckActiveLogInterval {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Platform active, doing BumpActiveExpire")
+				log.SpanLog(ctx, log.DebugLevelInfra, "Platform active, doing BumpActiveExpire")
 				timeSinceLog = time.Now()
 			}
 			err := s.BumpActiveExpire(ctx)
 			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "BumpActiveExpire failed, retry", "err", err)
+				log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire failed, retry", "err", err)
 				err = s.BumpActiveExpire(ctx)
 				if err != nil {
 					log.FatalLog("BumpActiveExpire failed!", "err", err)
