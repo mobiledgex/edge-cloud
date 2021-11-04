@@ -101,9 +101,7 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 		}
 		elapsed := time.Since(start)
 		if elapsed >= (MaxRedisWait) {
-			// for now we will return no errors when we time out.  In future we will use some other state or status
-			// field to reflect this and employ health checks to track these appinsts
-			log.InfoLog("redis wait timed out")
+			log.SpanLog(ctx, log.DebugLevelInfra, "redis wait timed out", "err", err)
 			break
 		}
 		time.Sleep(200 * time.Millisecond)

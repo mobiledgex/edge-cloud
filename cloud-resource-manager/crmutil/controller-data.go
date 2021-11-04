@@ -991,7 +991,7 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
-
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
@@ -1547,7 +1547,7 @@ func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 	close(cd.finishInfraResourceThread)
 }
 
-// StartHAManager returns haEnabled, error
+// InitHAManager returns haEnabled, error
 func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "InitHAManager", "haKey", haKey)
 	haEnabled := false

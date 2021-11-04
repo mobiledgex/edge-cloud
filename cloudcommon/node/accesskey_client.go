@@ -60,7 +60,7 @@ func (s *AccessKeyClient) InitFlags() {
 	flag.BoolVar(&s.requireAccessKey, "requireAccessKey", true, "Require access key for RegionalCloudlet service")
 }
 
-func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey, deploymentTag string, secondaryInstance bool) error {
+func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey, deploymentTag string) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "access key client init")
 	if tlsClientIssuer == NoTlsClientIssuer {
 		// unit test mode
@@ -99,6 +99,7 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 	}
 	s.cloudletKey = key
 	s.cloudletKeyStr = string(keystr)
+	secondaryInstance := nodeType == NodeTypeCRMSecondary
 
 	if nodeType == NodeTypeCRM || nodeType == NodeTypeCRMSecondary {
 		// Attempt to upgrade access key. May not exist if upgrading
