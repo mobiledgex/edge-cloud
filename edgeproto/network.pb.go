@@ -792,6 +792,10 @@ func (m *NetworkKey) CopyInFields(src *NetworkKey) int {
 		m.CloudletKey.Name = src.CloudletKey.Name
 		changed++
 	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Name != src.Name {
 		m.Name = src.Name
 		changed++
@@ -833,6 +837,7 @@ func (m *NetworkKey) GetTags() map[string]string {
 	tags := make(map[string]string)
 	tags["cloudletorg"] = m.CloudletKey.Organization
 	tags["cloudlet"] = m.CloudletKey.Name
+	tags["federatedorg"] = m.CloudletKey.FederatedOrganization
 	tags["network"] = m.Name
 	return tags
 }
@@ -878,6 +883,7 @@ const NetworkFieldKey = "2"
 const NetworkFieldKeyCloudletKey = "2.1"
 const NetworkFieldKeyCloudletKeyOrganization = "2.1.1"
 const NetworkFieldKeyCloudletKeyName = "2.1.2"
+const NetworkFieldKeyCloudletKeyFederatedOrganization = "2.1.3"
 const NetworkFieldKeyName = "2.2"
 const NetworkFieldRoutes = "3"
 const NetworkFieldRoutesDestinationCidr = "3.1"
@@ -887,6 +893,7 @@ const NetworkFieldConnectionType = "4"
 var NetworkAllFields = []string{
 	NetworkFieldKeyCloudletKeyOrganization,
 	NetworkFieldKeyCloudletKeyName,
+	NetworkFieldKeyCloudletKeyFederatedOrganization,
 	NetworkFieldKeyName,
 	NetworkFieldRoutesDestinationCidr,
 	NetworkFieldRoutesNextHopIp,
@@ -894,21 +901,23 @@ var NetworkAllFields = []string{
 }
 
 var NetworkAllFieldsMap = map[string]struct{}{
-	NetworkFieldKeyCloudletKeyOrganization: struct{}{},
-	NetworkFieldKeyCloudletKeyName:         struct{}{},
-	NetworkFieldKeyName:                    struct{}{},
-	NetworkFieldRoutesDestinationCidr:      struct{}{},
-	NetworkFieldRoutesNextHopIp:            struct{}{},
-	NetworkFieldConnectionType:             struct{}{},
+	NetworkFieldKeyCloudletKeyOrganization:          struct{}{},
+	NetworkFieldKeyCloudletKeyName:                  struct{}{},
+	NetworkFieldKeyCloudletKeyFederatedOrganization: struct{}{},
+	NetworkFieldKeyName:                             struct{}{},
+	NetworkFieldRoutesDestinationCidr:               struct{}{},
+	NetworkFieldRoutesNextHopIp:                     struct{}{},
+	NetworkFieldConnectionType:                      struct{}{},
 }
 
 var NetworkAllFieldsStringMap = map[string]string{
-	NetworkFieldKeyCloudletKeyOrganization: "Key Cloudlet Key Organization",
-	NetworkFieldKeyCloudletKeyName:         "Key Cloudlet Key Name",
-	NetworkFieldKeyName:                    "Key Name",
-	NetworkFieldRoutesDestinationCidr:      "Routes Destination Cidr",
-	NetworkFieldRoutesNextHopIp:            "Routes Next Hop Ip",
-	NetworkFieldConnectionType:             "Connection Type",
+	NetworkFieldKeyCloudletKeyOrganization:          "Key Cloudlet Key Organization",
+	NetworkFieldKeyCloudletKeyName:                  "Key Cloudlet Key Name",
+	NetworkFieldKeyCloudletKeyFederatedOrganization: "Key Cloudlet Key Federated Organization",
+	NetworkFieldKeyName:                             "Key Name",
+	NetworkFieldRoutesDestinationCidr:               "Routes Destination Cidr",
+	NetworkFieldRoutesNextHopIp:                     "Routes Next Hop Ip",
+	NetworkFieldConnectionType:                      "Connection Type",
 }
 
 func (m *Network) IsKeyField(s string) bool {
@@ -923,6 +932,11 @@ func (m *Network) DiffFields(o *Network, fields map[string]struct{}) {
 	}
 	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
 		fields[NetworkFieldKeyCloudletKeyName] = struct{}{}
+		fields[NetworkFieldKeyCloudletKey] = struct{}{}
+		fields[NetworkFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.FederatedOrganization != o.Key.CloudletKey.FederatedOrganization {
+		fields[NetworkFieldKeyCloudletKeyFederatedOrganization] = struct{}{}
 		fields[NetworkFieldKeyCloudletKey] = struct{}{}
 		fields[NetworkFieldKey] = struct{}{}
 	}
@@ -993,6 +1007,12 @@ func (m *Network) CopyInFields(src *Network) int {
 			if _, set := fmap["2.1.2"]; set {
 				if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 					m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+					changed++
+				}
+			}
+			if _, set := fmap["2.1.3"]; set {
+				if m.Key.CloudletKey.FederatedOrganization != src.Key.CloudletKey.FederatedOrganization {
+					m.Key.CloudletKey.FederatedOrganization = src.Key.CloudletKey.FederatedOrganization
 					changed++
 				}
 			}

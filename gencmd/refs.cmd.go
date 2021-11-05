@@ -274,6 +274,7 @@ var VMResourceRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.organization",
 	"key.cloudletkey.name",
+	"key.cloudletkey.federatedorganization",
 	"key.organization",
 }
 var VMResourceOptionalArgs = []string{
@@ -287,17 +288,18 @@ var VMResourceOptionalArgs = []string{
 }
 var VMResourceAliasArgs = []string{}
 var VMResourceComments = map[string]string{
-	"key.clusterkey.name":          "Cluster name",
-	"key.cloudletkey.organization": "Organization of the cloudlet site",
-	"key.cloudletkey.name":         "Name of the cloudlet",
-	"key.organization":             "Name of Developer organization that this cluster belongs to",
-	"vmflavor.name":                "Name of the flavor on the Cloudlet",
-	"vmflavor.vcpus":               "Number of VCPU cores on the Cloudlet",
-	"vmflavor.ram":                 "Ram in MB on the Cloudlet",
-	"vmflavor.disk":                "Amount of disk in GB on the Cloudlet",
-	"vmflavor.propmap":             "OS Flavor Properties, if any",
-	"type":                         "Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
-	"appaccesstype":                "Access type for resource of type App VM, one of DefaultForDeployment, Direct, LoadBalancer",
+	"key.clusterkey.name":                   "Cluster name",
+	"key.cloudletkey.organization":          "Organization of the cloudlet site",
+	"key.cloudletkey.name":                  "Name of the cloudlet",
+	"key.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"key.organization":                      "Name of Developer organization that this cluster belongs to",
+	"vmflavor.name":                         "Name of the flavor on the Cloudlet",
+	"vmflavor.vcpus":                        "Number of VCPU cores on the Cloudlet",
+	"vmflavor.ram":                          "Ram in MB on the Cloudlet",
+	"vmflavor.disk":                         "Amount of disk in GB on the Cloudlet",
+	"vmflavor.propmap":                      "OS Flavor Properties, if any",
+	"type":                                  "Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
+	"appaccesstype":                         "Access type for resource of type App VM, one of DefaultForDeployment, Direct, LoadBalancer",
 }
 var VMResourceSpecialArgs = map[string]string{
 	"vmflavor.propmap": "StringToString",
@@ -305,6 +307,7 @@ var VMResourceSpecialArgs = map[string]string{
 var CloudletRefsRequiredArgs = []string{
 	"key.organization",
 	"key.name",
+	"key.federatedorganization",
 }
 var CloudletRefsOptionalArgs = []string{
 	"rootlbports:#.key",
@@ -326,6 +329,7 @@ var CloudletRefsAliasArgs = []string{}
 var CloudletRefsComments = map[string]string{
 	"key.organization":                            "Organization of the cloudlet site",
 	"key.name":                                    "Name of the cloudlet",
+	"key.federatedorganization":                   "Federated operator organization who shared this cloudlet",
 	"useddynamicips":                              "Used dynamic IPs",
 	"usedstaticips":                               "Used static IPs",
 	"reservedautoclusterids":                      "Track reservable autoclusterinsts ids in use. This is a bitmap.",
@@ -357,6 +361,7 @@ var ClusterRefsRequiredArgs = []string{
 	"key.clusterkey.name",
 	"key.cloudletkey.organization",
 	"key.cloudletkey.name",
+	"key.cloudletkey.federatedorganization",
 	"key.organization",
 }
 var ClusterRefsOptionalArgs = []string{
@@ -367,14 +372,15 @@ var ClusterRefsOptionalArgs = []string{
 }
 var ClusterRefsAliasArgs = []string{}
 var ClusterRefsComments = map[string]string{
-	"key.clusterkey.name":          "Cluster name",
-	"key.cloudletkey.organization": "Organization of the cloudlet site",
-	"key.cloudletkey.name":         "Name of the cloudlet",
-	"key.organization":             "Name of Developer organization that this cluster belongs to",
-	"apps:#.appkey.organization":   "App developer organization",
-	"apps:#.appkey.name":           "App name",
-	"apps:#.appkey.version":        "App version",
-	"apps:#.vclustername":          "Virtual cluster name",
+	"key.clusterkey.name":                   "Cluster name",
+	"key.cloudletkey.organization":          "Organization of the cloudlet site",
+	"key.cloudletkey.name":                  "Name of the cloudlet",
+	"key.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"key.organization":                      "Name of Developer organization that this cluster belongs to",
+	"apps:#.appkey.organization":            "App developer organization",
+	"apps:#.appkey.name":                    "App name",
+	"apps:#.appkey.version":                 "App version",
+	"apps:#.vclustername":                   "Virtual cluster name",
 }
 var ClusterRefsSpecialArgs = map[string]string{}
 var AppInstRefsRequiredArgs = []string{

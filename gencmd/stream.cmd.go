@@ -443,6 +443,7 @@ var StreamObjRequiredArgs = []string{
 	"key.clusterinstkey.clusterkey.name",
 	"key.clusterinstkey.cloudletkey.organization",
 	"key.clusterinstkey.cloudletkey.name",
+	"key.clusterinstkey.cloudletkey.federatedorganization",
 	"key.clusterinstkey.organization",
 }
 var StreamObjOptionalArgs = []string{
@@ -455,13 +456,14 @@ var StreamObjOptionalArgs = []string{
 }
 var StreamObjAliasArgs = []string{}
 var StreamObjComments = map[string]string{
-	"key.appkey.organization":                     "App developer organization",
-	"key.appkey.name":                             "App name",
-	"key.appkey.version":                          "App version",
-	"key.clusterinstkey.clusterkey.name":          "Cluster name",
-	"key.clusterinstkey.cloudletkey.organization": "Organization of the cloudlet site",
-	"key.clusterinstkey.cloudletkey.name":         "Name of the cloudlet",
-	"key.clusterinstkey.organization":             "Name of Developer organization that this cluster belongs to",
+	"key.appkey.organization":                              "App developer organization",
+	"key.appkey.name":                                      "App name",
+	"key.appkey.version":                                   "App version",
+	"key.clusterinstkey.clusterkey.name":                   "Cluster name",
+	"key.clusterinstkey.cloudletkey.organization":          "Organization of the cloudlet site",
+	"key.clusterinstkey.cloudletkey.name":                  "Name of the cloudlet",
+	"key.clusterinstkey.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"key.clusterinstkey.organization":                      "Name of Developer organization that this cluster belongs to",
 }
 var StreamObjSpecialArgs = map[string]string{
 	"status.msgs": "StringArray",

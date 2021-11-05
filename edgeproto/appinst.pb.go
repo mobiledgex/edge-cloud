@@ -2144,6 +2144,10 @@ func (m *VirtualClusterInstKey) CopyInFields(src *VirtualClusterInstKey) int {
 		m.CloudletKey.Name = src.CloudletKey.Name
 		changed++
 	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Organization != src.Organization {
 		m.Organization = src.Organization
 		changed++
@@ -2187,6 +2191,7 @@ func (m *VirtualClusterInstKey) GetTags() map[string]string {
 	tags["cluster"] = m.ClusterKey.Name
 	tags["cloudletorg"] = m.CloudletKey.Organization
 	tags["cloudlet"] = m.CloudletKey.Name
+	tags["federatedorg"] = m.CloudletKey.FederatedOrganization
 	tags["clusterorg"] = m.Organization
 	return tags
 }
@@ -2248,6 +2253,10 @@ func (m *AppInstKey) CopyInFields(src *AppInstKey) int {
 		m.ClusterInstKey.CloudletKey.Name = src.ClusterInstKey.CloudletKey.Name
 		changed++
 	}
+	if m.ClusterInstKey.CloudletKey.FederatedOrganization != src.ClusterInstKey.CloudletKey.FederatedOrganization {
+		m.ClusterInstKey.CloudletKey.FederatedOrganization = src.ClusterInstKey.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.ClusterInstKey.Organization != src.ClusterInstKey.Organization {
 		m.ClusterInstKey.Organization = src.ClusterInstKey.Organization
 		changed++
@@ -2291,6 +2300,7 @@ func (m *AppInstKey) GetTags() map[string]string {
 	tags["cluster"] = m.ClusterInstKey.ClusterKey.Name
 	tags["cloudletorg"] = m.ClusterInstKey.CloudletKey.Organization
 	tags["cloudlet"] = m.ClusterInstKey.CloudletKey.Name
+	tags["federatedorg"] = m.ClusterInstKey.CloudletKey.FederatedOrganization
 	tags["clusterorg"] = m.ClusterInstKey.Organization
 	return tags
 }
@@ -2511,6 +2521,7 @@ const AppInstFieldKeyClusterInstKeyClusterKeyName = "2.4.1.1"
 const AppInstFieldKeyClusterInstKeyCloudletKey = "2.4.2"
 const AppInstFieldKeyClusterInstKeyCloudletKeyOrganization = "2.4.2.1"
 const AppInstFieldKeyClusterInstKeyCloudletKeyName = "2.4.2.2"
+const AppInstFieldKeyClusterInstKeyCloudletKeyFederatedOrganization = "2.4.2.3"
 const AppInstFieldKeyClusterInstKeyOrganization = "2.4.3"
 const AppInstFieldCloudletLoc = "3"
 const AppInstFieldCloudletLocLatitude = "3.1"
@@ -2581,6 +2592,7 @@ var AppInstAllFields = []string{
 	AppInstFieldKeyClusterInstKeyClusterKeyName,
 	AppInstFieldKeyClusterInstKeyCloudletKeyOrganization,
 	AppInstFieldKeyClusterInstKeyCloudletKeyName,
+	AppInstFieldKeyClusterInstKeyCloudletKeyFederatedOrganization,
 	AppInstFieldKeyClusterInstKeyOrganization,
 	AppInstFieldCloudletLocLatitude,
 	AppInstFieldCloudletLocLongitude,
@@ -2636,125 +2648,127 @@ var AppInstAllFields = []string{
 }
 
 var AppInstAllFieldsMap = map[string]struct{}{
-	AppInstFieldKeyAppKeyOrganization:                    struct{}{},
-	AppInstFieldKeyAppKeyName:                            struct{}{},
-	AppInstFieldKeyAppKeyVersion:                         struct{}{},
-	AppInstFieldKeyClusterInstKeyClusterKeyName:          struct{}{},
-	AppInstFieldKeyClusterInstKeyCloudletKeyOrganization: struct{}{},
-	AppInstFieldKeyClusterInstKeyCloudletKeyName:         struct{}{},
-	AppInstFieldKeyClusterInstKeyOrganization:            struct{}{},
-	AppInstFieldCloudletLocLatitude:                      struct{}{},
-	AppInstFieldCloudletLocLongitude:                     struct{}{},
-	AppInstFieldCloudletLocHorizontalAccuracy:            struct{}{},
-	AppInstFieldCloudletLocVerticalAccuracy:              struct{}{},
-	AppInstFieldCloudletLocAltitude:                      struct{}{},
-	AppInstFieldCloudletLocCourse:                        struct{}{},
-	AppInstFieldCloudletLocSpeed:                         struct{}{},
-	AppInstFieldCloudletLocTimestampSeconds:              struct{}{},
-	AppInstFieldCloudletLocTimestampNanos:                struct{}{},
-	AppInstFieldUri:                                      struct{}{},
-	AppInstFieldLiveness:                                 struct{}{},
-	AppInstFieldMappedPortsProto:                         struct{}{},
-	AppInstFieldMappedPortsInternalPort:                  struct{}{},
-	AppInstFieldMappedPortsPublicPort:                    struct{}{},
-	AppInstFieldMappedPortsFqdnPrefix:                    struct{}{},
-	AppInstFieldMappedPortsEndPort:                       struct{}{},
-	AppInstFieldMappedPortsTls:                           struct{}{},
-	AppInstFieldMappedPortsNginx:                         struct{}{},
-	AppInstFieldMappedPortsMaxPktSize:                    struct{}{},
-	AppInstFieldFlavorName:                               struct{}{},
-	AppInstFieldState:                                    struct{}{},
-	AppInstFieldErrors:                                   struct{}{},
-	AppInstFieldCrmOverride:                              struct{}{},
-	AppInstFieldRuntimeInfoContainerIds:                  struct{}{},
-	AppInstFieldCreatedAtSeconds:                         struct{}{},
-	AppInstFieldCreatedAtNanos:                           struct{}{},
-	AppInstFieldAutoClusterIpAccess:                      struct{}{},
-	AppInstFieldStatusTaskNumber:                         struct{}{},
-	AppInstFieldStatusMaxTasks:                           struct{}{},
-	AppInstFieldStatusTaskName:                           struct{}{},
-	AppInstFieldStatusStepName:                           struct{}{},
-	AppInstFieldStatusMsgCount:                           struct{}{},
-	AppInstFieldStatusMsgs:                               struct{}{},
-	AppInstFieldRevision:                                 struct{}{},
-	AppInstFieldForceUpdate:                              struct{}{},
-	AppInstFieldUpdateMultiple:                           struct{}{},
-	AppInstFieldConfigsKind:                              struct{}{},
-	AppInstFieldConfigsConfig:                            struct{}{},
-	AppInstFieldHealthCheck:                              struct{}{},
-	AppInstFieldPrivacyPolicy:                            struct{}{},
-	AppInstFieldPowerState:                               struct{}{},
-	AppInstFieldExternalVolumeSize:                       struct{}{},
-	AppInstFieldAvailabilityZone:                         struct{}{},
-	AppInstFieldVmFlavor:                                 struct{}{},
-	AppInstFieldOptRes:                                   struct{}{},
-	AppInstFieldUpdatedAtSeconds:                         struct{}{},
-	AppInstFieldUpdatedAtNanos:                           struct{}{},
-	AppInstFieldRealClusterName:                          struct{}{},
-	AppInstFieldInternalPortToLbIpKey:                    struct{}{},
-	AppInstFieldInternalPortToLbIpValue:                  struct{}{},
-	AppInstFieldDedicatedIp:                              struct{}{},
+	AppInstFieldKeyAppKeyOrganization:                             struct{}{},
+	AppInstFieldKeyAppKeyName:                                     struct{}{},
+	AppInstFieldKeyAppKeyVersion:                                  struct{}{},
+	AppInstFieldKeyClusterInstKeyClusterKeyName:                   struct{}{},
+	AppInstFieldKeyClusterInstKeyCloudletKeyOrganization:          struct{}{},
+	AppInstFieldKeyClusterInstKeyCloudletKeyName:                  struct{}{},
+	AppInstFieldKeyClusterInstKeyCloudletKeyFederatedOrganization: struct{}{},
+	AppInstFieldKeyClusterInstKeyOrganization:                     struct{}{},
+	AppInstFieldCloudletLocLatitude:                               struct{}{},
+	AppInstFieldCloudletLocLongitude:                              struct{}{},
+	AppInstFieldCloudletLocHorizontalAccuracy:                     struct{}{},
+	AppInstFieldCloudletLocVerticalAccuracy:                       struct{}{},
+	AppInstFieldCloudletLocAltitude:                               struct{}{},
+	AppInstFieldCloudletLocCourse:                                 struct{}{},
+	AppInstFieldCloudletLocSpeed:                                  struct{}{},
+	AppInstFieldCloudletLocTimestampSeconds:                       struct{}{},
+	AppInstFieldCloudletLocTimestampNanos:                         struct{}{},
+	AppInstFieldUri:                                               struct{}{},
+	AppInstFieldLiveness:                                          struct{}{},
+	AppInstFieldMappedPortsProto:                                  struct{}{},
+	AppInstFieldMappedPortsInternalPort:                           struct{}{},
+	AppInstFieldMappedPortsPublicPort:                             struct{}{},
+	AppInstFieldMappedPortsFqdnPrefix:                             struct{}{},
+	AppInstFieldMappedPortsEndPort:                                struct{}{},
+	AppInstFieldMappedPortsTls:                                    struct{}{},
+	AppInstFieldMappedPortsNginx:                                  struct{}{},
+	AppInstFieldMappedPortsMaxPktSize:                             struct{}{},
+	AppInstFieldFlavorName:                                        struct{}{},
+	AppInstFieldState:                                             struct{}{},
+	AppInstFieldErrors:                                            struct{}{},
+	AppInstFieldCrmOverride:                                       struct{}{},
+	AppInstFieldRuntimeInfoContainerIds:                           struct{}{},
+	AppInstFieldCreatedAtSeconds:                                  struct{}{},
+	AppInstFieldCreatedAtNanos:                                    struct{}{},
+	AppInstFieldAutoClusterIpAccess:                               struct{}{},
+	AppInstFieldStatusTaskNumber:                                  struct{}{},
+	AppInstFieldStatusMaxTasks:                                    struct{}{},
+	AppInstFieldStatusTaskName:                                    struct{}{},
+	AppInstFieldStatusStepName:                                    struct{}{},
+	AppInstFieldStatusMsgCount:                                    struct{}{},
+	AppInstFieldStatusMsgs:                                        struct{}{},
+	AppInstFieldRevision:                                          struct{}{},
+	AppInstFieldForceUpdate:                                       struct{}{},
+	AppInstFieldUpdateMultiple:                                    struct{}{},
+	AppInstFieldConfigsKind:                                       struct{}{},
+	AppInstFieldConfigsConfig:                                     struct{}{},
+	AppInstFieldHealthCheck:                                       struct{}{},
+	AppInstFieldPrivacyPolicy:                                     struct{}{},
+	AppInstFieldPowerState:                                        struct{}{},
+	AppInstFieldExternalVolumeSize:                                struct{}{},
+	AppInstFieldAvailabilityZone:                                  struct{}{},
+	AppInstFieldVmFlavor:                                          struct{}{},
+	AppInstFieldOptRes:                                            struct{}{},
+	AppInstFieldUpdatedAtSeconds:                                  struct{}{},
+	AppInstFieldUpdatedAtNanos:                                    struct{}{},
+	AppInstFieldRealClusterName:                                   struct{}{},
+	AppInstFieldInternalPortToLbIpKey:                             struct{}{},
+	AppInstFieldInternalPortToLbIpValue:                           struct{}{},
+	AppInstFieldDedicatedIp:                                       struct{}{},
 }
 
 var AppInstAllFieldsStringMap = map[string]string{
-	AppInstFieldKeyAppKeyOrganization:                    "Key App Key Organization",
-	AppInstFieldKeyAppKeyName:                            "Key App Key Name",
-	AppInstFieldKeyAppKeyVersion:                         "Key App Key Version",
-	AppInstFieldKeyClusterInstKeyClusterKeyName:          "Key Cluster Inst Key Cluster Key Name",
-	AppInstFieldKeyClusterInstKeyCloudletKeyOrganization: "Key Cluster Inst Key Cloudlet Key Organization",
-	AppInstFieldKeyClusterInstKeyCloudletKeyName:         "Key Cluster Inst Key Cloudlet Key Name",
-	AppInstFieldKeyClusterInstKeyOrganization:            "Key Cluster Inst Key Organization",
-	AppInstFieldCloudletLocLatitude:                      "Cloudlet Loc Latitude",
-	AppInstFieldCloudletLocLongitude:                     "Cloudlet Loc Longitude",
-	AppInstFieldCloudletLocHorizontalAccuracy:            "Cloudlet Loc Horizontal Accuracy",
-	AppInstFieldCloudletLocVerticalAccuracy:              "Cloudlet Loc Vertical Accuracy",
-	AppInstFieldCloudletLocAltitude:                      "Cloudlet Loc Altitude",
-	AppInstFieldCloudletLocCourse:                        "Cloudlet Loc Course",
-	AppInstFieldCloudletLocSpeed:                         "Cloudlet Loc Speed",
-	AppInstFieldCloudletLocTimestampSeconds:              "Cloudlet Loc Timestamp Seconds",
-	AppInstFieldCloudletLocTimestampNanos:                "Cloudlet Loc Timestamp Nanos",
-	AppInstFieldUri:                                      "Uri",
-	AppInstFieldLiveness:                                 "Liveness",
-	AppInstFieldMappedPortsProto:                         "Mapped Ports Proto",
-	AppInstFieldMappedPortsInternalPort:                  "Mapped Ports Internal Port",
-	AppInstFieldMappedPortsPublicPort:                    "Mapped Ports Public Port",
-	AppInstFieldMappedPortsFqdnPrefix:                    "Mapped Ports Fqdn Prefix",
-	AppInstFieldMappedPortsEndPort:                       "Mapped Ports End Port",
-	AppInstFieldMappedPortsTls:                           "Mapped Ports Tls",
-	AppInstFieldMappedPortsNginx:                         "Mapped Ports Nginx",
-	AppInstFieldMappedPortsMaxPktSize:                    "Mapped Ports Max Pkt Size",
-	AppInstFieldFlavorName:                               "Flavor Name",
-	AppInstFieldState:                                    "State",
-	AppInstFieldErrors:                                   "Errors",
-	AppInstFieldCrmOverride:                              "Crm Override",
-	AppInstFieldRuntimeInfoContainerIds:                  "Runtime Info Container Ids",
-	AppInstFieldCreatedAtSeconds:                         "Created At Seconds",
-	AppInstFieldCreatedAtNanos:                           "Created At Nanos",
-	AppInstFieldAutoClusterIpAccess:                      "Auto Cluster Ip Access",
-	AppInstFieldStatusTaskNumber:                         "Status Task Number",
-	AppInstFieldStatusMaxTasks:                           "Status Max Tasks",
-	AppInstFieldStatusTaskName:                           "Status Task Name",
-	AppInstFieldStatusStepName:                           "Status Step Name",
-	AppInstFieldStatusMsgCount:                           "Status Msg Count",
-	AppInstFieldStatusMsgs:                               "Status Msgs",
-	AppInstFieldRevision:                                 "Revision",
-	AppInstFieldForceUpdate:                              "Force Update",
-	AppInstFieldUpdateMultiple:                           "Update Multiple",
-	AppInstFieldConfigsKind:                              "Configs Kind",
-	AppInstFieldConfigsConfig:                            "Configs Config",
-	AppInstFieldHealthCheck:                              "Health Check",
-	AppInstFieldPrivacyPolicy:                            "Privacy Policy",
-	AppInstFieldPowerState:                               "Power State",
-	AppInstFieldExternalVolumeSize:                       "External Volume Size",
-	AppInstFieldAvailabilityZone:                         "Availability Zone",
-	AppInstFieldVmFlavor:                                 "Vm Flavor",
-	AppInstFieldOptRes:                                   "Opt Res",
-	AppInstFieldUpdatedAtSeconds:                         "Updated At Seconds",
-	AppInstFieldUpdatedAtNanos:                           "Updated At Nanos",
-	AppInstFieldRealClusterName:                          "Real Cluster Name",
-	AppInstFieldInternalPortToLbIpKey:                    "Internal Port To Lb Ip Key",
-	AppInstFieldInternalPortToLbIpValue:                  "Internal Port To Lb Ip Value",
-	AppInstFieldDedicatedIp:                              "Dedicated Ip",
+	AppInstFieldKeyAppKeyOrganization:                             "Key App Key Organization",
+	AppInstFieldKeyAppKeyName:                                     "Key App Key Name",
+	AppInstFieldKeyAppKeyVersion:                                  "Key App Key Version",
+	AppInstFieldKeyClusterInstKeyClusterKeyName:                   "Key Cluster Inst Key Cluster Key Name",
+	AppInstFieldKeyClusterInstKeyCloudletKeyOrganization:          "Key Cluster Inst Key Cloudlet Key Organization",
+	AppInstFieldKeyClusterInstKeyCloudletKeyName:                  "Key Cluster Inst Key Cloudlet Key Name",
+	AppInstFieldKeyClusterInstKeyCloudletKeyFederatedOrganization: "Key Cluster Inst Key Cloudlet Key Federated Organization",
+	AppInstFieldKeyClusterInstKeyOrganization:                     "Key Cluster Inst Key Organization",
+	AppInstFieldCloudletLocLatitude:                               "Cloudlet Loc Latitude",
+	AppInstFieldCloudletLocLongitude:                              "Cloudlet Loc Longitude",
+	AppInstFieldCloudletLocHorizontalAccuracy:                     "Cloudlet Loc Horizontal Accuracy",
+	AppInstFieldCloudletLocVerticalAccuracy:                       "Cloudlet Loc Vertical Accuracy",
+	AppInstFieldCloudletLocAltitude:                               "Cloudlet Loc Altitude",
+	AppInstFieldCloudletLocCourse:                                 "Cloudlet Loc Course",
+	AppInstFieldCloudletLocSpeed:                                  "Cloudlet Loc Speed",
+	AppInstFieldCloudletLocTimestampSeconds:                       "Cloudlet Loc Timestamp Seconds",
+	AppInstFieldCloudletLocTimestampNanos:                         "Cloudlet Loc Timestamp Nanos",
+	AppInstFieldUri:                                               "Uri",
+	AppInstFieldLiveness:                                          "Liveness",
+	AppInstFieldMappedPortsProto:                                  "Mapped Ports Proto",
+	AppInstFieldMappedPortsInternalPort:                           "Mapped Ports Internal Port",
+	AppInstFieldMappedPortsPublicPort:                             "Mapped Ports Public Port",
+	AppInstFieldMappedPortsFqdnPrefix:                             "Mapped Ports Fqdn Prefix",
+	AppInstFieldMappedPortsEndPort:                                "Mapped Ports End Port",
+	AppInstFieldMappedPortsTls:                                    "Mapped Ports Tls",
+	AppInstFieldMappedPortsNginx:                                  "Mapped Ports Nginx",
+	AppInstFieldMappedPortsMaxPktSize:                             "Mapped Ports Max Pkt Size",
+	AppInstFieldFlavorName:                                        "Flavor Name",
+	AppInstFieldState:                                             "State",
+	AppInstFieldErrors:                                            "Errors",
+	AppInstFieldCrmOverride:                                       "Crm Override",
+	AppInstFieldRuntimeInfoContainerIds:                           "Runtime Info Container Ids",
+	AppInstFieldCreatedAtSeconds:                                  "Created At Seconds",
+	AppInstFieldCreatedAtNanos:                                    "Created At Nanos",
+	AppInstFieldAutoClusterIpAccess:                               "Auto Cluster Ip Access",
+	AppInstFieldStatusTaskNumber:                                  "Status Task Number",
+	AppInstFieldStatusMaxTasks:                                    "Status Max Tasks",
+	AppInstFieldStatusTaskName:                                    "Status Task Name",
+	AppInstFieldStatusStepName:                                    "Status Step Name",
+	AppInstFieldStatusMsgCount:                                    "Status Msg Count",
+	AppInstFieldStatusMsgs:                                        "Status Msgs",
+	AppInstFieldRevision:                                          "Revision",
+	AppInstFieldForceUpdate:                                       "Force Update",
+	AppInstFieldUpdateMultiple:                                    "Update Multiple",
+	AppInstFieldConfigsKind:                                       "Configs Kind",
+	AppInstFieldConfigsConfig:                                     "Configs Config",
+	AppInstFieldHealthCheck:                                       "Health Check",
+	AppInstFieldPrivacyPolicy:                                     "Privacy Policy",
+	AppInstFieldPowerState:                                        "Power State",
+	AppInstFieldExternalVolumeSize:                                "External Volume Size",
+	AppInstFieldAvailabilityZone:                                  "Availability Zone",
+	AppInstFieldVmFlavor:                                          "Vm Flavor",
+	AppInstFieldOptRes:                                            "Opt Res",
+	AppInstFieldUpdatedAtSeconds:                                  "Updated At Seconds",
+	AppInstFieldUpdatedAtNanos:                                    "Updated At Nanos",
+	AppInstFieldRealClusterName:                                   "Real Cluster Name",
+	AppInstFieldInternalPortToLbIpKey:                             "Internal Port To Lb Ip Key",
+	AppInstFieldInternalPortToLbIpValue:                           "Internal Port To Lb Ip Value",
+	AppInstFieldDedicatedIp:                                       "Dedicated Ip",
 }
 
 func (m *AppInst) IsKeyField(s string) bool {
@@ -2791,6 +2805,12 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	}
 	if m.Key.ClusterInstKey.CloudletKey.Name != o.Key.ClusterInstKey.CloudletKey.Name {
 		fields[AppInstFieldKeyClusterInstKeyCloudletKeyName] = struct{}{}
+		fields[AppInstFieldKeyClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldKeyClusterInstKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != o.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+		fields[AppInstFieldKeyClusterInstKeyCloudletKeyFederatedOrganization] = struct{}{}
 		fields[AppInstFieldKeyClusterInstKeyCloudletKey] = struct{}{}
 		fields[AppInstFieldKeyClusterInstKey] = struct{}{}
 		fields[AppInstFieldKey] = struct{}{}
@@ -3122,6 +3142,12 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 				if _, set := fmap["2.4.2.2"]; set {
 					if m.Key.ClusterInstKey.CloudletKey.Name != src.Key.ClusterInstKey.CloudletKey.Name {
 						m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
+						changed++
+					}
+				}
+				if _, set := fmap["2.4.2.3"]; set {
+					if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != src.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+						m.Key.ClusterInstKey.CloudletKey.FederatedOrganization = src.Key.ClusterInstKey.CloudletKey.FederatedOrganization
 						changed++
 					}
 				}
@@ -4356,6 +4382,7 @@ const AppInstInfoFieldKeyClusterInstKeyClusterKeyName = "2.4.1.1"
 const AppInstInfoFieldKeyClusterInstKeyCloudletKey = "2.4.2"
 const AppInstInfoFieldKeyClusterInstKeyCloudletKeyOrganization = "2.4.2.1"
 const AppInstInfoFieldKeyClusterInstKeyCloudletKeyName = "2.4.2.2"
+const AppInstInfoFieldKeyClusterInstKeyCloudletKeyFederatedOrganization = "2.4.2.3"
 const AppInstInfoFieldKeyClusterInstKeyOrganization = "2.4.3"
 const AppInstInfoFieldNotifyId = "3"
 const AppInstInfoFieldState = "4"
@@ -4379,6 +4406,7 @@ var AppInstInfoAllFields = []string{
 	AppInstInfoFieldKeyClusterInstKeyClusterKeyName,
 	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOrganization,
 	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName,
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyFederatedOrganization,
 	AppInstInfoFieldKeyClusterInstKeyOrganization,
 	AppInstInfoFieldNotifyId,
 	AppInstInfoFieldState,
@@ -4395,47 +4423,49 @@ var AppInstInfoAllFields = []string{
 }
 
 var AppInstInfoAllFieldsMap = map[string]struct{}{
-	AppInstInfoFieldKeyAppKeyOrganization:                    struct{}{},
-	AppInstInfoFieldKeyAppKeyName:                            struct{}{},
-	AppInstInfoFieldKeyAppKeyVersion:                         struct{}{},
-	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:          struct{}{},
-	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOrganization: struct{}{},
-	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:         struct{}{},
-	AppInstInfoFieldKeyClusterInstKeyOrganization:            struct{}{},
-	AppInstInfoFieldNotifyId:                                 struct{}{},
-	AppInstInfoFieldState:                                    struct{}{},
-	AppInstInfoFieldErrors:                                   struct{}{},
-	AppInstInfoFieldRuntimeInfoContainerIds:                  struct{}{},
-	AppInstInfoFieldStatusTaskNumber:                         struct{}{},
-	AppInstInfoFieldStatusMaxTasks:                           struct{}{},
-	AppInstInfoFieldStatusTaskName:                           struct{}{},
-	AppInstInfoFieldStatusStepName:                           struct{}{},
-	AppInstInfoFieldStatusMsgCount:                           struct{}{},
-	AppInstInfoFieldStatusMsgs:                               struct{}{},
-	AppInstInfoFieldPowerState:                               struct{}{},
-	AppInstInfoFieldUri:                                      struct{}{},
+	AppInstInfoFieldKeyAppKeyOrganization:                             struct{}{},
+	AppInstInfoFieldKeyAppKeyName:                                     struct{}{},
+	AppInstInfoFieldKeyAppKeyVersion:                                  struct{}{},
+	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:                   struct{}{},
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOrganization:          struct{}{},
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:                  struct{}{},
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyFederatedOrganization: struct{}{},
+	AppInstInfoFieldKeyClusterInstKeyOrganization:                     struct{}{},
+	AppInstInfoFieldNotifyId:                                          struct{}{},
+	AppInstInfoFieldState:                                             struct{}{},
+	AppInstInfoFieldErrors:                                            struct{}{},
+	AppInstInfoFieldRuntimeInfoContainerIds:                           struct{}{},
+	AppInstInfoFieldStatusTaskNumber:                                  struct{}{},
+	AppInstInfoFieldStatusMaxTasks:                                    struct{}{},
+	AppInstInfoFieldStatusTaskName:                                    struct{}{},
+	AppInstInfoFieldStatusStepName:                                    struct{}{},
+	AppInstInfoFieldStatusMsgCount:                                    struct{}{},
+	AppInstInfoFieldStatusMsgs:                                        struct{}{},
+	AppInstInfoFieldPowerState:                                        struct{}{},
+	AppInstInfoFieldUri:                                               struct{}{},
 }
 
 var AppInstInfoAllFieldsStringMap = map[string]string{
-	AppInstInfoFieldKeyAppKeyOrganization:                    "Key App Key Organization",
-	AppInstInfoFieldKeyAppKeyName:                            "Key App Key Name",
-	AppInstInfoFieldKeyAppKeyVersion:                         "Key App Key Version",
-	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:          "Key Cluster Inst Key Cluster Key Name",
-	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOrganization: "Key Cluster Inst Key Cloudlet Key Organization",
-	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:         "Key Cluster Inst Key Cloudlet Key Name",
-	AppInstInfoFieldKeyClusterInstKeyOrganization:            "Key Cluster Inst Key Organization",
-	AppInstInfoFieldNotifyId:                                 "Notify Id",
-	AppInstInfoFieldState:                                    "State",
-	AppInstInfoFieldErrors:                                   "Errors",
-	AppInstInfoFieldRuntimeInfoContainerIds:                  "Runtime Info Container Ids",
-	AppInstInfoFieldStatusTaskNumber:                         "Status Task Number",
-	AppInstInfoFieldStatusMaxTasks:                           "Status Max Tasks",
-	AppInstInfoFieldStatusTaskName:                           "Status Task Name",
-	AppInstInfoFieldStatusStepName:                           "Status Step Name",
-	AppInstInfoFieldStatusMsgCount:                           "Status Msg Count",
-	AppInstInfoFieldStatusMsgs:                               "Status Msgs",
-	AppInstInfoFieldPowerState:                               "Power State",
-	AppInstInfoFieldUri:                                      "Uri",
+	AppInstInfoFieldKeyAppKeyOrganization:                             "Key App Key Organization",
+	AppInstInfoFieldKeyAppKeyName:                                     "Key App Key Name",
+	AppInstInfoFieldKeyAppKeyVersion:                                  "Key App Key Version",
+	AppInstInfoFieldKeyClusterInstKeyClusterKeyName:                   "Key Cluster Inst Key Cluster Key Name",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyOrganization:          "Key Cluster Inst Key Cloudlet Key Organization",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyName:                  "Key Cluster Inst Key Cloudlet Key Name",
+	AppInstInfoFieldKeyClusterInstKeyCloudletKeyFederatedOrganization: "Key Cluster Inst Key Cloudlet Key Federated Organization",
+	AppInstInfoFieldKeyClusterInstKeyOrganization:                     "Key Cluster Inst Key Organization",
+	AppInstInfoFieldNotifyId:                                          "Notify Id",
+	AppInstInfoFieldState:                                             "State",
+	AppInstInfoFieldErrors:                                            "Errors",
+	AppInstInfoFieldRuntimeInfoContainerIds:                           "Runtime Info Container Ids",
+	AppInstInfoFieldStatusTaskNumber:                                  "Status Task Number",
+	AppInstInfoFieldStatusMaxTasks:                                    "Status Max Tasks",
+	AppInstInfoFieldStatusTaskName:                                    "Status Task Name",
+	AppInstInfoFieldStatusStepName:                                    "Status Step Name",
+	AppInstInfoFieldStatusMsgCount:                                    "Status Msg Count",
+	AppInstInfoFieldStatusMsgs:                                        "Status Msgs",
+	AppInstInfoFieldPowerState:                                        "Power State",
+	AppInstInfoFieldUri:                                               "Uri",
 }
 
 func (m *AppInstInfo) IsKeyField(s string) bool {
@@ -4472,6 +4502,12 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 	}
 	if m.Key.ClusterInstKey.CloudletKey.Name != o.Key.ClusterInstKey.CloudletKey.Name {
 		fields[AppInstInfoFieldKeyClusterInstKeyCloudletKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstInfoFieldKeyClusterInstKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != o.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+		fields[AppInstInfoFieldKeyClusterInstKeyCloudletKeyFederatedOrganization] = struct{}{}
 		fields[AppInstInfoFieldKeyClusterInstKeyCloudletKey] = struct{}{}
 		fields[AppInstInfoFieldKeyClusterInstKey] = struct{}{}
 		fields[AppInstInfoFieldKey] = struct{}{}
@@ -4592,6 +4628,12 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) int {
 				if _, set := fmap["2.4.2.2"]; set {
 					if m.Key.ClusterInstKey.CloudletKey.Name != src.Key.ClusterInstKey.CloudletKey.Name {
 						m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
+						changed++
+					}
+				}
+				if _, set := fmap["2.4.2.3"]; set {
+					if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != src.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+						m.Key.ClusterInstKey.CloudletKey.FederatedOrganization = src.Key.ClusterInstKey.CloudletKey.FederatedOrganization
 						changed++
 					}
 				}
@@ -5354,6 +5396,10 @@ func (m *AppInstLookup) CopyInFields(src *AppInstLookup) int {
 		m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
 		changed++
 	}
+	if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != src.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+		m.Key.ClusterInstKey.CloudletKey.FederatedOrganization = src.Key.ClusterInstKey.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Key.ClusterInstKey.Organization != src.Key.ClusterInstKey.Organization {
 		m.Key.ClusterInstKey.Organization = src.Key.ClusterInstKey.Organization
 		changed++
@@ -5480,6 +5526,10 @@ func (m *AppInstLookup2) CopyInFields(src *AppInstLookup2) int {
 		m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
 		changed++
 	}
+	if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != src.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+		m.Key.ClusterInstKey.CloudletKey.FederatedOrganization = src.Key.ClusterInstKey.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Key.ClusterInstKey.Organization != src.Key.ClusterInstKey.Organization {
 		m.Key.ClusterInstKey.Organization = src.Key.ClusterInstKey.Organization
 		changed++
@@ -5490,6 +5540,10 @@ func (m *AppInstLookup2) CopyInFields(src *AppInstLookup2) int {
 	}
 	if m.CloudletKey.Name != src.CloudletKey.Name {
 		m.CloudletKey.Name = src.CloudletKey.Name
+		changed++
+	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
 		changed++
 	}
 	return changed
@@ -5604,6 +5658,10 @@ func (m *AppInstLatency) CopyInFields(src *AppInstLatency) int {
 	}
 	if m.Key.ClusterInstKey.CloudletKey.Name != src.Key.ClusterInstKey.CloudletKey.Name {
 		m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
+		changed++
+	}
+	if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != src.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+		m.Key.ClusterInstKey.CloudletKey.FederatedOrganization = src.Key.ClusterInstKey.CloudletKey.FederatedOrganization
 		changed++
 	}
 	if m.Key.ClusterInstKey.Organization != src.Key.ClusterInstKey.Organization {

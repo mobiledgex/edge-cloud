@@ -1013,6 +1013,10 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		m.AppInstKey.ClusterInstKey.CloudletKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.Name
 		changed++
 	}
+	if m.AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization != src.AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization {
+		m.AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization = src.AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.AppInstKey.ClusterInstKey.Organization != src.AppInstKey.ClusterInstKey.Organization {
 		m.AppInstKey.ClusterInstKey.Organization = src.AppInstKey.ClusterInstKey.Organization
 		changed++

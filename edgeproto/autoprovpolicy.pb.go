@@ -1147,6 +1147,7 @@ const AutoProvPolicyFieldCloudlets = "5"
 const AutoProvPolicyFieldCloudletsKey = "5.1"
 const AutoProvPolicyFieldCloudletsKeyOrganization = "5.1.1"
 const AutoProvPolicyFieldCloudletsKeyName = "5.1.2"
+const AutoProvPolicyFieldCloudletsKeyFederatedOrganization = "5.1.3"
 const AutoProvPolicyFieldCloudletsLoc = "5.2"
 const AutoProvPolicyFieldCloudletsLocLatitude = "5.2.1"
 const AutoProvPolicyFieldCloudletsLocLongitude = "5.2.2"
@@ -1170,6 +1171,7 @@ var AutoProvPolicyAllFields = []string{
 	AutoProvPolicyFieldDeployIntervalCount,
 	AutoProvPolicyFieldCloudletsKeyOrganization,
 	AutoProvPolicyFieldCloudletsKeyName,
+	AutoProvPolicyFieldCloudletsKeyFederatedOrganization,
 	AutoProvPolicyFieldCloudletsLocLatitude,
 	AutoProvPolicyFieldCloudletsLocLongitude,
 	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy,
@@ -1186,47 +1188,49 @@ var AutoProvPolicyAllFields = []string{
 }
 
 var AutoProvPolicyAllFieldsMap = map[string]struct{}{
-	AutoProvPolicyFieldKeyOrganization:                struct{}{},
-	AutoProvPolicyFieldKeyName:                        struct{}{},
-	AutoProvPolicyFieldDeployClientCount:              struct{}{},
-	AutoProvPolicyFieldDeployIntervalCount:            struct{}{},
-	AutoProvPolicyFieldCloudletsKeyOrganization:       struct{}{},
-	AutoProvPolicyFieldCloudletsKeyName:               struct{}{},
-	AutoProvPolicyFieldCloudletsLocLatitude:           struct{}{},
-	AutoProvPolicyFieldCloudletsLocLongitude:          struct{}{},
-	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy: struct{}{},
-	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:   struct{}{},
-	AutoProvPolicyFieldCloudletsLocAltitude:           struct{}{},
-	AutoProvPolicyFieldCloudletsLocCourse:             struct{}{},
-	AutoProvPolicyFieldCloudletsLocSpeed:              struct{}{},
-	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   struct{}{},
-	AutoProvPolicyFieldCloudletsLocTimestampNanos:     struct{}{},
-	AutoProvPolicyFieldMinActiveInstances:             struct{}{},
-	AutoProvPolicyFieldMaxInstances:                   struct{}{},
-	AutoProvPolicyFieldUndeployClientCount:            struct{}{},
-	AutoProvPolicyFieldUndeployIntervalCount:          struct{}{},
+	AutoProvPolicyFieldKeyOrganization:                   struct{}{},
+	AutoProvPolicyFieldKeyName:                           struct{}{},
+	AutoProvPolicyFieldDeployClientCount:                 struct{}{},
+	AutoProvPolicyFieldDeployIntervalCount:               struct{}{},
+	AutoProvPolicyFieldCloudletsKeyOrganization:          struct{}{},
+	AutoProvPolicyFieldCloudletsKeyName:                  struct{}{},
+	AutoProvPolicyFieldCloudletsKeyFederatedOrganization: struct{}{},
+	AutoProvPolicyFieldCloudletsLocLatitude:              struct{}{},
+	AutoProvPolicyFieldCloudletsLocLongitude:             struct{}{},
+	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy:    struct{}{},
+	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:      struct{}{},
+	AutoProvPolicyFieldCloudletsLocAltitude:              struct{}{},
+	AutoProvPolicyFieldCloudletsLocCourse:                struct{}{},
+	AutoProvPolicyFieldCloudletsLocSpeed:                 struct{}{},
+	AutoProvPolicyFieldCloudletsLocTimestampSeconds:      struct{}{},
+	AutoProvPolicyFieldCloudletsLocTimestampNanos:        struct{}{},
+	AutoProvPolicyFieldMinActiveInstances:                struct{}{},
+	AutoProvPolicyFieldMaxInstances:                      struct{}{},
+	AutoProvPolicyFieldUndeployClientCount:               struct{}{},
+	AutoProvPolicyFieldUndeployIntervalCount:             struct{}{},
 }
 
 var AutoProvPolicyAllFieldsStringMap = map[string]string{
-	AutoProvPolicyFieldKeyOrganization:                "Key Organization",
-	AutoProvPolicyFieldKeyName:                        "Key Name",
-	AutoProvPolicyFieldDeployClientCount:              "Deploy Client Count",
-	AutoProvPolicyFieldDeployIntervalCount:            "Deploy Interval Count",
-	AutoProvPolicyFieldCloudletsKeyOrganization:       "Cloudlets Key Organization",
-	AutoProvPolicyFieldCloudletsKeyName:               "Cloudlets Key Name",
-	AutoProvPolicyFieldCloudletsLocLatitude:           "Cloudlets Loc Latitude",
-	AutoProvPolicyFieldCloudletsLocLongitude:          "Cloudlets Loc Longitude",
-	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy: "Cloudlets Loc Horizontal Accuracy",
-	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:   "Cloudlets Loc Vertical Accuracy",
-	AutoProvPolicyFieldCloudletsLocAltitude:           "Cloudlets Loc Altitude",
-	AutoProvPolicyFieldCloudletsLocCourse:             "Cloudlets Loc Course",
-	AutoProvPolicyFieldCloudletsLocSpeed:              "Cloudlets Loc Speed",
-	AutoProvPolicyFieldCloudletsLocTimestampSeconds:   "Cloudlets Loc Timestamp Seconds",
-	AutoProvPolicyFieldCloudletsLocTimestampNanos:     "Cloudlets Loc Timestamp Nanos",
-	AutoProvPolicyFieldMinActiveInstances:             "Min Active Instances",
-	AutoProvPolicyFieldMaxInstances:                   "Max Instances",
-	AutoProvPolicyFieldUndeployClientCount:            "Undeploy Client Count",
-	AutoProvPolicyFieldUndeployIntervalCount:          "Undeploy Interval Count",
+	AutoProvPolicyFieldKeyOrganization:                   "Key Organization",
+	AutoProvPolicyFieldKeyName:                           "Key Name",
+	AutoProvPolicyFieldDeployClientCount:                 "Deploy Client Count",
+	AutoProvPolicyFieldDeployIntervalCount:               "Deploy Interval Count",
+	AutoProvPolicyFieldCloudletsKeyOrganization:          "Cloudlets Key Organization",
+	AutoProvPolicyFieldCloudletsKeyName:                  "Cloudlets Key Name",
+	AutoProvPolicyFieldCloudletsKeyFederatedOrganization: "Cloudlets Key Federated Organization",
+	AutoProvPolicyFieldCloudletsLocLatitude:              "Cloudlets Loc Latitude",
+	AutoProvPolicyFieldCloudletsLocLongitude:             "Cloudlets Loc Longitude",
+	AutoProvPolicyFieldCloudletsLocHorizontalAccuracy:    "Cloudlets Loc Horizontal Accuracy",
+	AutoProvPolicyFieldCloudletsLocVerticalAccuracy:      "Cloudlets Loc Vertical Accuracy",
+	AutoProvPolicyFieldCloudletsLocAltitude:              "Cloudlets Loc Altitude",
+	AutoProvPolicyFieldCloudletsLocCourse:                "Cloudlets Loc Course",
+	AutoProvPolicyFieldCloudletsLocSpeed:                 "Cloudlets Loc Speed",
+	AutoProvPolicyFieldCloudletsLocTimestampSeconds:      "Cloudlets Loc Timestamp Seconds",
+	AutoProvPolicyFieldCloudletsLocTimestampNanos:        "Cloudlets Loc Timestamp Nanos",
+	AutoProvPolicyFieldMinActiveInstances:                "Min Active Instances",
+	AutoProvPolicyFieldMaxInstances:                      "Max Instances",
+	AutoProvPolicyFieldUndeployClientCount:               "Undeploy Client Count",
+	AutoProvPolicyFieldUndeployIntervalCount:             "Undeploy Interval Count",
 }
 
 func (m *AutoProvPolicy) IsKeyField(s string) bool {
@@ -1260,6 +1264,11 @@ func (m *AutoProvPolicy) DiffFields(o *AutoProvPolicy, fields map[string]struct{
 				}
 				if m.Cloudlets[i0].Key.Name != o.Cloudlets[i0].Key.Name {
 					fields[AutoProvPolicyFieldCloudletsKeyName] = struct{}{}
+					fields[AutoProvPolicyFieldCloudletsKey] = struct{}{}
+					fields[AutoProvPolicyFieldCloudlets] = struct{}{}
+				}
+				if m.Cloudlets[i0].Key.FederatedOrganization != o.Cloudlets[i0].Key.FederatedOrganization {
+					fields[AutoProvPolicyFieldCloudletsKeyFederatedOrganization] = struct{}{}
 					fields[AutoProvPolicyFieldCloudletsKey] = struct{}{}
 					fields[AutoProvPolicyFieldCloudlets] = struct{}{}
 				}
@@ -2136,6 +2145,10 @@ func (m *AutoProvCloudlet) CopyInFields(src *AutoProvCloudlet) int {
 		m.Key.Name = src.Key.Name
 		changed++
 	}
+	if m.Key.FederatedOrganization != src.Key.FederatedOrganization {
+		m.Key.FederatedOrganization = src.Key.FederatedOrganization
+		changed++
+	}
 	if m.Loc.Latitude != src.Loc.Latitude {
 		m.Loc.Latitude = src.Loc.Latitude
 		changed++
@@ -2236,6 +2249,10 @@ func (m *AutoProvCount) CopyInFields(src *AutoProvCount) int {
 		m.CloudletKey.Name = src.CloudletKey.Name
 		changed++
 	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Count != src.Count {
 		m.Count = src.Count
 		changed++
@@ -2254,6 +2271,10 @@ func (m *AutoProvCount) CopyInFields(src *AutoProvCount) int {
 	}
 	if m.DeployNowKey.CloudletKey.Name != src.DeployNowKey.CloudletKey.Name {
 		m.DeployNowKey.CloudletKey.Name = src.DeployNowKey.CloudletKey.Name
+		changed++
+	}
+	if m.DeployNowKey.CloudletKey.FederatedOrganization != src.DeployNowKey.CloudletKey.FederatedOrganization {
+		m.DeployNowKey.CloudletKey.FederatedOrganization = src.DeployNowKey.CloudletKey.FederatedOrganization
 		changed++
 	}
 	if m.DeployNowKey.Organization != src.DeployNowKey.Organization {
@@ -2350,6 +2371,10 @@ func (m *AutoProvPolicyCloudlet) CopyInFields(src *AutoProvPolicyCloudlet) int {
 	}
 	if m.CloudletKey.Name != src.CloudletKey.Name {
 		m.CloudletKey.Name = src.CloudletKey.Name
+		changed++
+	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
 		changed++
 	}
 	return changed
@@ -2461,6 +2486,7 @@ func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
 const AutoProvInfoFieldKey = "2"
 const AutoProvInfoFieldKeyOrganization = "2.1"
 const AutoProvInfoFieldKeyName = "2.2"
+const AutoProvInfoFieldKeyFederatedOrganization = "2.3"
 const AutoProvInfoFieldNotifyId = "3"
 const AutoProvInfoFieldMaintenanceState = "4"
 const AutoProvInfoFieldCompleted = "5"
@@ -2469,6 +2495,7 @@ const AutoProvInfoFieldErrors = "6"
 var AutoProvInfoAllFields = []string{
 	AutoProvInfoFieldKeyOrganization,
 	AutoProvInfoFieldKeyName,
+	AutoProvInfoFieldKeyFederatedOrganization,
 	AutoProvInfoFieldNotifyId,
 	AutoProvInfoFieldMaintenanceState,
 	AutoProvInfoFieldCompleted,
@@ -2476,21 +2503,23 @@ var AutoProvInfoAllFields = []string{
 }
 
 var AutoProvInfoAllFieldsMap = map[string]struct{}{
-	AutoProvInfoFieldKeyOrganization:  struct{}{},
-	AutoProvInfoFieldKeyName:          struct{}{},
-	AutoProvInfoFieldNotifyId:         struct{}{},
-	AutoProvInfoFieldMaintenanceState: struct{}{},
-	AutoProvInfoFieldCompleted:        struct{}{},
-	AutoProvInfoFieldErrors:           struct{}{},
+	AutoProvInfoFieldKeyOrganization:          struct{}{},
+	AutoProvInfoFieldKeyName:                  struct{}{},
+	AutoProvInfoFieldKeyFederatedOrganization: struct{}{},
+	AutoProvInfoFieldNotifyId:                 struct{}{},
+	AutoProvInfoFieldMaintenanceState:         struct{}{},
+	AutoProvInfoFieldCompleted:                struct{}{},
+	AutoProvInfoFieldErrors:                   struct{}{},
 }
 
 var AutoProvInfoAllFieldsStringMap = map[string]string{
-	AutoProvInfoFieldKeyOrganization:  "Key Organization",
-	AutoProvInfoFieldKeyName:          "Key Name",
-	AutoProvInfoFieldNotifyId:         "Notify Id",
-	AutoProvInfoFieldMaintenanceState: "Maintenance State",
-	AutoProvInfoFieldCompleted:        "Completed",
-	AutoProvInfoFieldErrors:           "Errors",
+	AutoProvInfoFieldKeyOrganization:          "Key Organization",
+	AutoProvInfoFieldKeyName:                  "Key Name",
+	AutoProvInfoFieldKeyFederatedOrganization: "Key Federated Organization",
+	AutoProvInfoFieldNotifyId:                 "Notify Id",
+	AutoProvInfoFieldMaintenanceState:         "Maintenance State",
+	AutoProvInfoFieldCompleted:                "Completed",
+	AutoProvInfoFieldErrors:                   "Errors",
 }
 
 func (m *AutoProvInfo) IsKeyField(s string) bool {
@@ -2504,6 +2533,10 @@ func (m *AutoProvInfo) DiffFields(o *AutoProvInfo, fields map[string]struct{}) {
 	}
 	if m.Key.Name != o.Key.Name {
 		fields[AutoProvInfoFieldKeyName] = struct{}{}
+		fields[AutoProvInfoFieldKey] = struct{}{}
+	}
+	if m.Key.FederatedOrganization != o.Key.FederatedOrganization {
+		fields[AutoProvInfoFieldKeyFederatedOrganization] = struct{}{}
 		fields[AutoProvInfoFieldKey] = struct{}{}
 	}
 	if m.NotifyId != o.NotifyId {
@@ -2547,6 +2580,12 @@ func (m *AutoProvInfo) CopyInFields(src *AutoProvInfo) int {
 		if _, set := fmap["2.2"]; set {
 			if m.Key.Name != src.Key.Name {
 				m.Key.Name = src.Key.Name
+				changed++
+			}
+		}
+		if _, set := fmap["2.3"]; set {
+			if m.Key.FederatedOrganization != src.Key.FederatedOrganization {
+				m.Key.FederatedOrganization = src.Key.FederatedOrganization
 				changed++
 			}
 		}

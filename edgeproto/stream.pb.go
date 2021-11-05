@@ -633,6 +633,10 @@ func (m *StreamObj) CopyInFields(src *StreamObj) int {
 		m.Key.ClusterInstKey.CloudletKey.Name = src.Key.ClusterInstKey.CloudletKey.Name
 		changed++
 	}
+	if m.Key.ClusterInstKey.CloudletKey.FederatedOrganization != src.Key.ClusterInstKey.CloudletKey.FederatedOrganization {
+		m.Key.ClusterInstKey.CloudletKey.FederatedOrganization = src.Key.ClusterInstKey.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Key.ClusterInstKey.Organization != src.Key.ClusterInstKey.Organization {
 		m.Key.ClusterInstKey.Organization = src.Key.ClusterInstKey.Organization
 		changed++

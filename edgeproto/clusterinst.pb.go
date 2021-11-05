@@ -1370,6 +1370,10 @@ func (m *ClusterInstKey) CopyInFields(src *ClusterInstKey) int {
 		m.CloudletKey.Name = src.CloudletKey.Name
 		changed++
 	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Organization != src.Organization {
 		m.Organization = src.Organization
 		changed++
@@ -1413,6 +1417,7 @@ func (m *ClusterInstKey) GetTags() map[string]string {
 	tags["cluster"] = m.ClusterKey.Name
 	tags["cloudletorg"] = m.CloudletKey.Organization
 	tags["cloudlet"] = m.CloudletKey.Name
+	tags["federatedorg"] = m.CloudletKey.FederatedOrganization
 	tags["clusterorg"] = m.Organization
 	return tags
 }
@@ -1637,6 +1642,7 @@ const ClusterInstFieldKeyClusterKeyName = "2.1.1"
 const ClusterInstFieldKeyCloudletKey = "2.2"
 const ClusterInstFieldKeyCloudletKeyOrganization = "2.2.1"
 const ClusterInstFieldKeyCloudletKeyName = "2.2.2"
+const ClusterInstFieldKeyCloudletKeyFederatedOrganization = "2.2.3"
 const ClusterInstFieldKeyOrganization = "2.3"
 const ClusterInstFieldFlavor = "3"
 const ClusterInstFieldFlavorName = "3.1"
@@ -1699,6 +1705,7 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldKeyClusterKeyName,
 	ClusterInstFieldKeyCloudletKeyOrganization,
 	ClusterInstFieldKeyCloudletKeyName,
+	ClusterInstFieldKeyCloudletKeyFederatedOrganization,
 	ClusterInstFieldKeyOrganization,
 	ClusterInstFieldFlavorName,
 	ClusterInstFieldState,
@@ -1750,111 +1757,113 @@ var ClusterInstAllFields = []string{
 }
 
 var ClusterInstAllFieldsMap = map[string]struct{}{
-	ClusterInstFieldKeyClusterKeyName:                 struct{}{},
-	ClusterInstFieldKeyCloudletKeyOrganization:        struct{}{},
-	ClusterInstFieldKeyCloudletKeyName:                struct{}{},
-	ClusterInstFieldKeyOrganization:                   struct{}{},
-	ClusterInstFieldFlavorName:                        struct{}{},
-	ClusterInstFieldState:                             struct{}{},
-	ClusterInstFieldErrors:                            struct{}{},
-	ClusterInstFieldCrmOverride:                       struct{}{},
-	ClusterInstFieldIpAccess:                          struct{}{},
-	ClusterInstFieldAllocatedIp:                       struct{}{},
-	ClusterInstFieldLiveness:                          struct{}{},
-	ClusterInstFieldAuto:                              struct{}{},
-	ClusterInstFieldNodeFlavor:                        struct{}{},
-	ClusterInstFieldNumMasters:                        struct{}{},
-	ClusterInstFieldNumNodes:                          struct{}{},
-	ClusterInstFieldDeployment:                        struct{}{},
-	ClusterInstFieldStatusTaskNumber:                  struct{}{},
-	ClusterInstFieldStatusMaxTasks:                    struct{}{},
-	ClusterInstFieldStatusTaskName:                    struct{}{},
-	ClusterInstFieldStatusStepName:                    struct{}{},
-	ClusterInstFieldStatusMsgCount:                    struct{}{},
-	ClusterInstFieldStatusMsgs:                        struct{}{},
-	ClusterInstFieldExternalVolumeSize:                struct{}{},
-	ClusterInstFieldAutoScalePolicy:                   struct{}{},
-	ClusterInstFieldAvailabilityZone:                  struct{}{},
-	ClusterInstFieldImageName:                         struct{}{},
-	ClusterInstFieldReservable:                        struct{}{},
-	ClusterInstFieldReservedBy:                        struct{}{},
-	ClusterInstFieldSharedVolumeSize:                  struct{}{},
-	ClusterInstFieldMasterNodeFlavor:                  struct{}{},
-	ClusterInstFieldSkipCrmCleanupOnFailure:           struct{}{},
-	ClusterInstFieldOptRes:                            struct{}{},
-	ClusterInstFieldResourcesVmsName:                  struct{}{},
-	ClusterInstFieldResourcesVmsType:                  struct{}{},
-	ClusterInstFieldResourcesVmsStatus:                struct{}{},
-	ClusterInstFieldResourcesVmsInfraFlavor:           struct{}{},
-	ClusterInstFieldResourcesVmsIpaddressesExternalIp: struct{}{},
-	ClusterInstFieldResourcesVmsIpaddressesInternalIp: struct{}{},
-	ClusterInstFieldResourcesVmsContainersName:        struct{}{},
-	ClusterInstFieldResourcesVmsContainersType:        struct{}{},
-	ClusterInstFieldResourcesVmsContainersStatus:      struct{}{},
-	ClusterInstFieldResourcesVmsContainersClusterip:   struct{}{},
-	ClusterInstFieldResourcesVmsContainersRestarts:    struct{}{},
-	ClusterInstFieldCreatedAtSeconds:                  struct{}{},
-	ClusterInstFieldCreatedAtNanos:                    struct{}{},
-	ClusterInstFieldUpdatedAtSeconds:                  struct{}{},
-	ClusterInstFieldUpdatedAtNanos:                    struct{}{},
-	ClusterInstFieldReservationEndedAtSeconds:         struct{}{},
-	ClusterInstFieldReservationEndedAtNanos:           struct{}{},
-	ClusterInstFieldMultiTenant:                       struct{}{},
-	ClusterInstFieldNetworks:                          struct{}{},
+	ClusterInstFieldKeyClusterKeyName:                   struct{}{},
+	ClusterInstFieldKeyCloudletKeyOrganization:          struct{}{},
+	ClusterInstFieldKeyCloudletKeyName:                  struct{}{},
+	ClusterInstFieldKeyCloudletKeyFederatedOrganization: struct{}{},
+	ClusterInstFieldKeyOrganization:                     struct{}{},
+	ClusterInstFieldFlavorName:                          struct{}{},
+	ClusterInstFieldState:                               struct{}{},
+	ClusterInstFieldErrors:                              struct{}{},
+	ClusterInstFieldCrmOverride:                         struct{}{},
+	ClusterInstFieldIpAccess:                            struct{}{},
+	ClusterInstFieldAllocatedIp:                         struct{}{},
+	ClusterInstFieldLiveness:                            struct{}{},
+	ClusterInstFieldAuto:                                struct{}{},
+	ClusterInstFieldNodeFlavor:                          struct{}{},
+	ClusterInstFieldNumMasters:                          struct{}{},
+	ClusterInstFieldNumNodes:                            struct{}{},
+	ClusterInstFieldDeployment:                          struct{}{},
+	ClusterInstFieldStatusTaskNumber:                    struct{}{},
+	ClusterInstFieldStatusMaxTasks:                      struct{}{},
+	ClusterInstFieldStatusTaskName:                      struct{}{},
+	ClusterInstFieldStatusStepName:                      struct{}{},
+	ClusterInstFieldStatusMsgCount:                      struct{}{},
+	ClusterInstFieldStatusMsgs:                          struct{}{},
+	ClusterInstFieldExternalVolumeSize:                  struct{}{},
+	ClusterInstFieldAutoScalePolicy:                     struct{}{},
+	ClusterInstFieldAvailabilityZone:                    struct{}{},
+	ClusterInstFieldImageName:                           struct{}{},
+	ClusterInstFieldReservable:                          struct{}{},
+	ClusterInstFieldReservedBy:                          struct{}{},
+	ClusterInstFieldSharedVolumeSize:                    struct{}{},
+	ClusterInstFieldMasterNodeFlavor:                    struct{}{},
+	ClusterInstFieldSkipCrmCleanupOnFailure:             struct{}{},
+	ClusterInstFieldOptRes:                              struct{}{},
+	ClusterInstFieldResourcesVmsName:                    struct{}{},
+	ClusterInstFieldResourcesVmsType:                    struct{}{},
+	ClusterInstFieldResourcesVmsStatus:                  struct{}{},
+	ClusterInstFieldResourcesVmsInfraFlavor:             struct{}{},
+	ClusterInstFieldResourcesVmsIpaddressesExternalIp:   struct{}{},
+	ClusterInstFieldResourcesVmsIpaddressesInternalIp:   struct{}{},
+	ClusterInstFieldResourcesVmsContainersName:          struct{}{},
+	ClusterInstFieldResourcesVmsContainersType:          struct{}{},
+	ClusterInstFieldResourcesVmsContainersStatus:        struct{}{},
+	ClusterInstFieldResourcesVmsContainersClusterip:     struct{}{},
+	ClusterInstFieldResourcesVmsContainersRestarts:      struct{}{},
+	ClusterInstFieldCreatedAtSeconds:                    struct{}{},
+	ClusterInstFieldCreatedAtNanos:                      struct{}{},
+	ClusterInstFieldUpdatedAtSeconds:                    struct{}{},
+	ClusterInstFieldUpdatedAtNanos:                      struct{}{},
+	ClusterInstFieldReservationEndedAtSeconds:           struct{}{},
+	ClusterInstFieldReservationEndedAtNanos:             struct{}{},
+	ClusterInstFieldMultiTenant:                         struct{}{},
+	ClusterInstFieldNetworks:                            struct{}{},
 }
 
 var ClusterInstAllFieldsStringMap = map[string]string{
-	ClusterInstFieldKeyClusterKeyName:                 "Key Cluster Key Name",
-	ClusterInstFieldKeyCloudletKeyOrganization:        "Key Cloudlet Key Organization",
-	ClusterInstFieldKeyCloudletKeyName:                "Key Cloudlet Key Name",
-	ClusterInstFieldKeyOrganization:                   "Key Organization",
-	ClusterInstFieldFlavorName:                        "Flavor Name",
-	ClusterInstFieldState:                             "State",
-	ClusterInstFieldErrors:                            "Errors",
-	ClusterInstFieldCrmOverride:                       "Crm Override",
-	ClusterInstFieldIpAccess:                          "Ip Access",
-	ClusterInstFieldAllocatedIp:                       "Allocated Ip",
-	ClusterInstFieldLiveness:                          "Liveness",
-	ClusterInstFieldAuto:                              "Auto",
-	ClusterInstFieldNodeFlavor:                        "Node Flavor",
-	ClusterInstFieldNumMasters:                        "Num Masters",
-	ClusterInstFieldNumNodes:                          "Num Nodes",
-	ClusterInstFieldDeployment:                        "Deployment",
-	ClusterInstFieldStatusTaskNumber:                  "Status Task Number",
-	ClusterInstFieldStatusMaxTasks:                    "Status Max Tasks",
-	ClusterInstFieldStatusTaskName:                    "Status Task Name",
-	ClusterInstFieldStatusStepName:                    "Status Step Name",
-	ClusterInstFieldStatusMsgCount:                    "Status Msg Count",
-	ClusterInstFieldStatusMsgs:                        "Status Msgs",
-	ClusterInstFieldExternalVolumeSize:                "External Volume Size",
-	ClusterInstFieldAutoScalePolicy:                   "Auto Scale Policy",
-	ClusterInstFieldAvailabilityZone:                  "Availability Zone",
-	ClusterInstFieldImageName:                         "Image Name",
-	ClusterInstFieldReservable:                        "Reservable",
-	ClusterInstFieldReservedBy:                        "Reserved By",
-	ClusterInstFieldSharedVolumeSize:                  "Shared Volume Size",
-	ClusterInstFieldMasterNodeFlavor:                  "Master Node Flavor",
-	ClusterInstFieldSkipCrmCleanupOnFailure:           "Skip Crm Cleanup On Failure",
-	ClusterInstFieldOptRes:                            "Opt Res",
-	ClusterInstFieldResourcesVmsName:                  "Resources Vms Name",
-	ClusterInstFieldResourcesVmsType:                  "Resources Vms Type",
-	ClusterInstFieldResourcesVmsStatus:                "Resources Vms Status",
-	ClusterInstFieldResourcesVmsInfraFlavor:           "Resources Vms Infra Flavor",
-	ClusterInstFieldResourcesVmsIpaddressesExternalIp: "Resources Vms Ipaddresses External Ip",
-	ClusterInstFieldResourcesVmsIpaddressesInternalIp: "Resources Vms Ipaddresses Internal Ip",
-	ClusterInstFieldResourcesVmsContainersName:        "Resources Vms Containers Name",
-	ClusterInstFieldResourcesVmsContainersType:        "Resources Vms Containers Type",
-	ClusterInstFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
-	ClusterInstFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
-	ClusterInstFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
-	ClusterInstFieldCreatedAtSeconds:                  "Created At Seconds",
-	ClusterInstFieldCreatedAtNanos:                    "Created At Nanos",
-	ClusterInstFieldUpdatedAtSeconds:                  "Updated At Seconds",
-	ClusterInstFieldUpdatedAtNanos:                    "Updated At Nanos",
-	ClusterInstFieldReservationEndedAtSeconds:         "Reservation Ended At Seconds",
-	ClusterInstFieldReservationEndedAtNanos:           "Reservation Ended At Nanos",
-	ClusterInstFieldMultiTenant:                       "Multi Tenant",
-	ClusterInstFieldNetworks:                          "Networks",
+	ClusterInstFieldKeyClusterKeyName:                   "Key Cluster Key Name",
+	ClusterInstFieldKeyCloudletKeyOrganization:          "Key Cloudlet Key Organization",
+	ClusterInstFieldKeyCloudletKeyName:                  "Key Cloudlet Key Name",
+	ClusterInstFieldKeyCloudletKeyFederatedOrganization: "Key Cloudlet Key Federated Organization",
+	ClusterInstFieldKeyOrganization:                     "Key Organization",
+	ClusterInstFieldFlavorName:                          "Flavor Name",
+	ClusterInstFieldState:                               "State",
+	ClusterInstFieldErrors:                              "Errors",
+	ClusterInstFieldCrmOverride:                         "Crm Override",
+	ClusterInstFieldIpAccess:                            "Ip Access",
+	ClusterInstFieldAllocatedIp:                         "Allocated Ip",
+	ClusterInstFieldLiveness:                            "Liveness",
+	ClusterInstFieldAuto:                                "Auto",
+	ClusterInstFieldNodeFlavor:                          "Node Flavor",
+	ClusterInstFieldNumMasters:                          "Num Masters",
+	ClusterInstFieldNumNodes:                            "Num Nodes",
+	ClusterInstFieldDeployment:                          "Deployment",
+	ClusterInstFieldStatusTaskNumber:                    "Status Task Number",
+	ClusterInstFieldStatusMaxTasks:                      "Status Max Tasks",
+	ClusterInstFieldStatusTaskName:                      "Status Task Name",
+	ClusterInstFieldStatusStepName:                      "Status Step Name",
+	ClusterInstFieldStatusMsgCount:                      "Status Msg Count",
+	ClusterInstFieldStatusMsgs:                          "Status Msgs",
+	ClusterInstFieldExternalVolumeSize:                  "External Volume Size",
+	ClusterInstFieldAutoScalePolicy:                     "Auto Scale Policy",
+	ClusterInstFieldAvailabilityZone:                    "Availability Zone",
+	ClusterInstFieldImageName:                           "Image Name",
+	ClusterInstFieldReservable:                          "Reservable",
+	ClusterInstFieldReservedBy:                          "Reserved By",
+	ClusterInstFieldSharedVolumeSize:                    "Shared Volume Size",
+	ClusterInstFieldMasterNodeFlavor:                    "Master Node Flavor",
+	ClusterInstFieldSkipCrmCleanupOnFailure:             "Skip Crm Cleanup On Failure",
+	ClusterInstFieldOptRes:                              "Opt Res",
+	ClusterInstFieldResourcesVmsName:                    "Resources Vms Name",
+	ClusterInstFieldResourcesVmsType:                    "Resources Vms Type",
+	ClusterInstFieldResourcesVmsStatus:                  "Resources Vms Status",
+	ClusterInstFieldResourcesVmsInfraFlavor:             "Resources Vms Infra Flavor",
+	ClusterInstFieldResourcesVmsIpaddressesExternalIp:   "Resources Vms Ipaddresses External Ip",
+	ClusterInstFieldResourcesVmsIpaddressesInternalIp:   "Resources Vms Ipaddresses Internal Ip",
+	ClusterInstFieldResourcesVmsContainersName:          "Resources Vms Containers Name",
+	ClusterInstFieldResourcesVmsContainersType:          "Resources Vms Containers Type",
+	ClusterInstFieldResourcesVmsContainersStatus:        "Resources Vms Containers Status",
+	ClusterInstFieldResourcesVmsContainersClusterip:     "Resources Vms Containers Clusterip",
+	ClusterInstFieldResourcesVmsContainersRestarts:      "Resources Vms Containers Restarts",
+	ClusterInstFieldCreatedAtSeconds:                    "Created At Seconds",
+	ClusterInstFieldCreatedAtNanos:                      "Created At Nanos",
+	ClusterInstFieldUpdatedAtSeconds:                    "Updated At Seconds",
+	ClusterInstFieldUpdatedAtNanos:                      "Updated At Nanos",
+	ClusterInstFieldReservationEndedAtSeconds:           "Reservation Ended At Seconds",
+	ClusterInstFieldReservationEndedAtNanos:             "Reservation Ended At Nanos",
+	ClusterInstFieldMultiTenant:                         "Multi Tenant",
+	ClusterInstFieldNetworks:                            "Networks",
 }
 
 func (m *ClusterInst) IsKeyField(s string) bool {
@@ -1874,6 +1883,11 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 	}
 	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
 		fields[ClusterInstFieldKeyCloudletKeyName] = struct{}{}
+		fields[ClusterInstFieldKeyCloudletKey] = struct{}{}
+		fields[ClusterInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.FederatedOrganization != o.Key.CloudletKey.FederatedOrganization {
+		fields[ClusterInstFieldKeyCloudletKeyFederatedOrganization] = struct{}{}
 		fields[ClusterInstFieldKeyCloudletKey] = struct{}{}
 		fields[ClusterInstFieldKey] = struct{}{}
 	}
@@ -2170,6 +2184,12 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) int {
 			if _, set := fmap["2.2.2"]; set {
 				if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 					m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+					changed++
+				}
+			}
+			if _, set := fmap["2.2.3"]; set {
+				if m.Key.CloudletKey.FederatedOrganization != src.Key.CloudletKey.FederatedOrganization {
+					m.Key.CloudletKey.FederatedOrganization = src.Key.CloudletKey.FederatedOrganization
 					changed++
 				}
 			}
@@ -3286,6 +3306,7 @@ const ClusterInstInfoFieldKeyClusterKeyName = "2.1.1"
 const ClusterInstInfoFieldKeyCloudletKey = "2.2"
 const ClusterInstInfoFieldKeyCloudletKeyOrganization = "2.2.1"
 const ClusterInstInfoFieldKeyCloudletKeyName = "2.2.2"
+const ClusterInstInfoFieldKeyCloudletKeyFederatedOrganization = "2.2.3"
 const ClusterInstInfoFieldKeyOrganization = "2.3"
 const ClusterInstInfoFieldNotifyId = "3"
 const ClusterInstInfoFieldState = "4"
@@ -3317,6 +3338,7 @@ var ClusterInstInfoAllFields = []string{
 	ClusterInstInfoFieldKeyClusterKeyName,
 	ClusterInstInfoFieldKeyCloudletKeyOrganization,
 	ClusterInstInfoFieldKeyCloudletKeyName,
+	ClusterInstInfoFieldKeyCloudletKeyFederatedOrganization,
 	ClusterInstInfoFieldKeyOrganization,
 	ClusterInstInfoFieldNotifyId,
 	ClusterInstInfoFieldState,
@@ -3341,57 +3363,59 @@ var ClusterInstInfoAllFields = []string{
 }
 
 var ClusterInstInfoAllFieldsMap = map[string]struct{}{
-	ClusterInstInfoFieldKeyClusterKeyName:                 struct{}{},
-	ClusterInstInfoFieldKeyCloudletKeyOrganization:        struct{}{},
-	ClusterInstInfoFieldKeyCloudletKeyName:                struct{}{},
-	ClusterInstInfoFieldKeyOrganization:                   struct{}{},
-	ClusterInstInfoFieldNotifyId:                          struct{}{},
-	ClusterInstInfoFieldState:                             struct{}{},
-	ClusterInstInfoFieldErrors:                            struct{}{},
-	ClusterInstInfoFieldStatusTaskNumber:                  struct{}{},
-	ClusterInstInfoFieldStatusMaxTasks:                    struct{}{},
-	ClusterInstInfoFieldStatusTaskName:                    struct{}{},
-	ClusterInstInfoFieldStatusStepName:                    struct{}{},
-	ClusterInstInfoFieldStatusMsgCount:                    struct{}{},
-	ClusterInstInfoFieldStatusMsgs:                        struct{}{},
-	ClusterInstInfoFieldResourcesVmsName:                  struct{}{},
-	ClusterInstInfoFieldResourcesVmsType:                  struct{}{},
-	ClusterInstInfoFieldResourcesVmsStatus:                struct{}{},
-	ClusterInstInfoFieldResourcesVmsInfraFlavor:           struct{}{},
-	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp: struct{}{},
-	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp: struct{}{},
-	ClusterInstInfoFieldResourcesVmsContainersName:        struct{}{},
-	ClusterInstInfoFieldResourcesVmsContainersType:        struct{}{},
-	ClusterInstInfoFieldResourcesVmsContainersStatus:      struct{}{},
-	ClusterInstInfoFieldResourcesVmsContainersClusterip:   struct{}{},
-	ClusterInstInfoFieldResourcesVmsContainersRestarts:    struct{}{},
+	ClusterInstInfoFieldKeyClusterKeyName:                   struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyOrganization:          struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyName:                  struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyFederatedOrganization: struct{}{},
+	ClusterInstInfoFieldKeyOrganization:                     struct{}{},
+	ClusterInstInfoFieldNotifyId:                            struct{}{},
+	ClusterInstInfoFieldState:                               struct{}{},
+	ClusterInstInfoFieldErrors:                              struct{}{},
+	ClusterInstInfoFieldStatusTaskNumber:                    struct{}{},
+	ClusterInstInfoFieldStatusMaxTasks:                      struct{}{},
+	ClusterInstInfoFieldStatusTaskName:                      struct{}{},
+	ClusterInstInfoFieldStatusStepName:                      struct{}{},
+	ClusterInstInfoFieldStatusMsgCount:                      struct{}{},
+	ClusterInstInfoFieldStatusMsgs:                          struct{}{},
+	ClusterInstInfoFieldResourcesVmsName:                    struct{}{},
+	ClusterInstInfoFieldResourcesVmsType:                    struct{}{},
+	ClusterInstInfoFieldResourcesVmsStatus:                  struct{}{},
+	ClusterInstInfoFieldResourcesVmsInfraFlavor:             struct{}{},
+	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp:   struct{}{},
+	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp:   struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersName:          struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersType:          struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersStatus:        struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersClusterip:     struct{}{},
+	ClusterInstInfoFieldResourcesVmsContainersRestarts:      struct{}{},
 }
 
 var ClusterInstInfoAllFieldsStringMap = map[string]string{
-	ClusterInstInfoFieldKeyClusterKeyName:                 "Key Cluster Key Name",
-	ClusterInstInfoFieldKeyCloudletKeyOrganization:        "Key Cloudlet Key Organization",
-	ClusterInstInfoFieldKeyCloudletKeyName:                "Key Cloudlet Key Name",
-	ClusterInstInfoFieldKeyOrganization:                   "Key Organization",
-	ClusterInstInfoFieldNotifyId:                          "Notify Id",
-	ClusterInstInfoFieldState:                             "State",
-	ClusterInstInfoFieldErrors:                            "Errors",
-	ClusterInstInfoFieldStatusTaskNumber:                  "Status Task Number",
-	ClusterInstInfoFieldStatusMaxTasks:                    "Status Max Tasks",
-	ClusterInstInfoFieldStatusTaskName:                    "Status Task Name",
-	ClusterInstInfoFieldStatusStepName:                    "Status Step Name",
-	ClusterInstInfoFieldStatusMsgCount:                    "Status Msg Count",
-	ClusterInstInfoFieldStatusMsgs:                        "Status Msgs",
-	ClusterInstInfoFieldResourcesVmsName:                  "Resources Vms Name",
-	ClusterInstInfoFieldResourcesVmsType:                  "Resources Vms Type",
-	ClusterInstInfoFieldResourcesVmsStatus:                "Resources Vms Status",
-	ClusterInstInfoFieldResourcesVmsInfraFlavor:           "Resources Vms Infra Flavor",
-	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp: "Resources Vms Ipaddresses External Ip",
-	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp: "Resources Vms Ipaddresses Internal Ip",
-	ClusterInstInfoFieldResourcesVmsContainersName:        "Resources Vms Containers Name",
-	ClusterInstInfoFieldResourcesVmsContainersType:        "Resources Vms Containers Type",
-	ClusterInstInfoFieldResourcesVmsContainersStatus:      "Resources Vms Containers Status",
-	ClusterInstInfoFieldResourcesVmsContainersClusterip:   "Resources Vms Containers Clusterip",
-	ClusterInstInfoFieldResourcesVmsContainersRestarts:    "Resources Vms Containers Restarts",
+	ClusterInstInfoFieldKeyClusterKeyName:                   "Key Cluster Key Name",
+	ClusterInstInfoFieldKeyCloudletKeyOrganization:          "Key Cloudlet Key Organization",
+	ClusterInstInfoFieldKeyCloudletKeyName:                  "Key Cloudlet Key Name",
+	ClusterInstInfoFieldKeyCloudletKeyFederatedOrganization: "Key Cloudlet Key Federated Organization",
+	ClusterInstInfoFieldKeyOrganization:                     "Key Organization",
+	ClusterInstInfoFieldNotifyId:                            "Notify Id",
+	ClusterInstInfoFieldState:                               "State",
+	ClusterInstInfoFieldErrors:                              "Errors",
+	ClusterInstInfoFieldStatusTaskNumber:                    "Status Task Number",
+	ClusterInstInfoFieldStatusMaxTasks:                      "Status Max Tasks",
+	ClusterInstInfoFieldStatusTaskName:                      "Status Task Name",
+	ClusterInstInfoFieldStatusStepName:                      "Status Step Name",
+	ClusterInstInfoFieldStatusMsgCount:                      "Status Msg Count",
+	ClusterInstInfoFieldStatusMsgs:                          "Status Msgs",
+	ClusterInstInfoFieldResourcesVmsName:                    "Resources Vms Name",
+	ClusterInstInfoFieldResourcesVmsType:                    "Resources Vms Type",
+	ClusterInstInfoFieldResourcesVmsStatus:                  "Resources Vms Status",
+	ClusterInstInfoFieldResourcesVmsInfraFlavor:             "Resources Vms Infra Flavor",
+	ClusterInstInfoFieldResourcesVmsIpaddressesExternalIp:   "Resources Vms Ipaddresses External Ip",
+	ClusterInstInfoFieldResourcesVmsIpaddressesInternalIp:   "Resources Vms Ipaddresses Internal Ip",
+	ClusterInstInfoFieldResourcesVmsContainersName:          "Resources Vms Containers Name",
+	ClusterInstInfoFieldResourcesVmsContainersType:          "Resources Vms Containers Type",
+	ClusterInstInfoFieldResourcesVmsContainersStatus:        "Resources Vms Containers Status",
+	ClusterInstInfoFieldResourcesVmsContainersClusterip:     "Resources Vms Containers Clusterip",
+	ClusterInstInfoFieldResourcesVmsContainersRestarts:      "Resources Vms Containers Restarts",
 }
 
 func (m *ClusterInstInfo) IsKeyField(s string) bool {
@@ -3411,6 +3435,11 @@ func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struc
 	}
 	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
 		fields[ClusterInstInfoFieldKeyCloudletKeyName] = struct{}{}
+		fields[ClusterInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[ClusterInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.FederatedOrganization != o.Key.CloudletKey.FederatedOrganization {
+		fields[ClusterInstInfoFieldKeyCloudletKeyFederatedOrganization] = struct{}{}
 		fields[ClusterInstInfoFieldKeyCloudletKey] = struct{}{}
 		fields[ClusterInstInfoFieldKey] = struct{}{}
 	}
@@ -3581,6 +3610,12 @@ func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) int {
 			if _, set := fmap["2.2.2"]; set {
 				if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 					m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+					changed++
+				}
+			}
+			if _, set := fmap["2.2.3"]; set {
+				if m.Key.CloudletKey.FederatedOrganization != src.Key.CloudletKey.FederatedOrganization {
+					m.Key.CloudletKey.FederatedOrganization = src.Key.CloudletKey.FederatedOrganization
 					changed++
 				}
 			}

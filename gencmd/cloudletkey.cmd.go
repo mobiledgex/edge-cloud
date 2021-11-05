@@ -21,13 +21,17 @@ var CloudletKeyRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
 }
-var CloudletKeyOptionalArgs = []string{}
+var CloudletKeyOptionalArgs = []string{
+	"federator-org",
+}
 var CloudletKeyAliasArgs = []string{
 	"cloudlet-org=organization",
 	"cloudlet=name",
+	"federator-org=federatedorganization",
 }
 var CloudletKeyComments = map[string]string{
-	"cloudlet-org": "Organization of the cloudlet site",
-	"cloudlet":     "Name of the cloudlet",
+	"cloudlet-org":  "Organization of the cloudlet site",
+	"cloudlet":      "Name of the cloudlet",
+	"federator-org": "Federated operator organization who shared this cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}

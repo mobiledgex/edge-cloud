@@ -365,18 +365,21 @@ var NetworkKeyRequiredArgs = []string{}
 var NetworkKeyOptionalArgs = []string{
 	"cloudletkey.organization",
 	"cloudletkey.name",
+	"cloudletkey.federatedorganization",
 	"name",
 }
 var NetworkKeyAliasArgs = []string{}
 var NetworkKeyComments = map[string]string{
-	"cloudletkey.organization": "Organization of the cloudlet site",
-	"cloudletkey.name":         "Name of the cloudlet",
-	"name":                     "Network Name",
+	"cloudletkey.organization":          "Organization of the cloudlet site",
+	"cloudletkey.name":                  "Name of the cloudlet",
+	"cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"name":                              "Network Name",
 }
 var NetworkKeySpecialArgs = map[string]string{}
 var NetworkRequiredArgs = []string{
 	"cloudlet-org",
 	"key.cloudletkey.name",
+	"key.cloudletkey.federatedorganization",
 	"name",
 }
 var NetworkOptionalArgs = []string{
@@ -390,14 +393,15 @@ var NetworkAliasArgs = []string{
 	"name=key.name",
 }
 var NetworkComments = map[string]string{
-	"fields":                   "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":             "Organization of the cloudlet site",
-	"key.cloudletkey.name":     "Name of the cloudlet",
-	"name":                     "Network Name",
-	"routes:empty":             "List of routes, specify routes:empty=true to clear",
-	"routes:#.destinationcidr": "Destination CIDR",
-	"routes:#.nexthopip":       "Next hop IP",
-	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
+	"fields":                                "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":                          "Organization of the cloudlet site",
+	"key.cloudletkey.name":                  "Name of the cloudlet",
+	"key.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"name":                                  "Network Name",
+	"routes:empty":                          "List of routes, specify routes:empty=true to clear",
+	"routes:#.destinationcidr":              "Destination CIDR",
+	"routes:#.nexthopip":                    "Next hop IP",
+	"connectiontype":                        "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
 }
 var NetworkSpecialArgs = map[string]string{
 	"fields": "StringArray",

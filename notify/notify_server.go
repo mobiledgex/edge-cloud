@@ -290,7 +290,8 @@ func (s *Server) negotiate(ctx context.Context, stream edgeproto.NotifyApi_Strea
 	}
 	s.sendrecv.setRemoteWanted(req.WantObjs)
 	s.sendrecv.filterCloudletKeys = req.FilterCloudletKey
-	if s.sendrecv.filterCloudletKeys {
+	s.sendrecv.filterFederatedCloudlet = req.FilterFederatedCloudlet
+	if s.sendrecv.filterCloudletKeys || s.sendrecv.filterFederatedCloudlet {
 		s.sendrecv.sendAllEnd = false
 		s.sendrecv.manualSendAllEnd = true
 	} else {

@@ -702,6 +702,10 @@ func (m *DebugRequest) CopyInFields(src *DebugRequest) int {
 		m.Node.CloudletKey.Name = src.Node.CloudletKey.Name
 		changed++
 	}
+	if m.Node.CloudletKey.FederatedOrganization != src.Node.CloudletKey.FederatedOrganization {
+		m.Node.CloudletKey.FederatedOrganization = src.Node.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Node.Type != src.Node.Type {
 		m.Node.Type = src.Node.Type
 		changed++
@@ -779,6 +783,10 @@ func (m *DebugReply) CopyInFields(src *DebugReply) int {
 	}
 	if m.Node.CloudletKey.Name != src.Node.CloudletKey.Name {
 		m.Node.CloudletKey.Name = src.Node.CloudletKey.Name
+		changed++
+	}
+	if m.Node.CloudletKey.FederatedOrganization != src.Node.CloudletKey.FederatedOrganization {
+		m.Node.CloudletKey.FederatedOrganization = src.Node.CloudletKey.FederatedOrganization
 		changed++
 	}
 	if m.Node.Type != src.Node.Type {

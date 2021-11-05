@@ -980,7 +980,19 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
 	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
+
 	cloudletInfo := edgeproto.CloudletInfo{}
+	// for federated cloudlet, set cloudletinfo object if it is empty
+	if old == nil && new.State == edgeproto.TrackedState_CREATING && new.Key.FederatedOrganization != "" {
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			cloudletInfo.Key = new.Key
+		}
+		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+		cloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
 		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)

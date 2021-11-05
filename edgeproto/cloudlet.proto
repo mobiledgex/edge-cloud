@@ -122,6 +122,7 @@ message PlatformConfig {
 // 13: `PLATFORM_TYPE_KIND`
 // 14: `PLATFORM_TYPE_KINDINFRA`
 // 15: `PLATFORM_TYPE_FAKE_SINGLE_CLUSTER`
+// 16: `PLATFORM_TYPE_FEDERATION`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -155,6 +156,8 @@ enum PlatformType {
   PLATFORM_TYPE_KINDINFRA = 14;
   // Fake Single Cluster Cloudlet
   PLATFORM_TYPE_FAKE_SINGLE_CLUSTER = 15;
+  // Cloudlet shared as part of federation
+  PLATFORM_TYPE_FEDERATION  = 16;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name

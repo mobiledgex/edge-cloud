@@ -1001,6 +1001,10 @@ func (m *VMResource) CopyInFields(src *VMResource) int {
 		m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
 		changed++
 	}
+	if m.Key.CloudletKey.FederatedOrganization != src.Key.CloudletKey.FederatedOrganization {
+		m.Key.CloudletKey.FederatedOrganization = src.Key.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Key.Organization != src.Key.Organization {
 		m.Key.Organization = src.Key.Organization
 		changed++
@@ -1205,6 +1209,10 @@ func (m *CloudletRefs) CopyInFields(src *CloudletRefs) int {
 	}
 	if m.Key.Name != src.Key.Name {
 		m.Key.Name = src.Key.Name
+		changed++
+	}
+	if m.Key.FederatedOrganization != src.Key.FederatedOrganization {
+		m.Key.FederatedOrganization = src.Key.FederatedOrganization
 		changed++
 	}
 	if src.RootLbPorts != nil {
@@ -1977,6 +1985,10 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) int {
 	}
 	if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 		m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+		changed++
+	}
+	if m.Key.CloudletKey.FederatedOrganization != src.Key.CloudletKey.FederatedOrganization {
+		m.Key.CloudletKey.FederatedOrganization = src.Key.CloudletKey.FederatedOrganization
 		changed++
 	}
 	if m.Key.Organization != src.Key.Organization {

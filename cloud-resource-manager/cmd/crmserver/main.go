@@ -151,7 +151,7 @@ func main() {
 		notify.ClientStreamInterceptors(nodeMgr.AccessKeyClient.StreamAddAccessKey),
 	)
 	notifyClient.SetFilterByCloudletKey()
-	InitClientNotify(notifyClient, controllerData)
+	crmutil.InitClientNotify(notifyClient, &nodeMgr, controllerData)
 	notifyClient.Start()
 	defer notifyClient.Stop()
 
@@ -328,7 +328,7 @@ func main() {
 
 	// setup crm notify listener (for shepherd)
 	var notifyServer notify.ServerMgr
-	initSrvNotify(&notifyServer)
+	crmutil.InitSrvNotify(&notifyServer, &nodeMgr, controllerData)
 	notifyServer.Start(nodeMgr.Name(), *notifySrvAddr, notifyServerTls)
 	defer notifyServer.Stop()
 

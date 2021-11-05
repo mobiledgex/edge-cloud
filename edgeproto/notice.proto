@@ -41,6 +41,8 @@ message Notice {
   int64 mod_rev = 7;
   // Extra tags
   map<string, string> tags = 8;
+  // Filter by federated cloudlet
+  bool filter_federated_cloudlet = 9;
 }
 
 service NotifyApi {

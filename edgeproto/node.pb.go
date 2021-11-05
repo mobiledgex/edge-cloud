@@ -633,6 +633,10 @@ func (m *NodeKey) CopyInFields(src *NodeKey) int {
 		m.CloudletKey.Name = src.CloudletKey.Name
 		changed++
 	}
+	if m.CloudletKey.FederatedOrganization != src.CloudletKey.FederatedOrganization {
+		m.CloudletKey.FederatedOrganization = src.CloudletKey.FederatedOrganization
+		changed++
+	}
 	if m.Type != src.Type {
 		m.Type = src.Type
 		changed++
@@ -683,6 +687,7 @@ func (m *NodeKey) GetTags() map[string]string {
 	tags["node"] = m.Name
 	tags["cloudletorg"] = m.CloudletKey.Organization
 	tags["cloudlet"] = m.CloudletKey.Name
+	tags["federatedorg"] = m.CloudletKey.FederatedOrganization
 	tags["nodetype"] = m.Type
 	tags["noderegion"] = m.Region
 	return tags
@@ -802,6 +807,7 @@ const NodeFieldKeyName = "2.1"
 const NodeFieldKeyCloudletKey = "2.3"
 const NodeFieldKeyCloudletKeyOrganization = "2.3.1"
 const NodeFieldKeyCloudletKeyName = "2.3.2"
+const NodeFieldKeyCloudletKeyFederatedOrganization = "2.3.3"
 const NodeFieldKeyType = "2.4"
 const NodeFieldKeyRegion = "2.5"
 const NodeFieldNotifyId = "3"
@@ -820,6 +826,7 @@ var NodeAllFields = []string{
 	NodeFieldKeyName,
 	NodeFieldKeyCloudletKeyOrganization,
 	NodeFieldKeyCloudletKeyName,
+	NodeFieldKeyCloudletKeyFederatedOrganization,
 	NodeFieldKeyType,
 	NodeFieldKeyRegion,
 	NodeFieldNotifyId,
@@ -835,39 +842,41 @@ var NodeAllFields = []string{
 }
 
 var NodeAllFieldsMap = map[string]struct{}{
-	NodeFieldKeyName:                    struct{}{},
-	NodeFieldKeyCloudletKeyOrganization: struct{}{},
-	NodeFieldKeyCloudletKeyName:         struct{}{},
-	NodeFieldKeyType:                    struct{}{},
-	NodeFieldKeyRegion:                  struct{}{},
-	NodeFieldNotifyId:                   struct{}{},
-	NodeFieldBuildMaster:                struct{}{},
-	NodeFieldBuildHead:                  struct{}{},
-	NodeFieldBuildAuthor:                struct{}{},
-	NodeFieldHostname:                   struct{}{},
-	NodeFieldContainerVersion:           struct{}{},
-	NodeFieldInternalPki:                struct{}{},
-	NodeFieldBuildDate:                  struct{}{},
-	NodeFieldPropertiesKey:              struct{}{},
-	NodeFieldPropertiesValue:            struct{}{},
+	NodeFieldKeyName:                             struct{}{},
+	NodeFieldKeyCloudletKeyOrganization:          struct{}{},
+	NodeFieldKeyCloudletKeyName:                  struct{}{},
+	NodeFieldKeyCloudletKeyFederatedOrganization: struct{}{},
+	NodeFieldKeyType:                             struct{}{},
+	NodeFieldKeyRegion:                           struct{}{},
+	NodeFieldNotifyId:                            struct{}{},
+	NodeFieldBuildMaster:                         struct{}{},
+	NodeFieldBuildHead:                           struct{}{},
+	NodeFieldBuildAuthor:                         struct{}{},
+	NodeFieldHostname:                            struct{}{},
+	NodeFieldContainerVersion:                    struct{}{},
+	NodeFieldInternalPki:                         struct{}{},
+	NodeFieldBuildDate:                           struct{}{},
+	NodeFieldPropertiesKey:                       struct{}{},
+	NodeFieldPropertiesValue:                     struct{}{},
 }
 
 var NodeAllFieldsStringMap = map[string]string{
-	NodeFieldKeyName:                    "Key Name",
-	NodeFieldKeyCloudletKeyOrganization: "Key Cloudlet Key Organization",
-	NodeFieldKeyCloudletKeyName:         "Key Cloudlet Key Name",
-	NodeFieldKeyType:                    "Key Type",
-	NodeFieldKeyRegion:                  "Key Region",
-	NodeFieldNotifyId:                   "Notify Id",
-	NodeFieldBuildMaster:                "Build Master",
-	NodeFieldBuildHead:                  "Build Head",
-	NodeFieldBuildAuthor:                "Build Author",
-	NodeFieldHostname:                   "Hostname",
-	NodeFieldContainerVersion:           "Container Version",
-	NodeFieldInternalPki:                "Internal Pki",
-	NodeFieldBuildDate:                  "Build Date",
-	NodeFieldPropertiesKey:              "Properties Key",
-	NodeFieldPropertiesValue:            "Properties Value",
+	NodeFieldKeyName:                             "Key Name",
+	NodeFieldKeyCloudletKeyOrganization:          "Key Cloudlet Key Organization",
+	NodeFieldKeyCloudletKeyName:                  "Key Cloudlet Key Name",
+	NodeFieldKeyCloudletKeyFederatedOrganization: "Key Cloudlet Key Federated Organization",
+	NodeFieldKeyType:                             "Key Type",
+	NodeFieldKeyRegion:                           "Key Region",
+	NodeFieldNotifyId:                            "Notify Id",
+	NodeFieldBuildMaster:                         "Build Master",
+	NodeFieldBuildHead:                           "Build Head",
+	NodeFieldBuildAuthor:                         "Build Author",
+	NodeFieldHostname:                            "Hostname",
+	NodeFieldContainerVersion:                    "Container Version",
+	NodeFieldInternalPki:                         "Internal Pki",
+	NodeFieldBuildDate:                           "Build Date",
+	NodeFieldPropertiesKey:                       "Properties Key",
+	NodeFieldPropertiesValue:                     "Properties Value",
 }
 
 func (m *Node) IsKeyField(s string) bool {
@@ -886,6 +895,11 @@ func (m *Node) DiffFields(o *Node, fields map[string]struct{}) {
 	}
 	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
 		fields[NodeFieldKeyCloudletKeyName] = struct{}{}
+		fields[NodeFieldKeyCloudletKey] = struct{}{}
+		fields[NodeFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.FederatedOrganization != o.Key.CloudletKey.FederatedOrganization {
+		fields[NodeFieldKeyCloudletKeyFederatedOrganization] = struct{}{}
 		fields[NodeFieldKeyCloudletKey] = struct{}{}
 		fields[NodeFieldKey] = struct{}{}
 	}
@@ -962,6 +976,12 @@ func (m *Node) CopyInFields(src *Node) int {
 			if _, set := fmap["2.3.2"]; set {
 				if m.Key.CloudletKey.Name != src.Key.CloudletKey.Name {
 					m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+					changed++
+				}
+			}
+			if _, set := fmap["2.3.3"]; set {
+				if m.Key.CloudletKey.FederatedOrganization != src.Key.CloudletKey.FederatedOrganization {
+					m.Key.CloudletKey.FederatedOrganization = src.Key.CloudletKey.FederatedOrganization
 					changed++
 				}
 			}
