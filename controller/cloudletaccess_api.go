@@ -81,7 +81,7 @@ func (s *CloudletApi) commitSecondaryAccessPublicKey(ctx context.Context, key *e
 			// deleted
 			return nil
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "commit upgraded secondarymkey")
+		log.SpanLog(ctx, log.DebugLevelApi, "commit upgraded secondary key")
 		cloudlet.CrmSecondaryAccessPublicKey = pubPEM
 		cloudlet.CrmSecondaryAccessKeyUpgradeRequired = false
 		s.store.STMPut(stm, &cloudlet)

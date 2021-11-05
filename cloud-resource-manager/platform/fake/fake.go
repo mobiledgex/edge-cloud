@@ -553,25 +553,32 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 		// cloudletInfo shows up from the primary
 		go func() {
 			start := time.Now()
+			var err error
+			var cloudletInfo edgeproto.CloudletInfo
 			for {
-				var cloudletInfo edgeproto.CloudletInfo
 				time.Sleep(time.Millisecond * 200)
 				elapsed := time.Since(start)
 				if elapsed >= (maxPrimaryCrmStartupWait) {
 					log.SpanLog(ctx, log.DebugLevelInfra, "timed out waiting for primary CRM to report cloudlet info")
+					err = fmt.Errorf("timed out waiting for primary CRM to report cloudlet info")
 					break
 				}
 				if !caches.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo) {
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to get cloudlet info after starting primary CRM, will retry", "cloudletKey", s.cloudletKey)
-					time.Sleep(time.Millisecond * 200)
 				} else {
 					log.SpanLog(ctx, log.DebugLevelInfra, "got cloudlet info from primary CRM, will start secondary", "cloudletKey", cloudlet.Key, "active", cloudletInfo.ActiveCrmInstance, "ci", cloudletInfo)
-					err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleSecondary)
+					err = cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleSecondary)
 					if err != nil {
 						log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start secondary CRM", "err", err)
 					}
 					break
 				}
+			}
+			if err != nil {
+				cloudletInfo.Key = cloudlet.Key
+				cloudletInfo.Errors = append(cloudletInfo.Errors, "fake cloudlet create failed to start secondary CRM: "+err.Error())
+				cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
+				caches.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			}
 		}()
 	} else {

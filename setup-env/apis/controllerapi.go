@@ -333,7 +333,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 				return err
 			}
 		} else {
-			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, ""); err != nil {
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleNone); err != nil {
 				return err
 			}
 		}

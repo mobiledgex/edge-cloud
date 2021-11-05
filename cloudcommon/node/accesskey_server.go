@@ -44,8 +44,7 @@ func ContextSetAccessKeyVerified(ctx context.Context, info *AccessKeyVerified) c
 }
 
 func ContextGetAccessKeyVerified(ctx context.Context) *AccessKeyVerified {
-	tag := accessKeyVerifiedTag
-	key, ok := ctx.Value(tag).(*AccessKeyVerified)
+	key, ok := ctx.Value(accessKeyVerifiedTag).(*AccessKeyVerified)
 	if !ok {
 		return nil
 	}

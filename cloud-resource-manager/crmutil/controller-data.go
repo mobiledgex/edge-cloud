@@ -338,6 +338,7 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
 	if !redundancy.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring cluster change because not active")
+		return
 	}
 	// store clusterInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
@@ -578,6 +579,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	var err error
 	if !redundancy.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring appInst change because not active")
+		return
 	}
 	if old != nil && old.State == new.State {
 		return
@@ -969,6 +971,7 @@ func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionChanged()", "trustPolicyException", new)
 	if !redundancy.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy change because not active")
+		return
 	}
 	if old != nil && old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 		new.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
@@ -981,6 +984,7 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionDeleted()", "TrustPolicyException:", old)
 	if !redundancy.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy deleted because not active")
+		return
 	}
 	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
 		log.SpanLog(ctx, log.DebugLevelInfra, "calling deleteTrustPolicyExceptionKeyWorkers")
@@ -1126,6 +1130,7 @@ func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPo
 	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "newvmpool", new, "oldvmpool", old)
 	if !redundancy.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring VM Pool changed because not active")
+		return
 	}
 	if old == nil || old.State == new.State {
 		return

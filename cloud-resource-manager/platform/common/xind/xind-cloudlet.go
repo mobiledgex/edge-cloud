@@ -18,7 +18,7 @@ func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet,
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, "")
+	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleNone)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet create failed", "err", err)
 		return true, err
