@@ -2265,19 +2265,20 @@ var PlatformConfigSpecialArgs = map[string]string{
 var CloudletResMapRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 	"mapping",
 }
 var CloudletResMapOptionalArgs = []string{}
 var CloudletResMapAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletResMapComments = map[string]string{
-	"cloudlet-org":              "Organization of the cloudlet site",
-	"cloudlet":                  "Name of the cloudlet",
-	"key.federatedorganization": "Federated operator organization who shared this cloudlet",
-	"mapping":                   "Resource mapping info",
+	"cloudlet-org":  "Organization of the cloudlet site",
+	"cloudlet":      "Name of the cloudlet",
+	"federated-org": "Federated operator organization who shared this cloudlet",
+	"mapping":       "Resource mapping info",
 }
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
@@ -2441,7 +2442,7 @@ var GPUConfigSpecialArgs = map[string]string{
 var CloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var CloudletOptionalArgs = []string{
 	"location.latitude",
@@ -2496,12 +2497,13 @@ var CloudletOptionalArgs = []string{
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletComments = map[string]string{
 	"fields":                              "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                        "Organization of the cloudlet site",
 	"cloudlet":                            "Name of the cloudlet",
-	"key.federatedorganization":           "Federated operator organization who shared this cloudlet",
+	"federated-org":                       "Federated operator organization who shared this cloudlet",
 	"location.latitude":                   "Latitude in WGS 84 coordinates",
 	"location.longitude":                  "Longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":         "Horizontal accuracy (radius in meters)",
@@ -2596,7 +2598,7 @@ var CloudletSpecialArgs = map[string]string{
 var FlavorMatchRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 	"flavor",
 }
 var FlavorMatchOptionalArgs = []string{
@@ -2605,14 +2607,15 @@ var FlavorMatchOptionalArgs = []string{
 var FlavorMatchAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 	"flavor=flavorname",
 }
 var FlavorMatchComments = map[string]string{
-	"cloudlet-org":              "Organization of the cloudlet site",
-	"cloudlet":                  "Name of the cloudlet",
-	"key.federatedorganization": "Federated operator organization who shared this cloudlet",
-	"flavor":                    "Flavor name to lookup",
-	"availabilityzone":          "availability zone for optional resources if any",
+	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudlet":         "Name of the cloudlet",
+	"federated-org":    "Federated operator organization who shared this cloudlet",
+	"flavor":           "Flavor name to lookup",
+	"availabilityzone": "availability zone for optional resources if any",
 }
 var FlavorMatchSpecialArgs = map[string]string{}
 var CloudletManifestRequiredArgs = []string{}
@@ -2695,7 +2698,7 @@ var CloudletResourceQuotaPropsSpecialArgs = map[string]string{}
 var CloudletResourceUsageRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var CloudletResourceUsageOptionalArgs = []string{
 	"infrausage",
@@ -2710,37 +2713,39 @@ var CloudletResourceUsageOptionalArgs = []string{
 var CloudletResourceUsageAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletResourceUsageComments = map[string]string{
-	"cloudlet-org":              "Organization of the cloudlet site",
-	"cloudlet":                  "Name of the cloudlet",
-	"key.federatedorganization": "Federated operator organization who shared this cloudlet",
-	"infrausage":                "Show Infra based usage",
-	"info:#.name":               "Resource name",
-	"info:#.value":              "Resource value",
-	"info:#.inframaxvalue":      "Resource infra max value",
-	"info:#.quotamaxvalue":      "Resource quota max value",
-	"info:#.description":        "Resource description",
-	"info:#.units":              "Resource units",
-	"info:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
+	"cloudlet-org":          "Organization of the cloudlet site",
+	"cloudlet":              "Name of the cloudlet",
+	"federated-org":         "Federated operator organization who shared this cloudlet",
+	"infrausage":            "Show Infra based usage",
+	"info:#.name":           "Resource name",
+	"info:#.value":          "Resource value",
+	"info:#.inframaxvalue":  "Resource infra max value",
+	"info:#.quotamaxvalue":  "Resource quota max value",
+	"info:#.description":    "Resource description",
+	"info:#.units":          "Resource units",
+	"info:#.alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var CloudletResourceUsageSpecialArgs = map[string]string{}
 var CloudletAllianceOrgRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 	"organization",
 }
 var CloudletAllianceOrgOptionalArgs = []string{}
 var CloudletAllianceOrgAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletAllianceOrgComments = map[string]string{
-	"cloudlet-org":              "Organization of the cloudlet site",
-	"cloudlet":                  "Name of the cloudlet",
-	"key.federatedorganization": "Federated operator organization who shared this cloudlet",
-	"organization":              "Alliance organization",
+	"cloudlet-org":  "Organization of the cloudlet site",
+	"cloudlet":      "Name of the cloudlet",
+	"federated-org": "Federated operator organization who shared this cloudlet",
+	"organization":  "Alliance organization",
 }
 var CloudletAllianceOrgSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
@@ -2788,7 +2793,7 @@ var OSImageSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var CloudletInfoOptionalArgs = []string{
 	"state",
@@ -2855,12 +2860,13 @@ var CloudletInfoOptionalArgs = []string{
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletInfoComments = map[string]string{
 	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                           "Organization of the cloudlet site",
 	"cloudlet":                               "Name of the cloudlet",
-	"key.federatedorganization":              "Federated operator organization who shared this cloudlet",
+	"federated-org":                          "Federated operator organization who shared this cloudlet",
 	"state":                                  "State of cloudlet, one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync",
 	"notifyid":                               "Id of client assigned by server (internal use only)",
 	"controller":                             "Connected controller unique id",
@@ -2967,7 +2973,7 @@ var GetGPUDriverBuildURLOptionalArgs = []string{
 var CreateCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 	"location.latitude",
 	"location.longitude",
 	"numdynamicips",
@@ -3017,7 +3023,7 @@ var CreateCloudletOptionalArgs = []string{
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var DeleteCloudletOptionalArgs = []string{
 	"location.latitude",
@@ -3067,7 +3073,7 @@ var DeleteCloudletOptionalArgs = []string{
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var UpdateCloudletOptionalArgs = []string{
 	"location.latitude",
@@ -3106,7 +3112,7 @@ var UpdateCloudletOptionalArgs = []string{
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var ShowCloudletOptionalArgs = []string{
 	"location.latitude",
@@ -3168,7 +3174,7 @@ var GetCloudletResourceQuotaPropsOptionalArgs = []string{
 var GetCloudletResourceUsageRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
-	"key.federatedorganization",
+	"federated-org",
 }
 var GetCloudletResourceUsageOptionalArgs = []string{
 	"infrausage",

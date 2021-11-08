@@ -110,6 +110,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.AppInstCache.SetDeletedCb(cd.appInstDeleted)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
+	cd.CloudletCache.SetDeletedCb(cd.cloudletDeleted)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 
@@ -1102,6 +1103,15 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
 		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+}
+
+func (cd *ControllerData) cloudletDeleted(ctx context.Context, old *edgeproto.Cloudlet) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletDeleted", "Cloudlet", old)
+	if old.Key.FederatedOrganization != "" {
+		// cloudlet info
+		info := edgeproto.CloudletInfo{Key: old.Key}
+		cd.CloudletInfoCache.Delete(ctx, &info, 0)
 	}
 }
 

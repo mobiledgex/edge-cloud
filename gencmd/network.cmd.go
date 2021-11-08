@@ -379,7 +379,7 @@ var NetworkKeySpecialArgs = map[string]string{}
 var NetworkRequiredArgs = []string{
 	"cloudlet-org",
 	"key.cloudletkey.name",
-	"key.cloudletkey.federatedorganization",
+	"federated-org",
 	"name",
 }
 var NetworkOptionalArgs = []string{
@@ -390,18 +390,19 @@ var NetworkOptionalArgs = []string{
 }
 var NetworkAliasArgs = []string{
 	"cloudlet-org=key.cloudletkey.organization",
+	"federated-org=key.cloudletkey.federatedorganization",
 	"name=key.name",
 }
 var NetworkComments = map[string]string{
-	"fields":                                "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":                          "Organization of the cloudlet site",
-	"key.cloudletkey.name":                  "Name of the cloudlet",
-	"key.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
-	"name":                                  "Network Name",
-	"routes:empty":                          "List of routes, specify routes:empty=true to clear",
-	"routes:#.destinationcidr":              "Destination CIDR",
-	"routes:#.nexthopip":                    "Next hop IP",
-	"connectiontype":                        "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
+	"fields":                   "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":             "Organization of the cloudlet site",
+	"key.cloudletkey.name":     "Name of the cloudlet",
+	"federated-org":            "Federated operator organization who shared this cloudlet",
+	"name":                     "Network Name",
+	"routes:empty":             "List of routes, specify routes:empty=true to clear",
+	"routes:#.destinationcidr": "Destination CIDR",
+	"routes:#.nexthopip":       "Next hop IP",
+	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
 }
 var NetworkSpecialArgs = map[string]string{
 	"fields": "StringArray",

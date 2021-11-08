@@ -56,6 +56,7 @@ var (
 	}
 
 	ResourceQuotaDesc = map[string]string{
+		ResourceDisk:        "Limit on disk available (GB)",
 		ResourceInstances:   "Limit on number of instances that can be provisioned",
 		ResourceFloatingIPs: "Limit on number of floating IPs that can be created",
 	}

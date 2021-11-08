@@ -25,30 +25,39 @@ func (s *AppInstSend) UpdateOk(ctx context.Context, key *edgeproto.AppInstKey) b
 		if !s.sendrecv.cloudletReady {
 			return false
 		}
-		// Federated cloudlets are ignored by CRMs and are handled by FRMs
-		if key.ClusterInstKey.CloudletKey.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
-			return false
-		}
 		if !s.sendrecv.hasCloudletKey(&key.ClusterInstKey.CloudletKey) {
 			return false
 		}
-		// also trigger sending app
-		if s.sendrecv.appSend != nil {
-			s.sendrecv.appSend.updateInternal(ctx, &key.AppKey, 0)
+	}
+	if s.sendrecv.filterFederatedCloudlet {
+		// Federated cloudlets are ignored by CRMs and are handled by FRMs
+		if key.ClusterInstKey.CloudletKey.FederatedOrganization == "" {
+			return false
 		}
+	}
+	// also trigger sending app
+	if s.sendrecv.appSend != nil {
+		s.sendrecv.appSend.updateInternal(ctx, &key.AppKey, 0)
 	}
 	return true
 }
 
 func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey) bool {
+	triggerSend := false
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.hasCloudletKey(key) {
 			return false
 		}
+		triggerSend = true
+	}
+	if s.sendrecv.filterFederatedCloudlet {
 		// Federated cloudlets are ignored by CRMs and are handled by FRMs
-		if key.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
+		if key.FederatedOrganization == "" {
 			return false
 		}
+		triggerSend = true
+	}
+	if triggerSend {
 		cloudlet := edgeproto.Cloudlet{}
 		var modRev int64
 		if s.handler.GetWithRev(key, &cloudlet, &modRev) {
@@ -75,11 +84,13 @@ func (s *ClusterInstSend) UpdateOk(ctx context.Context, key *edgeproto.ClusterIn
 		if !s.sendrecv.cloudletReady {
 			return false
 		}
-		// Federated cloudlets are ignored by CRMs and are handled by FRMs
-		if key.CloudletKey.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
+		if !s.sendrecv.hasCloudletKey(&key.CloudletKey) {
 			return false
 		}
-		if !s.sendrecv.hasCloudletKey(&key.CloudletKey) {
+	}
+	if s.sendrecv.filterFederatedCloudlet {
+		// Federated cloudlets are ignored by CRMs and are handled by FRMs
+		if key.CloudletKey.FederatedOrganization == "" {
 			return false
 		}
 	}
@@ -91,11 +102,13 @@ func (s *ExecRequestSend) UpdateOk(ctx context.Context, msg *edgeproto.ExecReque
 		if !s.sendrecv.cloudletReady {
 			return false
 		}
-		// Federated cloudlets are ignored by CRMs and are handled by FRMs
-		if msg.AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
+		if !s.sendrecv.hasCloudletKey(&msg.AppInstKey.ClusterInstKey.CloudletKey) {
 			return false
 		}
-		if !s.sendrecv.hasCloudletKey(&msg.AppInstKey.ClusterInstKey.CloudletKey) {
+	}
+	if s.sendrecv.filterFederatedCloudlet {
+		// Federated cloudlets are ignored by CRMs and are handled by FRMs
+		if msg.AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization == "" {
 			return false
 		}
 	}
@@ -109,10 +122,6 @@ func (s *VMPoolSend) UpdateOk(ctx context.Context, key *edgeproto.VMPoolKey) boo
 			var modRev int64
 			if cKey.Organization != key.Organization {
 				continue
-			}
-			// Federated cloudlets are ignored by CRMs and are handled by FRMs
-			if cKey.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
-				return false
 			}
 			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
 				if cloudlet.VmPool != key.Name {
@@ -131,10 +140,6 @@ func (s *GPUDriverSend) UpdateOk(ctx context.Context, key *edgeproto.GPUDriverKe
 		for cKey, _ := range s.sendrecv.cloudletKeys {
 			cloudlet := edgeproto.Cloudlet{}
 			var modRev int64
-			// Federated cloudlets are ignored by CRMs and are handled by FRMs
-			if cKey.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
-				return false
-			}
 			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
 				if cloudlet.GpuConfig.Driver.Matches(key) {
 					return true
@@ -151,10 +156,6 @@ func (s *TrustPolicyExceptionSend) UpdateOk(ctx context.Context, key *edgeproto.
 		for cKey, _ := range s.sendrecv.cloudletKeys {
 			cloudlet := edgeproto.Cloudlet{}
 			var modRev int64
-			// Federated cloudlets are ignored by CRMs and are handled by FRMs
-			if cKey.FederatedOrganization != "" && !s.sendrecv.filterFederatedCloudlet {
-				return false
-			}
 			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
 				if cKey.Organization != key.CloudletPoolKey.Organization {
 					continue
