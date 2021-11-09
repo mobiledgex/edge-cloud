@@ -177,6 +177,10 @@ func IsValidDeploymentManifest(deploymentType, command, manifest string, ports [
 			}
 			for _, kp := range ksvc.Spec.Ports {
 				appPort := dme.AppPort{}
+				if kp.Protocol == "" {
+					// default to TCP, as k8s does the same
+					kp.Protocol = v1.ProtocolTCP
+				}
 				appPort.Proto, err = edgeproto.GetLProto(string(kp.Protocol))
 				if err != nil {
 					log.DebugLog(log.DebugLevelApi, "unrecognized port protocol in kubernetes manifest", "proto", string(kp.Protocol))
