@@ -12,8 +12,6 @@ import (
 var leaseTimeoutSec int64 = 5
 var syncLeaseDataRetry = time.Minute
 
-var syncLeaseData = SyncLeaseData{}
-
 // This synchronizes lease data with the persistent storage (etcd).
 // Data associated with the lease is meant to be deleted after the lease
 // expires, if this controller goes away. However, it's also possible
@@ -22,6 +20,7 @@ var syncLeaseData = SyncLeaseData{}
 // etcd will flush the lease data, and this Controller needs to restore
 // it once a new lease can be established.
 type SyncLeaseData struct {
+	allApis *AllApis
 	sync    *Sync
 	leaseID int64
 	stop    chan struct{}
@@ -30,8 +29,11 @@ type SyncLeaseData struct {
 	wg      sync.WaitGroup
 }
 
-func InitSyncLeaseData(sy *Sync) {
+func NewSyncLeaseData(sy *Sync, allApis *AllApis) *SyncLeaseData {
+	syncLeaseData := SyncLeaseData{}
+	syncLeaseData.allApis = allApis
 	syncLeaseData.sync = sy
+	return &syncLeaseData
 }
 
 func (s *SyncLeaseData) Start(ctx context.Context) {
@@ -113,12 +115,12 @@ func (s *SyncLeaseData) syncData() error {
 	s.leaseID = leaseID
 	s.mux.Unlock()
 
-	err = controllerApi.registerController(ctx, leaseID)
+	err = s.allApis.controllerApi.registerController(ctx, leaseID)
 	log.SpanLog(ctx, log.DebugLevelInfo, "registered controller", "hostname", cloudcommon.Hostname(), "err", err)
 	if err != nil {
 		return err
 	}
-	err = alertApi.syncSourceData(ctx, leaseID)
+	err = s.allApis.alertApi.syncSourceData(ctx, leaseID)
 	log.SpanLog(ctx, log.DebugLevelInfo, "synced alerts", "err", err)
 	if err != nil {
 		return err
@@ -132,6 +134,6 @@ func (s *SyncLeaseData) LeaseID() int64 {
 	return s.leaseID
 }
 
-func ControllerAliveLease() int64 {
-	return syncLeaseData.LeaseID()
+func (s *SyncLeaseData) ControllerAliveLease() int64 {
+	return s.LeaseID()
 }
