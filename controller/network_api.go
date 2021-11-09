@@ -9,18 +9,20 @@ import (
 )
 
 type NetworkApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.NetworkStore
 	cache edgeproto.NetworkCache
 }
 
-var networkApi = NetworkApi{}
-
-func InitNetworkApi(sync *Sync) {
+func NewNetworkApi(sync *Sync, all *AllApis) *NetworkApi {
+	networkApi := NetworkApi{}
+	networkApi.all = all
 	networkApi.sync = sync
 	networkApi.store = edgeproto.NewNetworkStore(sync.store)
 	edgeproto.InitNetworkCache(&networkApi.cache)
 	sync.RegisterCache(&networkApi.cache)
+	return &networkApi
 }
 
 func (s *NetworkApi) CreateNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_CreateNetworkServer) error {
@@ -37,7 +39,7 @@ func (s *NetworkApi) UpdateNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 	ctx := cb.Context()
 	cur := edgeproto.Network{}
 
-	if clusterInstApi.UsesNetwork(&in.Key) {
+	if s.all.clusterInstApi.UsesNetwork(&in.Key) {
 		return errors.New("Network cannot be modified while associated with a Cluster Instance")
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -66,7 +68,7 @@ func (s *NetworkApi) DeleteNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 	if !s.cache.HasKey(&in.Key) {
 		return in.Key.NotFoundError()
 	}
-	if clusterInstApi.UsesNetwork(&in.Key) {
+	if s.all.clusterInstApi.UsesNetwork(&in.Key) {
 		return errors.New("Network in use by Cluster Instance")
 	}
 	_, err := s.store.Delete(ctx, in, s.sync.syncWait)

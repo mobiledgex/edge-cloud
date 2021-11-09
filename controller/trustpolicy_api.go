@@ -9,18 +9,20 @@ import (
 )
 
 type TrustPolicyApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.TrustPolicyStore
 	cache edgeproto.TrustPolicyCache
 }
 
-var trustPolicyApi = TrustPolicyApi{}
-
-func InitTrustPolicyApi(sync *Sync) {
+func NewTrustPolicyApi(sync *Sync, all *AllApis) *TrustPolicyApi {
+	trustPolicyApi := TrustPolicyApi{}
+	trustPolicyApi.all = all
 	trustPolicyApi.sync = sync
 	trustPolicyApi.store = edgeproto.NewTrustPolicyStore(sync.store)
 	edgeproto.InitTrustPolicyCache(&trustPolicyApi.cache)
 	sync.RegisterCache(&trustPolicyApi.cache)
+	return &trustPolicyApi
 }
 
 func (s *TrustPolicyApi) CreateTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
@@ -63,7 +65,7 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
-		if err := cloudletApi.ValidateCloudletsUsingTrustPolicy(ctx, &cur); err != nil {
+		if err := s.all.cloudletApi.ValidateCloudletsUsingTrustPolicy(ctx, &cur); err != nil {
 			return err
 		}
 		if changed == 0 {
@@ -75,7 +77,7 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 	if err != nil {
 		return err
 	}
-	return cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
+	return s.all.cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
 }
 
 func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) error {
@@ -84,7 +86,7 @@ func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 		return in.Key.NotFoundError()
 	}
 	// look for cloudlets in any state
-	if cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
+	if s.all.cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
 		return fmt.Errorf("Policy in use by Cloudlet")
 	}
 	_, err := s.store.Delete(ctx, in, s.sync.syncWait)

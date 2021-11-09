@@ -26,18 +26,18 @@ func TestResTagTableApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalResTagTableTest(t, "cud", &resTagTableApi, testutil.ResTagTableData)
-	testutil.InternalResTagTableTest(t, "show", &resTagTableApi, testutil.ResTagTableData)
+	testutil.InternalResTagTableTest(t, "cud", apis.resTagTableApi, testutil.ResTagTableData)
+	testutil.InternalResTagTableTest(t, "show", apis.resTagTableApi, testutil.ResTagTableData)
 
 	// Non-Nominal attempt to create a table that should already exist from our cud tests
 	var tab = edgeproto.ResTagTable{
 		Key: testutil.Restblkeys[0],
 	}
-	_, err := resTagTableApi.CreateResTagTable(ctx, &tab)
+	_, err := apis.resTagTableApi.CreateResTagTable(ctx, &tab)
 	require.Equal(t, "ResTagTable key {\"name\":\"gpu\",\"organization\":\"AT\\u0026T Inc.\"} already exists", err.Error(), "create tag table EEXIST expected")
 
 	testags := map[string]string{"tag1": "val1"} //  "tag2": "val2", "tag3": "val3"}
@@ -50,40 +50,40 @@ func TestResTagTableApi(t *testing.T) {
 	tkey.Organization = "testOp"
 	tbl.Key = tkey
 
-	_, err = resTagTableApi.CreateResTagTable(ctx, &tbl)
+	_, err = apis.resTagTableApi.CreateResTagTable(ctx, &tbl)
 	require.Nil(t, err, "Create Res Tag Table dmuus-clouldlet-1")
 
 	// turn around and fetch the empty table we just created
 	var tbl1 *edgeproto.ResTagTable
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "Get Res Table")
 	require.Equal(t, len(tbl1.Tags), 0) // no tags yet
 
 	// add some tags to tbl
 	tbl.Tags = testags
 
-	_, err = resTagTableApi.AddResTag(ctx, &tbl)
+	_, err = apis.resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "AddResTag")
 
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GetResTagTable")
 	require.Equal(t, 1, len(tbl1.Tags), "Num Tags error")
 
 	// another tag
 	tbl.Tags["tag2"] = "val2" // testags[1] // "tag2"
-	_, err = resTagTableApi.AddResTag(ctx, &tbl)
+	_, err = apis.resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "AddResTag")
 
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
 
 	tbl.Tags["tag3"] = "val3"
 
-	_, err = resTagTableApi.AddResTag(ctx, &tbl)
+	_, err = apis.resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "AddResTag")
 
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 3, len(tbl1.Tags), "Num Tags error")
 
@@ -91,10 +91,10 @@ func TestResTagTableApi(t *testing.T) {
 	delete(tbl.Tags, "tag1")
 	delete(tbl.Tags, "tag2")
 	// all that's left is tag3 which we want deleted
-	_, err = resTagTableApi.RemoveResTag(ctx, &tbl)
+	_, err = apis.resTagTableApi.RemoveResTag(ctx, &tbl)
 	require.Nil(t, err, "RemoveResTag")
 
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "Num Tags error")
 
@@ -105,19 +105,19 @@ func TestResTagTableApi(t *testing.T) {
 
 	// test multi-tag input support
 	tbl.Tags = multi_tag
-	_, err = resTagTableApi.AddResTag(ctx, &tbl)
+	_, err = apis.resTagTableApi.AddResTag(ctx, &tbl)
 	require.Nil(t, err, "Multi-Tag add")
 
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 5, len(tbl1.Tags), "multi-tag num tags err")
 
 	// Multi-Tag remove option, our tbl is set with mulit_tag so use that
-	_, err = resTagTableApi.RemoveResTag(ctx, &tbl)
+	_, err = apis.resTagTableApi.RemoveResTag(ctx, &tbl)
 	require.Nil(t, err, "RemoveResTag")
 
 	// Get the table, we should have 2 tags left:  {tag1, tag2}
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, 2, len(tbl1.Tags), "multi-tag remove tags err")
 
@@ -133,10 +133,10 @@ func TestResTagTableApi(t *testing.T) {
 	update.Azone = "gpu_zone"
 	update.Fields = append(update.Fields, edgeproto.ResTagTableFieldAzone)
 
-	_, err = resTagTableApi.UpdateResTagTable(ctx, &update)
+	_, err = apis.resTagTableApi.UpdateResTagTable(ctx, &update)
 	require.Nil(t, err, "UpdateResTagTable")
 
-	tbl1, err = resTagTableApi.GetResTagTable(ctx, &tbl.Key)
+	tbl1, err = apis.resTagTableApi.GetResTagTable(ctx, &tbl.Key)
 	require.Nil(t, err, "GgetResTagTable")
 	require.Equal(t, "gpu_zone", tbl1.Azone, "UpdateResTagTable")
 

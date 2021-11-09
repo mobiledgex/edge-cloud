@@ -133,7 +133,7 @@ func TestCloudletApi(t *testing.T) {
 	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
@@ -157,79 +157,79 @@ func TestCloudletApi(t *testing.T) {
 
 	// create flavors
 	cloudletData := testutil.CloudletData()
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverTest(t, "cud", &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletTest(t, "cud", &cloudletApi, cloudletData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverTest(t, "cud", apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletTest(t, "cud", apis.cloudletApi, cloudletData)
 
 	// test invalid location values
 	clbad := cloudletData[0]
 	clbad.Key.Name = "bad loc"
-	testBadLat(t, ctx, &clbad, []float64{90.1, -90.1, -1323213, 1232334}, "create")
-	testBadLong(t, ctx, &clbad, []float64{180.1, -180.1, -1323213, 1232334}, "create")
+	testBadLat(t, ctx, &clbad, []float64{90.1, -90.1, -1323213, 1232334}, "create", apis)
+	testBadLong(t, ctx, &clbad, []float64{180.1, -180.1, -1323213, 1232334}, "create", apis)
 
 	clbad = cloudletData[0]
 	clbad.Key.Name = "test num dyn ips"
-	err = cloudletApi.CreateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.CreateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 	clbad.NumDynamicIps = 0
 	clbad.Fields = []string{edgeproto.CloudletFieldNumDynamicIps}
-	err = cloudletApi.UpdateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.UpdateCloudlet(&clbad, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 
 	cl := cloudletData[1]
 	cl.Key.Name = "test invalid lat-long"
-	err = cloudletApi.CreateCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.CreateCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
-	testBadLat(t, ctx, &cl, []float64{90.1, -90.1, -1323213, 1232334}, "update")
-	testBadLong(t, ctx, &cl, []float64{180.1, -180.1, -1323213, 1232334}, "update")
+	testBadLat(t, ctx, &cl, []float64{90.1, -90.1, -1323213, 1232334}, "update", apis)
+	testBadLong(t, ctx, &cl, []float64{180.1, -180.1, -1323213, 1232334}, "update", apis)
 
 	// Resource Mapping tests
-	testResMapKeysApi(t, ctx, &cl)
-	testGpuResourceMapping(t, ctx, &cl)
+	testResMapKeysApi(t, ctx, &cl, apis)
+	testGpuResourceMapping(t, ctx, &cl, apis)
 
 	// Cloudlet state tests
-	testCloudletStates(t, ctx)
-	testManualBringup(t, ctx)
+	testCloudletStates(t, ctx, apis)
+	testManualBringup(t, ctx, apis)
 
-	testShowFlavorsForCloudlet(t, ctx)
-	testAllianceOrgs(t, ctx)
+	testShowFlavorsForCloudlet(t, ctx, apis)
+	testAllianceOrgs(t, ctx, apis)
 }
 
-func testBadLat(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, lats []float64, action string) {
+func testBadLat(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, lats []float64, action string, apis *AllApis) {
 	for _, lat := range lats {
 		clbad.Location.Latitude = lat
 		clbad.Fields = []string{edgeproto.CloudletFieldLocationLatitude}
 		switch action {
 		case "create":
-			err := cloudletApi.CreateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
+			err := apis.cloudletApi.CreateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
 			require.NotNil(t, err, "create cloudlet bad latitude")
 		case "update":
-			err := cloudletApi.UpdateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
+			err := apis.cloudletApi.UpdateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
 			require.NotNil(t, err, "update cloudlet bad latitude")
 		}
 	}
 }
 
-func testBadLong(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, longs []float64, action string) {
+func testBadLong(t *testing.T, ctx context.Context, clbad *edgeproto.Cloudlet, longs []float64, action string, apis *AllApis) {
 	for _, long := range longs {
 		clbad.Location.Longitude = long
 		clbad.Fields = []string{edgeproto.CloudletFieldLocationLongitude}
 		switch action {
 		case "create":
-			err := cloudletApi.CreateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
+			err := apis.cloudletApi.CreateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
 			require.NotNil(t, err, "create cloudlet bad longitude")
 		case "update":
-			err := cloudletApi.CreateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
+			err := apis.cloudletApi.CreateCloudlet(clbad, testutil.NewCudStreamoutCloudlet(ctx))
 			require.NotNil(t, err, "update cloudlet bad longitude")
 		}
 	}
 }
 
-func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState) error {
+func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState, apis *AllApis) error {
 	lastState := edgeproto.TrackedState_TRACKED_STATE_UNKNOWN
 	for i := 0; i < 10; i++ {
 		cloudlet := edgeproto.Cloudlet{}
-		if cloudletApi.cache.Get(key, &cloudlet) {
+		if apis.cloudletApi.cache.Get(key, &cloudlet) {
 			if cloudlet.State == state {
 				return nil
 			}
@@ -241,28 +241,28 @@ func waitForState(key *edgeproto.CloudletKey, state edgeproto.TrackedState) erro
 	return fmt.Errorf("Unable to get desired cloudlet state, actual state %s, desired state %s", lastState, state)
 }
 
-func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state dme.CloudletState, taskName, version string) {
+func forceCloudletInfoState(ctx context.Context, key *edgeproto.CloudletKey, state dme.CloudletState, taskName, version string, apis *AllApis) {
 	info := edgeproto.CloudletInfo{}
 	info.Key = *key
 	info.State = state
 	info.ContainerVersion = version
 	info.Status.SetTask(taskName)
-	cloudletInfoApi.Update(ctx, &info, 0)
+	apis.cloudletInfoApi.Update(ctx, &info, 0)
 }
 
-func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state dme.MaintenanceState) {
+func forceCloudletInfoMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, state dme.MaintenanceState, apis *AllApis) {
 	info := edgeproto.CloudletInfo{}
-	if !cloudletInfoApi.cache.Get(key, &info) {
+	if !apis.cloudletInfoApi.cache.Get(key, &info) {
 		info.Key = *key
 	}
 	info.MaintenanceState = state
-	cloudletInfoApi.Update(ctx, &info, 0)
+	apis.cloudletInfoApi.Update(ctx, &info, 0)
 }
 
-func deleteCloudletInfo(ctx context.Context, key *edgeproto.CloudletKey) {
+func deleteCloudletInfo(ctx context.Context, key *edgeproto.CloudletKey, apis *AllApis) {
 	info := edgeproto.CloudletInfo{}
 	info.Key = *key
-	cloudletInfoApi.Delete(ctx, &info, 0)
+	apis.cloudletInfoApi.Delete(ctx, &info, 0)
 }
 
 func testNotifyId(t *testing.T, ctrlHandler *notify.DummyHandler, key *edgeproto.CloudletKey, nodeCount, notifyId int, crmVersion string) {
@@ -273,7 +273,7 @@ func testNotifyId(t *testing.T, ctrlHandler *notify.DummyHandler, key *edgeproto
 	require.Equal(t, int64(notifyId), nodeNotifyId, "node notifyId matches")
 }
 
-func testCloudletStates(t *testing.T, ctx context.Context) {
+func testCloudletStates(t *testing.T, ctx context.Context, apis *AllApis) {
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
 	ctrlHandler.RegisterServer(&ctrlMgr)
@@ -285,9 +285,9 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	require.Nil(t, err)
 	tlsConfig, err := publicCertManager.GetServerTlsConfig(ctx)
 	require.Nil(t, err)
-	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, tlsConfig, func(accessServer *grpc.Server) {
-		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
-		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, apis.cloudletApi.accessKeyServer, tlsConfig, func(accessServer *grpc.Server) {
+		edgeproto.RegisterCloudletAccessApiServer(accessServer, apis.cloudletApi)
+		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, apis.cloudletApi)
 	})
 	require.Nil(t, err, "start access server")
 	defer services.accessKeyGrpcServer.Stop()
@@ -298,14 +298,14 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	cloudlet.Key.Name = "testcloudletstates"
 	cloudlet.NotifySrvAddr = crm_notifyaddr
 	cloudlet.CrmOverride = edgeproto.CRMOverride_NO_OVERRIDE
-	pfConfig, err := getPlatformConfig(ctx, &cloudlet)
+	pfConfig, err := apis.cloudletApi.getPlatformConfig(ctx, &cloudlet)
 	require.Nil(t, err, "get platform config")
 	pfConfig.EnvVar["E2ETEST_TLS"] = "true"
 
-	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, "create cloudlet")
-	defer cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
-	res, err := cloudletApi.GenerateAccessKey(ctx, &cloudlet.Key)
+	defer apis.cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	res, err := apis.cloudletApi.GenerateAccessKey(ctx, &cloudlet.Key)
 	require.Nil(t, err, "generate access key")
 	pfConfig.CrmAccessPrivateKey = res.Message
 	pfConfig.AccessApiAddr = services.accessKeyGrpcServer.ApiAddr()
@@ -313,10 +313,10 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	streamCloudlet := NewStreamoutMsg(ctx)
 	go func() {
 		// copy objects required for WatchKey on cloudletInfo
-		cloudletInfoApi.cache.Objs = ctrlHandler.CloudletInfoCache.Objs
-		cloudletInfoApi.cache.KeyWatchers = ctrlHandler.CloudletInfoCache.KeyWatchers
+		apis.cloudletInfoApi.cache.Objs = ctrlHandler.CloudletInfoCache.Objs
+		apis.cloudletInfoApi.cache.KeyWatchers = ctrlHandler.CloudletInfoCache.KeyWatchers
 		// setup cloudlet stream
-		err = streamObjApi.StreamCloudlet(&cloudlet.Key, streamCloudlet)
+		err = apis.streamObjApi.StreamCloudlet(&cloudlet.Key, streamCloudlet)
 		require.Nil(t, err, "stream cloudlet")
 	}()
 
@@ -378,19 +378,19 @@ func testCloudletStates(t *testing.T, ctx context.Context) {
 	}
 }
 
-func testManualBringup(t *testing.T, ctx context.Context) {
+func testManualBringup(t *testing.T, ctx context.Context, apis *AllApis) {
 	var err error
 	cloudlet := testutil.CloudletData()[2]
 	cloudlet.Key.Name = "crmmanualbringup"
 	cloudlet.ContainerVersion = crm_v1
-	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
-	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY, apis)
 	require.Nil(t, err, "cloudlet obj created")
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2)
-	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v2, apis)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK, apis)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 	eMock.verifyEvent(t, "upgrading cloudlet", []node.EventTag{
 		node.EventTag{
@@ -403,8 +403,8 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
-	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2, apis)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY, apis)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 	eMock.verifyEvent(t, "cloudlet online", []node.EventTag{
 		node.EventTag{
@@ -423,28 +423,28 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		dme.MaintenanceState_NORMAL_OPERATION_INIT: dme.MaintenanceState_NORMAL_OPERATION,
 	}
 
-	cancel := cloudletApi.cache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
+	cancel := apis.cloudletApi.cache.WatchKey(&cloudlet.Key, func(ctx context.Context) {
 		cl := edgeproto.Cloudlet{}
-		if !cloudletApi.cache.Get(&cloudlet.Key, &cl) {
+		if !apis.cloudletApi.cache.Get(&cloudlet.Key, &cl) {
 			return
 		}
 		switch cl.MaintenanceState {
 		case dme.MaintenanceState_FAILOVER_REQUESTED:
 			info := edgeproto.AutoProvInfo{}
-			if !autoProvInfoApi.cache.Get(&cloudlet.Key, &info) {
+			if !apis.autoProvInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
 			}
 			info.MaintenanceState = stateTransitions[cl.MaintenanceState]
-			autoProvInfoApi.cache.Update(ctx, &info, 0)
+			apis.autoProvInfoApi.cache.Update(ctx, &info, 0)
 		case dme.MaintenanceState_CRM_REQUESTED:
 			fallthrough
 		case dme.MaintenanceState_NORMAL_OPERATION_INIT:
 			info := edgeproto.CloudletInfo{}
-			if !cloudletInfoApi.cache.Get(&cloudlet.Key, &info) {
+			if !apis.cloudletInfoApi.cache.Get(&cloudlet.Key, &info) {
 				info.Key = cloudlet.Key
 			}
 			info.MaintenanceState = stateTransitions[cl.MaintenanceState]
-			cloudletInfoApi.cache.Update(ctx, &info, 0)
+			apis.cloudletInfoApi.cache.Update(ctx, &info, 0)
 		}
 	})
 
@@ -452,7 +452,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 
 	cloudlet.MaintenanceState = dme.MaintenanceState_MAINTENANCE_START
 	cloudlet.Fields = append(cloudlet.Fields, edgeproto.CloudletFieldMaintenanceState)
-	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
 
 	eMock.verifyEvent(t, "cloudlet maintenance start", []node.EventTag{
@@ -463,7 +463,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	})
 
 	cloudlet.MaintenanceState = dme.MaintenanceState_NORMAL_OPERATION
-	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, fmt.Sprintf("update cloudlet maintenance state"))
 	eMock.verifyEvent(t, "cloudlet maintenance done", []node.EventTag{
 		node.EventTag{
@@ -472,7 +472,7 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 		},
 	})
 
-	deleteCloudletInfo(ctx, &cloudlet.Key)
+	deleteCloudletInfo(ctx, &cloudlet.Key, apis)
 	eMock.verifyEvent(t, "cloudlet offline", []node.EventTag{
 		node.EventTag{
 			Key:   "reason",
@@ -481,26 +481,26 @@ func testManualBringup(t *testing.T, ctx context.Context) {
 	})
 
 	// Cloudlet state is INITOK but from old CRM (crm_v1)
-	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1)
-	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_INIT, "sending init", crm_v1, apis)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_CRM_INITOK, apis)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
 	// Cloudlet should still be ready, ignoring the above stale entry
-	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2)
-	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY)
+	forceCloudletInfoState(ctx, &cloudlet.Key, dme.CloudletState_CLOUDLET_STATE_READY, "sending ready", crm_v2, apis)
+	err = waitForState(&cloudlet.Key, edgeproto.TrackedState_READY, apis)
 	require.Nil(t, err, fmt.Sprintf("cloudlet state transtions"))
 
-	found := autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
+	found := apis.autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
 	require.True(t, found, "autoprovinfo for cloudlet exists")
 
-	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
-	found = autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
+	found = apis.autoProvInfoApi.cache.Get(&cloudlet.Key, &edgeproto.AutoProvInfo{})
 	require.False(t, found, "autoprovinfo for cloudlet should be cleaned up")
 }
 
-func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet) {
+func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet, apis *AllApis) {
 	// We can add/remove edgeproto.ResTagTableKey values to the cl.ResTagMap map
 	// which then can be used in the GetVMSpec call when matching our meta-resource specificer
 	// to a deployments actual resources/flavrs.
@@ -522,21 +522,21 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 	// but we're doing it one by one.
 
 	resmap.Mapping[strings.ToLower(edgeproto.OptResNames_name[0])] = testutil.Restblkeys[0].Name
-	_, err := cloudletApi.AddCloudletResMapping(ctx, &resmap)
+	_, err := apis.cloudletApi.AddCloudletResMapping(ctx, &resmap)
 	require.Nil(t, err, "AddCloudletResMapKey")
 
 	resmap.Mapping[strings.ToLower(edgeproto.OptResNames_name[1])] = testutil.Restblkeys[1].Name
-	_, err = cloudletApi.AddCloudletResMapping(ctx, &resmap)
+	_, err = apis.cloudletApi.AddCloudletResMapping(ctx, &resmap)
 	require.Nil(t, err, "AddCloudletResMapKey")
 
 	resmap.Mapping[strings.ToLower(edgeproto.OptResNames_name[2])] = testutil.Restblkeys[2].Name
-	_, err = cloudletApi.AddCloudletResMapping(ctx, &resmap)
+	_, err = apis.cloudletApi.AddCloudletResMapping(ctx, &resmap)
 	require.Nil(t, err, "AddCloudletResMapKey")
 
 	testcl := &edgeproto.Cloudlet{}
 	// now it's all stored, fetch a copy of the cloudlet and verify
-	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !cloudletApi.store.STMGet(stm, &cl.Key, testcl) {
+	err = apis.cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !apis.cloudletApi.store.STMGet(stm, &cl.Key, testcl) {
 			return cl.Key.NotFoundError()
 		}
 		return err
@@ -561,7 +561,7 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 	resmap1.Mapping[strings.ToLower(edgeproto.OptResNames_name[1])] = testutil.Restblkeys[1].Name
 	resmap1.Key = cl.Key
 
-	_, err = cloudletApi.RemoveCloudletResMapping(ctx, &resmap1)
+	_, err = apis.cloudletApi.RemoveCloudletResMapping(ctx, &resmap1)
 	require.Nil(t, err, "RemoveCloudletResMapKey")
 
 	rmcl := &edgeproto.Cloudlet{}
@@ -570,8 +570,8 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 	}
 	rmcl.Key = resmap1.Key
 
-	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !cloudletApi.store.STMGet(stm, &cl.Key, rmcl) {
+	err = apis.cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !apis.cloudletApi.store.STMGet(stm, &cl.Key, rmcl) {
 			return cl.Key.NotFoundError()
 		}
 		return err
@@ -585,7 +585,7 @@ func testResMapKeysApi(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet
 	require.Equal(t, true, ok, "RemoveCloudletResMapKey")
 }
 
-func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet) {
+func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Cloudlet, apis *AllApis) {
 	// Cloudlet has a map key'ed by resource name/type whose value is a res tag tbl key.
 	// We init this map, and create a resource table, and place its key into this map
 	// and pass this map to the matcher routine, this allows the matcher to have access
@@ -614,7 +614,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		},
 		Tags: map[string]string{"nas": "ceph-20:1"},
 	}
-	_, err := resTagTableApi.CreateResTagTable(ctx, &gputab)
+	_, err := apis.resTagTableApi.CreateResTagTable(ctx, &gputab)
 	require.Nil(t, nil, err, "CreateResTagTable")
 
 	// Our clouldets resource map, maps from resource type names, to ResTagTableKeys.
@@ -623,7 +623,7 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 
 	// We also  need a list of edgeproto.FlavorInfo structs
 	// which it so happens we have in the testutils.CloudletInfoData.Flavors array
-	tbl1, err := resTagTableApi.GetResTagTable(ctx, &gputab.Key)
+	tbl1, err := apis.resTagTableApi.GetResTagTable(ctx, &gputab.Key)
 	require.Nil(t, err, "GetResTagTable")
 	require.Equal(t, 6, len(tbl1.Tags), "tag count mismatch")
 
@@ -755,46 +755,46 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 	// We can direct a generic request to a given flavor though,
 	// which is the case here.
 
-	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = apis.cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 
-		spec, vmerr := resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
+		spec, vmerr := apis.resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
 		require.Nil(t, vmerr, "GetVmSpec")
 		require.Equal(t, "flavor.large", spec.FlavorName)
 		require.Equal(t, "AZ1_GPU", spec.AvailabilityZone)
 		require.Equal(t, "gpu_image", spec.ImageName)
 
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorVgpuMatch, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, flavorVgpuMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVmSpec vgpu request")
 		require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
 
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorPciMatch, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, flavorPciMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.large", spec.FlavorName)
 
 		// non-nominal, ask for more resources than the would-be match supports.
 		// change testflavor to request 10 gpus of any kind.
 		testflavor.OptResMap["gpu"] = "gpu:10"
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
 		require.Equal(t, "no suitable platform flavor found for x1.large-mex, please try a smaller flavor", vmerr.Error(), "nil table")
 
 		// specific pci passthrough
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testPciT4flavor, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testPciT4flavor, *cl, cli)
 		require.Nil(t, vmerr, "GetVmSpec")
 		require.Equal(t, "flavor.large", spec.FlavorName)
 
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorVgpuNvidiaMatch, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, flavorVgpuNvidiaMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVmSpec")
 		require.Equal(t, "flavor.large-nvidia", spec.FlavorName)
-		uses := resTagTableApi.UsesGpu(ctx, stm, *spec.FlavorInfo, *cl)
+		uses := apis.resTagTableApi.UsesGpu(ctx, stm, *spec.FlavorInfo, *cl)
 		require.Equal(t, true, uses)
 
 		// vmware vio syntax
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorVIOMatch, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, flavorVIOMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVmSpec")
 		require.Equal(t, "flavor.large-generic-gpu", spec.FlavorName)
 
 		// Now try 2 optional resources requested by one flavor, first non-nominal, no res tag table for nas tags
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
 		if vmerr != nil {
 			require.Equal(t, "no suitable platform flavor found for x1.large-2-Resources, please try a smaller flavor", vmerr.Error())
 		}
@@ -803,42 +803,42 @@ func testGpuResourceMapping(t *testing.T, ctx context.Context, cl *edgeproto.Clo
 		cl.ResTagMap["nas"] = &nastab.Key
 
 		// ...and actually create the new nas res tag table
-		_, err := resTagTableApi.CreateResTagTable(ctx, &nastab)
+		_, err := apis.resTagTableApi.CreateResTagTable(ctx, &nastab)
 		require.Nil(t, err)
 
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testflavor2, *cl, cli)
 		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.large2", spec.FlavorName)
 
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorT4VGPUMatch, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, flavorT4VGPUMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.m4.large-vgpu", spec.FlavorName)
 
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, flavorT4GPUMatch, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, flavorT4GPUMatch, *cl, cli)
 		require.Nil(t, vmerr, "GetVMSpec")
 		require.Equal(t, "flavor.m4.large-gpu", spec.FlavorName)
 
 		// Non-nominal: ask for nas only, should reject testflavor2 as there are no
 		// os flavors with only a nas resource
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavorNas, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testflavorNas, *cl, cli)
 		require.Equal(t, "no suitable platform flavor found for x1.large-2-Resources, please try a smaller flavor", vmerr.Error())
 		// Non-nominal: flavor requests optional resource, while cloudlet's OptResMap is nil (cloudlet supports none)
 		cl.ResTagMap = nil
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testflavor, *cl, cli)
 		require.Equal(t, "Cloudlet San Jose Site doesn't support GPU", vmerr.Error())
 
 		nulCL := edgeproto.Cloudlet{}
 		// and finally, Non-nominal, request a resource, and cloudlet has none to give (nil cloudlet/cloudlet.ResTagMap)
-		spec, vmerr = resTagTableApi.GetVMSpec(ctx, stm, testflavor, nulCL, cli)
+		spec, vmerr = apis.resTagTableApi.GetVMSpec(ctx, stm, testflavor, nulCL, cli)
 		require.Equal(t, "Cloudlet San Jose Site doesn't support GPU", vmerr.Error(), "nil table")
 		return nil
 	})
 }
 
-func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context) {
-	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context, apis *AllApis) {
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 	// Use a clouldet with no ResourceTagMap
-	cCldApi := testutil.NewInternalCloudletApi(&cloudletApi)
+	cCldApi := testutil.NewInternalCloudletApi(apis.cloudletApi)
 	cld := testutil.CloudletData()[1]
 
 	show := testutil.ShowFlavorsForCloudlet{}
@@ -866,7 +866,7 @@ func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context) {
 	require.Equal(t, 2, len(show.Data))
 }
 
-func testAllianceOrgs(t *testing.T, ctx context.Context) {
+func testAllianceOrgs(t *testing.T, ctx context.Context, apis *AllApis) {
 	data := testutil.CloudletData()
 	cloudlet := data[0]
 
@@ -876,23 +876,23 @@ func testAllianceOrgs(t *testing.T, ctx context.Context) {
 
 	// update cloudlet checks
 	cloudlet.AllianceOrgs = []string{cloudlet.Key.Organization}
-	err := cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err := apis.cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 	require.Equal(t, selfOrgErr, err.Error())
 	cloudlet.AllianceOrgs = []string{"foo", "bar", "foo"}
-	err = cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.UpdateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 	require.Equal(t, dupOrgErr, err.Error())
 
 	// create cloudlet checks
 	cloudlet.Key.Name += "allianceorgtest"
 	cloudlet.AllianceOrgs = []string{cloudlet.Key.Organization}
-	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 
 	require.NotNil(t, err)
 	require.Equal(t, selfOrgErr, err.Error())
 	cloudlet.AllianceOrgs = []string{"foo", "bar", "foo"}
-	err = cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 	require.Equal(t, dupOrgErr, err.Error())
 
@@ -901,29 +901,28 @@ func testAllianceOrgs(t *testing.T, ctx context.Context) {
 		Key:          data[0].Key,
 		Organization: data[0].Key.Organization,
 	}
-	_, err = cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
+	_, err = apis.cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
 	require.NotNil(t, err)
 	require.Equal(t, selfOrgErr, err.Error())
 	cao.Organization = "foo"
-	_, err = cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
+	_, err = apis.cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
 	require.Nil(t, err)
-	_, err = cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
+	_, err = apis.cloudletApi.AddCloudletAllianceOrg(ctx, &cao)
 	require.NotNil(t, err)
 	require.Equal(t, dupOrgErr, err.Error())
-	_, err = cloudletApi.RemoveCloudletAllianceOrg(ctx, &cao)
+	_, err = apis.cloudletApi.RemoveCloudletAllianceOrg(ctx, &cao)
 	require.Nil(t, err)
-	_, err = cloudletApi.RemoveCloudletAllianceOrg(ctx, &cao)
+	_, err = apis.cloudletApi.RemoveCloudletAllianceOrg(ctx, &cao)
 	require.Nil(t, err)
 	// verify removed
 	check := edgeproto.Cloudlet{}
-	found := cloudletApi.cache.Get(&data[0].Key, &check)
+	found := apis.cloudletApi.cache.Get(&data[0].Key, &check)
 	require.True(t, found)
 	require.Equal(t, 0, len(check.AllianceOrgs))
 }
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	cAppApi := testutil.NewInternalAppApi(&appApi)
 	testinit()
 	defer testfinish()
 	log.InitTracer(nil)
@@ -934,9 +933,11 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
+
+	cAppApi := testutil.NewInternalAppApi(apis.appApi)
 
 	show := testutil.ShowCloudletsForAppDeployment{}
 	show.Init()
@@ -951,24 +952,24 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	filter := request
 
 	// test data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
-	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 
 	// without a responder, clusterInst create waits forever
-	_ = NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi, &clusterInstInfoApi)
+	_ = NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
+		apis.appInstInfoApi, apis.clusterInstInfoApi)
 
-	reduceInfoTimeouts(t, ctx)
+	reduceInfoTimeouts(t, ctx, apis)
 
 	// either create the policy expected by one of all cloudlets, or remove that bit of config, or
 	// just don't create that specific cloudlet. #1 create the policy.
-	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
+	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAutoScalePolicyCreate(t, apis.autoScalePolicyApi, testutil.AutoScalePolicyData)
 
 	for _, obj := range testutil.ClusterInstData {
-		err := clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
+		err := apis.clusterInstApi.CreateClusterInst(&obj, testutil.NewCudStreamoutClusterInst(ctx))
 		require.Nil(t, err, "Create ClusterInst")
 	}
 

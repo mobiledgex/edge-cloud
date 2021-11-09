@@ -23,16 +23,16 @@ func TestCloudletPoolApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	// create supporting data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
 
-	testutil.InternalCloudletPoolTest(t, "cud", &cloudletPoolApi, testutil.CloudletPoolData)
+	testutil.InternalCloudletPoolTest(t, "cud", apis.cloudletPoolApi, testutil.CloudletPoolData)
 
 	// create test cloudlet
 	cloudlet := edgeproto.Cloudlet{
@@ -47,7 +47,7 @@ func TestCloudletPoolApi(t *testing.T) {
 		},
 		CrmOverride: edgeproto.CRMOverride_IGNORE_CRM,
 	}
-	err := cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err := apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
 	// set up test data
@@ -58,20 +58,20 @@ func TestCloudletPoolApi(t *testing.T) {
 	pool := edgeproto.CloudletPool{}
 
 	// add member to pool
-	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
 	require.Nil(t, err)
-	found := cloudletPoolApi.cache.Get(&poolKey, &pool)
+	found := apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 2, len(pool.Cloudlets))
 
 	// add duplicate should fail
-	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
 	require.NotNil(t, err)
 
 	// remove member from pool
-	_, err = cloudletPoolApi.RemoveCloudletPoolMember(ctx, &member)
+	_, err = apis.cloudletPoolApi.RemoveCloudletPoolMember(ctx, &member)
 	require.Nil(t, err)
-	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
+	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 1, len(pool.Cloudlets))
 
@@ -80,20 +80,20 @@ func TestCloudletPoolApi(t *testing.T) {
 	poolUpdate.Cloudlets = append(poolUpdate.Cloudlets, member.CloudletName)
 	poolUpdate.Fields = []string{edgeproto.CloudletPoolFieldCloudlets}
 	require.Equal(t, 2, len(poolUpdate.Cloudlets))
-	_, err = cloudletPoolApi.UpdateCloudletPool(ctx, &poolUpdate)
+	_, err = apis.cloudletPoolApi.UpdateCloudletPool(ctx, &poolUpdate)
 	require.Nil(t, err)
-	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
+	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 2, len(pool.Cloudlets))
 
 	// delete cloudlet, see it gets removed from pool
-	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
-	found = cloudletPoolApi.cache.Get(&poolKey, &pool)
+	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 1, len(pool.Cloudlets))
 
 	// add cloudlet that doesn't exist, should fail
-	_, err = cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
 	require.NotNil(t, err)
 }

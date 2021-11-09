@@ -29,28 +29,28 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache, &appInstInfoApi, &clusterInstInfoApi)
-	reduceInfoTimeouts(t, ctx)
+	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache, apis.appInstInfoApi, apis.clusterInstInfoApi)
+	reduceInfoTimeouts(t, ctx, apis)
 
 	cloudletData := testutil.CloudletData()
-	testutil.InternalAutoProvPolicyTest(t, "cud", &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, cloudletData)
+	testutil.InternalAutoProvPolicyTest(t, "cud", apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, cloudletData)
 
 	// test adding cloudlet to policy
 	pc := edgeproto.AutoProvPolicyCloudlet{}
 	pc.Key = testutil.AutoProvPolicyData[0].Key
 	pc.CloudletKey = cloudletData[0].Key
 
-	_, err := autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
+	_, err := apis.autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
 	require.Nil(t, err, "add auto prov policy cloudlet")
 	policy := edgeproto.AutoProvPolicy{}
-	found := autoProvPolicyApi.cache.Get(&pc.Key, &policy)
+	found := apis.autoProvPolicyApi.cache.Get(&pc.Key, &policy)
 	require.True(t, found, "get auto prov policy %v", pc.Key)
 	require.Equal(t, 1, len(policy.Cloudlets))
 	require.Equal(t, pc.CloudletKey, policy.Cloudlets[0].Key)
@@ -60,37 +60,37 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	pc2.Key = testutil.AutoProvPolicyData[0].Key
 	pc2.CloudletKey = cloudletData[1].Key
 
-	_, err = autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc2)
+	_, err = apis.autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc2)
 	require.Nil(t, err, "add auto prov policy cloudlet")
-	found = autoProvPolicyApi.cache.Get(&pc2.Key, &policy)
+	found = apis.autoProvPolicyApi.cache.Get(&pc2.Key, &policy)
 	require.True(t, found, "get auto prov policy %v", pc2.Key)
 	require.Equal(t, 2, len(policy.Cloudlets))
 	require.Equal(t, pc2.CloudletKey, policy.Cloudlets[1].Key)
 
 	// delete cloudlet should fail if it is used by policy
 	deleteCloudlet := cloudletData[1]
-	err = cloudletApi.DeleteCloudlet(&deleteCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.DeleteCloudlet(&deleteCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err)
 	require.Equal(t, `Cloudlet in use by AutoProvPolicy {"organization":"AtlanticInc","name":"auto-prov-policy"}`, err.Error())
 
 	// remove cloudlet from policy
-	_, err = autoProvPolicyApi.RemoveAutoProvPolicyCloudlet(ctx, &pc)
+	_, err = apis.autoProvPolicyApi.RemoveAutoProvPolicyCloudlet(ctx, &pc)
 	require.Nil(t, err, "remove auto prov policy cloudlet")
-	found = autoProvPolicyApi.cache.Get(&pc.Key, &policy)
+	found = apis.autoProvPolicyApi.cache.Get(&pc.Key, &policy)
 	require.True(t, found, "get auto prov policy %v", pc.Key)
 	require.Equal(t, 1, len(policy.Cloudlets))
 	require.Equal(t, pc2.CloudletKey, policy.Cloudlets[0].Key)
 
 	// remove last cloudlet from policy
-	_, err = autoProvPolicyApi.RemoveAutoProvPolicyCloudlet(ctx, &pc2)
+	_, err = apis.autoProvPolicyApi.RemoveAutoProvPolicyCloudlet(ctx, &pc2)
 	require.Nil(t, err, "remove auto prov policy cloudlet")
-	found = autoProvPolicyApi.cache.Get(&pc2.Key, &policy)
+	found = apis.autoProvPolicyApi.cache.Get(&pc2.Key, &policy)
 	require.True(t, found, "get auto prov policy %v", pc2.Key)
 	require.Equal(t, 0, len(policy.Cloudlets))
 
 	// try to add policy for non-existent cloudlet
 	pc.CloudletKey.Name = ""
-	_, err = autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
+	_, err = apis.autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, &pc)
 	require.NotNil(t, err)
 
 	// try to add a policy with min > max
@@ -98,24 +98,24 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	policy.Key.Name = "badpolicy"
 	policy.MinActiveInstances = 3
 	policy.MaxInstances = 2
-	_, err = autoProvPolicyApi.CreateAutoProvPolicy(ctx, &policy)
+	_, err = apis.autoProvPolicyApi.CreateAutoProvPolicy(ctx, &policy)
 	require.NotNil(t, err)
 
-	addRemoveAutoProvPolicy(t, ctx)
-	testApiChecks(t, ctx)
+	addRemoveAutoProvPolicy(t, ctx, apis)
+	testApiChecks(t, ctx, apis)
 }
 
-func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
+func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context, apis *AllApis) {
 	// add app with multiple policies
 	app := testutil.AppData[11]
 	require.True(t, len(app.AutoProvPolicies) > 1)
-	_, err := appApi.CreateApp(ctx, &app)
+	_, err := apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
 
 	// new policy (copy)
 	ap := testutil.AutoProvPolicyData[3]
 	ap.Key.Name = "test-policy"
-	_, err = autoProvPolicyApi.CreateAutoProvPolicy(ctx, &ap)
+	_, err = apis.autoProvPolicyApi.CreateAutoProvPolicy(ctx, &ap)
 	require.Nil(t, err)
 
 	// add new policy to app
@@ -123,11 +123,11 @@ func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
 		AppKey:         app.Key,
 		AutoProvPolicy: ap.Key.Name,
 	}
-	_, err = appApi.AddAppAutoProvPolicy(ctx, &appPolicy)
+	_, err = apis.appApi.AddAppAutoProvPolicy(ctx, &appPolicy)
 	require.Nil(t, err)
 
 	appCheck := edgeproto.App{}
-	found := appApi.Get(&app.Key, &appCheck)
+	found := apis.appApi.Get(&app.Key, &appCheck)
 	require.True(t, found)
 	require.Equal(t, 3, len(appCheck.AutoProvPolicies))
 	found = false
@@ -139,10 +139,10 @@ func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
 	require.True(t, found)
 
 	// remove policy from app
-	_, err = appApi.RemoveAppAutoProvPolicy(ctx, &appPolicy)
+	_, err = apis.appApi.RemoveAppAutoProvPolicy(ctx, &appPolicy)
 	require.Nil(t, err)
 
-	found = appApi.Get(&app.Key, &appCheck)
+	found = apis.appApi.Get(&app.Key, &appCheck)
 	require.True(t, found)
 	require.Equal(t, 2, len(appCheck.AutoProvPolicies))
 	found = false
@@ -153,11 +153,11 @@ func addRemoveAutoProvPolicy(t *testing.T, ctx context.Context) {
 	}
 	require.False(t, found)
 
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 }
 
-func testApiChecks(t *testing.T, ctx context.Context) {
+func testApiChecks(t *testing.T, ctx context.Context, apis *AllApis) {
 	var err error
 	flavor := testutil.FlavorData[3]
 	app := edgeproto.App{}
@@ -168,17 +168,17 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	app.DefaultFlavor = flavor.Key
 
 	numCloudlets1 := 6
-	pt1 := newAutoProvPolicyTest("policy1", app.Key.Organization, numCloudlets1, &flavor)
+	pt1 := newAutoProvPolicyTest("policy1", app.Key.Organization, numCloudlets1, &flavor, apis)
 	pt1.policy.MinActiveInstances = 2
 	pt1.policy.MaxInstances = 4
 
 	numCloudlets2 := 10
-	pt2 := newAutoProvPolicyTest("policy2", app.Key.Organization, numCloudlets2, &flavor)
+	pt2 := newAutoProvPolicyTest("policy2", app.Key.Organization, numCloudlets2, &flavor, apis)
 	pt2.policy.MinActiveInstances = 5
 	pt2.policy.MaxInstances = 8
 
 	// pt3 is used to test limit of one AppInst per cloudlet
-	pt3 := newAutoProvPolicyTest("policy3", app.Key.Organization, 1, &flavor)
+	pt3 := newAutoProvPolicyTest("policy3", app.Key.Organization, 1, &flavor, apis)
 	pt3.policy.MinActiveInstances = 0
 	pt3.policy.DeployClientCount = 1
 	pt3.policy.MaxInstances = 20
@@ -192,7 +192,7 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	pt1.create(t, ctx)
 	pt2.create(t, ctx)
 	pt3.create(t, ctx)
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
 
 	updateCloudlets := func(pt *autoProvPolicyTest, list []*edgeproto.AutoProvCloudlet) {
@@ -202,7 +202,7 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 			edgeproto.AutoProvPolicyFieldCloudletsKey,
 			edgeproto.AutoProvPolicyFieldCloudletsKeyOrganization,
 			edgeproto.AutoProvPolicyFieldCloudletsKeyName}
-		_, err = autoProvPolicyApi.UpdateAutoProvPolicy(ctx, &pt.policy)
+		_, err = apis.autoProvPolicyApi.UpdateAutoProvPolicy(ctx, &pt.policy)
 		require.Nil(t, err)
 	}
 
@@ -338,7 +338,7 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 	}
 
 	// cleanup all data
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 
 	pt2.delete(t, ctx)
@@ -346,14 +346,16 @@ func testApiChecks(t *testing.T, ctx context.Context) {
 }
 
 type autoProvPolicyTest struct {
+	apis          *AllApis
 	policy        edgeproto.AutoProvPolicy
 	cloudlets     []edgeproto.Cloudlet
 	cloudletInfos []edgeproto.CloudletInfo
 }
 
 // AutoProvPolicy and supporting data for test
-func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor) *autoProvPolicyTest {
+func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor, apis *AllApis) *autoProvPolicyTest {
 	s := autoProvPolicyTest{}
+	s.apis = apis
 	s.policy.Key.Name = name
 	s.policy.Key.Organization = org
 	s.cloudlets = make([]edgeproto.Cloudlet, count, count)
@@ -406,26 +408,26 @@ func newAutoProvPolicyTest(name, org string, count int, flavor *edgeproto.Flavor
 
 func (s *autoProvPolicyTest) create(t *testing.T, ctx context.Context) {
 	for ii, _ := range s.cloudlets {
-		err := cloudletApi.CreateCloudlet(&s.cloudlets[ii], testutil.NewCudStreamoutCloudlet(ctx))
+		err := s.apis.cloudletApi.CreateCloudlet(&s.cloudlets[ii], testutil.NewCudStreamoutCloudlet(ctx))
 		require.Nil(t, err)
 	}
 	for ii, _ := range s.cloudletInfos {
-		cloudletInfoApi.Update(ctx, &s.cloudletInfos[ii], 0)
+		s.apis.cloudletInfoApi.Update(ctx, &s.cloudletInfos[ii], 0)
 	}
-	_, err := autoProvPolicyApi.CreateAutoProvPolicy(ctx, &s.policy)
+	_, err := s.apis.autoProvPolicyApi.CreateAutoProvPolicy(ctx, &s.policy)
 	require.Nil(t, err)
 }
 
 func (s *autoProvPolicyTest) delete(t *testing.T, ctx context.Context) {
-	_, err := autoProvPolicyApi.DeleteAutoProvPolicy(ctx, &s.policy)
+	_, err := s.apis.autoProvPolicyApi.DeleteAutoProvPolicy(ctx, &s.policy)
 	require.Nil(t, err)
 
 	for ii, _ := range s.cloudlets {
-		err := cloudletApi.DeleteCloudlet(&s.cloudlets[ii], testutil.NewCudStreamoutCloudlet(ctx))
+		err := s.apis.cloudletApi.DeleteCloudlet(&s.cloudlets[ii], testutil.NewCudStreamoutCloudlet(ctx))
 		require.Nil(t, err)
 	}
 	for ii, _ := range s.cloudletInfos {
-		cloudletInfoApi.Delete(ctx, &s.cloudletInfos[ii], 0)
+		s.apis.cloudletInfoApi.Delete(ctx, &s.cloudletInfos[ii], 0)
 	}
 }
 
@@ -453,9 +455,9 @@ func (s *autoProvPolicyTest) goDoAppInsts(t *testing.T, ctx context.Context, app
 			inst.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
 			var err error
 			if action == cloudcommon.Create {
-				err = appInstApi.CreateAppInst(&inst, testutil.NewCudStreamoutAppInst(ctx))
+				err = s.apis.appInstApi.CreateAppInst(&inst, testutil.NewCudStreamoutAppInst(ctx))
 			} else if action == cloudcommon.Delete {
-				err = appInstApi.DeleteAppInst(&inst, testutil.NewCudStreamoutAppInst(ctx))
+				err = s.apis.appInstApi.DeleteAppInst(&inst, testutil.NewCudStreamoutAppInst(ctx))
 			}
 			log.SpanLog(ctx, log.DebugLevelApi, "goDoAppInsts", "action", action.String(), "key", inst.Key, "err", err)
 			wg.Done()
@@ -473,7 +475,7 @@ func (s *autoProvPolicyTest) expectAppInsts(t *testing.T, ctx context.Context, a
 		instKey.ClusterInstKey.CloudletKey = s.cloudlets[ii].Key
 		instKey.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + strconv.Itoa(ii)
 		instKey.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
-		if appInstApi.cache.HasKey(&instKey) {
+		if s.apis.appInstApi.cache.HasKey(&instKey) {
 			actual++
 		}
 	}

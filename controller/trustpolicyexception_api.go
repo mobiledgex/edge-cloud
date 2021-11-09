@@ -10,18 +10,20 @@ import (
 )
 
 type TrustPolicyExceptionApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.TrustPolicyExceptionStore
 	cache edgeproto.TrustPolicyExceptionCache
 }
 
-var trustPolicyExceptionApi = TrustPolicyExceptionApi{}
-
-func InitTrustPolicyExceptionApi(sync *Sync) {
+func NewTrustPolicyExceptionApi(sync *Sync, all *AllApis) *TrustPolicyExceptionApi {
+	trustPolicyExceptionApi := TrustPolicyExceptionApi{}
+	trustPolicyExceptionApi.all = all
 	trustPolicyExceptionApi.sync = sync
 	trustPolicyExceptionApi.store = edgeproto.NewTrustPolicyExceptionStore(sync.store)
 	edgeproto.InitTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
 	sync.RegisterCache(&trustPolicyExceptionApi.cache)
+	return &trustPolicyExceptionApi
 }
 
 func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
@@ -43,11 +45,11 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 		return nil, err
 	}
 
-	if validateAppExists(&in.Key.AppKey) == false {
+	if s.all.appApi.validateAppExists(&in.Key.AppKey) == false {
 		return nil, fmt.Errorf("TrustPolicyExceptionKey: App does not exist")
 	}
 
-	if validateCloudletPoolExists(&in.Key.CloudletPoolKey) == false {
+	if s.all.cloudletPoolApi.validateCloudletPoolExists(&in.Key.CloudletPoolKey) == false {
 		return nil, fmt.Errorf("TrustPolicyExceptionKey: CloudletPoolKey does not exist")
 	}
 
@@ -61,8 +63,8 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 	cur := edgeproto.TrustPolicyException{}
 
-	err := trustPolicyExceptionApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !trustPolicyExceptionApi.store.STMGet(stm, &in.Key, &cur) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
 		if in.State == cur.State {
@@ -77,7 +79,7 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 		}
 		cur.State = in.State
 		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionResponseState", "state:", cur.State)
-		trustPolicyExceptionApi.store.STMPut(stm, &cur)
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
 
@@ -144,8 +146,8 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForCloudletPoolKey(cKey
 	return TrustPolicyException
 }
 
-func TrustPolicyExceptionForCloudletPoolKeyExists(cKey *edgeproto.CloudletPoolKey) bool {
-	return trustPolicyExceptionApi.GetTrustPolicyExceptionForCloudletPoolKey(cKey) != nil
+func (s *TrustPolicyExceptionApi) TrustPolicyExceptionForCloudletPoolKeyExists(cKey *edgeproto.CloudletPoolKey) bool {
+	return s.GetTrustPolicyExceptionForCloudletPoolKey(cKey) != nil
 }
 
 func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForAppKey(appKey *edgeproto.AppKey) *edgeproto.TrustPolicyException {
@@ -166,6 +168,6 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForAppKey(appKey *edgep
 	return TrustPolicyException
 }
 
-func TrustPolicyExceptionForAppKeyExists(appKey *edgeproto.AppKey) bool {
-	return trustPolicyExceptionApi.GetTrustPolicyExceptionForAppKey(appKey) != nil
+func (s *TrustPolicyExceptionApi) TrustPolicyExceptionForAppKeyExists(appKey *edgeproto.AppKey) bool {
+	return s.GetTrustPolicyExceptionForAppKey(appKey) != nil
 }

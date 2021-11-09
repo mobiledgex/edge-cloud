@@ -22,11 +22,11 @@ func TestAutoScalePolicyApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalAutoScalePolicyTest(t, "cud", &autoScalePolicyApi, testutil.AutoScalePolicyData)
+	testutil.InternalAutoScalePolicyTest(t, "cud", apis.autoScalePolicyApi, testutil.AutoScalePolicyData)
 
 	policy := edgeproto.AutoScalePolicy{}
 	policy.Key.Name = "auto-scale-policy-name"
@@ -40,27 +40,27 @@ func TestAutoScalePolicyApi(t *testing.T) {
 	// test invalid bounds
 	p := policy
 	p.MaxNodes = 100
-	expectBadAutoScaleCreate(t, ctx, &p, "Max nodes cannot exceed")
+	expectBadAutoScaleCreate(t, ctx, apis, &p, "Max nodes cannot exceed")
 	p = policy
 	p.ScaleUpCpuThresh = 101
-	expectBadAutoScaleCreate(t, ctx, &p, "must be between 0 and 100")
+	expectBadAutoScaleCreate(t, ctx, apis, &p, "must be between 0 and 100")
 	p = policy
 	p.ScaleDownCpuThresh = 900
-	expectBadAutoScaleCreate(t, ctx, &p, "must be between 0 and 100")
+	expectBadAutoScaleCreate(t, ctx, apis, &p, "must be between 0 and 100")
 	p = policy
 	p.MinNodes = 5
 	p.MaxNodes = 5
-	expectBadAutoScaleCreate(t, ctx, &p, "Max nodes must be greater than Min")
+	expectBadAutoScaleCreate(t, ctx, apis, &p, "Max nodes must be greater than Min")
 	p = policy
 	p.ScaleUpCpuThresh = 50
 	p.ScaleDownCpuThresh = 60
-	expectBadAutoScaleCreate(t, ctx, &p, "Scale down cpu threshold must be less than scale up")
+	expectBadAutoScaleCreate(t, ctx, apis, &p, "Scale down cpu threshold must be less than scale up")
 
 	dummy.Stop()
 }
 
-func expectBadAutoScaleCreate(t *testing.T, ctx context.Context, in *edgeproto.AutoScalePolicy, msg string) {
-	_, err := autoScalePolicyApi.CreateAutoScalePolicy(ctx, in)
+func expectBadAutoScaleCreate(t *testing.T, ctx context.Context, apis *AllApis, in *edgeproto.AutoScalePolicy, msg string) {
+	_, err := apis.autoScalePolicyApi.CreateAutoScalePolicy(ctx, in)
 	require.NotNil(t, err, "create %v", in)
 	require.Contains(t, err.Error(), msg, "error %v contains %s", err, msg)
 }

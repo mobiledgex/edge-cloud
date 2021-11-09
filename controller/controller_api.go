@@ -18,20 +18,22 @@ import (
 )
 
 type ControllerApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.ControllerStore
 	cache edgeproto.ControllerCache
 }
 
-var controllerApi = ControllerApi{}
-
 var controllerAliveLease int64
 
-func InitControllerApi(sync *Sync) {
+func NewControllerApi(sync *Sync, all *AllApis) *ControllerApi {
+	controllerApi := ControllerApi{}
+	controllerApi.all = all
 	controllerApi.sync = sync
 	controllerApi.store = edgeproto.NewControllerStore(sync.store)
 	edgeproto.InitControllerCache(&controllerApi.cache)
 	sync.RegisterCache(&controllerApi.cache)
+	return &controllerApi
 }
 
 // register controller puts this controller into the etcd database

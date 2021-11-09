@@ -13,18 +13,21 @@ import (
 )
 
 type AppInstClientApi struct {
+	all            *AllApis
 	queueMux       sync.Mutex
 	appInstClients []*edgeproto.AppInstClient
 	recvChans      map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient
 }
 
-var appInstClientApi = AppInstClientApi{}
 var appInstClientSendMany *notify.AppInstClientSendMany
 
-func InitAppInstClientApi() {
+func NewAppInstClientApi(all *AllApis) *AppInstClientApi {
+	appInstClientApi := AppInstClientApi{}
+	appInstClientApi.all = all
 	appInstClientSendMany = notify.NewAppInstClientSendMany()
 	appInstClientApi.appInstClients = make([]*edgeproto.AppInstClient, 0)
 	appInstClientApi.recvChans = make(map[edgeproto.AppInstClientKey][]chan edgeproto.AppInstClient)
+	return &appInstClientApi
 }
 
 func (s *AppInstClientApi) SetRecvChan(ctx context.Context, in *edgeproto.AppInstClientKey, ch chan edgeproto.AppInstClient) {
@@ -47,8 +50,8 @@ func (s *AppInstClientApi) SetRecvChan(ctx context.Context, in *edgeproto.AppIns
 			}
 		}
 		// request new clients only after we sent out the cached ones
-		if !appInstClientKeyApi.HasKey(in) {
-			appInstClientKeyApi.Update(ctx, in, 0)
+		if !s.all.appInstClientKeyApi.HasKey(in) {
+			s.all.appInstClientKeyApi.Update(ctx, in, 0)
 		}
 	}()
 }
@@ -69,7 +72,7 @@ func (s *AppInstClientApi) ClearRecvChan(ctx context.Context, in *edgeproto.AppI
 			retLen := len(s.recvChans[*in])
 			if retLen == 0 {
 				delete(s.recvChans, *in)
-				appInstClientKeyApi.Delete(ctx, in, 0)
+				s.all.appInstClientKeyApi.Delete(ctx, in, 0)
 				// We also need to clean up our local buffer - it will be out of sync since DME won't update it
 				jj := 0
 				for _, client := range s.appInstClients {
@@ -115,7 +118,7 @@ func (s *AppInstClientApi) AddAppInstClient(ctx context.Context, client *edgepro
 		}
 	}
 	// Queue full - remove the oldest one(first) and append the new one
-	if len(s.appInstClients) == int(settingsApi.Get().MaxTrackedDmeClients) {
+	if len(s.appInstClients) == int(s.all.settingsApi.Get().MaxTrackedDmeClients) {
 		s.appInstClients = s.appInstClients[1:]
 	}
 	s.appInstClients = append(s.appInstClients, client)
@@ -140,7 +143,7 @@ func (s *AppInstClientApi) Prune(ctx context.Context, keys map[edgeproto.AppInst
 
 func (s *AppInstClientApi) StreamAppInstClientsLocal(in *edgeproto.AppInstClientKey, cb edgeproto.AppInstClientApi_StreamAppInstClientsLocalServer) error {
 	// Request this AppInst to be sent
-	recvCh := make(chan edgeproto.AppInstClient, int(settingsApi.Get().MaxTrackedDmeClients))
+	recvCh := make(chan edgeproto.AppInstClient, int(s.all.settingsApi.Get().MaxTrackedDmeClients))
 	s.SetRecvChan(cb.Context(), in, recvCh)
 
 	done := false
@@ -175,7 +178,7 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 
 	ctrlConns = make([]*grpc.ClientConn, 0)
 	done := false
-	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
+	err := s.all.controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		if addr == *externalApiAddr {
 			// local node
 			err := s.StreamAppInstClientsLocal(in, cb)
@@ -239,16 +242,18 @@ func (s *AppInstClientApi) ShowAppInstClient(in *edgeproto.AppInstClientKey, cb 
 func (s *AppInstClientApi) Flush(ctx context.Context, notifyId int64) {}
 
 type AppInstClientKeyApi struct {
+	all   *AllApis
 	sync  *Sync
 	cache edgeproto.AppInstClientKeyCache
 }
 
-var appInstClientKeyApi = AppInstClientKeyApi{}
-
-func InitAppInstClientKeyApi(sync *Sync) {
+func NewAppInstClientKeyApi(sync *Sync, all *AllApis) *AppInstClientKeyApi {
+	appInstClientKeyApi := AppInstClientKeyApi{}
+	appInstClientKeyApi.all = all
 	appInstClientKeyApi.sync = sync
 	edgeproto.InitAppInstClientKeyCache(&appInstClientKeyApi.cache)
 	sync.RegisterCache(&appInstClientKeyApi.cache)
+	return &appInstClientKeyApi
 }
 
 func (s *AppInstClientKeyApi) Update(ctx context.Context, in *edgeproto.AppInstClientKey, rev int64) {

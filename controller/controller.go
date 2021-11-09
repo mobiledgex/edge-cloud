@@ -100,6 +100,7 @@ type Services struct {
 	listeners                 []net.Listener
 	publicCertManager         *node.PublicCertManager
 	stopInitCC                chan bool
+	allApis                   *AllApis
 }
 
 func main() {
@@ -181,7 +182,6 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
-	initDebug(ctx, &nodeMgr)
 	defer span.Finish()
 	vaultConfig = nodeMgr.VaultConfig
 
@@ -232,25 +232,27 @@ func startServices() error {
 	services.listeners = append(services.listeners, lis)
 
 	sync := InitSync(objStore)
-	InitApis(sync)
+	allApis := NewAllApis(sync)
+	services.allApis = allApis
 	sync.Start()
 	services.sync = sync
 	// requireNotifyAccessKey allows for backwards compatibility when
 	// set to false, because it allows CRMs to connect to notify without
 	// an access key (as long as pki internal cert is verified).
-	cloudletApi.accessKeyServer.SetRequireTlsAccessKey(*requireNotifyAccessKey)
+	allApis.cloudletApi.accessKeyServer.SetRequireTlsAccessKey(*requireNotifyAccessKey)
 
-	InitSyncLeaseData(sync)
-	syncLeaseData.Start(ctx)
+	allApis.Start(ctx)
 
-	err = settingsApi.initDefaults(ctx)
+	initDebug(ctx, &nodeMgr, allApis)
+
+	err = allApis.settingsApi.initDefaults(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to init settings, %v", err)
 	}
 	// cleanup thread must start after settings are loaded
-	go clusterInstApi.cleanupThread()
+	go allApis.clusterInstApi.cleanupThread()
 
-	err = rateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
+	err = allApis.rateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to init default rate limit settings, %v", err)
 	}
@@ -267,7 +269,7 @@ func startServices() error {
 
 	// downsampled metrics influx
 	downsampledMetricsInfluxQ := influxq.NewInfluxQ(cloudcommon.DownsampledMetricsDbName, influxAuth.User, influxAuth.Pass)
-	downsampledMetricsInfluxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration())
+	downsampledMetricsInfluxQ.InitRetentionPolicy(allApis.settingsApi.Get().InfluxDbDownsampledMetricsRetention.TimeDuration())
 	err = downsampledMetricsInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
@@ -277,7 +279,7 @@ func startServices() error {
 
 	// metrics influx
 	influxQ := influxq.NewInfluxQ(InfluxDBName, influxAuth.User, influxAuth.Pass)
-	influxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
+	influxQ.InitRetentionPolicy(allApis.settingsApi.Get().InfluxDbMetricsRetention.TimeDuration())
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
@@ -296,7 +298,7 @@ func startServices() error {
 
 	// persistent stats influx
 	edgeEventsInfluxQ := influxq.NewInfluxQ(cloudcommon.EdgeEventsMetricsDbName, influxAuth.User, influxAuth.Pass)
-	edgeEventsInfluxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration())
+	edgeEventsInfluxQ.InitRetentionPolicy(allApis.settingsApi.Get().InfluxDbEdgeEventsMetricsRetention.TimeDuration())
 	err = edgeEventsInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
@@ -306,7 +308,7 @@ func startServices() error {
 
 	// cloudlet resources influx
 	cloudletResourcesInfluxQ := influxq.NewInfluxQ(cloudcommon.CloudletResourceUsageDbName, influxAuth.User, influxAuth.Pass)
-	cloudletResourcesInfluxQ.InitRetentionPolicy(settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration())
+	cloudletResourcesInfluxQ.InitRetentionPolicy(allApis.settingsApi.Get().InfluxDbCloudletUsageMetricsRetention.TimeDuration())
 	err = cloudletResourcesInfluxQ.Start(*influxAddr)
 	if err != nil {
 		return fmt.Errorf("Failed to start influx queue address %s, %v",
@@ -316,9 +318,9 @@ func startServices() error {
 
 	// create continuous queries for edgeevents metrics
 	services.stopInitCC = make(chan bool)
-	go initContinuousQueries()
+	go initContinuousQueries(allApis)
 
-	InitNotify(influxQ, edgeEventsInfluxQ, &appInstClientApi)
+	InitNotify(influxQ, edgeEventsInfluxQ, allApis.appInstClientApi, allApis)
 	if *notifyParentAddrs != "" {
 		addrs := strings.Split(*notifyParentAddrs, ",")
 		tlsConfig, err := nodeMgr.InternalPki.GetClientTlsConfig(ctx,
@@ -330,7 +332,7 @@ func startServices() error {
 		}
 		dialOption := tls.GetGrpcDialOption(tlsConfig)
 		notifyClient := notify.NewClient(nodeMgr.Name(), addrs, dialOption)
-		notifyClient.RegisterSendAlertCache(&alertApi.cache)
+		notifyClient.RegisterSendAlertCache(&allApis.alertApi.cache)
 		nodeMgr.RegisterClient(notifyClient)
 		notifyClient.Start()
 		services.notifyClient = notifyClient
@@ -349,12 +351,12 @@ func startServices() error {
 	notifyUnaryInterceptor := grpc.UnaryInterceptor(
 		grpc_middleware.ChainUnaryServer(
 			cloudcommon.AuditUnaryInterceptor,
-			cloudletApi.accessKeyServer.UnaryTlsAccessKey,
+			allApis.cloudletApi.accessKeyServer.UnaryTlsAccessKey,
 		))
 	notifyStreamInterceptor := grpc.StreamInterceptor(
 		grpc_middleware.ChainStreamServer(
 			cloudcommon.AuditStreamInterceptor,
-			cloudletApi.accessKeyServer.StreamTlsAccessKey,
+			allApis.cloudletApi.accessKeyServer.StreamTlsAccessKey,
 		))
 	notify.ServerMgrOne.Start(nodeMgr.Name(), *notifyAddr, notifyServerTls,
 		notify.ServerUnaryInterceptor(notifyUnaryInterceptor),
@@ -384,9 +386,9 @@ func startServices() error {
 	}
 	services.publicCertManager.StartRefresh()
 	// Start access server
-	err = services.accessKeyGrpcServer.Start(*accessApiAddr, cloudletApi.accessKeyServer, accessServerTlsConfig, func(accessServer *grpc.Server) {
-		edgeproto.RegisterCloudletAccessApiServer(accessServer, &cloudletApi)
-		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, &cloudletApi)
+	err = services.accessKeyGrpcServer.Start(*accessApiAddr, allApis.cloudletApi.accessKeyServer, accessServerTlsConfig, func(accessServer *grpc.Server) {
+		edgeproto.RegisterCloudletAccessApiServer(accessServer, allApis.cloudletApi)
+		edgeproto.RegisterCloudletAccessKeyApiServer(accessServer, allApis.cloudletApi)
 	})
 	if err != nil {
 		return err
@@ -407,38 +409,38 @@ func startServices() error {
 	server := grpc.NewServer(cloudcommon.GrpcCreds(apiTlsConfig),
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(cloudcommon.AuditUnaryInterceptor)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(cloudcommon.AuditStreamInterceptor)))
-	edgeproto.RegisterAppApiServer(server, &appApi)
-	edgeproto.RegisterResTagTableApiServer(server, &resTagTableApi)
-	edgeproto.RegisterOperatorCodeApiServer(server, &operatorCodeApi)
-	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
-	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
-	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
-	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
-	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
-	edgeproto.RegisterVMPoolApiServer(server, &vmPoolApi)
-	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
-	edgeproto.RegisterClusterRefsApiServer(server, &clusterRefsApi)
-	edgeproto.RegisterAppInstRefsApiServer(server, &appInstRefsApi)
-	edgeproto.RegisterStreamObjApiServer(server, &streamObjApi)
-	edgeproto.RegisterControllerApiServer(server, &controllerApi)
+	edgeproto.RegisterAppApiServer(server, allApis.appApi)
+	edgeproto.RegisterResTagTableApiServer(server, allApis.resTagTableApi)
+	edgeproto.RegisterOperatorCodeApiServer(server, allApis.operatorCodeApi)
+	edgeproto.RegisterFlavorApiServer(server, allApis.flavorApi)
+	edgeproto.RegisterClusterInstApiServer(server, allApis.clusterInstApi)
+	edgeproto.RegisterCloudletApiServer(server, allApis.cloudletApi)
+	edgeproto.RegisterAppInstApiServer(server, allApis.appInstApi)
+	edgeproto.RegisterCloudletInfoApiServer(server, allApis.cloudletInfoApi)
+	edgeproto.RegisterVMPoolApiServer(server, allApis.vmPoolApi)
+	edgeproto.RegisterCloudletRefsApiServer(server, allApis.cloudletRefsApi)
+	edgeproto.RegisterClusterRefsApiServer(server, allApis.clusterRefsApi)
+	edgeproto.RegisterAppInstRefsApiServer(server, allApis.appInstRefsApi)
+	edgeproto.RegisterStreamObjApiServer(server, allApis.streamObjApi)
+	edgeproto.RegisterControllerApiServer(server, allApis.controllerApi)
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
-	edgeproto.RegisterExecApiServer(server, &execApi)
-	edgeproto.RegisterCloudletPoolApiServer(server, &cloudletPoolApi)
-	edgeproto.RegisterAlertApiServer(server, &alertApi)
-	edgeproto.RegisterAutoScalePolicyApiServer(server, &autoScalePolicyApi)
-	edgeproto.RegisterAutoProvPolicyApiServer(server, &autoProvPolicyApi)
-	edgeproto.RegisterTrustPolicyApiServer(server, &trustPolicyApi)
-	edgeproto.RegisterTrustPolicyExceptionApiServer(server, &trustPolicyExceptionApi)
-	edgeproto.RegisterSettingsApiServer(server, &settingsApi)
-	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
-	edgeproto.RegisterAppInstClientApiServer(server, &appInstClientApi)
+	edgeproto.RegisterExecApiServer(server, allApis.execApi)
+	edgeproto.RegisterCloudletPoolApiServer(server, allApis.cloudletPoolApi)
+	edgeproto.RegisterAlertApiServer(server, allApis.alertApi)
+	edgeproto.RegisterAutoScalePolicyApiServer(server, allApis.autoScalePolicyApi)
+	edgeproto.RegisterAutoProvPolicyApiServer(server, allApis.autoProvPolicyApi)
+	edgeproto.RegisterTrustPolicyApiServer(server, allApis.trustPolicyApi)
+	edgeproto.RegisterTrustPolicyExceptionApiServer(server, allApis.trustPolicyExceptionApi)
+	edgeproto.RegisterSettingsApiServer(server, allApis.settingsApi)
+	edgeproto.RegisterRateLimitSettingsApiServer(server, allApis.rateLimitSettingsApi)
+	edgeproto.RegisterAppInstClientApiServer(server, allApis.appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
-	edgeproto.RegisterDeviceApiServer(server, &deviceApi)
-	edgeproto.RegisterOrganizationApiServer(server, &organizationApi)
-	edgeproto.RegisterAppInstLatencyApiServer(server, &appInstLatencyApi)
-	edgeproto.RegisterGPUDriverApiServer(server, &gpuDriverApi)
-	edgeproto.RegisterAlertPolicyApiServer(server, &userAlertApi)
-	edgeproto.RegisterNetworkApiServer(server, &networkApi)
+	edgeproto.RegisterDeviceApiServer(server, allApis.deviceApi)
+	edgeproto.RegisterOrganizationApiServer(server, allApis.organizationApi)
+	edgeproto.RegisterAppInstLatencyApiServer(server, allApis.appInstLatencyApi)
+	edgeproto.RegisterGPUDriverApiServer(server, allApis.gpuDriverApi)
+	edgeproto.RegisterAlertPolicyApiServer(server, allApis.alertPolicyApi)
+	edgeproto.RegisterNetworkApiServer(server, allApis.networkApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -515,7 +517,7 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
-	go runCheckpoints(ctx)
+	go allApis.clusterInstApi.runCheckpoints(ctx)
 
 	// setup cleanup timer to remove expired stream messages
 	go streamObjs.SetupCleanupTimer()
@@ -559,8 +561,8 @@ func stopServices() {
 	if services.downsampledMetricsInfluxQ != nil {
 		services.downsampledMetricsInfluxQ.Stop()
 	}
-	if syncLeaseData.stop != nil {
-		syncLeaseData.Stop()
+	if services.allApis != nil {
+		services.allApis.Stop()
 	}
 	if services.sync != nil {
 		services.sync.Done()
@@ -602,86 +604,138 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 	return verHash, nil
 }
 
-func InitApis(sync *Sync) {
-	InitAppApi(sync)
-	InitOperatorCodeApi(sync)
-	InitCloudletApi(sync)
-	InitAppInstApi(sync)
-	InitFlavorApi(sync)
-	InitStreamObjApi(sync)
-	InitClusterInstApi(sync)
-	InitCloudletInfoApi(sync)
-	InitVMPoolApi(sync)
-	InitVMPoolInfoApi(sync)
-	InitAppInstInfoApi(sync)
-	InitClusterInstInfoApi(sync)
-	InitCloudletRefsApi(sync)
-	InitClusterRefsApi(sync)
-	InitAppInstRefsApi(sync)
-	InitControllerApi(sync)
-	InitCloudletPoolApi(sync)
-	InitExecApi()
-	InitAlertApi(sync)
-	InitAutoScalePolicyApi(sync)
-	InitAutoProvPolicyApi(sync)
-	InitAutoProvInfoApi(sync)
-	InitResTagTableApi(sync)
-	InitTrustPolicyApi(sync)
-	InitTrustPolicyExceptionApi(sync)
-	InitSettingsApi(sync)
-	InitRateLimitSettingsApi(sync)
-	InitAppInstClientKeyApi(sync)
-	InitAppInstClientApi()
-	InitDeviceApi(sync)
-	InitOrganizationApi(sync)
-	InitAppInstLatencyApi(sync)
-	InitGPUDriverApi(sync)
-	InitAlertPolicyApi(sync)
-	InitNetworkApi(sync)
+type AllApis struct {
+	appApi                  *AppApi
+	operatorCodeApi         *OperatorCodeApi
+	cloudletApi             *CloudletApi
+	appInstApi              *AppInstApi
+	flavorApi               *FlavorApi
+	streamObjApi            *StreamObjApi
+	clusterInstApi          *ClusterInstApi
+	cloudletInfoApi         *CloudletInfoApi
+	vmPoolApi               *VMPoolApi
+	vmPoolInfoApi           *VMPoolInfoApi
+	appInstInfoApi          *AppInstInfoApi
+	clusterInstInfoApi      *ClusterInstInfoApi
+	cloudletRefsApi         *CloudletRefsApi
+	clusterRefsApi          *ClusterRefsApi
+	appInstRefsApi          *AppInstRefsApi
+	controllerApi           *ControllerApi
+	cloudletPoolApi         *CloudletPoolApi
+	execApi                 *ExecApi
+	alertApi                *AlertApi
+	autoScalePolicyApi      *AutoScalePolicyApi
+	autoProvPolicyApi       *AutoProvPolicyApi
+	autoProvInfoApi         *AutoProvInfoApi
+	resTagTableApi          *ResTagTableApi
+	trustPolicyApi          *TrustPolicyApi
+	trustPolicyExceptionApi *TrustPolicyExceptionApi
+	settingsApi             *SettingsApi
+	rateLimitSettingsApi    *RateLimitSettingsApi
+	appInstClientKeyApi     *AppInstClientKeyApi
+	appInstClientApi        *AppInstClientApi
+	deviceApi               *DeviceApi
+	organizationApi         *OrganizationApi
+	appInstLatencyApi       *AppInstLatencyApi
+	gpuDriverApi            *GPUDriverApi
+	alertPolicyApi          *AlertPolicyApi
+	networkApi              *NetworkApi
+	syncLeaseData           *SyncLeaseData
 }
 
-func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
-	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
-	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&rateLimitSettingsApi.flowcache)
-	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&rateLimitSettingsApi.maxreqscache)
-	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
-	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
-	notify.ServerMgrOne.RegisterSendGPUDriverCache(&gpuDriverApi.cache)
-	notify.ServerMgrOne.RegisterSendVMPoolCache(&vmPoolApi.cache)
-	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
-	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendCloudletCache(cloudletApi.cache)
+func NewAllApis(sync *Sync) *AllApis {
+	all := &AllApis{}
+	all.appApi = NewAppApi(sync, all)
+	all.operatorCodeApi = NewOperatorCodeApi(sync, all)
+	all.cloudletApi = NewCloudletApi(sync, all)
+	all.appInstApi = NewAppInstApi(sync, all)
+	all.flavorApi = NewFlavorApi(sync, all)
+	all.streamObjApi = NewStreamObjApi(sync, all)
+	all.clusterInstApi = NewClusterInstApi(sync, all)
+	all.cloudletInfoApi = NewCloudletInfoApi(sync, all)
+	all.vmPoolApi = NewVMPoolApi(sync, all)
+	all.vmPoolInfoApi = NewVMPoolInfoApi(sync, all)
+	all.appInstInfoApi = NewAppInstInfoApi(sync, all)
+	all.clusterInstInfoApi = NewClusterInstInfoApi(sync, all)
+	all.cloudletRefsApi = NewCloudletRefsApi(sync, all)
+	all.clusterRefsApi = NewClusterRefsApi(sync, all)
+	all.appInstRefsApi = NewAppInstRefsApi(sync, all)
+	all.controllerApi = NewControllerApi(sync, all)
+	all.cloudletPoolApi = NewCloudletPoolApi(sync, all)
+	all.execApi = NewExecApi(all)
+	all.alertApi = NewAlertApi(sync, all)
+	all.autoScalePolicyApi = NewAutoScalePolicyApi(sync, all)
+	all.autoProvPolicyApi = NewAutoProvPolicyApi(sync, all)
+	all.autoProvInfoApi = NewAutoProvInfoApi(sync, all)
+	all.resTagTableApi = NewResTagTableApi(sync, all)
+	all.trustPolicyApi = NewTrustPolicyApi(sync, all)
+	all.trustPolicyExceptionApi = NewTrustPolicyExceptionApi(sync, all)
+	all.settingsApi = NewSettingsApi(sync, all)
+	all.rateLimitSettingsApi = NewRateLimitSettingsApi(sync, all)
+	all.appInstClientKeyApi = NewAppInstClientKeyApi(sync, all)
+	all.appInstClientApi = NewAppInstClientApi(all)
+	all.deviceApi = NewDeviceApi(sync, all)
+	all.organizationApi = NewOrganizationApi(sync, all)
+	all.appInstLatencyApi = NewAppInstLatencyApi(sync, all)
+	all.gpuDriverApi = NewGPUDriverApi(sync, all)
+	all.alertPolicyApi = NewAlertPolicyApi(sync, all)
+	all.networkApi = NewNetworkApi(sync, all)
+	all.syncLeaseData = NewSyncLeaseData(sync, all)
+	return all
+}
+
+func (s *AllApis) Start(ctx context.Context) {
+	s.syncLeaseData.Start(ctx)
+}
+
+func (s *AllApis) Stop() {
+	if s.syncLeaseData.stop != nil {
+		s.syncLeaseData.Stop()
+	}
+}
+
+func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler, allApis *AllApis) {
+	notify.ServerMgrOne.RegisterSendSettingsCache(&allApis.settingsApi.cache)
+	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&allApis.rateLimitSettingsApi.flowcache)
+	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&allApis.rateLimitSettingsApi.maxreqscache)
+	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&allApis.operatorCodeApi.cache)
+	notify.ServerMgrOne.RegisterSendFlavorCache(&allApis.flavorApi.cache)
+	notify.ServerMgrOne.RegisterSendGPUDriverCache(&allApis.gpuDriverApi.cache)
+	notify.ServerMgrOne.RegisterSendVMPoolCache(&allApis.vmPoolApi.cache)
+	notify.ServerMgrOne.RegisterSendResTagTableCache(&allApis.resTagTableApi.cache)
+	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&allApis.trustPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendCloudletCache(allApis.cloudletApi.cache)
 	// Be careful on dependencies.
 	// CloudletPools must be sent after cloudlets, because they reference cloudlets.
-	notify.ServerMgrOne.RegisterSendCloudletPoolCache(cloudletPoolApi.cache)
+	notify.ServerMgrOne.RegisterSendCloudletPoolCache(allApis.cloudletPoolApi.cache)
 
-	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
-	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendNetworkCache(&networkApi.cache)
-	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
-	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
-	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
-	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
-	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
-	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
-	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&userAlertApi.cache)
+	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&allApis.cloudletInfoApi.cache)
+	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&allApis.autoScalePolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&allApis.autoProvPolicyApi.cache)
+	notify.ServerMgrOne.RegisterSendNetworkCache(&allApis.networkApi.cache)
+	notify.ServerMgrOne.RegisterSendClusterInstCache(&allApis.clusterInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAppCache(&allApis.appApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstCache(&allApis.appInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&allApis.appInstRefsApi.cache)
+	notify.ServerMgrOne.RegisterSendAlertCache(&allApis.alertApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&allApis.appInstClientKeyApi.cache)
+	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&allApis.alertPolicyApi.cache)
 	// TrustPolicyExceptions depend on App and Cloudlet so must be sent after them.
-	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
+	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&allApis.trustPolicyExceptionApi.cache)
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)
-	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(&vmPoolInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(&alertApi))
-	autoProvPolicyApi.SetInfluxQ(metricsInflux)
-	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(&autoProvPolicyApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(allApis.cloudletInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(allApis.appInstInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewVMPoolInfoRecvMany(allApis.vmPoolInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(allApis.clusterInstInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(allApis.execApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAlertRecvMany(allApis.alertApi))
+	allApis.autoProvPolicyApi.SetInfluxQ(metricsInflux)
+	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvCountsRecvMany(allApis.autoProvPolicyApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstClientRecvMany(clientQ))
-	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(&deviceApi))
-	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(&autoProvInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewDeviceRecvMany(allApis.deviceApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAutoProvInfoRecvMany(allApis.autoProvInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(NewControllerMetricsReceiver(metricsInflux, edgeEventsInflux)))
 }
 
@@ -711,17 +765,17 @@ const (
 	ShowControllers          = "show-controllers"
 )
 
-func initDebug(ctx context.Context, nodeMgr *node.NodeMgr) {
+func initDebug(ctx context.Context, nodeMgr *node.NodeMgr, allApis *AllApis) {
 	nodeMgr.Debug.AddDebugFunc(ToggleFlavorMatchVerbose,
 		func(ctx context.Context, req *edgeproto.DebugRequest) string {
 			return vmspec.ToggleFlavorMatchVerbose()
 		})
-	nodeMgr.Debug.AddDebugFunc(ShowControllers, showControllers)
+	nodeMgr.Debug.AddDebugFunc(ShowControllers, allApis.controllerApi.showControllers)
 }
 
-func showControllers(ctx context.Context, req *edgeproto.DebugRequest) string {
+func (s *ControllerApi) showControllers(ctx context.Context, req *edgeproto.DebugRequest) string {
 	objs := []edgeproto.Controller{}
-	controllerApi.cache.Show(&edgeproto.Controller{}, func(obj *edgeproto.Controller) error {
+	s.cache.Show(&edgeproto.Controller{}, func(obj *edgeproto.Controller) error {
 		objs = append(objs, *obj)
 		return nil
 	})
@@ -732,7 +786,7 @@ func showControllers(ctx context.Context, req *edgeproto.DebugRequest) string {
 	return string(out)
 }
 
-func initContinuousQueries() {
+func initContinuousQueries(allApis *AllApis) {
 	done := false
 	for !done {
 		if services.stopInitCC == nil {
@@ -743,7 +797,7 @@ func initContinuousQueries() {
 
 		// create continuous queries for edgeevents metrics
 		var err error
-		for _, collectioninterval := range settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
+		for _, collectioninterval := range allApis.settingsApi.Get().EdgeEventsMetricsContinuousQueriesCollectionIntervals {
 			interval := time.Duration(collectioninterval.Interval)
 			retention := time.Duration(collectioninterval.Retention)
 			latencyCqSettings := influxq.CreateLatencyContinuousQuerySettings(interval, retention)

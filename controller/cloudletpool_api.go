@@ -15,18 +15,20 @@ import (
 )
 
 type CloudletPoolApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.CloudletPoolStore
 	cache *edgeproto.CloudletPoolCache
 }
 
-var cloudletPoolApi = CloudletPoolApi{}
-
-func InitCloudletPoolApi(sync *Sync) {
+func NewCloudletPoolApi(sync *Sync, all *AllApis) *CloudletPoolApi {
+	cloudletPoolApi := CloudletPoolApi{}
+	cloudletPoolApi.all = all
 	cloudletPoolApi.sync = sync
 	cloudletPoolApi.store = edgeproto.NewCloudletPoolStore(sync.store)
 	cloudletPoolApi.cache = nodeMgr.CloudletPoolLookup.GetCloudletPoolCache(node.NoRegion)
 	sync.RegisterCache(cloudletPoolApi.cache)
+	return &cloudletPoolApi
 }
 
 func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {
@@ -49,7 +51,7 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 }
 
 func (s *CloudletPoolApi) DeleteCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {
-	if TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
+	if s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
 		return &edgeproto.Result{}, errors.New("CloudletPool in use by Trust Policy Exception")
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -78,7 +80,7 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		if err := s.checkCloudletsExist(stm, &cur); err != nil {
 			return err
 		}
-		if TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
+		if s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
 			return fmt.Errorf("Not allowed to update CloudletPool when TrustPolicyException is applied")
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
@@ -95,7 +97,7 @@ func (s *CloudletPoolApi) checkCloudletsExist(stm concurrency.STM, in *edgeproto
 			Name:         name,
 			Organization: in.Key.Organization,
 		}
-		if !cloudletApi.store.STMGet(stm, &key, nil) {
+		if !s.all.cloudletApi.store.STMGet(stm, &key, nil) {
 			notFound = append(notFound, name)
 		}
 	}
@@ -128,7 +130,7 @@ func (s *CloudletPoolApi) AddCloudletPoolMember(ctx context.Context, in *edgepro
 			Name:         in.CloudletName,
 			Organization: in.Key.Organization,
 		}
-		if !cloudletApi.store.STMGet(stm, &ckey, nil) {
+		if !s.all.cloudletApi.store.STMGet(stm, &ckey, nil) {
 			return ckey.NotFoundError()
 		}
 		cur.Cloudlets = append(cur.Cloudlets, in.CloudletName)
@@ -194,6 +196,6 @@ func (s *CloudletPoolApi) HasCloudletPool(key *edgeproto.CloudletPoolKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func validateCloudletPoolExists(key *edgeproto.CloudletPoolKey) bool {
-	return cloudletPoolApi.HasCloudletPool(key)
+func (s *CloudletPoolApi) validateCloudletPoolExists(key *edgeproto.CloudletPoolKey) bool {
+	return s.HasCloudletPool(key)
 }
