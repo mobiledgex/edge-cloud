@@ -394,8 +394,7 @@ func WaitForAlerts(t *testing.T, apis *AllApis, count int) {
 }
 
 func TestControllerRace(t *testing.T) {
-	log.ClearDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
-	//log.SetDebugLevel(log.DebugLevelApi)
+	log.SetDebugLevel(log.DebugLevelApi)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
@@ -479,7 +478,6 @@ func testClusterInstDeleteChecks(t *testing.T, ctx context.Context, apis1, apis2
 		require.Nil(t, err)
 		wg := sync.WaitGroup{}
 		wg.Add(numApps + 1)
-		startDelete := make(chan bool, 1)
 		// We want to see if there's ever a case where we're left
 		// with an AppInst without a ClusterInst, by deleting
 		// the ClusterInst while AppInst creates are happening.
@@ -499,10 +497,6 @@ func testClusterInstDeleteChecks(t *testing.T, ctx context.Context, apis1, apis2
 					}
 				}
 				assert.Nil(t, err)
-				select {
-				case startDelete <- true:
-				default:
-				}
 				wg.Done()
 			}(ii)
 		}
