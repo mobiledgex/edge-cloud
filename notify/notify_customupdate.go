@@ -21,6 +21,7 @@ func (s *AppSend) UpdateOk(ctx context.Context, key *edgeproto.AppKey) bool {
 }
 
 func (s *AppInstSend) UpdateOk(ctx context.Context, key *edgeproto.AppInstKey) bool {
+	triggerSend := false
 	if s.sendrecv.filterCloudletKeys {
 		if !s.sendrecv.cloudletReady {
 			return false
@@ -28,15 +29,17 @@ func (s *AppInstSend) UpdateOk(ctx context.Context, key *edgeproto.AppInstKey) b
 		if !s.sendrecv.hasCloudletKey(&key.ClusterInstKey.CloudletKey) {
 			return false
 		}
+		triggerSend = true
 	}
 	if s.sendrecv.filterFederatedCloudlet {
 		// Federated cloudlets are ignored by CRMs and are handled by FRMs
 		if key.ClusterInstKey.CloudletKey.FederatedOrganization == "" {
 			return false
 		}
+		triggerSend = true
 	}
 	// also trigger sending app
-	if s.sendrecv.appSend != nil {
+	if triggerSend && s.sendrecv.appSend != nil {
 		s.sendrecv.appSend.updateInternal(ctx, &key.AppKey, 0)
 	}
 	return true
