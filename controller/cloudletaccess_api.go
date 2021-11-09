@@ -75,7 +75,7 @@ func (s *CloudletApi) GetAccessData(ctx context.Context, req *edgeproto.AccessDa
 		return nil, fmt.Errorf("Client authentication not verified")
 	}
 	cloudlet := &edgeproto.Cloudlet{}
-	if !cloudletApi.cache.Get(&verified.Key, cloudlet) {
+	if !s.all.cloudletApi.cache.Get(&verified.Key, cloudlet) {
 		return nil, verified.Key.NotFoundError()
 	}
 	vaultClient := accessapi.NewVaultClient(cloudlet, vaultConfig, *region)

@@ -14,18 +14,20 @@ import (
 )
 
 type SettingsApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.SettingsStore
 	cache edgeproto.SettingsCache
 }
 
-var settingsApi = SettingsApi{}
-
-func InitSettingsApi(sync *Sync) {
+func NewSettingsApi(sync *Sync, all *AllApis) *SettingsApi {
+	settingsApi := SettingsApi{}
+	settingsApi.all = all
 	settingsApi.sync = sync
 	settingsApi.store = edgeproto.NewSettingsStore(sync.store)
 	edgeproto.InitSettingsCache(&settingsApi.cache)
 	sync.RegisterCache(&settingsApi.cache)
+	return &settingsApi
 }
 
 func (s *SettingsApi) initDefaults(ctx context.Context) error {
@@ -181,7 +183,7 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 
 				flav := edgeproto.Flavor{}
 				flav.Key.Name = in.MasterNodeFlavor
-				if !flavorApi.store.STMGet(stm, &(flav.Key), &flav) {
+				if !s.all.flavorApi.store.STMGet(stm, &(flav.Key), &flav) {
 					return fmt.Errorf("Flavor must preexist")
 				}
 			} else if field == edgeproto.SettingsFieldInfluxDbMetricsRetention {

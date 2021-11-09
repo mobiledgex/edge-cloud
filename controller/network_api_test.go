@@ -21,20 +21,20 @@ func TestNetworkApi(t *testing.T) {
 	dummy.Start()
 	defer dummy.Stop()
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalNetworkTest(t, "cud", &networkApi, testutil.NetworkData)
+	testutil.InternalNetworkTest(t, "cud", apis.networkApi, testutil.NetworkData)
 	// error cases
-	expectCreateNetworkError(t, ctx, &testutil.NetworkErrorData[0], "Invalid route destination cidr")
-	expectCreateNetworkError(t, ctx, &testutil.NetworkErrorData[1], "Invalid next hop")
-	expectCreateNetworkError(t, ctx, &testutil.NetworkErrorData[2], "Invalid connection type")
+	expectCreateNetworkError(t, ctx, apis, &testutil.NetworkErrorData[0], "Invalid route destination cidr")
+	expectCreateNetworkError(t, ctx, apis, &testutil.NetworkErrorData[1], "Invalid next hop")
+	expectCreateNetworkError(t, ctx, apis, &testutil.NetworkErrorData[2], "Invalid connection type")
 
 }
 
-func expectCreateNetworkError(t *testing.T, ctx context.Context, in *edgeproto.Network, msg string) {
-	err := networkApi.CreateNetwork(in, testutil.NewCudStreamoutNetwork(ctx))
+func expectCreateNetworkError(t *testing.T, ctx context.Context, apis *AllApis, in *edgeproto.Network, msg string) {
+	err := apis.networkApi.CreateNetwork(in, testutil.NewCudStreamoutNetwork(ctx))
 	require.NotNil(t, err, "create %v", in)
 	require.Contains(t, err.Error(), msg, "error %v contains %s", err, msg)
 }

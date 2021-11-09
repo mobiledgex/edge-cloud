@@ -17,23 +17,25 @@ import (
 )
 
 type GPUDriverApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.GPUDriverStore
 	cache edgeproto.GPUDriverCache
 }
-
-var gpuDriverApi = GPUDriverApi{}
 
 const (
 	GPUDriverBuildURLValidity = 20 * time.Minute
 	ChangeInProgress          = "ChangeInProgress"
 )
 
-func InitGPUDriverApi(sync *Sync) {
+func NewGPUDriverApi(sync *Sync, all *AllApis) *GPUDriverApi {
+	gpuDriverApi := GPUDriverApi{}
+	gpuDriverApi.all = all
 	gpuDriverApi.sync = sync
 	gpuDriverApi.store = edgeproto.NewGPUDriverStore(sync.store)
 	edgeproto.InitGPUDriverCache(&gpuDriverApi.cache)
 	sync.RegisterCache(&gpuDriverApi.cache)
+	return &gpuDriverApi
 }
 
 // Must call GCSClient.Close() when done
@@ -149,9 +151,9 @@ func (s *GPUDriverApi) undoStateChange(ctx context.Context, key *edgeproto.GPUDr
 	}
 }
 
-func startGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, inCb edgeproto.GPUDriverApi_CreateGPUDriverServer) (*streamSend, edgeproto.GPUDriverApi_CreateGPUDriverServer, error) {
+func (s *GPUDriverApi) startGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, inCb edgeproto.GPUDriverApi_CreateGPUDriverServer) (*streamSend, edgeproto.GPUDriverApi_CreateGPUDriverServer, error) {
 	streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(key)
-	streamSendObj, err := streamObjApi.startStream(ctx, &streamKey, inCb)
+	streamSendObj, err := s.all.streamObjApi.startStream(ctx, &streamKey, inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start GPU driver stream", "err", err)
 		return nil, inCb, err
@@ -162,9 +164,9 @@ func startGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, inCb
 	}, nil
 }
 
-func stopGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
+func (s *GPUDriverApi) stopGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
 	streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(key)
-	if err := streamObjApi.stopStream(ctx, &streamKey, streamSendObj, objErr); err != nil {
+	if err := s.all.streamObjApi.stopStream(ctx, &streamKey, streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop GPU driver stream", "err", err)
 	}
 }
@@ -185,10 +187,10 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
 	if err == nil {
 		defer func() {
-			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
 		}()
 	}
 
@@ -287,10 +289,10 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
 	if err == nil {
 		defer func() {
-			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
 		}()
 	}
 
@@ -404,16 +406,16 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		return err
 	}
 	// Validate if driver is in use by Cloudlet
-	inUse, cloudlets := cloudletApi.UsesGPUDriver(&in.Key)
+	inUse, cloudlets := s.all.cloudletApi.UsesGPUDriver(&in.Key)
 	if inUse {
 		return fmt.Errorf("GPU driver in use by Cloudlet(s): %s", strings.Join(cloudlets, ","))
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
 	if err == nil {
 		defer func() {
-			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
 		}()
 	}
 
@@ -493,7 +495,7 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		s.store.STMDel(stm, &in.Key)
 		// delete associated streamobj as well
 		streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(&in.Key)
-		streamObjApi.store.STMDel(stm, &streamKey)
+		s.all.streamObjApi.store.STMDel(stm, &streamKey)
 		return nil
 	})
 	if err != nil {
@@ -521,10 +523,10 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
 	if err == nil {
 		defer func() {
-			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
 		}()
 	}
 
@@ -635,10 +637,10 @@ func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgep
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
 	if err == nil {
 		defer func() {
-			stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
 		}()
 	}
 
