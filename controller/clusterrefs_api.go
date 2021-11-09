@@ -6,18 +6,20 @@ import (
 )
 
 type ClusterRefsApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.ClusterRefsStore
 	cache edgeproto.ClusterRefsCache
 }
 
-var clusterRefsApi = ClusterRefsApi{}
-
-func InitClusterRefsApi(sync *Sync) {
+func NewClusterRefsApi(sync *Sync, all *AllApis) *ClusterRefsApi {
+	clusterRefsApi := ClusterRefsApi{}
+	clusterRefsApi.all = all
 	clusterRefsApi.sync = sync
 	clusterRefsApi.store = edgeproto.NewClusterRefsStore(sync.store)
 	edgeproto.InitClusterRefsCache(&clusterRefsApi.cache)
 	sync.RegisterCache(&clusterRefsApi.cache)
+	return &clusterRefsApi
 }
 
 func (s *ClusterRefsApi) ShowClusterRefs(in *edgeproto.ClusterRefs, cb edgeproto.ClusterRefsApi_ShowClusterRefsServer) error {

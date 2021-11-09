@@ -21,23 +21,23 @@ func TestOperatorCodeApi(t *testing.T) {
 	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	ctx := log.StartTestSpan(context.Background())
 
-	testutil.InternalOperatorCodeTest(t, "cud", &operatorCodeApi, testutil.OperatorCodeData)
+	testutil.InternalOperatorCodeTest(t, "cud", apis.operatorCodeApi, testutil.OperatorCodeData)
 	// create duplicate key should fail
 	code := testutil.OperatorCodeData[0]
-	_, err := operatorCodeApi.CreateOperatorCode(ctx, &code)
+	_, err := apis.operatorCodeApi.CreateOperatorCode(ctx, &code)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "already exists")
 
 	// check not found error on delete
-	_, err = operatorCodeApi.DeleteOperatorCode(ctx, &code)
+	_, err = apis.operatorCodeApi.DeleteOperatorCode(ctx, &code)
 	require.Nil(t, err)
-	_, err = operatorCodeApi.DeleteOperatorCode(ctx, &code)
+	_, err = apis.operatorCodeApi.DeleteOperatorCode(ctx, &code)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "not found")
 }

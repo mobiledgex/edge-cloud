@@ -15,19 +15,22 @@ import (
 )
 
 type CloudletInfoApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.CloudletInfoStore
 	cache edgeproto.CloudletInfoCache
 }
 
-var cloudletInfoApi = CloudletInfoApi{}
 var cleanupCloudletInfoTimeout = 5 * time.Minute
 
-func InitCloudletInfoApi(sync *Sync) {
+func NewCloudletInfoApi(sync *Sync, all *AllApis) *CloudletInfoApi {
+	cloudletInfoApi := CloudletInfoApi{}
+	cloudletInfoApi.all = all
 	cloudletInfoApi.sync = sync
 	cloudletInfoApi.store = edgeproto.NewCloudletInfoStore(sync.store)
 	edgeproto.InitCloudletInfoCache(&cloudletInfoApi.cache)
 	sync.RegisterCache(&cloudletInfoApi.cache)
+	return &cloudletInfoApi
 }
 
 // We put CloudletInfo in etcd with a lease, so in case both controller
@@ -69,7 +72,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	})
 
 	cloudlet := edgeproto.Cloudlet{}
-	if !cloudletApi.cache.Get(&in.Key, &cloudlet) {
+	if !s.all.cloudletApi.cache.Get(&in.Key, &cloudlet) {
 		return
 	}
 	if changedToOnline {
@@ -77,7 +80,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
 		if err == nil {
 			if features.SupportsMultiTenantCluster && cloudlet.EnableDefaultServerlessCluster {
-				go createDefaultMultiTenantCluster(ctx, in.Key)
+				go s.all.clusterInstApi.createDefaultMultiTenantCluster(ctx, in.Key)
 			}
 		}
 	}
@@ -108,13 +111,13 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 
 	// update only diff of status msgs
 	streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
-	streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
+	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
 
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key
-	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.all.cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		updateObj := false
-		if !cloudletApi.store.STMGet(stm, key, &newCloudlet) {
+		if !s.all.cloudletApi.store.STMGet(stm, key, &newCloudlet) {
 			return key.NotFoundError()
 		}
 		if newCloudlet.TrustPolicyState != in.TrustPolicyState && in.TrustPolicyState != edgeproto.TrackedState_TRACKED_STATE_UNKNOWN {
@@ -136,7 +139,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			updateObj = true
 		}
 		if updateObj {
-			cloudletApi.store.STMPut(stm, &newCloudlet)
+			s.all.cloudletApi.store.STMPut(stm, &newCloudlet)
 		}
 		return nil
 	})
@@ -145,15 +148,15 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			"key", in.Key, "err", err)
 	}
 	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
-		ClearCloudletAndAppInstDownAlerts(ctx, in)
+		s.ClearCloudletAndAppInstDownAlerts(ctx, in)
 		// Validate cloudlet resources and generate appropriate warnings
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
+			if !s.all.cloudletApi.store.STMGet(stm, key, &cloudlet) {
 				return key.NotFoundError()
 			}
 			cloudletRefs := edgeproto.CloudletRefs{}
-			cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
-			return validateResources(ctx, stm, nil, nil, nil, &cloudlet, in, &cloudletRefs, GenResourceAlerts)
+			s.all.cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
+			return s.all.clusterInstApi.validateResources(ctx, stm, nil, nil, nil, &cloudlet, in, &cloudletRefs, GenResourceAlerts)
 		})
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to validate cloudlet resources",
@@ -186,7 +189,7 @@ func cloudletDownAppInstAlertLabels(appInstKey *edgeproto.AppInstKey) map[string
 }
 
 // Raise the alarm when the cloudlet goes down
-func fireCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
+func (s *CloudletInfoApi) fireCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alert := edgeproto.Alert{}
 	alert.State = "firing"
 	alert.ActiveAt = dme.Timestamp{}
@@ -198,56 +201,56 @@ func fireCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertCloudletDown
 	alert.Annotations[cloudcommon.AlertAnnotationDescription] = cloudcommon.AlertCloudletDownDescription
 	// send an update
-	alertApi.Update(ctx, &alert, 0)
+	s.all.alertApi.Update(ctx, &alert, 0)
 }
 
-func FireCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
-	fireCloudletDownAlert(ctx, in)
-	fireCloudletDownAppInstAlerts(ctx, in)
+func (s *CloudletInfoApi) FireCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	s.fireCloudletDownAlert(ctx, in)
+	s.fireCloudletDownAppInstAlerts(ctx, in)
 }
 
-func ClearCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+func (s *CloudletInfoApi) ClearCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
 	// We ignore the controller and notifyId check when cleaning up the alerts here
 	ctx = context.WithValue(ctx, ControllerCreatedAlerts, &ControllerCreatedAlerts)
-	clearCloudletDownAlert(ctx, in)
-	clearCloudletDownAppInstAlerts(ctx, in)
+	s.clearCloudletDownAlert(ctx, in)
+	s.clearCloudletDownAppInstAlerts(ctx, in)
 }
 
-func clearCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
+func (s *CloudletInfoApi) clearCloudletDownAlert(ctx context.Context, in *edgeproto.CloudletInfo) {
 	alert := edgeproto.Alert{}
 	alert.Labels = cloudletInfoToAlertLabels(in)
-	alertApi.Delete(ctx, &alert, 0)
+	s.all.alertApi.Delete(ctx, &alert, 0)
 }
 
-func clearCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+func (s *CloudletInfoApi) clearCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
 	appInstFilter := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: in.Key}},
 	}
 	appInstKeys := make([]edgeproto.AppInstKey, 0)
-	appInstApi.cache.Show(&appInstFilter, func(obj *edgeproto.AppInst) error {
+	s.all.appInstApi.cache.Show(&appInstFilter, func(obj *edgeproto.AppInst) error {
 		appInstKeys = append(appInstKeys, obj.Key)
 		return nil
 	})
 	for _, k := range appInstKeys {
 		alert := edgeproto.Alert{}
 		alert.Labels = cloudletDownAppInstAlertLabels(&k)
-		alertApi.Delete(ctx, &alert, 0)
+		s.all.alertApi.Delete(ctx, &alert, 0)
 	}
 }
 
-func fireCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+func (s *CloudletInfoApi) fireCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
 	appInstFilter := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: in.Key}},
 	}
 	appInstKeys := make([]edgeproto.AppInstKey, 0)
-	appInstApi.cache.Show(&appInstFilter, func(obj *edgeproto.AppInst) error {
+	s.all.appInstApi.cache.Show(&appInstFilter, func(obj *edgeproto.AppInst) error {
 		appInstKeys = append(appInstKeys, obj.Key)
 		return nil
 	})
 	// exclude SideCar apps which are auto-deployed as part of the cluster
 	excludedAppFilter := cloudcommon.GetSideCarAppFilter()
 	excludedAppKeys := make(map[edgeproto.AppKey]bool, 0)
-	appApi.cache.Show(excludedAppFilter, func(obj *edgeproto.App) error {
+	s.all.appApi.cache.Show(excludedAppFilter, func(obj *edgeproto.App) error {
 		excludedAppKeys[obj.Key] = true
 		return nil
 	})
@@ -265,7 +268,7 @@ func fireCloudletDownAppInstAlerts(ctx context.Context, in *edgeproto.CloudletIn
 		alert.Annotations = make(map[string]string)
 		alert.Annotations[cloudcommon.AlertAnnotationTitle] = cloudcommon.AlertAppInstDown
 		alert.Annotations[cloudcommon.AlertAnnotationDescription] = "AppInst down due to cloudlet offline"
-		alertApi.Update(ctx, &alert, 0)
+		s.all.alertApi.Update(ctx, &alert, 0)
 	}
 }
 
@@ -322,7 +325,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 				}
 			}
 			cloudlet := edgeproto.Cloudlet{}
-			if cloudletApi.store.STMGet(stm, &info.Key, &cloudlet) {
+			if s.all.cloudletApi.store.STMGet(stm, &info.Key, &cloudlet) {
 				cloudletReady = (cloudlet.State == edgeproto.TrackedState_READY)
 			}
 			info.State = dme.CloudletState_CLOUDLET_STATE_OFFLINE
@@ -336,7 +339,7 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 			// Send a cloudlet down alert if a cloudlet was ready
 			if cloudletReady {
 				nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
-				FireCloudletAndAppInstDownAlerts(ctx, &info)
+				s.FireCloudletAndAppInstDownAlerts(ctx, &info)
 			}
 		}
 	}
@@ -356,14 +359,14 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) dme.Cloud
 	return dme.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 }
 
-func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey, action cloudcommon.Action) error {
+func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey, action cloudcommon.Action) error {
 	if cctx != nil && ignoreCRM(cctx) {
 		return nil
 	}
 	// Get tracked state, it could be that cloudlet has initiated
 	// upgrade but cloudletInfo is yet to transition to it
 	cloudlet := edgeproto.Cloudlet{}
-	if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
+	if !s.all.cloudletApi.store.STMGet(stm, key, &cloudlet) {
 		return key.NotFoundError()
 	}
 	if action == cloudcommon.Delete && cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE {
@@ -381,7 +384,7 @@ func checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.C
 		return fmt.Errorf("Cloudlet %v is in failed upgrade state, please upgrade it manually", key)
 	}
 	info := edgeproto.CloudletInfo{}
-	if !cloudletInfoApi.store.STMGet(stm, key, &info) {
+	if !s.all.cloudletInfoApi.store.STMGet(stm, key, &info) {
 		return fmt.Errorf("CloudletInfo not found for Cloudlet %s", key.GetKeyString())
 	}
 	if info.State == dme.CloudletState_CLOUDLET_STATE_READY {
@@ -433,7 +436,7 @@ func (s *CloudletInfoApi) cleanupCloudletInfo(ctx context.Context, key *edgeprot
 		log.SpanLog(ctx, log.DebugLevelApi, "cleanup CloudletInfo failed", "err", err)
 	}
 	// clean up any associated alerts with this cloudlet
-	ClearCloudletAndAppInstDownAlerts(ctx, &info)
+	s.ClearCloudletAndAppInstDownAlerts(ctx, &info)
 }
 
 func (s *CloudletInfoApi) waitForMaintenanceState(ctx context.Context, key *edgeproto.CloudletKey, targetState, errorState dme.MaintenanceState, timeout time.Duration, result *edgeproto.CloudletInfo) error {

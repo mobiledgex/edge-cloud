@@ -316,9 +316,36 @@ func ClientAppCreate(t *testing.T, api edgeproto.AppApiClient, testData []edgepr
 func CreateAppData(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App) {
 	var err error
 
-	for _, obj := range testData {
+	for ii := range testData {
+		obj := testData[ii]
 		_, err = api.CreateApp(ctx, &obj)
 		require.Nil(t, err, "Create App %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func InternalAppDelete(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalAppDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteAppData(t, ctx, NewInternalAppApi(api), testData)
+}
+
+func ClientAppDelete(t *testing.T, api edgeproto.AppApiClient, testData []edgeproto.App) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientAppDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteAppData(t, ctx, NewClientAppApi(api), testData)
+}
+
+func DeleteAppData(t *testing.T, ctx context.Context, api *AppCommonApi, testData []edgeproto.App) {
+	var err error
+
+	for ii := range testData {
+		obj := testData[ii]
+		_, err = api.DeleteApp(ctx, &obj)
+		require.Nil(t, err, "Delete App %s", obj.GetKey().GetKeyString())
 	}
 }
 

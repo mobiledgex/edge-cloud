@@ -436,9 +436,36 @@ func Client{{.Name}}{{.Create}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, t
 func {{.Create}}{{.Name}}Data(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
 
-	for _, obj := range testData {
+	for ii := range testData {
+		obj := testData[ii]
 		_, err = api.{{.Create}}{{.Name}}(ctx, &obj)
 		require.Nil(t, err, "{{.Create}} {{.Name}} %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func Internal{{.Name}}{{.Delete}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	span := log.StartSpan(log.DebugLevelApi, "Internal{{.Name}}{{.Delete}}")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	{{.Delete}}{{.Name}}Data(t, ctx, NewInternal{{.Name}}Api(api), testData)
+}
+
+func Client{{.Name}}{{.Delete}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	span := log.StartSpan(log.DebugLevelApi, "Client{{.Name}}{{.Delete}}")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	{{.Delete}}{{.Name}}Data(t, ctx, NewClient{{.Name}}Api(api), testData)
+}
+
+func {{.Delete}}{{.Name}}Data(t *testing.T, ctx context.Context, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+	var err error
+
+	for ii := range testData {
+		obj := testData[ii]
+		_, err = api.{{.Delete}}{{.Name}}(ctx, &obj)
+		require.Nil(t, err, "{{.Delete}} {{.Name}} %s", obj.GetKey().GetKeyString())
 	}
 }
 {{- end}}

@@ -13,19 +13,22 @@ import (
 )
 
 type ResTagTableApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.ResTagTableStore
 	cache edgeproto.ResTagTableCache
 }
 
-var resTagTableApi = ResTagTableApi{}
 var verbose bool = false
 
-func InitResTagTableApi(sync *Sync) {
+func NewResTagTableApi(sync *Sync, all *AllApis) *ResTagTableApi {
+	resTagTableApi := ResTagTableApi{}
+	resTagTableApi.all = all
 	resTagTableApi.sync = sync
 	resTagTableApi.store = edgeproto.NewResTagTableStore(sync.store)
 	edgeproto.InitResTagTableCache(&resTagTableApi.cache)
 	sync.RegisterCache(&resTagTableApi.cache)
+	return &resTagTableApi
 }
 
 func (s *ResTagTableApi) ValidateResName(ctx context.Context, in string) (error, bool) {
@@ -259,7 +262,7 @@ func (s *ResTagTableApi) GetResTablesForCloudlet(ctx context.Context, stm concur
 	tabs := make(map[string]*edgeproto.ResTagTable)
 	for k, v := range cl.ResTagMap {
 		t := edgeproto.ResTagTable{}
-		if resTagTableApi.store.STMGet(stm, v, &t) {
+		if s.store.STMGet(stm, v, &t) {
 			tabs[k] = &t
 		}
 	}
@@ -310,7 +313,7 @@ func (s *ResTagTableApi) ValidateOptResMapValues(resmap map[string]string) (bool
 
 func (s *ResTagTableApi) AddGpuResourceHintIfNeeded(ctx context.Context, stm concurrency.STM, spec *vmspec.VMCreationSpec, cloudlet edgeproto.Cloudlet) string {
 
-	if resTagTableApi.UsesGpu(ctx, stm, *spec.FlavorInfo, cloudlet) {
+	if s.UsesGpu(ctx, stm, *spec.FlavorInfo, cloudlet) {
 		log.SpanLog(ctx, log.DebugLevelApi, "add hint using gpu on", "platform", cloudlet.PlatformType, "flavor", spec.FlavorName)
 		return "gpu"
 	} else {

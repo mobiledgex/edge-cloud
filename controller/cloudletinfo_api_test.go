@@ -22,24 +22,31 @@ func TestCloudletInfo(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	// create supporting data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
-	insertCloudletInfo(ctx, testutil.CloudletInfoData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 
-	testutil.InternalCloudletInfoTest(t, "show", &cloudletInfoApi, testutil.CloudletInfoData)
+	testutil.InternalCloudletInfoTest(t, "show", apis.cloudletInfoApi, testutil.CloudletInfoData)
 	dummy.Stop()
 }
 
-func insertCloudletInfo(ctx context.Context, data []edgeproto.CloudletInfo) {
-	for ii, _ := range data {
+func insertCloudletInfo(ctx context.Context, apis *AllApis, data []edgeproto.CloudletInfo) {
+	for ii := range data {
 		in := &data[ii]
 		in.State = dme.CloudletState_CLOUDLET_STATE_READY
-		cloudletInfoApi.Update(ctx, in, 0)
+		apis.cloudletInfoApi.Update(ctx, in, 0)
+	}
+}
+
+func evictCloudletInfo(ctx context.Context, apis *AllApis, data []edgeproto.CloudletInfo) {
+	for ii := range data {
+		in := &data[ii]
+		apis.cloudletInfoApi.Delete(ctx, in, 0)
 	}
 }

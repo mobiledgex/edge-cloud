@@ -97,7 +97,7 @@ func createClusterUsageMetric(cluster *edgeproto.ClusterInst, startTime, endTime
 }
 
 // This is checkpointing for the usage api, from month to month
-func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
+func (s *ClusterInstApi) CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 	if err := checkpointTimeValid(timestamp); err != nil { // we dont know if there will be more creates and deletes before the timestamp occurs
 		return err
 	}
@@ -148,7 +148,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 			// if its still up, record it
 			if event != cloudcommon.DELETED && event != cloudcommon.UNRESERVED {
 				info := edgeproto.ClusterInst{}
-				if !clusterInstApi.cache.Get(&key, &info) {
+				if !s.cache.Get(&key, &info) {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find clusterinst even though event log indicates it is up", "cluster", key)
 					continue
 				}
@@ -202,7 +202,7 @@ func CreateClusterCheckpoint(ctx context.Context, timestamp time.Time) error {
 		seenClusters[key] = true
 		// record it
 		info := edgeproto.ClusterInst{}
-		if !clusterInstApi.cache.Get(&key, &info) {
+		if !s.cache.Get(&key, &info) {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find clusterinst even though event log indicates it is up", "cluster", key)
 			continue
 		}

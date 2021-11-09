@@ -7,18 +7,20 @@ import (
 )
 
 type OperatorCodeApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.OperatorCodeStore
 	cache edgeproto.OperatorCodeCache
 }
 
-var operatorCodeApi = OperatorCodeApi{}
-
-func InitOperatorCodeApi(sync *Sync) {
+func NewOperatorCodeApi(sync *Sync, all *AllApis) *OperatorCodeApi {
+	operatorCodeApi := OperatorCodeApi{}
+	operatorCodeApi.all = all
 	operatorCodeApi.sync = sync
 	operatorCodeApi.store = edgeproto.NewOperatorCodeStore(sync.store)
 	edgeproto.InitOperatorCodeCache(&operatorCodeApi.cache)
 	sync.RegisterCache(&operatorCodeApi.cache)
+	return &operatorCodeApi
 }
 
 func (s *OperatorCodeApi) CreateOperatorCode(ctx context.Context, in *edgeproto.OperatorCode) (*edgeproto.Result, error) {

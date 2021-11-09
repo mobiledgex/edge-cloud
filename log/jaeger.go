@@ -152,9 +152,7 @@ func NewSpanFromString(lvl uint64, val, spanName string) opentracing.Span {
 		if err == nil {
 			spanCtx, err := tracer.Extract(opentracing.TextMap, t)
 			if err == nil {
-				// parent span exists so new lvl is ignored,
-				// lvl used for parent is honored.
-				return StartSpan(IgnoreLvl, spanName, ext.RPCServerOption(spanCtx), linenoOpt)
+				return StartSpan(lvl, spanName, ext.RPCServerOption(spanCtx), linenoOpt)
 			}
 		}
 	}
