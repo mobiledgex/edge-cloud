@@ -788,10 +788,10 @@ var AppInstRequiredArgs = []string{
 	"appvers",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var AppInstOptionalArgs = []string{
 	"cluster",
+	"federated-org",
 	"cluster-org",
 	"flavor",
 	"crmoverride",
@@ -1007,10 +1007,10 @@ var AppInstLatencyRequiredArgs = []string{
 	"appvers",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var AppInstLatencyOptionalArgs = []string{
 	"cluster",
+	"federated-org",
 	"cluster-org",
 	"message",
 }
@@ -1041,10 +1041,10 @@ var CreateAppInstRequiredArgs = []string{
 	"appvers",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var CreateAppInstOptionalArgs = []string{
 	"cluster",
+	"federated-org",
 	"cluster-org",
 	"flavor",
 	"crmoverride",
@@ -1061,10 +1061,10 @@ var DeleteAppInstRequiredArgs = []string{
 	"appvers",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var DeleteAppInstOptionalArgs = []string{
 	"cluster",
+	"federated-org",
 	"cluster-org",
 	"flavor",
 	"crmoverride",
@@ -1101,10 +1101,10 @@ var UpdateAppInstRequiredArgs = []string{
 	"appvers",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var UpdateAppInstOptionalArgs = []string{
 	"cluster",
+	"federated-org",
 	"cluster-org",
 	"crmoverride",
 	"configs:empty",

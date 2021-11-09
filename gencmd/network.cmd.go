@@ -379,10 +379,10 @@ var NetworkKeySpecialArgs = map[string]string{}
 var NetworkRequiredArgs = []string{
 	"cloudlet-org",
 	"key.cloudletkey.name",
-	"federated-org",
 	"name",
 }
 var NetworkOptionalArgs = []string{
+	"federated-org",
 	"routes:empty",
 	"routes:#.destinationcidr",
 	"routes:#.nexthopip",

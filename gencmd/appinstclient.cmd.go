@@ -212,7 +212,6 @@ var AppInstClientApiCmds = []*cobra.Command{
 
 var AppInstClientKeyRequiredArgs = []string{
 	"app-org",
-	"federated-org",
 }
 var AppInstClientKeyOptionalArgs = []string{
 	"appname",
@@ -220,6 +219,7 @@ var AppInstClientKeyOptionalArgs = []string{
 	"cluster",
 	"cloudlet-org",
 	"cloudlet",
+	"federated-org",
 	"cluster-org",
 	"uniqueid",
 	"uniqueidtype",
