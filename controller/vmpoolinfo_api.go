@@ -13,6 +13,7 @@ type VMPoolInfoApi struct {
 
 func NewVMPoolInfoApi(sync *Sync, all *AllApis) *VMPoolInfoApi {
 	vmPoolInfoApi := VMPoolInfoApi{}
+	vmPoolInfoApi.all = all
 	edgeproto.InitVMPoolInfoCache(&vmPoolInfoApi.cache)
 	return &vmPoolInfoApi
 }
