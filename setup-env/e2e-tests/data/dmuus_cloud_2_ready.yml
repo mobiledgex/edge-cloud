@@ -4,7 +4,7 @@ cloudletinfos:
     name: dmuus-cloud-2
   state: Ready
   notifyid: 8
-  controller: Jon-Mex@127.0.0.1:55001
+  controller: controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
