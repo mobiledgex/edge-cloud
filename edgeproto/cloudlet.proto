@@ -281,6 +281,8 @@ message GPUDriver {
   string state = 7;
   // Ignore state will ignore any action in-progress on the GPU driver
   bool ignore_state = 8;
+  // Preparing to be deleted
+  bool delete_prepare = 9 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -290,8 +292,9 @@ message GPUDriver {
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "gpudrivername=Key.Name,gpudriver-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
-  option (protogen.noconfig) = "State,LicenseConfigMd5Sum";
+  option (protogen.noconfig) = "State,LicenseConfigMd5Sum,DeletePrepare";
   option (protogen.not_required) = "Key.Organization";
+  option (protogen.controller_api_struct) = "gpuDriverApi";
 }
 
 service GPUDriverApi {
@@ -374,7 +377,7 @@ service GPUDriverApi {
 
 message GPUConfig {
   // GPU driver key
-  GPUDriverKey driver = 1 [(gogoproto.nullable) = false];
+  GPUDriverKey driver = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "GPUDriver"];
   // Properties to identify specifics of GPU
   map<string, string> properties = 2;
 }
@@ -413,7 +416,7 @@ message Cloudlet {
   // Address for the CRM notify listener to run on
   string notify_srv_addr = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Min system resource requirements for platform
-  FlavorKey flavor = 17 [(gogoproto.nullable) = false];
+  FlavorKey flavor = 17 [(gogoproto.nullable) = false, (protogen.refers_to) = "Flavor"];
   // Physical infrastructure cloudlet name
   string physical_name = 18;
   // Single Key-Value pair of env var to be passed to CRM
@@ -423,7 +426,7 @@ message Cloudlet {
   // Platform Config Info
   PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Optional resource to restagtbl key map key values = [gpu, nas, nic]
-  map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true];
+  map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true, (protogen.refers_to) = "ResTagTable"];
   // Variables required to access cloudlet
   map<string, string> access_vars = 23;
   // MobiledgeX baseimage version where CRM services reside
@@ -451,7 +454,7 @@ message Cloudlet {
   // Updated at time
   distributed_match_engine.Timestamp updated_at = 36 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Optional Trust Policy
-  string trust_policy = 37;
+  string trust_policy = 37 [(protogen.refers_to) = "TrustPolicy"];
   // State of trust policy
   TrackedState trust_policy_state = 38 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Resource quotas
@@ -474,6 +477,8 @@ message Cloudlet {
   repeated string alliance_orgs = 47;
   // For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant
   string single_kubernetes_cluster_owner = 48;
+  // Preparing to be deleted
+  bool delete_prepare = 49 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -483,7 +488,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.mc2_target_cloudlet) = "Key";
   option (protogen.uses_org) = "key=Organization";

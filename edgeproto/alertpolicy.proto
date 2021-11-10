@@ -44,6 +44,8 @@ message AlertPolicy {
   map <string, string> annotations = 10;
   // Description of the alert policy
   string description = 11;
+  // Preparing to be deleted
+  bool delete_prepare = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -52,6 +54,7 @@ message AlertPolicy {
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name,alert-org=Key.Organization,cpu-utilization=CpuUtilizationLimit,mem-utilization=MemUtilizationLimit,disk-utilization=DiskUtilizationLimit,active-connections=ActiveConnLimit,trigger-time=TriggerTime";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.noconfig) = "DeletePrepare";
 }
 
 service AlertPolicyApi {

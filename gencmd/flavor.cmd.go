@@ -25,6 +25,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func FlavorHideTags(in *edgeproto.Flavor) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var FlavorApiCmd edgeproto.FlavorApiClient
 
 var CreateFlavorCmd = &cli.Command{
@@ -251,6 +264,7 @@ func ShowFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 			}
 			return fmt.Errorf("ShowFlavor recv failed: %s", errstr)
 		}
+		FlavorHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -420,12 +434,13 @@ var FlavorAliasArgs = []string{
 	"name=key.name",
 }
 var FlavorComments = map[string]string{
-	"fields":    "Fields are used for the Update API to specify which fields to apply",
-	"name":      "Flavor name",
-	"ram":       "RAM in megabytes",
-	"vcpus":     "Number of virtual CPUs",
-	"disk":      "Amount of disk space in gigabytes",
-	"optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1, specify optresmap:empty=true to clear",
+	"fields":        "Fields are used for the Update API to specify which fields to apply",
+	"name":          "Flavor name",
+	"ram":           "RAM in megabytes",
+	"vcpus":         "Number of virtual CPUs",
+	"disk":          "Amount of disk space in gigabytes",
+	"optresmap":     "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1, specify optresmap:empty=true to clear",
+	"deleteprepare": "Preparing to be deleted",
 }
 var FlavorSpecialArgs = map[string]string{
 	"fields":    "StringArray",

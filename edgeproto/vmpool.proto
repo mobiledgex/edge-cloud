@@ -108,6 +108,7 @@ message VMPool {
   option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Status,Vms:#.Flavor";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.controller_api_struct) = "vmPoolApi";
 }
 
 // VMPoolMember is used to add and remove VM from VM Pool

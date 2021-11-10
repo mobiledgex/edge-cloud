@@ -1653,15 +1653,27 @@ func (s *Settings) HasFields() bool {
 	return true
 }
 
-type SettingsStore struct {
+type SettingsStore interface {
+	Create(ctx context.Context, m *Settings, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *Settings, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *Settings, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *Settings, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*Settings, int64, error)
+	Get(ctx context.Context, key *SettingsKey, buf *Settings) bool
+	STMGet(stm concurrency.STM, key *SettingsKey, buf *Settings) bool
+	STMPut(stm concurrency.STM, obj *Settings, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *SettingsKey)
+}
+
+type SettingsStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewSettingsStore(kvstore objstore.KVStore) SettingsStore {
-	return SettingsStore{kvstore: kvstore}
+func NewSettingsStore(kvstore objstore.KVStore) *SettingsStoreImpl {
+	return &SettingsStoreImpl{kvstore: kvstore}
 }
 
-func (s *SettingsStore) Create(ctx context.Context, m *Settings, wait func(int64)) (*Result, error) {
+func (s *SettingsStoreImpl) Create(ctx context.Context, m *Settings, wait func(int64)) (*Result, error) {
 	err := m.Validate(SettingsAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -1681,7 +1693,7 @@ func (s *SettingsStore) Create(ctx context.Context, m *Settings, wait func(int64
 	return &Result{}, err
 }
 
-func (s *SettingsStore) Update(ctx context.Context, m *Settings, wait func(int64)) (*Result, error) {
+func (s *SettingsStoreImpl) Update(ctx context.Context, m *Settings, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1715,7 +1727,7 @@ func (s *SettingsStore) Update(ctx context.Context, m *Settings, wait func(int64
 	return &Result{}, err
 }
 
-func (s *SettingsStore) Put(ctx context.Context, m *Settings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *SettingsStoreImpl) Put(ctx context.Context, m *Settings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(SettingsAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -1737,7 +1749,7 @@ func (s *SettingsStore) Put(ctx context.Context, m *Settings, wait func(int64), 
 	return &Result{}, err
 }
 
-func (s *SettingsStore) Delete(ctx context.Context, m *Settings, wait func(int64)) (*Result, error) {
+func (s *SettingsStoreImpl) Delete(ctx context.Context, m *Settings, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -1753,7 +1765,7 @@ func (s *SettingsStore) Delete(ctx context.Context, m *Settings, wait func(int64
 	return &Result{}, err
 }
 
-func (s *SettingsStore) LoadOne(key string) (*Settings, int64, error) {
+func (s *SettingsStoreImpl) LoadOne(key string) (*Settings, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -1767,14 +1779,30 @@ func (s *SettingsStore) LoadOne(key string) (*Settings, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *SettingsStore) STMGet(stm concurrency.STM, key *SettingsKey, buf *Settings) bool {
+func (s *SettingsStoreImpl) Get(ctx context.Context, key *SettingsKey, buf *Settings) bool {
+	keystr := objstore.DbKeyString("Settings", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *SettingsStoreImpl) STMGet(stm concurrency.STM, key *SettingsKey, buf *Settings) bool {
 	keystr := objstore.DbKeyString("Settings", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *SettingsStoreImpl) parseGetData(val []byte, buf *Settings) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = Settings{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -1782,17 +1810,17 @@ func (s *SettingsStore) STMGet(stm concurrency.STM, key *SettingsKey, buf *Setti
 	return true
 }
 
-func (s *SettingsStore) STMPut(stm concurrency.STM, obj *Settings, ops ...objstore.KVOp) {
+func (s *SettingsStoreImpl) STMPut(stm concurrency.STM, obj *Settings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Settings", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("Settings json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("Settings json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *SettingsStore) STMDel(stm concurrency.STM, key *SettingsKey) {
+func (s *SettingsStoreImpl) STMDel(stm concurrency.STM, key *SettingsKey) {
 	keystr := objstore.DbKeyString("Settings", key)
 	stm.Del(keystr)
 }

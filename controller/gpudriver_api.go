@@ -139,10 +139,11 @@ func deleteGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSCli
 func (s *GPUDriverApi) undoStateChange(ctx context.Context, key *edgeproto.GPUDriverKey) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		driver := edgeproto.GPUDriver{}
-		if s.store.STMGet(stm, key, &driver) {
-			return key.ExistsError()
+		if !s.store.STMGet(stm, key, &driver) {
+			return nil
 		}
 		driver.State = ""
+		driver.DeletePrepare = false
 		s.store.STMPut(stm, &driver)
 		return nil
 	})
@@ -405,12 +406,6 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
-	// Validate if driver is in use by Cloudlet
-	inUse, cloudlets := s.all.cloudletApi.UsesGPUDriver(&in.Key)
-	if inUse {
-		return fmt.Errorf("GPU driver in use by Cloudlet(s): %s", strings.Join(cloudlets, ","))
-	}
-
 	gpuDriverKey := in.Key
 	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
 	if err == nil {
@@ -435,6 +430,9 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("GPUDriver already being deleted")
+		}
 		if !cctx.Undo {
 			if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {
 				return err
@@ -447,6 +445,7 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		}
 		licenseConfig = cur.LicenseConfig
 		cur.State = ChangeInProgress
+		cur.DeletePrepare = true
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -458,6 +457,13 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 			s.undoStateChange(ctx, &in.Key)
 		}
 	}()
+
+	// Validate if driver is in use by Cloudlet
+	inUse, cloudlets := s.all.cloudletApi.UsesGPUDriver(&in.Key)
+	if inUse {
+		return fmt.Errorf("GPU driver in use by Cloudlet(s): %s", strings.Join(cloudlets, ","))
+	}
+
 	// Step-2: Delete objects from GCS
 	if len(buildFiles) > 0 || licenseConfig != "" {
 		storageClient, err := getGCSStorageClient(ctx)

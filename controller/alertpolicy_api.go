@@ -60,13 +60,44 @@ func (a *AlertPolicyApi) CreateAlertPolicy(ctx context.Context, in *edgeproto.Al
 	return &edgeproto.Result{}, err
 }
 
-func (a *AlertPolicyApi) DeleteAlertPolicy(ctx context.Context, in *edgeproto.AlertPolicy) (*edgeproto.Result, error) {
-	if !a.cache.HasKey(&in.Key) {
-		return &edgeproto.Result{}, in.Key.NotFoundError()
+func (a *AlertPolicyApi) DeleteAlertPolicy(ctx context.Context, in *edgeproto.AlertPolicy) (res *edgeproto.Result, reterr error) {
+	err := a.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.AlertPolicy{}
+		if !a.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("AlertPolicy already being deleted")
+		}
+		cur.DeletePrepare = true
+		a.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		err := a.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.AlertPolicy{}
+			if !a.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				a.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "undo delete prepare failed", "key", in.Key, "err", err)
+		}
+	}()
 
-	if a.all.appApi.UsesAlertPolicy(&in.Key) {
-		return &edgeproto.Result{}, fmt.Errorf("Alert is in use by App")
+	if appKey := a.all.appApi.UsesAlertPolicy(&in.Key); appKey != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Alert is in use by App %s", appKey.GetKeyString())
 	}
 	return a.store.Delete(ctx, in, a.sync.syncWait)
 }

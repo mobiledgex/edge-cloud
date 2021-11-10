@@ -142,7 +142,7 @@ message App {
   // (3) maxpktsize (udp-only) - Configures maximum UDP datagram size allowed on port for both upstream/downstream traffic. Ex: "udp:10001:maxpktsize=8000".
   string access_ports = 7;
   // Default flavor for the App, which may be overridden by the AppInst
-  FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
+  FlavorKey default_flavor = 9 [(gogoproto.nullable) = false, (protogen.refers_to) = "Flavor"];
   // Public key used for authentication
   string auth_public_key = 12;
   // Command that the container runs to start service 
@@ -184,7 +184,7 @@ message App {
   // Preparing to be deleted
   bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Auto provisioning policy names, may be specified multiple times
-  repeated string auto_prov_policies = 32;
+  repeated string auto_prov_policies = 32 [(protogen.refers_to) = "AutoProvPolicy"];
   // Delimiter to be used for template parsing, defaults to "[[ ]]"
   string template_delimiter = 33;
   // Comma separated list of protocol:port pairs that we should not run health check on.
@@ -208,7 +208,7 @@ message App {
   // OS Type for VM Apps
   VmAppOsType vm_app_os_type = 41;
   // Alert Policies
-  repeated string alert_policies = 42;
+  repeated string alert_policies = 42 [(protogen.refers_to) = "AlertPolicy"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

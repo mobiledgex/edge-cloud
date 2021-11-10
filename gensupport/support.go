@@ -112,6 +112,47 @@ func (s *PluginSupport) GenFile(filename string) bool {
 	return found
 }
 
+// DottedName gets the proto-style name.
+// For normal objects, name should be singular.
+// For nested objects, there will be multiple names to include parent objects.
+func DottedName(packageName string, names ...string) string {
+	all := []string{}
+	if packageName != "" {
+		all = append(all, packageName)
+	}
+	all = append(all, names...)
+	return "." + strings.Join(all, ".")
+}
+
+// GetGeneratorFiles gets the wrapped files of the generator.
+// This requires that Generator.WrapTypes() and Generator.BuildTypeNameMap()
+// have already been called.
+// Generator doesn't provide a way to access the wrapped files
+// directly, which are useful if generating something besides golang.
+// This gets the files in a back-door kind of way.
+func (s *PluginSupport) GetGeneratorFiles(g *generator.Generator) []*generator.FileDescriptor {
+	files := []*generator.FileDescriptor{}
+	for _, protoFile := range g.Request.ProtoFile {
+		if !s.GenFile(protoFile.GetName()) {
+			continue
+		}
+		// find an object in the file
+		var name string
+		if len(protoFile.MessageType) > 0 {
+			name = *protoFile.MessageType[0].Name
+		} else if len(protoFile.EnumType) > 0 {
+			name = *protoFile.EnumType[0].Name
+		} else {
+			g.Fail("GetGeneratorFiles: Can't find object for file", *protoFile.Name)
+			continue
+		}
+		obj := g.ObjectNamed(DottedName(protoFile.GetPackage(), name))
+		// can get generator file from object
+		files = append(files, obj.File())
+	}
+	return files
+}
+
 // RegisterUsedPkg adds the package to the list
 func (s *PluginSupport) RegisterUsedPkg(pkg string, file *descriptor.FileDescriptorProto) {
 	pkg = strings.Replace(pkg, ".", "_", -1)
@@ -206,6 +247,17 @@ func GetDesc(g *generator.Generator, typeName string) *generator.Descriptor {
 	panic(typeName + " is not of type Descriptor")
 }
 
+func GetDescKey(g *generator.Generator, msg *generator.Descriptor) *generator.Descriptor {
+	msgProto := msg.DescriptorProto
+	if GetObjAndKey(msgProto) {
+		return msg
+	} else if keyField := GetMessageKey(msgProto); keyField != nil {
+		return GetDesc(g, keyField.GetTypeName())
+	}
+	g.Fail("Key type not found for message ", *msg.Name)
+	return nil
+}
+
 // GetEnumDesc returns the EnumDescriptor based on the protoc type name
 // referenced in Fields.
 func GetEnumDesc(g *generator.Generator, typeName string) *generator.EnumDescriptor {
@@ -215,6 +267,13 @@ func GetEnumDesc(g *generator.Generator, typeName string) *generator.EnumDescrip
 		return desc
 	}
 	panic(typeName + " is not of type EnumDescriptor")
+}
+
+// This assumes the Message is in the same package as the given file,
+// but possibly in a different file.
+func GetPackageDesc(g *generator.Generator, file *generator.FileDescriptor, name string) *generator.Descriptor {
+	dottedName := DottedName(file.GetPackage(), name)
+	return GetDesc(g, dottedName)
 }
 
 // GetMsgName returns the hierarchical type name of the Message without package

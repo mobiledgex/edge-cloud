@@ -28,9 +28,9 @@ enum TrustPolicyExceptionState {
 
 message TrustPolicyExceptionKey {
   // App Key
-  AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.keytag) = "appkey"];
+  AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.keytag) = "appkey", (protogen.refers_to) = "App"];
   // CloudletPool Key
-  CloudletPoolKey cloudlet_pool_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletpoolkey"];
+  CloudletPoolKey cloudlet_pool_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletpoolkey", (protogen.refers_to) = "CloudletPool"];
   // TrustPolicyExceptionKey name
   string Name = 3 [(protogen.keytag) = "name"]; 
   option (protogen.generate_matches) = true;

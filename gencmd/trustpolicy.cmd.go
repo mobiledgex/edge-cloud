@@ -25,6 +25,21 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func TrustPolicyHideTags(in *edgeproto.TrustPolicy) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.OutboundSecurityRules); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var TrustPolicyApiCmd edgeproto.TrustPolicyApiClient
 
 var CreateTrustPolicyCmd = &cli.Command{
@@ -323,6 +338,7 @@ func ShowTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 			}
 			return fmt.Errorf("ShowTrustPolicy recv failed: %s", errstr)
 		}
+		TrustPolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -393,6 +409,7 @@ var TrustPolicyComments = map[string]string{
 	"outboundsecurityrules:#.portrangemin": "TCP or UDP port range start",
 	"outboundsecurityrules:#.portrangemax": "TCP or UDP port range end",
 	"outboundsecurityrules:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"deleteprepare":                        "Preparing to be deleted",
 }
 var TrustPolicySpecialArgs = map[string]string{
 	"fields": "StringArray",

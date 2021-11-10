@@ -51,7 +51,9 @@ type mex struct {
 	importJson             bool
 	firstFile              string
 	support                gensupport.PluginSupport
+	refData                *gensupport.RefData
 	keyMessages            []descriptor.DescriptorProto
+	deletePrepareFields    map[string]string
 }
 
 func (m *mex) Name() string {
@@ -61,6 +63,7 @@ func (m *mex) Name() string {
 func (m *mex) Init(gen *generator.Generator) {
 	m.gen = gen
 	m.msgs = make(map[string]*descriptor.DescriptorProto)
+	m.deletePrepareFields = make(map[string]string)
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 	m.fieldsValTemplate = template.Must(template.New("fieldsVal").Parse(fieldsValTemplate))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
@@ -100,6 +103,10 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importCmp = false
 	m.importReflect = false
 	m.importJson = false
+	if m.firstFile == *file.FileDescriptorProto.Name {
+		m.refData = m.support.GatherRefData(m.gen)
+		m.checkDeletePrepares()
+	}
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -1075,6 +1082,7 @@ type cudTemplateArgs struct {
 	GenCache    bool
 	NotifyCache bool
 	ObjAndKey   bool
+	RefBys      []string
 }
 
 var fieldsValTemplate = `
@@ -1112,15 +1120,27 @@ func (s *{{.Name}}) HasFields() bool {
 {{- end}}
 }
 
-type {{.Name}}Store struct {
+type {{.Name}}Store interface {
+	Create(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *{{.Name}}, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*{{.Name}}, int64, error)
+	Get(ctx context.Context, key *{{.KeyType}}, buf *{{.Name}}) bool
+	STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.Name}}) bool
+	STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *{{.KeyType}})
+}
+
+type {{.Name}}StoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func New{{.Name}}Store(kvstore objstore.KVStore) {{.Name}}Store {
-	return {{.Name}}Store{kvstore: kvstore}
+func New{{.Name}}Store(kvstore objstore.KVStore) *{{.Name}}StoreImpl {
+	return &{{.Name}}StoreImpl{kvstore: kvstore}
 }
 
-func (s *{{.Name}}Store) Create(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
+func (s *{{.Name}}StoreImpl) Create(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
 {{- if (.ObjAndKey)}}
 	err := m.ValidateKey()
 {{- else if (.HasFields)}}
@@ -1140,7 +1160,7 @@ func (s *{{.Name}}Store) Create(ctx context.Context, m *{{.Name}}, wait func(int
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) Update(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
+func (s *{{.Name}}StoreImpl) Update(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
 {{- if (.ObjAndKey)}}
 	err := m.ValidateKey()
 {{- else if (.HasFields)}}
@@ -1174,7 +1194,7 @@ func (s *{{.Name}}Store) Update(ctx context.Context, m *{{.Name}}, wait func(int
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) Put(ctx context.Context, m *{{.Name}}, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *{{.Name}}StoreImpl) Put(ctx context.Context, m *{{.Name}}, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 {{- if (.ObjAndKey)}}
 	err := m.ValidateKey()
 {{- else if (.HasFields)}}
@@ -1196,7 +1216,7 @@ func (s *{{.Name}}Store) Put(ctx context.Context, m *{{.Name}}, wait func(int64)
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) Delete(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
+func (s *{{.Name}}StoreImpl) Delete(ctx context.Context, m *{{.Name}}, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil { return nil, err }
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
@@ -1208,7 +1228,7 @@ func (s *{{.Name}}Store) Delete(ctx context.Context, m *{{.Name}}, wait func(int
 	return &Result{}, err
 }
 
-func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
+func (s *{{.Name}}StoreImpl) LoadOne(key string) (*{{.Name}}, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -1222,14 +1242,30 @@ func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *{{.Name}}Store) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.Name}}) bool {
+func (s *{{.Name}}StoreImpl) Get(ctx context.Context, key *{{.KeyType}}, buf *{{.Name}}) bool {
+	keystr := objstore.DbKeyString("{{.Name}}", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *{{.Name}}StoreImpl) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.Name}}) bool {
 	keystr := objstore.DbKeyString("{{.Name}}", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *{{.Name}}StoreImpl) parseGetData(val []byte, buf *{{.Name}}) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = {{.Name}}{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -1237,17 +1273,17 @@ func (s *{{.Name}}Store) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.
 	return true
 }
 
-func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
+func (s *{{.Name}}StoreImpl) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("{{.Name}} json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("{{.Name}} json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
+func (s *{{.Name}}StoreImpl) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
 	keystr := objstore.DbKeyString("{{.Name}}", key)
 	stm.Del(keystr)
 }
@@ -2147,6 +2183,12 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			ObjAndKey: gensupport.GetObjAndKey(message),
 			KeyType:   keyType,
 		}
+		if refToGroup, ok := m.refData.RefTos[*message.Name]; ok {
+			for _, byObjField := range refToGroup.Bys {
+				name := byObjField.By.Type + strings.Replace(byObjField.Field.HierName, ".", "", -1)
+				args.RefBys = append(args.RefBys, name)
+			}
+		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
 		m.importLog = true
 	}
@@ -2719,6 +2761,29 @@ func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor
 		m.P("return nil")
 		m.P("}")
 		m.P("")
+	}
+}
+
+func (m *mex) checkDeletePrepares() {
+	msgs := []string{}
+	for _, ref := range m.refData.RefTos {
+		// refTo object must have delete_prepare boolean field.
+		hierName := gensupport.GetDeletePrepareField(m.gen, ref.To.TypeDesc)
+		if hierName == "" {
+			refsBy := []string{}
+			for _, by := range ref.Bys {
+				refsBy = append(refsBy, by.By.Type+"."+by.Field.HierName)
+			}
+			errMsg := fmt.Sprintf("%s requires bool field %s, which is needed for safe deletes due to references from %s.", ref.To.Type, gensupport.DeletePrepareName, strings.Join(refsBy, ", "))
+			msgs = append(msgs, errMsg)
+		} else {
+			m.deletePrepareFields[ref.To.Type] = hierName
+		}
+	}
+	help := fmt.Sprintf("Deletes must first use ApplySTMWait to set %s to true (which waits until local cache is updated, ensuring other changes have updated the caches), then search via caches to make sure no references to it exist, then delete.", gensupport.DeletePrepareName)
+	if len(msgs) > 0 {
+		msgs = append(msgs, help)
+		m.gen.Fail("\n" + strings.Join(msgs, "\n"))
 	}
 }
 

@@ -41,7 +41,7 @@ message AppInstKey {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Cluster instance on which this is instantiated
-  VirtualClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  VirtualClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.refers_to) = "ClusterInst"];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -108,7 +108,7 @@ message AppInst {
   // External ports should be appended to the Uri for L4 access.
   repeated distributed_match_engine.AppPort mapped_ports = 9 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Flavor defining resource requirements
-  FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.refers_to) = "Flavor"];
   // Current state of the AppInst on the Cloudlet
   TrackedState state = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Any errors trying to create, update, or delete the AppInst on the Cloudlet
@@ -265,6 +265,7 @@ message AppInstInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.uses_org) = "none";
+  option (protogen.ignore_refers_to) = true;
 }
 
 service AppInstInfoApi {

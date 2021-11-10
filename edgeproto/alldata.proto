@@ -37,10 +37,10 @@ message AllData {
   repeated OperatorCode operator_codes = 4 [(gogoproto.nullable) = false];
   repeated ResTagTable res_tag_tables = 6 [(gogoproto.nullable) = false];
   repeated TrustPolicy trust_policies = 14 [(gogoproto.nullable) = false];
-  repeated Network networks = 25 [(gogoproto.nullable) = false];
   repeated Cloudlet cloudlets = 7 [(gogoproto.nullable) = false];
   repeated CloudletInfo cloudlet_infos = 8 [(gogoproto.nullable) = false];
   repeated CloudletPool cloudlet_pools = 9 [(gogoproto.nullable) = false];
+  repeated Network networks = 25 [(gogoproto.nullable) = false];
   repeated AutoProvPolicy auto_prov_policies = 11 [(gogoproto.nullable) = false];
   repeated AutoProvPolicyCloudlet auto_prov_policy_cloudlets = 12 [(gogoproto.nullable) = false];
   repeated AutoScalePolicy auto_scale_policies = 13 [(gogoproto.nullable) = false];

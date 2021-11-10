@@ -6,6 +6,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 type AutoScalePolicyApi struct {
@@ -52,12 +53,44 @@ func (s *AutoScalePolicyApi) UpdateAutoScalePolicy(ctx context.Context, in *edge
 	return &edgeproto.Result{}, err
 }
 
-func (s *AutoScalePolicyApi) DeleteAutoScalePolicy(ctx context.Context, in *edgeproto.AutoScalePolicy) (*edgeproto.Result, error) {
-	if !s.cache.HasKey(&in.Key) {
-		return &edgeproto.Result{}, in.Key.NotFoundError()
+func (s *AutoScalePolicyApi) DeleteAutoScalePolicy(ctx context.Context, in *edgeproto.AutoScalePolicy) (res *edgeproto.Result, reterr error) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.AutoScalePolicy{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("AutoScalePolicy already being deleted")
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
 	}
-	if s.all.clusterInstApi.UsesAutoScalePolicy(&in.Key) {
-		return &edgeproto.Result{}, fmt.Errorf("Policy in use by ClusterInst")
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.AutoScalePolicy{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
+	if ciKey := s.all.clusterInstApi.UsesAutoScalePolicy(&in.Key); ciKey != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Policy in use by ClusterInst %s", ciKey.GetKeyString())
 	}
 	return s.store.Delete(ctx, in, s.sync.syncWait)
 }

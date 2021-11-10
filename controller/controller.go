@@ -252,7 +252,7 @@ func startServices() error {
 	// cleanup thread must start after settings are loaded
 	go allApis.clusterInstApi.cleanupThread()
 
-	err = allApis.rateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
+	err = allApis.flowRateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("Failed to init default rate limit settings, %v", err)
 	}
@@ -432,7 +432,11 @@ func startServices() error {
 	edgeproto.RegisterTrustPolicyApiServer(server, allApis.trustPolicyApi)
 	edgeproto.RegisterTrustPolicyExceptionApiServer(server, allApis.trustPolicyExceptionApi)
 	edgeproto.RegisterSettingsApiServer(server, allApis.settingsApi)
-	edgeproto.RegisterRateLimitSettingsApiServer(server, allApis.rateLimitSettingsApi)
+	rateLimitSettingsApi := RateLimitSettingsApi{
+		FlowRateLimitSettingsApi:    allApis.flowRateLimitSettingsApi,
+		MaxReqsRateLimitSettingsApi: allApis.maxReqsRateLimitSettingsApi,
+	}
+	edgeproto.RegisterRateLimitSettingsApiServer(server, &rateLimitSettingsApi)
 	edgeproto.RegisterAppInstClientApiServer(server, allApis.appInstClientApi)
 	edgeproto.RegisterDebugApiServer(server, &debugApi)
 	edgeproto.RegisterDeviceApiServer(server, allApis.deviceApi)
@@ -605,42 +609,43 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 }
 
 type AllApis struct {
-	appApi                  *AppApi
-	operatorCodeApi         *OperatorCodeApi
-	cloudletApi             *CloudletApi
-	appInstApi              *AppInstApi
-	flavorApi               *FlavorApi
-	streamObjApi            *StreamObjApi
-	clusterInstApi          *ClusterInstApi
-	cloudletInfoApi         *CloudletInfoApi
-	vmPoolApi               *VMPoolApi
-	vmPoolInfoApi           *VMPoolInfoApi
-	appInstInfoApi          *AppInstInfoApi
-	clusterInstInfoApi      *ClusterInstInfoApi
-	cloudletRefsApi         *CloudletRefsApi
-	clusterRefsApi          *ClusterRefsApi
-	appInstRefsApi          *AppInstRefsApi
-	controllerApi           *ControllerApi
-	cloudletPoolApi         *CloudletPoolApi
-	execApi                 *ExecApi
-	alertApi                *AlertApi
-	autoScalePolicyApi      *AutoScalePolicyApi
-	autoProvPolicyApi       *AutoProvPolicyApi
-	autoProvInfoApi         *AutoProvInfoApi
-	resTagTableApi          *ResTagTableApi
-	trustPolicyApi          *TrustPolicyApi
-	trustPolicyExceptionApi *TrustPolicyExceptionApi
-	settingsApi             *SettingsApi
-	rateLimitSettingsApi    *RateLimitSettingsApi
-	appInstClientKeyApi     *AppInstClientKeyApi
-	appInstClientApi        *AppInstClientApi
-	deviceApi               *DeviceApi
-	organizationApi         *OrganizationApi
-	appInstLatencyApi       *AppInstLatencyApi
-	gpuDriverApi            *GPUDriverApi
-	alertPolicyApi          *AlertPolicyApi
-	networkApi              *NetworkApi
-	syncLeaseData           *SyncLeaseData
+	appApi                      *AppApi
+	operatorCodeApi             *OperatorCodeApi
+	cloudletApi                 *CloudletApi
+	appInstApi                  *AppInstApi
+	flavorApi                   *FlavorApi
+	streamObjApi                *StreamObjApi
+	clusterInstApi              *ClusterInstApi
+	cloudletInfoApi             *CloudletInfoApi
+	vmPoolApi                   *VMPoolApi
+	vmPoolInfoApi               *VMPoolInfoApi
+	appInstInfoApi              *AppInstInfoApi
+	clusterInstInfoApi          *ClusterInstInfoApi
+	cloudletRefsApi             *CloudletRefsApi
+	clusterRefsApi              *ClusterRefsApi
+	appInstRefsApi              *AppInstRefsApi
+	controllerApi               *ControllerApi
+	cloudletPoolApi             *CloudletPoolApi
+	execApi                     *ExecApi
+	alertApi                    *AlertApi
+	autoScalePolicyApi          *AutoScalePolicyApi
+	autoProvPolicyApi           *AutoProvPolicyApi
+	autoProvInfoApi             *AutoProvInfoApi
+	resTagTableApi              *ResTagTableApi
+	trustPolicyApi              *TrustPolicyApi
+	trustPolicyExceptionApi     *TrustPolicyExceptionApi
+	settingsApi                 *SettingsApi
+	flowRateLimitSettingsApi    *FlowRateLimitSettingsApi
+	maxReqsRateLimitSettingsApi *MaxReqsRateLimitSettingsApi
+	appInstClientKeyApi         *AppInstClientKeyApi
+	appInstClientApi            *AppInstClientApi
+	deviceApi                   *DeviceApi
+	organizationApi             *OrganizationApi
+	appInstLatencyApi           *AppInstLatencyApi
+	gpuDriverApi                *GPUDriverApi
+	alertPolicyApi              *AlertPolicyApi
+	networkApi                  *NetworkApi
+	syncLeaseData               *SyncLeaseData
 }
 
 func NewAllApis(sync *Sync) *AllApis {
@@ -671,7 +676,8 @@ func NewAllApis(sync *Sync) *AllApis {
 	all.trustPolicyApi = NewTrustPolicyApi(sync, all)
 	all.trustPolicyExceptionApi = NewTrustPolicyExceptionApi(sync, all)
 	all.settingsApi = NewSettingsApi(sync, all)
-	all.rateLimitSettingsApi = NewRateLimitSettingsApi(sync, all)
+	all.flowRateLimitSettingsApi = NewFlowRateLimitSettingsApi(sync, all)
+	all.maxReqsRateLimitSettingsApi = NewMaxReqsRateLimitSettingsApi(sync, all)
 	all.appInstClientKeyApi = NewAppInstClientKeyApi(sync, all)
 	all.appInstClientApi = NewAppInstClientApi(all)
 	all.deviceApi = NewDeviceApi(sync, all)
@@ -696,8 +702,8 @@ func (s *AllApis) Stop() {
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler, allApis *AllApis) {
 	notify.ServerMgrOne.RegisterSendSettingsCache(&allApis.settingsApi.cache)
-	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&allApis.rateLimitSettingsApi.flowcache)
-	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&allApis.rateLimitSettingsApi.maxreqscache)
+	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&allApis.flowRateLimitSettingsApi.cache)
+	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&allApis.maxReqsRateLimitSettingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&allApis.operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&allApis.flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendGPUDriverCache(&allApis.gpuDriverApi.cache)

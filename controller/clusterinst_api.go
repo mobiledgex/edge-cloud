@@ -70,28 +70,28 @@ func (s *ClusterInstApi) Get(key *edgeproto.ClusterInstKey, buf *edgeproto.Clust
 	return s.cache.Get(key, buf)
 }
 
-func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
+func (s *ClusterInstApi) UsesFlavor(key *edgeproto.FlavorKey) *edgeproto.ClusterInstKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		cluster := data.Obj
 		if cluster.Flavor.Matches(key) {
-			return true
+			return &k
 		}
 	}
-	return false
+	return nil
 }
 
-func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) bool {
+func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) *edgeproto.ClusterInstKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		cluster := data.Obj
 		if cluster.AutoScalePolicy == key.Name {
-			return true
+			return &k
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *ClusterInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.CloudletRefs, dynInsts map[edgeproto.ClusterInstKey]struct{}) error {
@@ -123,47 +123,20 @@ func (s *ClusterInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.C
 	return nil
 }
 
-// Checks if there is some action in progress by ClusterInst on the cloudlet
-func (s *ClusterInstApi) UsingCloudlet(in *edgeproto.CloudletKey) bool {
+func (s *ClusterInstApi) UsesNetwork(networkKey *edgeproto.NetworkKey) *edgeproto.ClusterInstKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if key.CloudletKey.Matches(in) {
-			if edgeproto.IsTransientState(val.State) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
-		val := data.Obj
-		if val.Key.ClusterKey.Matches(key) {
-			return true
-		}
-	}
-	return false
-}
-
-func (s *ClusterInstApi) UsesNetwork(networkKey *edgeproto.NetworkKey) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		val := data.Obj
 		if val.Key.CloudletKey == networkKey.CloudletKey {
 			for _, n := range val.Networks {
 				if n == networkKey.Name {
-					return true
+					return &k
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 // validateAndDefaultIPAccess checks that the IP access type is valid if it is set.  If it is not set
@@ -1253,13 +1226,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := in.Key.ValidateKey(); err != nil {
 		return err
 	}
-	// If it is autoClusterInst and creation had failed, then deletion should proceed
-	// even though clusterinst is in use by Application Instance
-	if !(cctx.Undo && cctx.AutoCluster) {
-		if s.all.appInstApi.UsesClusterInst(&in.Key) {
-			return errors.New("ClusterInst in use by Application Instance")
-		}
-	}
 	cctx.SetOverride(&in.CrmOverride)
 	ctx := inCb.Context()
 
@@ -1274,44 +1240,93 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}()
 	}
 
+	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	var prevState edgeproto.TrackedState
 	// Set state to prevent other apps from being created on ClusterInst
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, in) {
+		cur := edgeproto.ClusterInst{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("ClusterInst already being deleted")
 		}
 		if err := s.all.cloudletInfoApi.checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Delete); err != nil {
 			return err
 		}
-		if err := validateDeleteState(cctx, "ClusterInst", in.State, in.Errors, cb.Send); err != nil {
+		if err := validateDeleteState(cctx, "ClusterInst", cur.State, cur.Errors, cb.Send); err != nil {
 			return err
 		}
-		prevState = in.State
-		in.State = edgeproto.TrackedState_DELETE_PREPARE
-		in.Status = edgeproto.StatusInfo{}
-		s.store.STMPut(stm, in)
+		// If it is autoClusterInst and creation had failed,
+		// then deletion should proceed even though clusterinst
+		// is in use by Application Instance
+		refs := edgeproto.ClusterRefs{}
+		if !(cctx.Undo && cctx.AutoCluster) && s.all.clusterRefsApi.store.STMGet(stm, &in.Key, &refs) {
+			aiKeys := []*edgeproto.AppInstKey{}
+			for _, aiRef := range refs.Apps {
+				aiKey := edgeproto.AppInstKey{}
+				aiKey.FromClusterRefsAppInstKey(&aiRef, &in.Key)
+				aiKeys = append(aiKeys, &aiKey)
+			}
+			err := s.all.appInstApi.cascadeDeleteOk(stm, in.Key.Organization, "ClusterInst", aiKeys, dynInsts)
+			if err != nil {
+				return err
+			}
+		}
+
+		prevState = cur.State
+		cur.DeletePrepare = true
+		// TODO: remove redundant DELETE_PREPARE state, unforunately
+		// a lot of other code does checks against state READY that
+		// would need to be modified.
+		cur.State = edgeproto.TrackedState_DELETE_PREPARE
+		cur.Status = edgeproto.StatusInfo{}
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.ClusterInst{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return in.Key.NotFoundError()
+			}
+			changed := true
+			if cur.State == edgeproto.TrackedState_DELETE_PREPARE {
+				// restore previous state since we failed pre-delete actions
+				cur.State = prevState
+				changed = true
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				changed = true
+			}
+			if changed {
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
 
 	// Delete appInsts that are set for autodelete
-	if err := s.all.appInstApi.AutoDeleteAppInsts(&in.Key, cctx.Override, cb); err != nil {
-		// restore previous state since we failed pre-delete actions
-		in.State = prevState
-		in.Fields = []string{edgeproto.ClusterInstFieldState}
-		s.store.Update(ctx, in, s.sync.syncWait)
-		return fmt.Errorf("Failed to auto-delete applications from ClusterInst %s, %s",
-			in.Key.ClusterKey.Name, err.Error())
+	if err := s.all.appInstApi.AutoDeleteAppInsts(ctx, dynInsts, cctx.Override, cb); err != nil {
+		return err
 	}
 
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
-		if in.State != edgeproto.TrackedState_DELETE_PREPARE {
-			return errors.New("ClusterInst expected state DELETE_PREPARE")
+		if !in.DeletePrepare {
+			return errors.New("ClusterInst expected delete prepare")
 		}
 
 		nodeFlavor := edgeproto.Flavor{}
