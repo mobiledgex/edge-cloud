@@ -473,10 +473,10 @@ var RunCommandRequiredArgs = []string{
 	"cluster",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 	"command",
 }
 var RunCommandOptionalArgs = []string{
+	"federated-org",
 	"cluster-org",
 	"containerid",
 }
@@ -486,10 +486,10 @@ var RunConsoleRequiredArgs = []string{
 	"appvers",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var RunConsoleOptionalArgs = []string{
 	"cluster",
+	"federated-org",
 	"cluster-org",
 }
 var ShowLogsRequiredArgs = []string{
@@ -499,9 +499,9 @@ var ShowLogsRequiredArgs = []string{
 	"cluster",
 	"cloudlet-org",
 	"cloudlet",
-	"federated-org",
 }
 var ShowLogsOptionalArgs = []string{
+	"federated-org",
 	"cluster-org",
 	"containerid",
 	"since",
