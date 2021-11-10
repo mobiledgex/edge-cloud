@@ -8,13 +8,15 @@ import (
 )
 
 type OrganizationApi struct {
+	all  *AllApis
 	sync *Sync
 }
 
-var organizationApi = OrganizationApi{}
-
-func InitOrganizationApi(sync *Sync) {
+func NewOrganizationApi(sync *Sync, all *AllApis) *OrganizationApi {
+	organizationApi := OrganizationApi{}
+	organizationApi.all = all
 	organizationApi.sync = sync
+	return &organizationApi
 }
 
 func (s *OrganizationApi) OrganizationInUse(ctx context.Context, in *edgeproto.Organization) (*edgeproto.Result, error) {

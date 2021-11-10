@@ -26,28 +26,28 @@ func TestAppApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	// cannot create apps without developer
 	ctx := log.StartTestSpan(context.Background())
 	for _, obj := range testutil.AppData {
-		_, err := appApi.CreateApp(ctx, &obj)
+		_, err := apis.appApi.CreateApp(ctx, &obj)
 		require.NotNil(t, err, "Create app without developer")
 	}
 
 	// create support data
-	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 
-	testutil.InternalAppTest(t, "cud", &appApi, testutil.AppData)
+	testutil.InternalAppTest(t, "cud", apis.appApi, testutil.AppData)
 
 	// update should validate ports
 	upapp := testutil.AppData[3]
 	upapp.AccessPorts = "tcp:0"
 	upapp.Fields = []string{edgeproto.AppFieldAccessPorts}
-	_, err := appApi.UpdateApp(ctx, &upapp)
+	_, err := apis.appApi.UpdateApp(ctx, &upapp)
 	require.NotNil(t, err, "Update app with port 0")
 	require.Contains(t, err.Error(), "App ports out of range")
 
@@ -55,38 +55,38 @@ func TestAppApi(t *testing.T) {
 	upapp = testutil.AppData[3]
 	upapp.SkipHcPorts = "tcp:8080"
 	upapp.Fields = []string{edgeproto.AppFieldSkipHcPorts}
-	_, err = appApi.UpdateApp(ctx, &upapp)
+	_, err = apis.appApi.UpdateApp(ctx, &upapp)
 	require.Nil(t, err, "Update app with SkipHcPort 8080")
 	obj := testutil.AppData[3]
-	_, err = appApi.DeleteApp(ctx, &obj)
+	_, err = apis.appApi.DeleteApp(ctx, &obj)
 	require.Nil(t, err)
 
 	// validateSkipHcPorts
 	obj = testutil.AppData[2]
 	obj.SkipHcPorts = "udp:11111"
 	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
-	_, err = appApi.UpdateApp(ctx, &obj)
+	_, err = apis.appApi.UpdateApp(ctx, &obj)
 	require.NotNil(t, err, "update App with udp skipHcPort")
 	require.Contains(t, err.Error(), "Protocol L_PROTO_UDP unsupported for healthchecks")
 
 	obj = testutil.AppData[2]
 	obj.SkipHcPorts = "tcp:444"
 	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
-	_, err = appApi.UpdateApp(ctx, &obj)
+	_, err = apis.appApi.UpdateApp(ctx, &obj)
 	require.NotNil(t, err, "Update App with skipHcPort not in AccessPorts")
 	require.Contains(t, err.Error(), "skipHcPort 444 not found in accessPorts")
 
 	obj = testutil.AppData[8]
 	obj.SkipHcPorts = "tcp:5000-5004"
 	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
-	_, err = appApi.UpdateApp(ctx, &obj)
+	_, err = apis.appApi.UpdateApp(ctx, &obj)
 	require.NotNil(t, err, "Update App with skipHcPort range not in AccessPorts")
 	require.Contains(t, err.Error(), "skipHcPort 5003 not found in accessPorts")
 
 	obj = testutil.AppData[8]
 	obj.SkipHcPorts = "tcp:5000-5002"
 	obj.Fields = []string{edgeproto.AppFieldSkipHcPorts}
-	_, err = appApi.UpdateApp(ctx, &obj)
+	_, err = apis.appApi.UpdateApp(ctx, &obj)
 	require.Nil(t, err, "Update App with skipHcPort range")
 
 	// image path is optional for docker deployments if
@@ -103,27 +103,27 @@ func TestAppApi(t *testing.T) {
 		DeploymentManifest: "some manifest",
 		DefaultFlavor:      testutil.FlavorData[2].Key,
 	}
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err, "Create app with deployment manifest")
 	checkApp := edgeproto.App{}
-	found := appApi.Get(&app.Key, &checkApp)
+	found := apis.appApi.Get(&app.Key, &checkApp)
 	require.True(t, found, "found app")
 	require.Equal(t, "", checkApp.ImagePath, "image path empty")
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 
 	// manifest must be empty if deployment is helm
 	app.Deployment = cloudcommon.DeploymentTypeHelm
 	app.DeploymentManifest = testK8SManifest1
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_HELM
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Manifest is not used for Helm deployments")
 	// check that creation passes with empty manifest
 	app.DeploymentManifest = ""
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 
 	// user-specified manifest parsing/consistency/checking
@@ -131,9 +131,9 @@ func TestAppApi(t *testing.T) {
 	app.DeploymentManifest = testK8SManifest1
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
 	app.AccessPorts = "tcp:80"
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err)
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 
 	// empty config check (edgecloud-3993)
@@ -142,26 +142,26 @@ func TestAppApi(t *testing.T) {
 			Kind: edgeproto.AppConfigEnvYaml,
 		},
 	}
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Empty config for config kind")
 
 	// test Updating of the ports with a manifest k8s. Manifest should be cleared
 	k8sApp := testutil.AppData[2]
 	// clean up previous instance first
-	_, err = appApi.DeleteApp(ctx, &k8sApp)
+	_, err = apis.appApi.DeleteApp(ctx, &k8sApp)
 	require.Nil(t, err)
 
 	k8sApp = testutil.AppData[2]
 	k8sApp.Deployment = cloudcommon.DeploymentTypeKubernetes
 	k8sApp.DeploymentManifest = testK8SManifest1
 	k8sApp.AccessPorts = "tcp:80"
-	_, err = appApi.CreateApp(ctx, &k8sApp)
+	_, err = apis.appApi.CreateApp(ctx, &k8sApp)
 	require.Nil(t, err)
 	// Update ports with a manifest and verify it requires an update to the manifest
 	k8sApp.AccessPorts = "tcp:80,tcp:81"
 	k8sApp.Fields = []string{edgeproto.AppFieldAccessPorts}
-	_, err = appApi.UpdateApp(ctx, &k8sApp)
+	_, err = apis.appApi.UpdateApp(ctx, &k8sApp)
 	require.NotNil(t, err, "k8s app with manifest should complain about the manifest")
 	require.Contains(t, "kubernetes manifest which was previously specified must be provided again when changing access ports",
 		err.Error())
@@ -170,15 +170,15 @@ func TestAppApi(t *testing.T) {
 	vmApp.Deployment = cloudcommon.DeploymentTypeVM
 	vmApp.DeploymentManifest = testVmManifest
 	vmApp.AccessPorts = "tcp:80"
-	_, err = appApi.CreateApp(ctx, &vmApp)
+	_, err = apis.appApi.CreateApp(ctx, &vmApp)
 	require.Nil(t, err)
 	vmApp.AccessPorts = "tcp:80,tcp:81"
 	vmApp.Fields = []string{edgeproto.AppFieldAccessPorts}
 	// Update of the VM app with a manifest and make sure that manifest is retained
-	_, err = appApi.UpdateApp(ctx, &vmApp)
+	_, err = apis.appApi.UpdateApp(ctx, &vmApp)
 	require.Nil(t, err, "Vm app should be updated with no error")
 	storedApp := edgeproto.App{}
-	found = appApi.Get(vmApp.GetKey(), &storedApp)
+	found = apis.appApi.Get(vmApp.GetKey(), &storedApp)
 	require.True(t, found, "VM app should still be in etcd after update")
 	require.Equal(t, testVmManifest, storedApp.DeploymentManifest, "Deployment manifest should not be affected by access port update")
 
@@ -189,26 +189,26 @@ func TestAppApi(t *testing.T) {
 	app.DeploymentManifest = ""
 	app.Configs = nil
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err, "Create app with maxpktsize")
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 	app.AccessPorts = "tcp:888,tcp:1999:maxpktsize=1500"
 	// maxpktsize is not valid config for TCP port
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.NotNil(t, err, "Create app with maxpktsize fails")
 
 	app.Key.Name = "dockapp"
 	app.Deployment = "docker"
 	app.AccessPorts = "tcp:888,udp:1999:maxpktsize=1500"
 	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err, "Create app with maxpktsize")
-	_, err = appApi.DeleteApp(ctx, &app)
+	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 	app.AccessPorts = "tcp:888,udp:1999:maxpktsize=1500000"
 	// maxpktsize should be less than equal 50000
-	_, err = appApi.CreateApp(ctx, &app)
+	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.NotNil(t, err, "Create app with maxpktsize fails")
 
 	dummy.Stop()

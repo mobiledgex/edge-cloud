@@ -21,7 +21,7 @@ type AppCheckpoint struct {
 
 var AppUsageInfluxQueryTemplate = `SELECT %s from "%s" WHERE "apporg"='%s' AND "app"='%s' AND "ver"='%s' AND "cluster"='%s' AND "clusterorg"='%s' AND "cloudlet"='%s' AND "cloudletorg"='%s' AND time >= '%s' AND time < '%s' order by time desc`
 
-func CreateAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime time.Time) error {
+func (s *AppApi) CreateAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime time.Time) error {
 	var metric *edgeproto.Metric
 	// query from the checkpoint up to the event
 	selectors := []string{"\"event\"", "\"status\""}
@@ -58,7 +58,7 @@ func CreateAppUsageRecord(ctx context.Context, app *edgeproto.AppInst, endTime t
 
 	// write the usage record to influx
 	appInfo := edgeproto.App{}
-	if !appApi.cache.Get(&app.Key.AppKey, &appInfo) {
+	if !s.cache.Get(&app.Key.AppKey, &appInfo) {
 		return fmt.Errorf("Could not find appinst even though event log indicates it is up. App: %v", app.Key.AppKey)
 	}
 	metric = createAppUsageMetric(app, &appInfo, stats.start, stats.end, stats.upTime, stats.status)
@@ -99,7 +99,7 @@ func createAppUsageMetric(appInst *edgeproto.AppInst, appInfo *edgeproto.App, st
 }
 
 // This is checkpointing for all appinsts
-func CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
+func (s *AppApi) CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 	if err := checkpointTimeValid(timestamp); err != nil { // we dont know if there will be more creates and deletes before the timestamp occurs
 		return err
 	}
@@ -161,12 +161,12 @@ func CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 			// if its still up, record it
 			if event != cloudcommon.DELETED {
 				info := edgeproto.AppInst{}
-				if !appInstApi.cache.Get(&key, &info) {
+				if !s.all.appInstApi.cache.Get(&key, &info) {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find appinst even though event log indicates it is up", "app", key)
 					continue
 				}
 				//record the usage up to this point
-				err = CreateAppUsageRecord(ctx, &info, timestamp)
+				err = s.CreateAppUsageRecord(ctx, &info, timestamp)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to create app usage record of checkpointed app", "app", key, "err", err)
 				}
@@ -224,11 +224,11 @@ func CreateAppCheckpoint(ctx context.Context, timestamp time.Time) error {
 		seenApps[key] = true
 		// record it
 		info := edgeproto.AppInst{}
-		if !appInstApi.cache.Get(&key, &info) {
+		if !s.all.appInstApi.cache.Get(&key, &info) {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Could not find appinst even though event log indicates it is up", "app", key)
 			continue
 		}
-		err = CreateAppUsageRecord(ctx, &info, timestamp)
+		err = s.CreateAppUsageRecord(ctx, &info, timestamp)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelMetrics, "Unable to create app usage record of checkpointed app", "app", key, "err", err)
 		}

@@ -315,9 +315,36 @@ func ClientFlavorCreate(t *testing.T, api edgeproto.FlavorApiClient, testData []
 func CreateFlavorData(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
 
-	for _, obj := range testData {
+	for ii := range testData {
+		obj := testData[ii]
 		_, err = api.CreateFlavor(ctx, &obj)
 		require.Nil(t, err, "Create Flavor %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func InternalFlavorDelete(t *testing.T, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalFlavorDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteFlavorData(t, ctx, NewInternalFlavorApi(api), testData)
+}
+
+func ClientFlavorDelete(t *testing.T, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientFlavorDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteFlavorData(t, ctx, NewClientFlavorApi(api), testData)
+}
+
+func DeleteFlavorData(t *testing.T, ctx context.Context, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+	var err error
+
+	for ii := range testData {
+		obj := testData[ii]
+		_, err = api.DeleteFlavor(ctx, &obj)
+		require.Nil(t, err, "Delete Flavor %s", obj.GetKey().GetKeyString())
 	}
 }
 

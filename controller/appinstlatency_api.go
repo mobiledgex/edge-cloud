@@ -10,13 +10,15 @@ import (
 )
 
 type AppInstLatencyApi struct {
+	all  *AllApis
 	sync *Sync
 }
 
-var appInstLatencyApi = AppInstLatencyApi{}
-
-func InitAppInstLatencyApi(sync *Sync) {
+func NewAppInstLatencyApi(sync *Sync, all *AllApis) *AppInstLatencyApi {
+	appInstLatencyApi := AppInstLatencyApi{}
+	appInstLatencyApi.all = all
 	appInstLatencyApi.sync = sync
+	return &appInstLatencyApi
 }
 
 func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgeproto.AppInstLatency) (*edgeproto.Result, error) {
@@ -28,7 +30,7 @@ func (s *AppInstLatencyApi) RequestAppInstLatency(ctx context.Context, in *edgep
 	}
 	// Check that appinst exists
 	appInstInfo := edgeproto.AppInst{}
-	if !appInstApi.cache.Get(&in.Key, &appInstInfo) {
+	if !s.all.appInstApi.cache.Get(&in.Key, &appInstInfo) {
 		return nil, in.Key.NotFoundError()
 	}
 

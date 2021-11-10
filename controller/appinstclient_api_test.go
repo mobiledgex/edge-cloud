@@ -50,85 +50,85 @@ func TestAppInstClientApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	// Init settings default
-	err := settingsApi.initDefaults(ctx)
+	err := apis.settingsApi.initDefaults(ctx)
 	require.Nil(t, err, "settingsApi.initDefaults")
 
 	// Init AppInstClient Server
 	showServer := ShowAppInstClient{}
 	showServer.Init(ctx)
 
-	qSize := int(settingsApi.Get().MaxTrackedDmeClients)
+	qSize := int(apis.settingsApi.Get().MaxTrackedDmeClients)
 	// Add a client for a non-existent AppInst
-	appInstClientApi.RecvAppInstClient(ctx, &testutil.AppInstClientData[0])
+	apis.appInstClientApi.RecvAppInstClient(ctx, &testutil.AppInstClientData[0])
 	// Make sure that we didn't save it
-	require.Empty(t, appInstClientApi.appInstClients)
+	require.Empty(t, apis.appInstClientApi.appInstClients)
 	// Try to do a show without an org in the ClientKey
-	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{UniqueId: "123"}, &showServer)
+	err = apis.appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{UniqueId: "123"}, &showServer)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Organization must be specified")
-	err = appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{AppInstKey: edgeproto.AppInstKey{}}, &showServer)
+	err = apis.appInstClientApi.ShowAppInstClient(&edgeproto.AppInstClientKey{AppInstKey: edgeproto.AppInstKey{}}, &showServer)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Organization must be specified")
 
 	// Tests to verify that queue is being handled correctly
 	// Add a channel for appInst1
 	ch1 := make(chan edgeproto.AppInstClient, qSize)
-	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch1)
+	apis.appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch1)
 	// Wait for local cache since it's in a separate go routine
-	notify.WaitFor(&appInstClientKeyApi.cache, 1)
+	notify.WaitFor(&apis.appInstClientKeyApi.cache, 1)
 
 	// Add Client for AppInst1
-	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[0])
+	apis.appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[0])
 	// Check client is received in the channel
 	appInstClient := <-ch1
 	assert.Equal(t, testutil.AppInstClientData[0], appInstClient)
 	// 3. Add a second channel for the different appInst
 	ch2 := make(chan edgeproto.AppInstClient, qSize)
-	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
+	apis.appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
 	// Wait for local cache since it's in a separate go routine
-	notify.WaitFor(&appInstClientKeyApi.cache, 2)
+	notify.WaitFor(&apis.appInstClientKeyApi.cache, 2)
 
 	// Add a Client for AppInst2
-	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[3])
+	apis.appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[3])
 	// Check client is received in the channel 2
 	appInstClient = <-ch2
 	assert.Equal(t, testutil.AppInstClientData[3], appInstClient)
 	// Delete channel 2 - check that list is 0
-	count := appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
+	count := apis.appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
 	assert.Equal(t, 0, count)
 	// Make sure we clean up the buffer and there is nothing
-	assert.Equal(t, 0, len(appInstClientApi.appInstClients))
+	assert.Equal(t, 0, len(apis.appInstClientApi.appInstClients))
 	// Delete non-existent channel, return is -1
-	count = appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
+	count = apis.appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[1], ch2)
 	assert.Equal(t, -1, count)
 	// Add a second Channel for AppInst1
 	ch12 := make(chan edgeproto.AppInstClient, qSize)
-	appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
+	apis.appInstClientApi.SetRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
 	// Wait for local cache since it's in a separate go routine
-	notify.WaitFor(&appInstClientKeyApi.cache, 2)
+	notify.WaitFor(&apis.appInstClientKeyApi.cache, 2)
 
 	// Add a client 2 for AppInst1
-	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[1])
+	apis.appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[1])
 	// Check that both of the channels receive the AppInstClient
 	appInstClient = <-ch1
 	assert.Equal(t, testutil.AppInstClientData[1], appInstClient)
 	appInstClient = <-ch12
 	assert.Equal(t, testutil.AppInstClientData[1], appInstClient)
 	// Delete Channel 1 - verify that count is 1
-	count = appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch1)
+	count = apis.appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch1)
 	assert.Equal(t, 1, count)
 	// Add client 3 for AppInst1
-	appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[2])
+	apis.appInstClientApi.AddAppInstClient(ctx, &testutil.AppInstClientData[2])
 	// Verify that it's received in channel 2 for appInst1
 	appInstClient = <-ch12
 	assert.Equal(t, testutil.AppInstClientData[2], appInstClient)
 	// Delete channel 2 - verify that count is 0
-	count = appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
+	count = apis.appInstClientApi.ClearRecvChan(ctx, &testutil.AppInstClientKeyData[0], ch12)
 	assert.Equal(t, 0, count)
 
 	dummy.Stop()

@@ -45,10 +45,10 @@ func NewStreamoutMsg(ctx context.Context) *StreamoutMsg {
 	}
 }
 
-func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, pass bool) []edgeproto.Result {
+func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, apis *AllApis, pass bool) []edgeproto.Result {
 	// Verify stream appInst
 	streamAppInst := NewStreamoutMsg(ctx)
-	err := streamObjApi.StreamAppInst(key, streamAppInst)
+	err := apis.streamObjApi.StreamAppInst(key, streamAppInst)
 	if pass {
 		require.Nil(t, err, "stream appinst")
 		require.Greater(t, len(streamAppInst.Msgs), 0, "contains stream messages")
@@ -58,10 +58,10 @@ func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppI
 	return streamAppInst.Msgs
 }
 
-func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, pass bool) []edgeproto.Result {
+func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, apis *AllApis, pass bool) []edgeproto.Result {
 	// Verify stream clusterInst
 	streamClusterInst := NewStreamoutMsg(ctx)
-	err := streamObjApi.StreamClusterInst(key, streamClusterInst)
+	err := apis.streamObjApi.StreamClusterInst(key, streamClusterInst)
 	if pass {
 		require.Nil(t, err, "stream clusterinst")
 		require.Greater(t, len(streamClusterInst.Msgs), 0, "contains stream messages")
@@ -71,10 +71,10 @@ func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.
 	return streamClusterInst.Msgs
 }
 
-func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey) []edgeproto.Result {
+func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey, apis *AllApis) []edgeproto.Result {
 	// Verify stream cloudlet
 	streamCloudlet := NewStreamoutMsg(ctx)
-	err := streamObjApi.StreamCloudlet(key, streamCloudlet)
+	err := apis.streamObjApi.StreamCloudlet(key, streamCloudlet)
 	require.Nil(t, err, "stream cloudlet")
 	require.Greater(t, len(streamCloudlet.Msgs), 0, "contains stream messages")
 	return streamCloudlet.Msgs
@@ -93,34 +93,33 @@ func TestAppInstApi(t *testing.T) {
 	defer dummy.Stop()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi, &clusterInstInfoApi)
+	responder := NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache, apis.appInstInfoApi, apis.clusterInstInfoApi)
 
-	reduceInfoTimeouts(t, ctx)
+	reduceInfoTimeouts(t, ctx, apis)
 
 	// cannote create instances without apps and cloudlets
 	for _, data := range testutil.AppInstData {
 		obj := data
-		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create app inst without apps/cloudlets")
 		// Verify stream AppInst fails
-		GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
+		GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
 	}
 
 	// create supporting data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
-	insertCloudletInfo(ctx, testutil.CloudletInfoData)
-	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
-	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
-	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
-	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
-	clusterInstCnt := len(clusterInstApi.cache.Objs)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
+	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAutoScalePolicyCreate(t, apis.autoScalePolicyApi, testutil.AutoScalePolicyData)
+	testutil.InternalAppCreate(t, apis.appApi, testutil.AppData)
+	testutil.InternalClusterInstCreate(t, apis.clusterInstApi, testutil.ClusterInstData)
+	testutil.InternalCloudletRefsTest(t, "show", apis.cloudletRefsApi, testutil.CloudletRefsData)
+	clusterInstCnt := len(apis.clusterInstApi.cache.Objs)
 	require.Equal(t, len(testutil.ClusterInstData), clusterInstCnt)
 
 	// Set responder to fail. This should clean up the object after
@@ -134,7 +133,7 @@ func TestAppInstApi(t *testing.T) {
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
 		}
-		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create app inst responder failures")
 		// make sure error matches responder
 		// if app-inst triggers auto-cluster, the error will be for a cluster
@@ -144,59 +143,59 @@ func TestAppInstApi(t *testing.T) {
 			require.Equal(t, "Encountered failures: crm create app inst failed", err.Error(), "AppInst[%d]: %v", ii, obj.Key)
 		}
 		// As there was some progress, there should be some messages in stream
-		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
+		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
 		require.Greater(t, len(msgs), 0, "some progress messages before failure")
 	}
 	responder.SetSimulateAppCreateFailure(false)
 	RequireAppInstPortConsistency = true
-	require.Equal(t, 0, len(appInstApi.cache.Objs))
-	require.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
-	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
+	require.Equal(t, 0, len(apis.appInstApi.cache.Objs))
+	require.Equal(t, clusterInstCnt, len(apis.clusterInstApi.cache.Objs))
+	testutil.InternalCloudletRefsTest(t, "show", apis.cloudletRefsApi, testutil.CloudletRefsData)
 
-	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))
-	InternalAppInstCachedFieldsTest(t, ctx)
+	testutil.InternalAppInstTest(t, "cud", apis.appInstApi, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))
+	InternalAppInstCachedFieldsTest(t, ctx, apis)
 	// check cluster insts created (includes explicit and auto)
-	testutil.InternalClusterInstTest(t, "show", &clusterInstApi,
+	testutil.InternalClusterInstTest(t, "show", apis.clusterInstApi,
 		append(testutil.ClusterInstData, testutil.ClusterInstAutoData...))
-	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(clusterInstApi.cache.Objs))
+	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(apis.clusterInstApi.cache.Objs))
 
 	// after app insts create, check that cloudlet refs data is correct.
 	// Note this refs data is a second set after app insts were created.
-	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.GetAppInstRefsData())
+	testutil.InternalCloudletRefsTest(t, "show", apis.cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
+	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, testutil.GetAppInstRefsData())
 
-	commonApi := testutil.NewInternalAppInstApi(&appInstApi)
+	commonApi := testutil.NewInternalAppInstApi(apis.appInstApi)
 
 	// Set responder to fail delete.
 	responder.SetSimulateAppDeleteFailure(true)
 	obj := testutil.AppInstData[0]
-	err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err := apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "Delete AppInst responder failure")
 	responder.SetSimulateAppDeleteFailure(false)
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.GetAppInstRefsData())
+	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, testutil.GetAppInstRefsData())
 	// As there was some progress, there should be some messages in stream
-	msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, Fail)
+	msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
 	require.Greater(t, len(msgs), 0, "some progress messages before failure")
 
 	obj = testutil.AppInstData[0]
 	// check override of error DELETE_ERROR
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR, responder)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_DELETE_ERROR, responder, apis)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
-	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create overrides delete error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, testutil.GetAppInstRefsData())
+	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, testutil.GetAppInstRefsData())
 	// As there was progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Pass)
 	require.Greater(t, len(msgs), 0, "progress messages")
 
 	// check override of error CREATE_ERROR
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR, responder)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR, responder, apis)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
-	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
 	// create copy of refs without the deleted AppInst
@@ -208,43 +207,43 @@ func TestAppInstApi(t *testing.T) {
 		}
 		appInstRefsDeleted[0].Insts[k] = v
 	}
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, appInstRefsDeleted)
+	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, appInstRefsDeleted)
 	// As there was some progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, Pass)
+	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Pass)
 	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// check override of error UPDATE_ERROR
-	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create appinst")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
-	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR, responder)
+	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_UPDATE_ERROR, responder, apis)
 	require.Nil(t, err, "force state")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_UPDATE_ERROR)
-	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, appInstRefsDeleted)
+	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, appInstRefsDeleted)
 
 	// override CRM error
 	responder.SetSimulateAppCreateFailure(true)
 	responder.SetSimulateAppDeleteFailure(true)
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
-	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "override crm error")
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
-	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "override crm error")
 
 	// ignore CRM
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
-	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "ignore crm")
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
-	err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "ignore crm")
 	responder.SetSimulateAppCreateFailure(false)
 	responder.SetSimulateAppDeleteFailure(false)
@@ -257,29 +256,29 @@ func TestAppInstApi(t *testing.T) {
 			continue
 		}
 		obj = testutil.AppInstData[0]
-		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state, responder)
+		err = forceAppInstState(ctx, &obj, state, responder, apis)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, commonApi, &obj, state)
 		obj = testutil.AppInstData[0]
 		obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
-		err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "override crm and transient state %s", stateName)
 	}
 	responder.SetSimulateAppDeleteFailure(false)
 
-	testAppInstOverrideTransientDelete(t, ctx, commonApi, responder)
+	testAppInstOverrideTransientDelete(t, ctx, commonApi, responder, apis)
 
 	// Test Fqdn prefix
-	for _, data := range appInstApi.cache.Objs {
+	for _, data := range apis.appInstApi.cache.Objs {
 		obj := data.Obj
 		app_name := util.K8SSanitize(obj.Key.AppKey.Name + obj.Key.AppKey.Version)
 		if obj.Key.AppKey.Name == "helmApp" || obj.Key.AppKey.Name == "vm lb" {
 			continue
 		}
 		cloudlet := edgeproto.Cloudlet{}
-		found := cloudletApi.cache.Get(&obj.Key.ClusterInstKey.CloudletKey, &cloudlet)
+		found := apis.cloudletApi.cache.Get(&obj.Key.ClusterInstKey.CloudletKey, &cloudlet)
 		require.True(t, found)
 		features := platform.Features{}
 		operator := obj.Key.ClusterInstKey.CloudletKey.Organization
@@ -303,7 +302,7 @@ func TestAppInstApi(t *testing.T) {
 	// test appint create with overlapping ports
 	obj = testutil.AppInstData[0]
 	obj.Key.AppKey = testutil.AppData[1].Key
-	err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "Overlapping ports would trigger an app inst create failure")
 	require.Contains(t, err.Error(), "port 80 is already in use")
 
@@ -317,24 +316,24 @@ func TestAppInstApi(t *testing.T) {
 		if testutil.IsAutoClusterAutoDeleteApp(&obj.Key) {
 			continue
 		}
-		err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "Delete app inst %d failed", ii)
 	}
 
-	testAppFlavorRequest(t, ctx, commonApi, responder)
-	testDeprecatedSharedRootLBFQDN(t, ctx)
-	testSingleKubernetesCloudlet(t, ctx)
+	testAppFlavorRequest(t, ctx, commonApi, responder, apis)
+	testDeprecatedSharedRootLBFQDN(t, ctx, apis)
+	testSingleKubernetesCloudlet(t, ctx, apis)
 
 	// cleanup unused reservable auto clusters
-	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
-	clusterInstApi.cleanupWorkers.WaitIdle()
+	apis.clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	apis.clusterInstApi.cleanupWorkers.WaitIdle()
 
 	for ii, data := range testutil.AppData {
 		obj := data
-		_, err := appApi.DeleteApp(ctx, &obj)
+		_, err := apis.appApi.DeleteApp(ctx, &obj)
 		require.Nil(t, err, "Delete app %d: %s failed", ii, obj.Key.GetKeyString())
 	}
-	testutil.InternalAppInstRefsTest(t, "show", &appInstRefsApi, []edgeproto.AppInstRefs{})
+	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, []edgeproto.AppInstRefs{})
 }
 
 func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testutil.AppCommonApi, cCloudletApi *testutil.CloudletCommonApi, cAppInstApi *testutil.AppInstCommonApi) {
@@ -379,10 +378,10 @@ func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testuti
 	require.True(t, len(show.Data) > 0, "number of matching app insts")
 }
 
-func InternalAppInstCachedFieldsTest(t *testing.T, ctx context.Context) {
-	cAppApi := testutil.NewInternalAppApi(&appApi)
-	cCloudletApi := testutil.NewInternalCloudletApi(&cloudletApi)
-	cAppInstApi := testutil.NewInternalAppInstApi(&appInstApi)
+func InternalAppInstCachedFieldsTest(t *testing.T, ctx context.Context, apis *AllApis) {
+	cAppApi := testutil.NewInternalAppApi(apis.appApi)
+	cCloudletApi := testutil.NewInternalCloudletApi(apis.cloudletApi)
+	cAppInstApi := testutil.NewInternalAppInstApi(apis.appInstApi)
 	appInstCachedFieldsTest(t, ctx, cAppApi, cCloudletApi, cAppInstApi)
 }
 
@@ -405,21 +404,21 @@ func TestAutoClusterInst(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi, &clusterInstInfoApi)
+	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
+		apis.appInstInfoApi, apis.clusterInstInfoApi)
 
-	reduceInfoTimeouts(t, ctx)
+	reduceInfoTimeouts(t, ctx, apis)
 
 	// create supporting data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
-	insertCloudletInfo(ctx, testutil.CloudletInfoData)
-	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
+	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAppCreate(t, apis.appApi, testutil.AppData)
 	// multi-tenant ClusterInst
 	mt := testutil.ClusterInstData[8]
 	require.True(t, mt.MultiTenant)
@@ -427,20 +426,20 @@ func TestAutoClusterInst(t *testing.T) {
 	// bad Organization
 	mtBad := mt
 	mtBad.Key.Organization = "foo"
-	err := clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
+	err := apis.clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Only MobiledgeX ClusterInsts may be multi-tenant")
 	// bad deployment type
 	mtBad = mt
 	mtBad.Deployment = cloudcommon.DeploymentTypeDocker
-	err = clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
+	err = apis.clusterInstApi.CreateClusterInst(&mtBad, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Multi-tenant clusters must be of deployment type Kubernetes")
 
 	// Create multi-tenant ClusterInst before reservable tests.
 	// Reservable tests should pass without using multi-tenant because
 	// the App's SupportMultiTenant is false.
-	err = clusterInstApi.CreateClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
+	err = apis.clusterInstApi.CreateClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err)
 
 	checkReserved := func(cloudletKey edgeproto.CloudletKey, found bool, id, reservedBy string) {
@@ -450,7 +449,7 @@ func TestAutoClusterInst(t *testing.T) {
 		key.Organization = cloudcommon.OrganizationMobiledgeX
 		// look up reserved ClusterInst
 		clusterInst := edgeproto.ClusterInst{}
-		actualFound := clusterInstApi.Get(key, &clusterInst)
+		actualFound := apis.clusterInstApi.Get(key, &clusterInst)
 		require.Equal(t, found, actualFound, "lookup %s", key.GetKeyString())
 		if !found {
 			return
@@ -459,17 +458,17 @@ func TestAutoClusterInst(t *testing.T) {
 		require.True(t, clusterInst.Reservable, "clusterinst is reservable")
 		require.Equal(t, reservedBy, clusterInst.ReservedBy, "reserved by matches")
 		// Progress message should be there for cluster instance itself
-		msgs := GetClusterInstStreamMsgs(t, ctx, key, Pass)
+		msgs := GetClusterInstStreamMsgs(t, ctx, key, apis, Pass)
 		require.Greater(t, len(msgs), 0, "some progress messages")
 	}
 	createAutoClusterAppInst := func(copy edgeproto.AppInst, expectedId string) {
 		// since cluster inst does not exist, it will be auto-created
 		copy.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + expectedId
 		copy.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
-		err := appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create app inst")
 		// As there was some progress, there should be some messages in stream
-		msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key, Pass)
+		msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key, apis, Pass)
 		require.Greater(t, len(msgs), 0, "some progress messages")
 		// Check that reserved ClusterInst was created
 		checkReserved(copy.Key.ClusterInstKey.CloudletKey, true, expectedId, copy.Key.AppKey.Organization)
@@ -480,13 +479,13 @@ func TestAutoClusterInst(t *testing.T) {
 		// delete appinst
 		copy.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + id
 		copy.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
-		err := appInstApi.DeleteAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.DeleteAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "delete app inst")
 		checkReserved(copy.Key.ClusterInstKey.CloudletKey, true, id, "")
 	}
 	checkReservedIds := func(key edgeproto.CloudletKey, expected uint64) {
 		refs := edgeproto.CloudletRefs{}
-		found := cloudletRefsApi.cache.Get(&key, &refs)
+		found := apis.cloudletRefsApi.cache.Get(&key, &refs)
 		require.True(t, found)
 		require.Equal(t, expected, refs.ReservedAutoClusterIds)
 	}
@@ -511,8 +510,8 @@ func TestAutoClusterInst(t *testing.T) {
 	deleteAutoClusterAppInst(appInst, "1")
 	checkReservedIds(cloudletKey, 7) // clusterinst doesn't get deleted
 	// cleanup unused reservable auto clusters
-	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
-	clusterInstApi.cleanupWorkers.WaitIdle()
+	apis.clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	apis.clusterInstApi.cleanupWorkers.WaitIdle()
 	checkReserved(cloudletKey, false, "1", "")
 	checkReservedIds(cloudletKey, 5)
 	// create again, should create new ClusterInst with next free id
@@ -524,8 +523,8 @@ func TestAutoClusterInst(t *testing.T) {
 	deleteAutoClusterAppInst(appInst, "2")
 	checkReservedIds(cloudletKey, 7)
 	// cleanup unused reservable auto clusters
-	clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
-	clusterInstApi.cleanupWorkers.WaitIdle()
+	apis.clusterInstApi.cleanupIdleReservableAutoClusters(ctx, time.Duration(0))
+	apis.clusterInstApi.cleanupWorkers.WaitIdle()
 	checkReserved(cloudletKey, false, "0", "")
 	checkReserved(cloudletKey, false, "1", "")
 	checkReserved(cloudletKey, false, "2", "")
@@ -535,25 +534,25 @@ func TestAutoClusterInst(t *testing.T) {
 	autoDeleteAppInst := testutil.AppInstData[10]
 	autoDeleteAppInst.RealClusterName = ""
 	autoDeleteAppInst.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + "foo"
-	err = appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "create autodelete appInst")
 	require.Contains(t, err.Error(), "Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster")
 
-	err = clusterInstApi.DeleteClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
+	err = apis.clusterInstApi.DeleteClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err)
 
-	testDeprecatedAutoCluster(t, ctx)
+	testDeprecatedAutoCluster(t, ctx, apis)
 	dummy.Stop()
 }
 
-func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
+func testDeprecatedAutoCluster(t *testing.T, ctx context.Context, apis *AllApis) {
 	// downgrade cloudlets to older crm compatibility version
 	cloudletInfos := []edgeproto.CloudletInfo{}
 	for _, info := range testutil.CloudletInfoData {
 		info.CompatibilityVersion = 0
 		cloudletInfos = append(cloudletInfos, info)
 	}
-	insertCloudletInfo(ctx, cloudletInfos)
+	insertCloudletInfo(ctx, apis, cloudletInfos)
 
 	// existing AppInst creates should fail because the ClusterInst org
 	// must match the AppInst org.
@@ -567,7 +566,7 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 		if obj.Key.AppKey.Organization == obj.Key.ClusterInstKey.Organization {
 			continue
 		}
-		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create autocluster appinst[%d]: %v", ii, obj.Key)
 		require.Contains(t, err.Error(), "Developer name mismatch")
 	}
@@ -582,7 +581,7 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 		obj.Key.ClusterInstKey.Organization = obj.Key.AppKey.Organization
 		appInsts = append(appInsts, obj)
 
-		err := appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "Create autocluster appinst[%d]: %v", ii, obj.Key)
 		// find app for AppInst
 		var app *edgeproto.App
@@ -603,33 +602,33 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context) {
 		cinst.State = edgeproto.TrackedState_READY
 		clusterInsts = append(clusterInsts, cinst)
 	}
-	testutil.InternalClusterInstTest(t, "show", &clusterInstApi, clusterInsts)
+	testutil.InternalClusterInstTest(t, "show", apis.clusterInstApi, clusterInsts)
 	// delete AppInsts should delete ClusterInsts
 	for _, obj := range appInsts {
-		err := appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err := apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "Delete autocluster appinst %v", obj.Key)
 	}
-	testutil.InternalClusterInstTest(t, "show", &clusterInstApi, []edgeproto.ClusterInst{})
+	testutil.InternalClusterInstTest(t, "show", apis.clusterInstApi, []edgeproto.ClusterInst{})
 	// restore CRM version
 	for ii := range cloudletInfos {
 		cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 	}
-	insertCloudletInfo(ctx, cloudletInfos)
+	insertCloudletInfo(ctx, apis, cloudletInfos)
 }
 
-func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context) {
+func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context, apis *AllApis) {
 	// downgrade cloudlets to older crm compatibility version
 	cloudletInfos := []edgeproto.CloudletInfo{}
 	for _, info := range testutil.CloudletInfoData {
 		info.CompatibilityVersion = 0
 		cloudletInfos = append(cloudletInfos, info)
 	}
-	insertCloudletInfo(ctx, cloudletInfos)
+	insertCloudletInfo(ctx, apis, cloudletInfos)
 
 	// create appInst with internalports set to true, this means
 	// that this appInst will not need access from external network
 	appInstData := testutil.AppInstData[9]
-	err := appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	err := apis.appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "Create appinst: %v", appInstData.Key)
 
 	show := testutil.ShowAppInst{}
@@ -638,7 +637,7 @@ func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context) {
 	filter.Key = appInstData.Key
 
 	// For older version of CRM, URI should exist
-	err = appInstApi.ShowAppInst(&filter, &show)
+	err = apis.appInstApi.ShowAppInst(&filter, &show)
 	require.Nil(t, err, "show app inst data")
 	require.True(t, len(show.Data) == 1, "matches app inst")
 	for _, appInstOut := range show.Data {
@@ -646,21 +645,21 @@ func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context) {
 	}
 
 	// delete appinst
-	err = appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "Delete appinst: %v", appInstData.Key)
 
 	// restore CRM version
 	for ii := range cloudletInfos {
 		cloudletInfos[ii].CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 	}
-	insertCloudletInfo(ctx, cloudletInfos)
+	insertCloudletInfo(ctx, apis, cloudletInfos)
 
 	// create appinst again
-	err = appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "Create appinst: %v", appInstData.Key)
 
 	// For newer version of CRM, URI should not exist
-	err = appInstApi.ShowAppInst(&filter, &show)
+	err = apis.appInstApi.ShowAppInst(&filter, &show)
 	require.Nil(t, err, "show app inst data")
 	require.True(t, len(show.Data) == 1, "matches app inst")
 	for _, appInstOut := range show.Data {
@@ -668,7 +667,7 @@ func testDeprecatedSharedRootLBFQDN(t *testing.T, ctx context.Context) {
 	}
 
 	// final cleanup: delete appinst
-	err = appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&appInstData, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "Delete appinst: %v", appInstData.Key)
 }
 
@@ -683,7 +682,7 @@ func checkAppInstState(t *testing.T, ctx context.Context, api *testutil.AppInstC
 	}
 }
 
-func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState, responder *DummyInfoResponder) error {
+func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgeproto.TrackedState, responder *DummyInfoResponder, apis *AllApis) error {
 	if responder != nil {
 		// disable responder, otherwise it will respond to certain states
 		// and change the current state
@@ -692,19 +691,19 @@ func forceAppInstState(ctx context.Context, in *edgeproto.AppInst, state edgepro
 			responder.enable = true
 		}()
 	}
-	err := appInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err := apis.appInstApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		obj := edgeproto.AppInst{}
-		if !appInstApi.store.STMGet(stm, &in.Key, &obj) {
+		if !apis.appInstApi.store.STMGet(stm, &in.Key, &obj) {
 			return in.Key.NotFoundError()
 		}
 		obj.State = state
-		appInstApi.store.STMPut(stm, &obj)
+		apis.appInstApi.store.STMPut(stm, &obj)
 		return nil
 	})
 	return err
 }
 
-func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder) {
+func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder, apis *AllApis) {
 	// Non-nomial test, request an optional resource from a cloudlet that offers none.
 	var testflavor = edgeproto.Flavor{
 		Key: edgeproto.FlavorKey{
@@ -715,18 +714,18 @@ func testAppFlavorRequest(t *testing.T, ctx context.Context, api *testutil.AppIn
 		Disk:      40,
 		OptResMap: map[string]string{"gpu": "gpu:1"},
 	}
-	_, err := flavorApi.CreateFlavor(ctx, &testflavor)
+	_, err := apis.flavorApi.CreateFlavor(ctx, &testflavor)
 	require.Nil(t, err, "CreateFlavor")
 	nonNomApp := testutil.AppInstData[2]
 	nonNomApp.Flavor = testflavor.Key
-	err = appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&nonNomApp, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "non-nom-app-create")
 	require.Equal(t, "Cloudlet New York Site doesn't support GPU", err.Error())
 }
 
 // Test that Crm Override for Delete App overrides any failures
 // on both side-car auto-apps and an underlying auto-cluster.
-func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder) {
+func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *testutil.AppInstCommonApi, responder *DummyInfoResponder, apis *AllApis) {
 	// autocluster app
 	ai := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -751,7 +750,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 	var err error
 	var obj edgeproto.AppInst
 	var clust edgeproto.ClusterInst
-	clustApi := testutil.NewInternalClusterInstApi(&clusterInstApi)
+	clustApi := testutil.NewInternalClusterInstApi(apis.clusterInstApi)
 
 	responder.SetSimulateAppDeleteFailure(true)
 	responder.SetSimulateClusterDeleteFailure(true)
@@ -762,9 +761,9 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		}
 		// create app (also creates clusterinst)
 		obj = ai
-		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst")
-		err = forceAppInstState(ctx, &obj, state, responder)
+		err = forceAppInstState(ctx, &obj, state, responder, apis)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
@@ -773,15 +772,15 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		obj = aiauto
 		obj.Key.ClusterInstKey = *clKey.Virtual("")
 		// create auto app
-		err = appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create AppInst on cluster %v", obj.Key.ClusterInstKey)
-		err = forceAppInstState(ctx, &obj, state, responder)
+		err = forceAppInstState(ctx, &obj, state, responder, apis)
 		require.Nil(t, err, "force state")
 		checkAppInstState(t, ctx, api, &obj, state)
 
 		clust = edgeproto.ClusterInst{}
 		clust.Key = *clKey
-		err = forceClusterInstState(ctx, &clust, state, responder)
+		err = forceClusterInstState(ctx, &clust, state, responder, apis)
 		require.Nil(t, err, "force state")
 		checkClusterInstState(t, ctx, clustApi, &clust, state)
 
@@ -789,14 +788,14 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 		obj = ai
 		obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
 		log.SpanLog(ctx, log.DebugLevelInfo, "test run appinst delete")
-		err = appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "override crm and transient state %s", stateName)
 		log.SpanLog(ctx, log.DebugLevelInfo, "test appinst deleted")
 
 		// delete cluster (should also delete auto app)
 		clust.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE
 		log.SpanLog(ctx, log.DebugLevelInfo, "test run ClusterInst delete")
-		err = clusterInstApi.DeleteClusterInst(&clust, testutil.NewCudStreamoutClusterInst(ctx))
+		err = apis.clusterInstApi.DeleteClusterInst(&clust, testutil.NewCudStreamoutClusterInst(ctx))
 		require.Nil(t, err, "override crm and transient state %s", stateName)
 		log.SpanLog(ctx, log.DebugLevelInfo, "test ClusterInst deleted")
 		// make sure cluster got deleted (means apps also were deleted)
@@ -809,7 +808,7 @@ func testAppInstOverrideTransientDelete(t *testing.T, ctx context.Context, api *
 
 }
 
-func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
+func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllApis) {
 	var err error
 	var found bool
 	// Single kubernetes cloudlets can be either multi-tenant,
@@ -856,12 +855,12 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
 	for _, test := range setupTests {
 		clusterInstKey := getDefaultClustKey(test.cloudlet.Key, test.ownerOrg)
 		// create cloudlet
-		err = cloudletApi.CreateCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		err = apis.cloudletApi.CreateCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 		require.Nil(t, err, test.desc)
-		cloudletInfoApi.Update(ctx, test.cloudletInfo, 0)
+		apis.cloudletInfoApi.Update(ctx, test.cloudletInfo, 0)
 		// creating cloudlet also creates singleton cluster for cloudlet
 		clusterInst := edgeproto.ClusterInst{}
-		found = clusterInstApi.Get(clusterInstKey, &clusterInst)
+		found = apis.clusterInstApi.Get(clusterInstKey, &clusterInst)
 		require.True(t, found, test.desc)
 		require.Equal(t, clusterInst.MultiTenant, test.mt)
 
@@ -878,7 +877,7 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
 			NumNodes:   2,
 		}
 		tryClusterInst.Key.CloudletKey = test.cloudlet.Key
-		err = clusterInstApi.CreateClusterInst(&tryClusterInst, testutil.NewCudStreamoutClusterInst(ctx))
+		err = apis.clusterInstApi.CreateClusterInst(&tryClusterInst, testutil.NewCudStreamoutClusterInst(ctx))
 		require.NotNil(t, err, test.desc)
 		require.Contains(t, err.Error(), "only supports AppInst creates", test.desc)
 	}
@@ -933,11 +932,11 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
 		ai.Key.ClusterInstKey.ClusterKey.Name = test.clusterName
 		ai.Key.ClusterInstKey.Organization = test.clusterOrg
 		ai.RealClusterName = test.realClusterName
-		err = appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		if test.errStr == PASS {
 			require.Nil(t, err, test.desc)
 			// clean up
-			err = appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+			err = apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 			require.Nil(t, err, test.desc)
 		} else {
 			require.NotNil(t, err, test.desc)
@@ -961,12 +960,12 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
 		ai.Key.ClusterInstKey.ClusterKey.Name = "blocker"
 		ai.Key.ClusterInstKey.Organization = clusterInstKey.Organization
 		ai.RealClusterName = ""
-		err = appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, test.desc)
 
 		// check refs
 		refs := edgeproto.ClusterRefs{}
-		found = clusterRefsApi.cache.Get(clusterInstKey, &refs)
+		found = apis.clusterRefsApi.cache.Get(clusterInstKey, &refs)
 		require.True(t, found, test.desc)
 		require.Equal(t, 1, len(refs.Apps), test.desc)
 		refAiKey := edgeproto.AppInstKey{}
@@ -975,24 +974,24 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context) {
 
 		// Test that delete cloudlet fails if AppInst exists
 		test.cloudlet.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
-		err = cloudletApi.DeleteCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		err = apis.cloudletApi.DeleteCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 		require.NotNil(t, err, test.desc)
 		require.Contains(t, err.Error(), "Cloudlet in use by AppInst", test.desc)
 
 		// delete AppInst
-		err = appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		err = apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, test.desc)
 
 		// now delete cloudlet should succeed
 		test.cloudlet.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
-		err = cloudletApi.DeleteCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+		err = apis.cloudletApi.DeleteCloudlet(test.cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 		require.Nil(t, err, test.desc)
 
 		// check that cluster and refs don't exist
 		clusterInst := edgeproto.ClusterInst{}
-		found = clusterInstApi.Get(clusterInstKey, &clusterInst)
+		found = apis.clusterInstApi.Get(clusterInstKey, &clusterInst)
 		require.False(t, found, test.desc)
-		found = clusterRefsApi.cache.Get(clusterInstKey, &refs)
+		found = apis.clusterRefsApi.cache.Get(clusterInstKey, &refs)
 		require.False(t, found, test.desc)
 	}
 }

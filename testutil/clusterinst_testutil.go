@@ -361,9 +361,36 @@ func ClientClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiClient, t
 func CreateClusterInstData(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
 
-	for _, obj := range testData {
+	for ii := range testData {
+		obj := testData[ii]
 		_, err = api.CreateClusterInst(ctx, &obj)
 		require.Nil(t, err, "Create ClusterInst %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func InternalClusterInstDelete(t *testing.T, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalClusterInstDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteClusterInstData(t, ctx, NewInternalClusterInstApi(api), testData)
+}
+
+func ClientClusterInstDelete(t *testing.T, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientClusterInstDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteClusterInstData(t, ctx, NewClientClusterInstApi(api), testData)
+}
+
+func DeleteClusterInstData(t *testing.T, ctx context.Context, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+	var err error
+
+	for ii := range testData {
+		obj := testData[ii]
+		_, err = api.DeleteClusterInst(ctx, &obj)
+		require.Nil(t, err, "Delete ClusterInst %s", obj.GetKey().GetKeyString())
 	}
 }
 
