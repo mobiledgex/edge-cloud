@@ -86,10 +86,15 @@ func (s *ClusterInstDeleteStore) STMDel(stm concurrency.STM, key *edgeproto.Clus
 }
 
 func (s *ClusterInstDeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.ClusterInst) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *ClusterInstDeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.ClusterInst) bool {
 	buf := edgeproto.ClusterInst{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.DeletePrepare, "undo delete prepare field")
+	return buf.DeletePrepare
 }
 
 func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen ClusterInstDeleteDataGen) {
@@ -136,7 +141,7 @@ func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	require.Nil(t, err, "delete must succeed with no refs")
 	deleteStore.putDeletePrepareCb = nil
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.GetClusterInstTestObj()
 	testObj.DeletePrepare = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -145,6 +150,8 @@ func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	err = api.DeleteClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.GetClusterInstTestObj()

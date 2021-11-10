@@ -67,7 +67,7 @@ func isAutoDeleteAppInstOk(callerOrg string, appInst *edgeproto.AppInst, app *ed
 	}
 	if callerOrg == app.Key.Organization && appInst.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV {
 		// Caller owns the App and AppInst. Allow them to automatically
-		// delete auto-provisioned instances. Otherwise, this is an
+		// delete auto-provisioned instances. Otherwise, this is
 		// probably an operator trying to delete a cloudlet or common
 		// ClusterInst, and should not be able to automatically delete
 		// developer's instances.

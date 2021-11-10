@@ -86,10 +86,15 @@ func (s *GPUDriverDeleteStore) STMDel(stm concurrency.STM, key *edgeproto.GPUDri
 }
 
 func (s *GPUDriverDeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.GPUDriver) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *GPUDriverDeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.GPUDriver) bool {
 	buf := edgeproto.GPUDriver{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.DeletePrepare, "undo delete prepare field")
+	return buf.DeletePrepare
 }
 
 func deleteGPUDriverChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen GPUDriverDeleteDataGen) {
@@ -120,7 +125,7 @@ func deleteGPUDriverChecks(t *testing.T, ctx context.Context, all *AllApis, data
 	err = api.DeleteGPUDriver(testObj, testutil.NewCudStreamoutGPUDriver(ctx))
 	require.Nil(t, err, "delete must succeed with no refs")
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.GetGPUDriverTestObj()
 	testObj.DeletePrepare = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -129,6 +134,8 @@ func deleteGPUDriverChecks(t *testing.T, ctx context.Context, all *AllApis, data
 	err = api.DeleteGPUDriver(testObj, testutil.NewCudStreamoutGPUDriver(ctx))
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.GetGPUDriverTestObj()
@@ -223,10 +230,15 @@ func (s *CloudletDeleteStore) STMDel(stm concurrency.STM, key *edgeproto.Cloudle
 }
 
 func (s *CloudletDeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.Cloudlet) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *CloudletDeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.Cloudlet) bool {
 	buf := edgeproto.Cloudlet{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.DeletePrepare, "undo delete prepare field")
+	return buf.DeletePrepare
 }
 
 func deleteCloudletChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen CloudletDeleteDataGen) {
@@ -273,7 +285,7 @@ func deleteCloudletChecks(t *testing.T, ctx context.Context, all *AllApis, dataG
 	require.Nil(t, err, "delete must succeed with no refs")
 	deleteStore.putDeletePrepareCb = nil
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.GetCloudletTestObj()
 	testObj.DeletePrepare = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -282,6 +294,8 @@ func deleteCloudletChecks(t *testing.T, ctx context.Context, all *AllApis, dataG
 	err = api.DeleteCloudlet(testObj, testutil.NewCudStreamoutCloudlet(ctx))
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.GetCloudletTestObj()

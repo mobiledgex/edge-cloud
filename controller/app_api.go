@@ -964,7 +964,6 @@ func (s *AppApi) UsesAlertPolicy(key *edgeproto.AlertPolicyKey) *edgeproto.AppKe
 		if app.Key.Organization == key.Organization {
 			for _, name := range app.AlertPolicies {
 				if name == key.Name {
-
 					return &k
 				}
 			}

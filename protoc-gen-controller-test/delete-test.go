@@ -113,10 +113,15 @@ func (s *{{.Type}}DeleteStore) STMDel(stm concurrency.STM, key *edgeproto.{{.Key
 }
 
 func (s *{{.Type}}DeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.{{.Type}}) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *{{.Type}}DeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.{{.Type}}) bool {
 	buf := edgeproto.{{.Type}}{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.{{.DeletePrepareField}}, "undo delete prepare field")
+	return buf.{{.DeletePrepareField}}
 }
 
 func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, dataGen {{.Type}}DeleteDataGen) {
@@ -172,7 +177,7 @@ func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, data
 	deleteStore.putDeletePrepareCb = nil
 {{- end}}
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.Get{{.Type}}TestObj()
 	testObj.{{.DeletePrepareField}} = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -180,6 +185,8 @@ func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, data
 {{- template "runDelete" .}}
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.Get{{.Type}}TestObj()

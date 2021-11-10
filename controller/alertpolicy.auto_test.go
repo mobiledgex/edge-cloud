@@ -84,10 +84,15 @@ func (s *AlertPolicyDeleteStore) STMDel(stm concurrency.STM, key *edgeproto.Aler
 }
 
 func (s *AlertPolicyDeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.AlertPolicy) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *AlertPolicyDeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.AlertPolicy) bool {
 	buf := edgeproto.AlertPolicy{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.DeletePrepare, "undo delete prepare field")
+	return buf.DeletePrepare
 }
 
 func deleteAlertPolicyChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AlertPolicyDeleteDataGen) {
@@ -118,7 +123,7 @@ func deleteAlertPolicyChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	_, err = api.DeleteAlertPolicy(ctx, testObj)
 	require.Nil(t, err, "delete must succeed with no refs")
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.GetAlertPolicyTestObj()
 	testObj.DeletePrepare = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -127,6 +132,8 @@ func deleteAlertPolicyChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	_, err = api.DeleteAlertPolicy(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.GetAlertPolicyTestObj()

@@ -370,7 +370,7 @@ func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.
 		return key.NotFoundError()
 	}
 	if action == cloudcommon.Delete && (cloudlet.DeletePrepare || cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE) {
-		return nil
+		return fmt.Errorf("Cloudlet %s is being deleted", key.GetKeyString())
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {

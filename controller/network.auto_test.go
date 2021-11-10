@@ -85,10 +85,15 @@ func (s *NetworkDeleteStore) STMDel(stm concurrency.STM, key *edgeproto.NetworkK
 }
 
 func (s *NetworkDeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.Network) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *NetworkDeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.Network) bool {
 	buf := edgeproto.Network{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.DeletePrepare, "undo delete prepare field")
+	return buf.DeletePrepare
 }
 
 func deleteNetworkChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen NetworkDeleteDataGen) {
@@ -119,7 +124,7 @@ func deleteNetworkChecks(t *testing.T, ctx context.Context, all *AllApis, dataGe
 	err = api.DeleteNetwork(testObj, testutil.NewCudStreamoutNetwork(ctx))
 	require.Nil(t, err, "delete must succeed with no refs")
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.GetNetworkTestObj()
 	testObj.DeletePrepare = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -128,6 +133,8 @@ func deleteNetworkChecks(t *testing.T, ctx context.Context, all *AllApis, dataGe
 	err = api.DeleteNetwork(testObj, testutil.NewCudStreamoutNetwork(ctx))
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.GetNetworkTestObj()

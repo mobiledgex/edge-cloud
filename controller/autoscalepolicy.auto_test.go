@@ -84,10 +84,15 @@ func (s *AutoScalePolicyDeleteStore) STMDel(stm concurrency.STM, key *edgeproto.
 }
 
 func (s *AutoScalePolicyDeleteStore) requireUndoDeletePrepare(ctx context.Context, obj *edgeproto.AutoScalePolicy) {
+	deletePrepare := s.getDeletePrepare(ctx, obj)
+	require.False(s.t, deletePrepare, "must undo delete prepare field on failure")
+}
+
+func (s *AutoScalePolicyDeleteStore) getDeletePrepare(ctx context.Context, obj *edgeproto.AutoScalePolicy) bool {
 	buf := edgeproto.AutoScalePolicy{}
 	found := s.Get(ctx, obj.GetKey(), &buf)
 	require.True(s.t, found, "expected test object to be found")
-	require.False(s.t, buf.DeletePrepare, "undo delete prepare field")
+	return buf.DeletePrepare
 }
 
 func deleteAutoScalePolicyChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AutoScalePolicyDeleteDataGen) {
@@ -118,7 +123,7 @@ func deleteAutoScalePolicyChecks(t *testing.T, ctx context.Context, all *AllApis
 	_, err = api.DeleteAutoScalePolicy(ctx, testObj)
 	require.Nil(t, err, "delete must succeed with no refs")
 
-	// Negative test, inject testObj with prepare delete already set.
+	// Negative test, inject testObj with delete prepare already set.
 	testObj, _ = dataGen.GetAutoScalePolicyTestObj()
 	testObj.DeletePrepare = true
 	origStore.Put(ctx, testObj, api.sync.syncWait)
@@ -127,6 +132,8 @@ func deleteAutoScalePolicyChecks(t *testing.T, ctx context.Context, all *AllApis
 	_, err = api.DeleteAutoScalePolicy(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
 	require.Contains(t, err.Error(), "already being deleted")
+	// failed delete must not interfere with existing delete prepare state
+	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
 	// inject testObj for ref tests
 	testObj, _ = dataGen.GetAutoScalePolicyTestObj()
