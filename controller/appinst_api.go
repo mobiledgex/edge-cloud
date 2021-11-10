@@ -202,6 +202,8 @@ func (s *AppInstApi) AutoDeleteAppInsts(ctx context.Context, dynInsts map[edgepr
 				crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 				cctx.SetOverride(&crmo)
 			}
+			// cloudlet ready check should already have been done
+			cctx.SkipCloudletReadyCheck = true
 			err = s.deleteAppInstInternal(cctx, val, cb)
 			if err != nil && err.Error() == val.Key.NotFoundError().Error() {
 				err = nil

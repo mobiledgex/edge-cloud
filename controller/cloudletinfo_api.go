@@ -360,7 +360,7 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) dme.Cloud
 }
 
 func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey, action cloudcommon.Action) error {
-	if cctx != nil && ignoreCRM(cctx) {
+	if cctx != nil && (ignoreCRM(cctx) || cctx.SkipCloudletReadyCheck) {
 		return nil
 	}
 	// Get tracked state, it could be that cloudlet has initiated

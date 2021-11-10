@@ -1407,6 +1407,10 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}()
 
+	// for cascaded deletes of ClusterInst/AppInst, skip cloudlet
+	// ready check because it's not ready - it's being deleted.
+	cctx.SkipCloudletReadyCheck = true
+
 	autoProvPolicies := s.all.autoProvPolicyApi.UsesCloudlet(&in.Key)
 	if len(autoProvPolicies) > 0 {
 		strs := []string{}
@@ -1435,7 +1439,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if len(clDynInsts) > 0 {
 		for key, _ := range clDynInsts {
 			clInst := edgeproto.ClusterInst{Key: key}
-			derr := s.all.clusterInstApi.deleteClusterInstInternal(DefCallContext(), &clInst, cb)
+			derr := s.all.clusterInstApi.deleteClusterInstInternal(cctx.Clone(), &clInst, cb)
 			if derr != nil {
 				log.SpanLog(ctx, log.DebugLevelApi,
 					"Failed to delete dynamic ClusterInst",
