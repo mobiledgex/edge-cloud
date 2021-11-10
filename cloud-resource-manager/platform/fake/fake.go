@@ -521,7 +521,7 @@ func (s *Platform) GetContainerCommand(ctx context.Context, clusterInst *edgepro
 	return "", fmt.Errorf("no cmd or log specified in exec request")
 }
 
-func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
+func (s *Platform) GetConsoleUrl(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
 	if s.consoleServer != nil {
 		return s.consoleServer.URL + "?token=xyz", nil
 	}

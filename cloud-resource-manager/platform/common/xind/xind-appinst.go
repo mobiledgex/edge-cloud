@@ -222,7 +222,7 @@ func (s *Xind) GetContainerCommand(ctx context.Context, clusterInst *edgeproto.C
 	return k8smgmt.GetContainerCommand(ctx, clusterInst, app, appInst, req)
 }
 
-func (s *Xind) GetConsoleUrl(ctx context.Context, app *edgeproto.App) (string, error) {
+func (s *Xind) GetConsoleUrl(ctx context.Context, app *edgeproto.App, appInst *edgeproto.AppInst) (string, error) {
 	return "", nil
 }
 
