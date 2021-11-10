@@ -141,7 +141,7 @@ func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.Exe
 	var execReqType cloudcommon.ExecReqType
 	var initURL *url.URL
 	if req.Console != nil {
-		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app)
+		req.Console.Url, err = cd.platform.GetConsoleUrl(ctx, &app, &appInst)
 		if err != nil {
 			return err
 		}
