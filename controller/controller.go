@@ -604,73 +604,6 @@ func checkVersion(ctx context.Context, objStore objstore.KVStore) (string, error
 	return verHash, nil
 }
 
-<<<<<<< HEAD
-func InitApis(sync *Sync) {
-	InitAppApi(sync)
-	InitOperatorCodeApi(sync)
-	InitCloudletApi(sync)
-	InitAppInstApi(sync)
-	InitFlavorApi(sync)
-	InitStreamObjApi(sync)
-	InitClusterInstApi(sync)
-	InitCloudletInfoApi(sync)
-	InitVMPoolApi(sync)
-	InitVMPoolInfoApi(sync)
-	InitAppInstInfoApi(sync)
-	InitClusterInstInfoApi(sync)
-	InitCloudletRefsApi(sync)
-	InitAppInstRefsApi(sync)
-	InitControllerApi(sync)
-	InitCloudletPoolApi(sync)
-	InitExecApi()
-	InitAlertApi(sync)
-	InitAutoScalePolicyApi(sync)
-	InitAutoProvPolicyApi(sync)
-	InitAutoProvInfoApi(sync)
-	InitResTagTableApi(sync)
-	InitTrustPolicyApi(sync)
-	InitTrustPolicyExceptionApi(sync)
-	InitSettingsApi(sync)
-	InitRateLimitSettingsApi(sync)
-	InitAppInstClientKeyApi(sync)
-	InitAppInstClientApi()
-	InitDeviceApi(sync)
-	InitOrganizationApi(sync)
-	InitAppInstLatencyApi(sync)
-	InitGPUDriverApi(sync)
-	InitAlertPolicyApi(sync)
-	InitNetworkApi(sync)
-}
-
-func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler) {
-	notify.ServerMgrOne.RegisterSendSettingsCache(&settingsApi.cache)
-	notify.ServerMgrOne.RegisterSendFlowRateLimitSettingsCache(&rateLimitSettingsApi.flowcache)
-	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&rateLimitSettingsApi.maxreqscache)
-	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&operatorCodeApi.cache)
-	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
-	notify.ServerMgrOne.RegisterSendGPUDriverCache(&gpuDriverApi.cache)
-	notify.ServerMgrOne.RegisterSendVMPoolCache(&vmPoolApi.cache)
-	notify.ServerMgrOne.RegisterSendResTagTableCache(&resTagTableApi.cache)
-	notify.ServerMgrOne.RegisterSendTrustPolicyCache(&trustPolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendCloudletCache(cloudletApi.cache)
-	// Be careful on dependencies.
-	// CloudletPools must be sent after cloudlets, because they reference cloudlets.
-	notify.ServerMgrOne.RegisterSendCloudletPoolCache(cloudletPoolApi.cache)
-
-	notify.ServerMgrOne.RegisterSendCloudletInfoCache(&cloudletInfoApi.cache)
-	notify.ServerMgrOne.RegisterSendAutoScalePolicyCache(&autoScalePolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendAutoProvPolicyCache(&autoProvPolicyApi.cache)
-	notify.ServerMgrOne.RegisterSendNetworkCache(&networkApi.cache)
-	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
-	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
-	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
-	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&appInstRefsApi.cache)
-	notify.ServerMgrOne.RegisterSendAlertCache(&alertApi.cache)
-	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&appInstClientKeyApi.cache)
-	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&userAlertApi.cache)
-	// TrustPolicyExceptions depend on App and Cloudlet so must be sent after them.
-	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&trustPolicyExceptionApi.cache)
-=======
 type AllApis struct {
 	appApi                  *AppApi
 	operatorCodeApi         *OperatorCodeApi
@@ -789,7 +722,6 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&allApis.alertPolicyApi.cache)
 	// TrustPolicyExceptions depend on App and Cloudlet so must be sent after them.
 	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&allApis.trustPolicyExceptionApi.cache)
->>>>>>> origin/master
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	nodeMgr.RegisterServer(&notify.ServerMgrOne)
