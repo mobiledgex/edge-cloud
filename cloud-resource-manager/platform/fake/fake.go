@@ -556,12 +556,12 @@ func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto
 	return nil
 }
 
-func (s *Platform) UpdateTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException) error {
+func (s *Platform) UpdateTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException, clusterInstKey *edgeproto.ClusterInstKey) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake UpdateTrustPolicyException", "policy", TrustPolicyException)
 	return nil
 }
 
-func (s *Platform) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey) error {
+func (s *Platform) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey, clusterInstKey *edgeproto.ClusterInstKey) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake DeleteTrustPolicyException", "policyKey", TrustPolicyExceptionKey)
 	return nil
 }
