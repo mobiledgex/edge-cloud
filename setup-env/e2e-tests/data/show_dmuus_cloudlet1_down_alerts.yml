@@ -5,6 +5,7 @@
     appver: "1.0"
     cloudlet: dmuus-cloud-1
     cloudletorg: dmuus
+    federatedorg: ""
     cluster: SmallCluster
     clusterorg: AcmeAppCo
     region: local
@@ -25,6 +26,7 @@
     appver: "1.0"
     cloudlet: dmuus-cloud-1
     cloudletorg: dmuus
+    federatedorg: ""
     cluster: SmallCluster
     clusterorg: AcmeAppCo
     region: local
@@ -45,6 +47,7 @@
     appver: "1.0"
     cloudlet: dmuus-cloud-1
     cloudletorg: dmuus
+    federatedorg: ""
     cluster: defaultclust
     clusterorg: AcmeAppCo1
     region: local
@@ -79,6 +82,7 @@
     appver: "1.0"
     cloudlet: dmuus-cloud-1
     cloudletorg: dmuus
+    federatedorg: ""
     cluster: SmallCluster
     clusterorg: AcmeAppCo
     region: local
