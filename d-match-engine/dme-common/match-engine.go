@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -20,6 +21,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 )
 
 // 1 km is considered near enough to call 2 locations equivalent
@@ -1357,7 +1359,15 @@ func StreamEdgeEvent(ctx context.Context, svr dme.MatchEngineApi_StreamEdgeEvent
 	}
 
 	// Initialize rate limiter so that we can handle all the incoming messages
-	rateLimiter := ratelimit.NewTokenBucketLimiter(ratelimit.DefaultReqsPerSecondPerApi, int(ratelimit.DefaultTokenBucketSize))
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return errors.New("unable to get peer IP info")
+	}
+	callerInfo := &ratelimit.CallerInfo{
+		Api: edgeproto.PersistentConnectionApiName,
+		Ip:  p.Addr.String(),
+	}
+
 	// Loop while persistent connection is up
 loop:
 	for {
@@ -1365,7 +1375,7 @@ loop:
 		cupdate, err := svr.Recv()
 		ctx = svr.Context()
 		// Rate limit
-		err = rateLimiter.Limit(ctx, nil)
+		err = RateLimitMgr.Limit(ctx, callerInfo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Limiting client messages", "err", err)
 			sendErrorEventToClient(ctx, fmt.Sprintf("Limiting client messages. Most recent ClientEdgeEvent will not be processed: %v. Error is: %s", cupdate, err), *appInstKey, *sessionCookieKey)

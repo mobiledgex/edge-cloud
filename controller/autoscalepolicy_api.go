@@ -9,18 +9,20 @@ import (
 )
 
 type AutoScalePolicyApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.AutoScalePolicyStore
 	cache edgeproto.AutoScalePolicyCache
 }
 
-var autoScalePolicyApi = AutoScalePolicyApi{}
-
-func InitAutoScalePolicyApi(sync *Sync) {
+func NewAutoScalePolicyApi(sync *Sync, all *AllApis) *AutoScalePolicyApi {
+	autoScalePolicyApi := AutoScalePolicyApi{}
+	autoScalePolicyApi.all = all
 	autoScalePolicyApi.sync = sync
 	autoScalePolicyApi.store = edgeproto.NewAutoScalePolicyStore(sync.store)
 	edgeproto.InitAutoScalePolicyCache(&autoScalePolicyApi.cache)
 	sync.RegisterCache(&autoScalePolicyApi.cache)
+	return &autoScalePolicyApi
 }
 
 func (s *AutoScalePolicyApi) CreateAutoScalePolicy(ctx context.Context, in *edgeproto.AutoScalePolicy) (*edgeproto.Result, error) {
@@ -54,7 +56,7 @@ func (s *AutoScalePolicyApi) DeleteAutoScalePolicy(ctx context.Context, in *edge
 	if !s.cache.HasKey(&in.Key) {
 		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
-	if clusterInstApi.UsesAutoScalePolicy(&in.Key) {
+	if s.all.clusterInstApi.UsesAutoScalePolicy(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("Policy in use by ClusterInst")
 	}
 	return s.store.Delete(ctx, in, s.sync.syncWait)

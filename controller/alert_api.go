@@ -13,6 +13,7 @@ import (
 )
 
 type AlertApi struct {
+	all         *AllApis
 	sync        *Sync
 	store       edgeproto.AlertStore
 	cache       edgeproto.AlertCache
@@ -21,9 +22,9 @@ type AlertApi struct {
 
 var ControllerCreatedAlerts = "ControllerCreatedAlerts"
 
-var alertApi = AlertApi{}
-
-func InitAlertApi(sync *Sync) {
+func NewAlertApi(sync *Sync, all *AllApis) *AlertApi {
+	alertApi := AlertApi{}
+	alertApi.all = all
 	alertApi.sync = sync
 	alertApi.store = edgeproto.NewAlertStore(sync.store)
 	edgeproto.InitAlertCache(&alertApi.cache)
@@ -31,10 +32,11 @@ func InitAlertApi(sync *Sync) {
 	alertApi.sourceCache.SetUpdatedCb(alertApi.StoreUpdate)
 	alertApi.sourceCache.SetDeletedCb(alertApi.StoreDelete)
 	sync.RegisterCache(&alertApi.cache)
+	return &alertApi
 }
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
-func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state dme.HealthCheck) {
+func (s *AlertApi) appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.Alert, state dme.HealthCheck) {
 	appOrg, ok := alert.Labels[edgeproto.AppKeyTagOrganization]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Could not find AppInst Org label in Alert", "alert", alert)
@@ -89,7 +91,7 @@ func appInstSetStateFromHealthCheckAlert(ctx context.Context, alert *edgeproto.A
 			},
 		},
 	}
-	appInstApi.HealthCheckUpdate(ctx, &appInst, state)
+	s.all.appInstApi.HealthCheckUpdate(ctx, &appInst, state)
 
 }
 
@@ -125,7 +127,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 }
 
 func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
-	s.store.Put(ctx, new, nil, objstore.WithLease(ControllerAliveLease()))
+	s.store.Put(ctx, new, nil, objstore.WithLease(s.all.syncLeaseData.ControllerAliveLease()))
 	name, ok := new.Labels["alertname"]
 	if !ok {
 		return
@@ -143,7 +145,7 @@ func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
 				"state", state, "error", err)
 			return
 		}
-		appInstSetStateFromHealthCheckAlert(ctx, new, dme.HealthCheck(hcState))
+		s.appInstSetStateFromHealthCheckAlert(ctx, new, dme.HealthCheck(hcState))
 	}
 }
 
@@ -188,7 +190,7 @@ func (s *AlertApi) StoreDelete(ctx context.Context, in *edgeproto.Alert) {
 	// Reset HealthCheck state back to OK
 	name, ok := in.Labels["alertname"]
 	if ok && foundAlert && name == cloudcommon.AlertAppInstDown {
-		appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck_HEALTH_CHECK_OK)
+		s.appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck_HEALTH_CHECK_OK)
 	}
 }
 

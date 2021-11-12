@@ -49,6 +49,7 @@ message AllData {
   repeated App apps = 16 [(gogoproto.nullable) = false];
   repeated AppInst app_instances = 17 [(gogoproto.nullable) = false];
   repeated AppInstRefs app_inst_refs = 18 [(gogoproto.nullable) = false];
+  repeated ClusterRefs cluster_refs = 27 [(gogoproto.nullable) = false];
   repeated VMPool vm_pools = 19 [(gogoproto.nullable) = false];
   repeated GPUDriver gpu_drivers = 21 [(gogoproto.nullable) = false];
   repeated AlertPolicy alert_policies = 22 [(gogoproto.nullable) = false];
