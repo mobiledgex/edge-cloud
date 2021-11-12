@@ -191,15 +191,17 @@ var NodeKeyOptionalArgs = []string{
 	"type",
 	"cloudletkey.organization",
 	"cloudletkey.name",
+	"cloudletkey.federatedorganization",
 	"region",
 }
 var NodeKeyAliasArgs = []string{}
 var NodeKeyComments = map[string]string{
-	"name":                     "Name or hostname of node",
-	"type":                     "Node type",
-	"cloudletkey.organization": "Organization of the cloudlet site",
-	"cloudletkey.name":         "Name of the cloudlet",
-	"region":                   "Region the node is in",
+	"name":                              "Name or hostname of node",
+	"type":                              "Node type",
+	"cloudletkey.organization":          "Organization of the cloudlet site",
+	"cloudletkey.name":                  "Name of the cloudlet",
+	"cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"region":                            "Region the node is in",
 }
 var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
@@ -207,6 +209,7 @@ var NodeRequiredArgs = []string{
 	"type",
 	"cloudlet-org",
 	"cloudlet",
+	"federated-org",
 	"region",
 }
 var NodeOptionalArgs = []string{
@@ -225,6 +228,7 @@ var NodeAliasArgs = []string{
 	"type=key.type",
 	"cloudlet-org=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
+	"federated-org=key.cloudletkey.federatedorganization",
 	"region=key.region",
 }
 var NodeComments = map[string]string{
@@ -233,6 +237,7 @@ var NodeComments = map[string]string{
 	"type":             "Node type",
 	"cloudlet-org":     "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
+	"federated-org":    "Federated operator organization who shared this cloudlet",
 	"region":           "Region the node is in",
 	"notifyid":         "Id of client assigned by server (internal use only)",
 	"buildmaster":      "Build Master Version",
@@ -255,6 +260,7 @@ var NodeDataOptionalArgs = []string{
 	"nodes:#.key.type",
 	"nodes:#.key.cloudletkey.organization",
 	"nodes:#.key.cloudletkey.name",
+	"nodes:#.key.cloudletkey.federatedorganization",
 	"nodes:#.key.region",
 	"nodes:#.notifyid",
 	"nodes:#.buildmaster",
@@ -268,21 +274,22 @@ var NodeDataOptionalArgs = []string{
 }
 var NodeDataAliasArgs = []string{}
 var NodeDataComments = map[string]string{
-	"nodes:#.fields":                       "Fields are used for the Update API to specify which fields to apply",
-	"nodes:#.key.name":                     "Name or hostname of node",
-	"nodes:#.key.type":                     "Node type",
-	"nodes:#.key.cloudletkey.organization": "Organization of the cloudlet site",
-	"nodes:#.key.cloudletkey.name":         "Name of the cloudlet",
-	"nodes:#.key.region":                   "Region the node is in",
-	"nodes:#.notifyid":                     "Id of client assigned by server (internal use only)",
-	"nodes:#.buildmaster":                  "Build Master Version",
-	"nodes:#.buildhead":                    "Build Head Version",
-	"nodes:#.buildauthor":                  "Build Author",
-	"nodes:#.builddate":                    "Build Date",
-	"nodes:#.hostname":                     "Hostname",
-	"nodes:#.containerversion":             "Docker edge-cloud container version which node instance use",
-	"nodes:#.internalpki":                  "Internal PKI Config",
-	"nodes:#.properties":                   "Additional properties",
+	"nodes:#.fields":                                "Fields are used for the Update API to specify which fields to apply",
+	"nodes:#.key.name":                              "Name or hostname of node",
+	"nodes:#.key.type":                              "Node type",
+	"nodes:#.key.cloudletkey.organization":          "Organization of the cloudlet site",
+	"nodes:#.key.cloudletkey.name":                  "Name of the cloudlet",
+	"nodes:#.key.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"nodes:#.key.region":                            "Region the node is in",
+	"nodes:#.notifyid":                              "Id of client assigned by server (internal use only)",
+	"nodes:#.buildmaster":                           "Build Master Version",
+	"nodes:#.buildhead":                             "Build Head Version",
+	"nodes:#.buildauthor":                           "Build Author",
+	"nodes:#.builddate":                             "Build Date",
+	"nodes:#.hostname":                              "Hostname",
+	"nodes:#.containerversion":                      "Docker edge-cloud container version which node instance use",
+	"nodes:#.internalpki":                           "Internal PKI Config",
+	"nodes:#.properties":                            "Additional properties",
 }
 var NodeDataSpecialArgs = map[string]string{
 	"nodes:#.fields":     "StringArray",

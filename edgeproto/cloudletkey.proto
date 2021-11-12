@@ -18,12 +18,14 @@ message CloudletKey {
   string organization = 1 [(protogen.keytag) = "cloudletorg"];
   // Name of the cloudlet
   string name = 2 [(protogen.keytag) = "cloudlet"];
+  // Federated operator organization who shared this cloudlet
+  string federated_organization = 3 [(protogen.keytag) = "federatedorg"];
 
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
   option (protogen.also_required) = "Name,Organization";
-  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization";
+  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization,federator-org=FederatedOrganization";
   option (protogen.custom_key_type) = "CloudletKey";
   option (protogen.generate_show_test) = true; 
   option (protogen.uses_org) = "none";

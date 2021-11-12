@@ -90,7 +90,7 @@ message AutoProvPolicyCloudlet {
   PolicyKey key = 1 [(gogoproto.nullable) = false];
   // Cloudlet identifier key
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
-  option (protogen.alias) = "name=Key.Name,app-org=Key.Organization,cloudlet=CloudletKey.Name,cloudlet-org=CloudletKey.Organization";
+  option (protogen.alias) = "name=Key.Name,app-org=Key.Organization,cloudlet=CloudletKey.Name,cloudlet-org=CloudletKey.Organization,federated-org=CloudletKey.FederatedOrganization";
 }
 
 service AutoProvPolicyApi {

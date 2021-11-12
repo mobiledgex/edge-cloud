@@ -56,17 +56,19 @@ func TestEvents(t *testing.T) {
 	operOrg := "operOrg"
 	cloudlet1Name := "cloudlet1"
 	keyTags := map[string]string{
-		edgeproto.AppKeyTagName:                 "myapp",
-		edgeproto.AppKeyTagOrganization:         org,
-		edgeproto.AppKeyTagVersion:              "1.0",
-		edgeproto.CloudletKeyTagName:            cloudlet1Name,
-		edgeproto.CloudletKeyTagOrganization:    operOrg,
-		edgeproto.ClusterKeyTagName:             "testclust",
-		edgeproto.ClusterInstKeyTagOrganization: "MobiledgeX",
+		edgeproto.AppKeyTagName:                       "myapp",
+		edgeproto.AppKeyTagOrganization:               org,
+		edgeproto.AppKeyTagVersion:                    "1.0",
+		edgeproto.CloudletKeyTagName:                  cloudlet1Name,
+		edgeproto.CloudletKeyTagOrganization:          operOrg,
+		edgeproto.CloudletKeyTagFederatedOrganization: operOrg,
+		edgeproto.ClusterKeyTagName:                   "testclust",
+		edgeproto.ClusterInstKeyTagOrganization:       "MobiledgeX",
 	}
 	keyTags2 := map[string]string{
-		edgeproto.CloudletKeyTagName:         cloudlet1Name,
-		edgeproto.CloudletKeyTagOrganization: operOrg,
+		edgeproto.CloudletKeyTagName:                  cloudlet1Name,
+		edgeproto.CloudletKeyTagOrganization:          operOrg,
+		edgeproto.CloudletKeyTagFederatedOrganization: operOrg,
 	}
 
 	// add a mock kafka producer so we can capture kafka events
@@ -242,6 +244,7 @@ func TestEvents(t *testing.T) {
 			aggr("traceid", 7),
 			aggr(edgeproto.CloudletKeyTagName, 6),
 			aggr(edgeproto.CloudletKeyTagOrganization, 6),
+			aggr(edgeproto.CloudletKeyTagFederatedOrganization, 6),
 			aggr(edgeproto.AppKeyTagName, 4),
 			aggr(edgeproto.AppKeyTagOrganization, 4),
 			aggr(edgeproto.AppKeyTagVersion, 4),
@@ -280,6 +283,7 @@ func TestEvents(t *testing.T) {
 			aggr(edgeproto.CloudletKeyTagOrganization, 4),
 			aggr(edgeproto.ClusterKeyTagName, 4),
 			aggr(edgeproto.ClusterInstKeyTagOrganization, 4),
+			aggr(edgeproto.CloudletKeyTagFederatedOrganization, 4),
 			aggr("hostname", 4),
 			aggr("lineno", 4),
 			aggr("spanid", 4),
@@ -308,6 +312,7 @@ func TestEvents(t *testing.T) {
 		TagKeys: []AggrVal{
 			aggr(edgeproto.CloudletKeyTagName, 2),
 			aggr(edgeproto.CloudletKeyTagOrganization, 2),
+			aggr(edgeproto.CloudletKeyTagFederatedOrganization, 2),
 			aggr("hostname", 2),
 			aggr("lineno", 2),
 			aggr("spanid", 2),
