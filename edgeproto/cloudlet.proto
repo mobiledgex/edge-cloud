@@ -122,6 +122,7 @@ message PlatformConfig {
 // 13: `PLATFORM_TYPE_KIND`
 // 14: `PLATFORM_TYPE_KINDINFRA`
 // 15: `PLATFORM_TYPE_FAKE_SINGLE_CLUSTER`
+// 16: `PLATFORM_TYPE_FEDERATION`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -155,6 +156,8 @@ enum PlatformType {
   PLATFORM_TYPE_KINDINFRA = 14;
   // Fake Single Cluster Cloudlet
   PLATFORM_TYPE_FAKE_SINGLE_CLUSTER = 15;
+  // Cloudlet shared as part of federation
+  PLATFORM_TYPE_FEDERATION  = 16;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
@@ -163,7 +166,8 @@ message CloudletResMap {
   CloudletKey key = 1[(gogoproto.nullable) = false];
   // Resource mapping info
   map<string, string> mapping = 2;
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.also_required) = "Mapping";
 }
 
@@ -484,7 +488,8 @@ message Cloudlet {
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
   option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.mc2_target_cloudlet) = "Key";
   option (protogen.uses_org) = "key=Organization";
 }
@@ -497,7 +502,8 @@ message FlavorMatch {
   // availability zone for optional resources if any
   string availability_zone = 4;
   option (protogen.also_required) = "FlavorName";
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,flavor=FlavorName,federated-org=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
 }
 
 message CloudletManifest {
@@ -545,7 +551,8 @@ message CloudletResourceUsage {
   bool infra_usage = 2;
   // Infra Resource information
   repeated InfraResource info = 3 [(gogoproto.nullable) = false];
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
 }
 
 message CloudletAllianceOrg {
@@ -554,7 +561,8 @@ message CloudletAllianceOrg {
   // Alliance organization
   string organization = 2;
   option (protogen.also_required) = "Organization";
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,alliance-org=organization";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,alliance-org=organization,federated-org=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
 }
 
 service CloudletApi {
@@ -809,7 +817,8 @@ message CloudletInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.uses_org) = "none";
   option (protogen.noconfig) = "Resources";
 }
