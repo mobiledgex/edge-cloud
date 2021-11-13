@@ -146,8 +146,12 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForCloudletPoolKey(cKey
 	return TrustPolicyException
 }
 
-func (s *TrustPolicyExceptionApi) TrustPolicyExceptionForCloudletPoolKeyExists(cKey *edgeproto.CloudletPoolKey) bool {
-	return s.GetTrustPolicyExceptionForCloudletPoolKey(cKey) != nil
+func (s *TrustPolicyExceptionApi) TrustPolicyExceptionForCloudletPoolKeyExists(cKey *edgeproto.CloudletPoolKey) *edgeproto.TrustPolicyExceptionKey {
+	tpe := s.GetTrustPolicyExceptionForCloudletPoolKey(cKey)
+	if tpe != nil {
+		return &tpe.Key
+	}
+	return nil
 }
 
 func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForAppKey(appKey *edgeproto.AppKey) *edgeproto.TrustPolicyException {
@@ -168,6 +172,10 @@ func (s *TrustPolicyExceptionApi) GetTrustPolicyExceptionForAppKey(appKey *edgep
 	return TrustPolicyException
 }
 
-func (s *TrustPolicyExceptionApi) TrustPolicyExceptionForAppKeyExists(appKey *edgeproto.AppKey) bool {
-	return s.GetTrustPolicyExceptionForAppKey(appKey) != nil
+func (s *TrustPolicyExceptionApi) TrustPolicyExceptionForAppKeyExists(appKey *edgeproto.AppKey) *edgeproto.TrustPolicyExceptionKey {
+	tp := s.GetTrustPolicyExceptionForAppKey(appKey)
+	if tp != nil {
+		return &tp.Key
+	}
+	return nil
 }

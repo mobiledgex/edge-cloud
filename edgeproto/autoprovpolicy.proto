@@ -30,7 +30,7 @@ message AutoProvPolicy {
   // Number of intervals to check before triggering deployment
   uint32 deploy_interval_count = 4 [(protogen.test_update) = true];
   // Allowed deployment locations
-  repeated AutoProvCloudlet cloudlets = 5;
+  repeated AutoProvCloudlet cloudlets = 5 [(protogen.refers_to) = "Cloudlet"];
   // Minimum number of active instances for High-Availability
   uint32 min_active_instances = 6;
   // Maximum number of instances (active or not)
@@ -39,6 +39,8 @@ message AutoProvPolicy {
   uint32 undeploy_client_count = 8;
   // Number of intervals to check before triggering undeployment
   uint32 undeploy_interval_count = 9;
+  // Preparing to be deleted
+  bool delete_prepare = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -47,7 +49,7 @@ message AutoProvPolicy {
   option (protogen.alias) = "name=Key.Name,app-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "CloudletKey";
-  option (protogen.noconfig) = "Cloudlets:#.Loc";
+  option (protogen.noconfig) = "Cloudlets:#.Loc,DeletePrepare";
 }
 
 // AutoProvCloudlet stores the potential cloudlet and location for DME lookup

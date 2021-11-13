@@ -27,6 +27,21 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func AutoProvPolicyHideTags(in *edgeproto.AutoProvPolicy) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 func AutoProvInfoHideTags(in *edgeproto.AutoProvInfo) {
 	if cli.HideTags == "" {
 		return
@@ -266,6 +281,7 @@ func ShowAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 			}
 			return fmt.Errorf("ShowAutoProvPolicy recv failed: %s", errstr)
 		}
+		AutoProvPolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -454,6 +470,7 @@ var AutoProvPolicyComments = map[string]string{
 	"maxinstances":                          "Maximum number of instances (active or not)",
 	"undeployclientcount":                   "Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy",
 	"undeployintervalcount":                 "Number of intervals to check before triggering undeployment",
+	"deleteprepare":                         "Preparing to be deleted",
 }
 var AutoProvPolicySpecialArgs = map[string]string{
 	"fields": "StringArray",

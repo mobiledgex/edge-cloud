@@ -8,6 +8,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 type FlavorApi struct {
@@ -58,24 +59,18 @@ func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 	//return s.store.Update(in, s.sync.syncWait)
 }
 
-func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
-	if !s.all.flavorApi.HasFlavor(&in.Key) {
-		// key doesn't exist
-		return &edgeproto.Result{}, in.Key.NotFoundError()
-	}
-	if s.all.clusterInstApi.UsesFlavor(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Flavor in use by ClusterInst")
-	}
-	if s.all.appApi.UsesFlavor(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Flavor in use by App")
-	}
-	if s.all.appInstApi.UsesFlavor(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Flavor in use by AppInst")
-	}
+func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (res *edgeproto.Result, reterr error) {
 	// if settings.MasterNodeFlavor == in.Key.Name it must remain
 	// until first removed from settings.MasterNodeFlavor
 	settings := edgeproto.Settings{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.Flavor{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("Flavor already being deleted")
+		}
 		if !s.all.settingsApi.store.STMGet(stm, &edgeproto.SettingsKeySingular, &settings) {
 			// should never happen (initDefaults)
 			return edgeproto.SettingsKeySingular.NotFoundError()
@@ -83,13 +78,47 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 		if settings.MasterNodeFlavor == in.Key.Name {
 			return fmt.Errorf("Flavor in use by Settings MasterNodeFlavor, change Settings.MasterNodeFlavor first")
 		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.Flavor{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
 
-	res, err := s.store.Delete(ctx, in, s.sync.syncWait)
+	if k := s.all.clusterInstApi.UsesFlavor(&in.Key); k != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Flavor in use by ClusterInst %s", k.GetKeyString())
+	}
+	if k := s.all.appApi.UsesFlavor(&in.Key); k != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Flavor in use by App %s", k.GetKeyString())
+	}
+	if k := s.all.appInstApi.UsesFlavor(&in.Key); k != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Flavor in use by AppInst %s", k.GetKeyString())
+	}
+	if k := s.all.cloudletApi.UsesFlavor(&in.Key); k != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Flavor in use by Cloudlet %s", k.GetKeyString())
+	}
+
+	res, err = s.store.Delete(ctx, in, s.sync.syncWait)
 	// clean up auto-apps using flavor
 	s.all.appApi.AutoDeleteApps(ctx, &in.Key)
 	return res, err

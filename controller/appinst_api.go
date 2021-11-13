@@ -61,6 +61,21 @@ func (s *AppInstApi) HasKey(key *edgeproto.AppInstKey) bool {
 	return s.cache.HasKey(key)
 }
 
+func isAutoDeleteAppInstOk(callerOrg string, appInst *edgeproto.AppInst, app *edgeproto.App) bool {
+	if appInst.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC || app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
+		return true
+	}
+	if callerOrg == app.Key.Organization && appInst.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV {
+		// Caller owns the App and AppInst. Allow them to automatically
+		// delete auto-provisioned instances. Otherwise, this is
+		// probably an operator trying to delete a cloudlet or common
+		// ClusterInst, and should not be able to automatically delete
+		// developer's instances.
+		return true
+	}
+	return false
+}
+
 func (s *AppInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.CloudletRefs, defaultClustKey *edgeproto.ClusterInstKey, dynInsts map[edgeproto.AppInstKey]struct{}) error {
 	aiKeys := []*edgeproto.AppInstKey{}
 	// Only need to check VM apps, as other AppInsts require ClusterInsts,
@@ -79,6 +94,10 @@ func (s *AppInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.Cloud
 			aiKeys = append(aiKeys, &aiKey)
 		}
 	}
+	return s.cascadeDeleteOk(stm, refs.Key.Organization, "Cloudlet", aiKeys, dynInsts)
+}
+
+func (s *AppInstApi) cascadeDeleteOk(stm concurrency.STM, callerOrg, deleteTarget string, aiKeys []*edgeproto.AppInstKey, dynInsts map[edgeproto.AppInstKey]struct{}) error {
 	for _, aiKey := range aiKeys {
 		ai := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, aiKey, &ai) {
@@ -88,12 +107,11 @@ func (s *AppInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.Cloud
 		if !s.all.appApi.store.STMGet(stm, &ai.Key.AppKey, &app) {
 			continue
 		}
-		if (ai.Liveness == edgeproto.Liveness_LIVENESS_STATIC || ai.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV) && (app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE) {
-			return fmt.Errorf("Cloudlet in use by AppInst %s", ai.Key.GetKeyString())
-			//if can autodelete it then also add it to the dynInsts to be deleted later
-		} else if (ai.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC) || (app.DelOpt == edgeproto.DeleteType_AUTO_DELETE) {
+		if isAutoDeleteAppInstOk(callerOrg, &ai, &app) {
 			dynInsts[ai.Key] = struct{}{}
+			continue
 		}
+		return fmt.Errorf("%s in use by AppInst %s", deleteTarget, ai.Key.GetKeyString())
 	}
 	return nil
 }
@@ -137,35 +155,14 @@ func (s *AppInstApi) updateAppInstRevision(ctx context.Context, key *edgeproto.A
 	return err
 }
 
-func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	static := false
-	for key, data := range s.cache.Objs {
-		val := data.Obj
-		if key.AppKey.Matches(in) {
-			if val.Liveness == edgeproto.Liveness_LIVENESS_STATIC || val.Liveness == edgeproto.Liveness_LIVENESS_AUTOPROV {
-				static = true
-			} else if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
-				dynInsts[key] = struct{}{}
-			}
-		}
-	}
-	return static
-}
-
-func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
+func (s *AppInstApi) UsesClusterInst(callerOrg string, in *edgeproto.ClusterInstKey) bool {
 	var app edgeproto.App
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		val := data.Obj
 		if val.ClusterInstKey().Matches(in) && s.all.appApi.Get(&val.Key.AppKey, &app) {
-			if val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
-				continue
-			}
-			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name, "autodelete", app.DelOpt.String())
-			if app.DelOpt == edgeproto.DeleteType_NO_AUTO_DELETE {
+			if !isAutoDeleteAppInstOk(callerOrg, val, &app) {
 				return true
 			}
 		}
@@ -173,24 +170,14 @@ func (s *AppInstApi) UsesClusterInst(in *edgeproto.ClusterInstKey) bool {
 	return false
 }
 
-func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverride edgeproto.CRMOverride, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	var app edgeproto.App
+func (s *AppInstApi) AutoDeleteAppInsts(ctx context.Context, dynInsts map[edgeproto.AppInstKey]struct{}, crmoverride edgeproto.CRMOverride, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	var err error
-	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
-	log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInsts ", "cluster", key.ClusterKey.Name)
-	s.cache.Mux.Lock()
-	keys := []edgeproto.AppInstKey{}
-	for k, data := range s.cache.Objs {
-		val := data.Obj
-		if val.ClusterInstKey().Matches(key) && s.all.appApi.Get(&val.Key.AppKey, &app) {
-			if app.DelOpt == edgeproto.DeleteType_AUTO_DELETE || val.Liveness == edgeproto.Liveness_LIVENESS_DYNAMIC {
-				apps[k] = val
-				keys = append(keys, k)
-			}
-		}
-	}
-	s.cache.Mux.Unlock()
+	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts")
 
+	keys := []edgeproto.AppInstKey{}
+	for key := range dynInsts {
+		keys = append(keys, key)
+	}
 	// sort keys for stable iteration order, needed for testing
 	sort.Slice(keys[:], func(i, j int) bool {
 		return keys[i].GetKeyString() < keys[j].GetKeyString()
@@ -200,8 +187,11 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 	var spinTime time.Duration
 	start := time.Now()
 	for _, key := range keys {
-		val := apps[key]
-		log.DebugLog(log.DebugLevelApi, "Auto-deleting AppInst ", "appinst", val.Key.AppKey.Name)
+		val := &edgeproto.AppInst{}
+		if !s.cache.Get(&key, val) {
+			continue
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting AppInst " + val.Key.AppKey.Name})
 		for {
 			// ignore CRM errors when deleting dynamic apps as we will be deleting the cluster anyway
@@ -212,6 +202,8 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 				crmo := edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 				cctx.SetOverride(&crmo)
 			}
+			// cloudlet ready check should already have been done
+			cctx.SkipCloudletReadyCheck = true
 			err = s.deleteAppInstInternal(cctx, val, cb)
 			if err != nil && err.Error() == val.Key.NotFoundError().Error() {
 				err = nil
@@ -220,10 +212,10 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, crmoverri
 			if err != nil && strings.Contains(err.Error(), ObjBusyDeletionMsg) {
 				spinTime = time.Since(start)
 				if spinTime > s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration() {
-					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
+					log.SpanLog(ctx, log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
 					return err
 				}
-				log.DebugLog(log.DebugLevelApi, "AppInst busy, retrying in 0.5s...", "appName", val.Key.AppKey.Name)
+				log.SpanLog(ctx, log.DebugLevelApi, "AppInst busy, retrying in 0.5s...", "appName", val.Key.AppKey.Name)
 				time.Sleep(500 * time.Millisecond)
 			} else { //if its anything other than an appinst busy error, break out of the spin
 				break
@@ -267,16 +259,16 @@ func (s *AppInstApi) AutoDelete(ctx context.Context, appinsts []*edgeproto.AppIn
 	return nil
 }
 
-func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
+func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) *edgeproto.AppInstKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Flavor.Matches(key) {
-			return true
+			return &k
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
@@ -1755,7 +1747,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// this is retained for old autoclusters that are not reservable,
 	// and can be removed once no old autoclusters exist anymore.
 	clusterInst := edgeproto.ClusterInst{}
-	if s.all.clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !s.UsesClusterInst(&clusterInstKey) && !clusterInst.Reservable {
+	if s.all.clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !s.UsesClusterInst(in.Key.AppKey.Organization, &clusterInstKey) && !clusterInst.Reservable {
 		cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst"})
 		cctxauto := cctx.WithAutoCluster()
 		autoerr := s.all.clusterInstApi.deleteClusterInstInternal(cctxauto, &clusterInst, cb)

@@ -46,6 +46,7 @@ message StreamObj {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.uses_org) = "none";
+  option (protogen.ignore_refers_to) = true;
 }
 
 service StreamObjApi {

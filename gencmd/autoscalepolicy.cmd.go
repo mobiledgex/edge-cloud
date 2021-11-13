@@ -25,6 +25,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func AutoScalePolicyHideTags(in *edgeproto.AutoScalePolicy) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var AutoScalePolicyApiCmd edgeproto.AutoScalePolicyApiClient
 
 var CreateAutoScalePolicyCmd = &cli.Command{
@@ -251,6 +264,7 @@ func ShowAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error {
 			}
 			return fmt.Errorf("ShowAutoScalePolicy recv failed: %s", errstr)
 		}
+		AutoScalePolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -325,6 +339,7 @@ var AutoScalePolicyComments = map[string]string{
 	"targetcpu":               "Target per-node cpu utilization (percentage 1 to 100), 0 means disabled",
 	"targetmem":               "Target per-node memory utilization (percentage 1 to 100), 0 means disabled",
 	"targetactiveconnections": "Target per-node number of active connections, 0 means disabled",
+	"deleteprepare":           "Preparing to be deleted",
 }
 var AutoScalePolicySpecialArgs = map[string]string{
 	"fields": "StringArray",
