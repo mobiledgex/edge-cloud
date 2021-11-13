@@ -814,15 +814,27 @@ func (s *DeviceReport) HasFields() bool {
 	return false
 }
 
-type DeviceReportStore struct {
+type DeviceReportStore interface {
+	Create(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *DeviceReport, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*DeviceReport, int64, error)
+	Get(ctx context.Context, key *DeviceKey, buf *DeviceReport) bool
+	STMGet(stm concurrency.STM, key *DeviceKey, buf *DeviceReport) bool
+	STMPut(stm concurrency.STM, obj *DeviceReport, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *DeviceKey)
+}
+
+type DeviceReportStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewDeviceReportStore(kvstore objstore.KVStore) DeviceReportStore {
-	return DeviceReportStore{kvstore: kvstore}
+func NewDeviceReportStore(kvstore objstore.KVStore) *DeviceReportStoreImpl {
+	return &DeviceReportStoreImpl{kvstore: kvstore}
 }
 
-func (s *DeviceReportStore) Create(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error) {
+func (s *DeviceReportStoreImpl) Create(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -842,7 +854,7 @@ func (s *DeviceReportStore) Create(ctx context.Context, m *DeviceReport, wait fu
 	return &Result{}, err
 }
 
-func (s *DeviceReportStore) Update(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error) {
+func (s *DeviceReportStoreImpl) Update(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -863,7 +875,7 @@ func (s *DeviceReportStore) Update(ctx context.Context, m *DeviceReport, wait fu
 	return &Result{}, err
 }
 
-func (s *DeviceReportStore) Put(ctx context.Context, m *DeviceReport, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *DeviceReportStoreImpl) Put(ctx context.Context, m *DeviceReport, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -884,7 +896,7 @@ func (s *DeviceReportStore) Put(ctx context.Context, m *DeviceReport, wait func(
 	return &Result{}, err
 }
 
-func (s *DeviceReportStore) Delete(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error) {
+func (s *DeviceReportStoreImpl) Delete(ctx context.Context, m *DeviceReport, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -900,7 +912,7 @@ func (s *DeviceReportStore) Delete(ctx context.Context, m *DeviceReport, wait fu
 	return &Result{}, err
 }
 
-func (s *DeviceReportStore) LoadOne(key string) (*DeviceReport, int64, error) {
+func (s *DeviceReportStoreImpl) LoadOne(key string) (*DeviceReport, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -914,14 +926,30 @@ func (s *DeviceReportStore) LoadOne(key string) (*DeviceReport, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *DeviceReportStore) STMGet(stm concurrency.STM, key *DeviceKey, buf *DeviceReport) bool {
+func (s *DeviceReportStoreImpl) Get(ctx context.Context, key *DeviceKey, buf *DeviceReport) bool {
+	keystr := objstore.DbKeyString("DeviceReport", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *DeviceReportStoreImpl) STMGet(stm concurrency.STM, key *DeviceKey, buf *DeviceReport) bool {
 	keystr := objstore.DbKeyString("DeviceReport", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *DeviceReportStoreImpl) parseGetData(val []byte, buf *DeviceReport) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = DeviceReport{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -929,17 +957,17 @@ func (s *DeviceReportStore) STMGet(stm concurrency.STM, key *DeviceKey, buf *Dev
 	return true
 }
 
-func (s *DeviceReportStore) STMPut(stm concurrency.STM, obj *DeviceReport, ops ...objstore.KVOp) {
+func (s *DeviceReportStoreImpl) STMPut(stm concurrency.STM, obj *DeviceReport, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("DeviceReport", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("DeviceReport json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("DeviceReport json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *DeviceReportStore) STMDel(stm concurrency.STM, key *DeviceKey) {
+func (s *DeviceReportStoreImpl) STMDel(stm concurrency.STM, key *DeviceKey) {
 	keystr := objstore.DbKeyString("DeviceReport", key)
 	stm.Del(keystr)
 }
@@ -1262,15 +1290,27 @@ func (s *Device) HasFields() bool {
 	return true
 }
 
-type DeviceStore struct {
+type DeviceStore interface {
+	Create(ctx context.Context, m *Device, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *Device, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *Device, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *Device, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*Device, int64, error)
+	Get(ctx context.Context, key *DeviceKey, buf *Device) bool
+	STMGet(stm concurrency.STM, key *DeviceKey, buf *Device) bool
+	STMPut(stm concurrency.STM, obj *Device, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *DeviceKey)
+}
+
+type DeviceStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewDeviceStore(kvstore objstore.KVStore) DeviceStore {
-	return DeviceStore{kvstore: kvstore}
+func NewDeviceStore(kvstore objstore.KVStore) *DeviceStoreImpl {
+	return &DeviceStoreImpl{kvstore: kvstore}
 }
 
-func (s *DeviceStore) Create(ctx context.Context, m *Device, wait func(int64)) (*Result, error) {
+func (s *DeviceStoreImpl) Create(ctx context.Context, m *Device, wait func(int64)) (*Result, error) {
 	err := m.Validate(DeviceAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -1290,7 +1330,7 @@ func (s *DeviceStore) Create(ctx context.Context, m *Device, wait func(int64)) (
 	return &Result{}, err
 }
 
-func (s *DeviceStore) Update(ctx context.Context, m *Device, wait func(int64)) (*Result, error) {
+func (s *DeviceStoreImpl) Update(ctx context.Context, m *Device, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1324,7 +1364,7 @@ func (s *DeviceStore) Update(ctx context.Context, m *Device, wait func(int64)) (
 	return &Result{}, err
 }
 
-func (s *DeviceStore) Put(ctx context.Context, m *Device, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *DeviceStoreImpl) Put(ctx context.Context, m *Device, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(DeviceAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -1346,7 +1386,7 @@ func (s *DeviceStore) Put(ctx context.Context, m *Device, wait func(int64), ops 
 	return &Result{}, err
 }
 
-func (s *DeviceStore) Delete(ctx context.Context, m *Device, wait func(int64)) (*Result, error) {
+func (s *DeviceStoreImpl) Delete(ctx context.Context, m *Device, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -1362,7 +1402,7 @@ func (s *DeviceStore) Delete(ctx context.Context, m *Device, wait func(int64)) (
 	return &Result{}, err
 }
 
-func (s *DeviceStore) LoadOne(key string) (*Device, int64, error) {
+func (s *DeviceStoreImpl) LoadOne(key string) (*Device, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -1376,14 +1416,30 @@ func (s *DeviceStore) LoadOne(key string) (*Device, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *DeviceStore) STMGet(stm concurrency.STM, key *DeviceKey, buf *Device) bool {
+func (s *DeviceStoreImpl) Get(ctx context.Context, key *DeviceKey, buf *Device) bool {
+	keystr := objstore.DbKeyString("Device", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *DeviceStoreImpl) STMGet(stm concurrency.STM, key *DeviceKey, buf *Device) bool {
 	keystr := objstore.DbKeyString("Device", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *DeviceStoreImpl) parseGetData(val []byte, buf *Device) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = Device{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -1391,17 +1447,17 @@ func (s *DeviceStore) STMGet(stm concurrency.STM, key *DeviceKey, buf *Device) b
 	return true
 }
 
-func (s *DeviceStore) STMPut(stm concurrency.STM, obj *Device, ops ...objstore.KVOp) {
+func (s *DeviceStoreImpl) STMPut(stm concurrency.STM, obj *Device, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Device", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("Device json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("Device json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *DeviceStore) STMDel(stm concurrency.STM, key *DeviceKey) {
+func (s *DeviceStoreImpl) STMDel(stm concurrency.STM, key *DeviceKey) {
 	keystr := objstore.DbKeyString("Device", key)
 	stm.Del(keystr)
 }

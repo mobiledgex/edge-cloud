@@ -86,13 +86,6 @@ func TestCloudletPoolApi(t *testing.T) {
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 2, len(pool.Cloudlets))
 
-	// delete cloudlet, see it gets removed from pool
-	err = apis.cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
-	require.Nil(t, err)
-	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
-	require.True(t, found, "get pool %v", poolKey)
-	require.Equal(t, 1, len(pool.Cloudlets))
-
 	// add cloudlet that doesn't exist, should fail
 	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
 	require.NotNil(t, err)

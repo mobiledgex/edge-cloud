@@ -25,6 +25,21 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func NetworkHideTags(in *edgeproto.Network) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Routes); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var NetworkApiCmd edgeproto.NetworkApiClient
 
 var CreateNetworkCmd = &cli.Command{
@@ -319,6 +334,7 @@ func ShowNetwork(c *cli.Command, in *edgeproto.Network) error {
 			}
 			return fmt.Errorf("ShowNetwork recv failed: %s", errstr)
 		}
+		NetworkHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -365,13 +381,15 @@ var NetworkKeyRequiredArgs = []string{}
 var NetworkKeyOptionalArgs = []string{
 	"cloudletkey.organization",
 	"cloudletkey.name",
+	"cloudletkey.federatedorganization",
 	"name",
 }
 var NetworkKeyAliasArgs = []string{}
 var NetworkKeyComments = map[string]string{
-	"cloudletkey.organization": "Organization of the cloudlet site",
-	"cloudletkey.name":         "Name of the cloudlet",
-	"name":                     "Network Name",
+	"cloudletkey.organization":          "Organization of the cloudlet site",
+	"cloudletkey.name":                  "Name of the cloudlet",
+	"cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"name":                              "Network Name",
 }
 var NetworkKeySpecialArgs = map[string]string{}
 var NetworkRequiredArgs = []string{
@@ -380,6 +398,7 @@ var NetworkRequiredArgs = []string{
 	"name",
 }
 var NetworkOptionalArgs = []string{
+	"federated-org",
 	"routes:empty",
 	"routes:#.destinationcidr",
 	"routes:#.nexthopip",
@@ -387,17 +406,20 @@ var NetworkOptionalArgs = []string{
 }
 var NetworkAliasArgs = []string{
 	"cloudlet-org=key.cloudletkey.organization",
+	"federated-org=key.cloudletkey.federatedorganization",
 	"name=key.name",
 }
 var NetworkComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":             "Organization of the cloudlet site",
 	"key.cloudletkey.name":     "Name of the cloudlet",
+	"federated-org":            "Federated operator organization who shared this cloudlet",
 	"name":                     "Network Name",
 	"routes:empty":             "List of routes, specify routes:empty=true to clear",
 	"routes:#.destinationcidr": "Destination CIDR",
 	"routes:#.nexthopip":       "Next hop IP",
 	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
+	"deleteprepare":            "Preparing to be deleted",
 }
 var NetworkSpecialArgs = map[string]string{
 	"fields": "StringArray",

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -50,11 +49,46 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 	return &edgeproto.Result{}, err
 }
 
-func (s *CloudletPoolApi) DeleteCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (*edgeproto.Result, error) {
-	if s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
-		return &edgeproto.Result{}, errors.New("CloudletPool in use by Trust Policy Exception")
-	}
+func (s *CloudletPoolApi) DeleteCloudletPool(ctx context.Context, in *edgeproto.CloudletPool) (res *edgeproto.Result, reterr error) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.CloudletPool{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("CloudletPool already being deleted")
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.CloudletPool{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
+	if tpeKey := s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key); tpeKey != nil {
+		return &edgeproto.Result{}, fmt.Errorf("CloudletPool in use by Trust Policy Exception %s", tpeKey.GetKeyString())
+	}
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.NotFoundError()
 		}
@@ -80,8 +114,8 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		if err := s.checkCloudletsExist(stm, &cur); err != nil {
 			return err
 		}
-		if s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key) {
-			return fmt.Errorf("Not allowed to update CloudletPool when TrustPolicyException is applied")
+		if k := s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key); k != nil {
+			return fmt.Errorf("Not allowed to update CloudletPool when TrustPolicyException %s is applied", k.GetKeyString())
 		}
 		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
@@ -163,31 +197,6 @@ func (s *CloudletPoolApi) RemoveCloudletPoolMember(ctx context.Context, in *edge
 	return &edgeproto.Result{}, err
 }
 
-func (s *CloudletPoolApi) cloudletDeleted(ctx context.Context, key *edgeproto.CloudletKey) {
-	// best effort, no problem if we miss something here.
-	toRemove := []edgeproto.CloudletPoolMember{}
-	s.cache.Mux.Lock()
-	for _, data := range s.cache.Objs {
-		if data.Obj.Key.Organization != key.Organization {
-			continue
-		}
-		// we don't check if it's part of the list because
-		// the remove func will do that anyway.
-		member := edgeproto.CloudletPoolMember{
-			Key:          data.Obj.Key,
-			CloudletName: key.Name,
-		}
-		toRemove = append(toRemove, member)
-	}
-	s.cache.Mux.Unlock()
-	for _, member := range toRemove {
-		_, err := s.RemoveCloudletPoolMember(ctx, &member)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "failed to remove cloudlet member", "member", member, "err", err)
-		}
-	}
-}
-
 func (s *CloudletPoolApi) GetCloudletPoolKeysForCloudletKey(in *edgeproto.CloudletKey) ([]edgeproto.CloudletPoolKey, error) {
 	return s.cache.GetPoolsForCloudletKey(in)
 }
@@ -198,4 +207,23 @@ func (s *CloudletPoolApi) HasCloudletPool(key *edgeproto.CloudletPoolKey) bool {
 
 func (s *CloudletPoolApi) validateCloudletPoolExists(key *edgeproto.CloudletPoolKey) bool {
 	return s.HasCloudletPool(key)
+}
+
+func (s *CloudletPoolApi) UsesCloudlet(key *edgeproto.CloudletKey) []edgeproto.CloudletPoolKey {
+	cpKeys := []edgeproto.CloudletPoolKey{}
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for cpKey, data := range s.cache.Objs {
+		if cpKey.Organization != key.Organization {
+			continue
+		}
+		pool := data.Obj
+		for _, name := range pool.Cloudlets {
+			if name == key.Name {
+				cpKeys = append(cpKeys, cpKey)
+				break
+			}
+		}
+	}
+	return cpKeys
 }

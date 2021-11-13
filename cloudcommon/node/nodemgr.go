@@ -24,6 +24,8 @@ var NodeTypeClusterSvc = "cluster-svc"
 var NodeTypeNotifyRoot = "notifyroot"
 var NodeTypeEdgeTurn = "edgeturn"
 var NodeTypeMC = "mc"
+var NodeTypeAutoProv = "autoprov"
+var NodeTypeFRM = "frm"
 
 // Node tracks all the nodes connected via notify, and handles common
 // requests over all nodes.

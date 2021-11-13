@@ -41,6 +41,9 @@ func CloudletPoolHideTags(in *edgeproto.CloudletPool) {
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 var CloudletPoolApiCmd edgeproto.CloudletPoolApiClient
@@ -440,10 +443,11 @@ var CloudletPoolAliasArgs = []string{
 	"name=key.name",
 }
 var CloudletPoolComments = map[string]string{
-	"fields":    "Fields are used for the Update API to specify which fields to apply",
-	"org":       "Name of the organization this pool belongs to",
-	"name":      "CloudletPool Name",
-	"cloudlets": "Cloudlets part of the pool, specify cloudlets:empty=true to clear",
+	"fields":        "Fields are used for the Update API to specify which fields to apply",
+	"org":           "Name of the organization this pool belongs to",
+	"name":          "CloudletPool Name",
+	"cloudlets":     "Cloudlets part of the pool, specify cloudlets:empty=true to clear",
+	"deleteprepare": "Preparing to be deleted",
 }
 var CloudletPoolSpecialArgs = map[string]string{
 	"cloudlets": "StringArray",

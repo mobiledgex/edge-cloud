@@ -157,6 +157,11 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	if ok {
 		s.sourceCache.Delete(ctx, in, rev)
 		s.store.Delete(ctx, in, s.sync.syncWait)
+		// Reset HealthCheck state back to OK
+		name, ok := in.Labels["alertname"]
+		if ok && name == cloudcommon.AlertAppInstDown {
+			s.appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck_HEALTH_CHECK_OK)
+		}
 	} else {
 		s.sourceCache.DeleteCondFunc(ctx, in, rev, func(old *edgeproto.Alert) bool {
 			if old.NotifyId != in.NotifyId {

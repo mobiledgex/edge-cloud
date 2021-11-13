@@ -80,6 +80,19 @@ func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
 	}
 }
 
+func VMSpecHideTags(in *edgeproto.VMSpec) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Flavor.DeletePrepare = false
+	}
+}
+
 func VMPoolInfoHideTags(in *edgeproto.VMPoolInfo) {
 	if cli.HideTags == "" {
 		return
@@ -625,18 +638,20 @@ var VMSpecOptionalArgs = []string{
 	"flavor.vcpus",
 	"flavor.disk",
 	"flavor.optresmap",
+	"flavor.deleteprepare",
 }
 var VMSpecAliasArgs = []string{}
 var VMSpecComments = map[string]string{
-	"internalname":     "VM internal name",
-	"externalnetwork":  "VM has external network defined or not",
-	"internalnetwork":  "VM has internal network defined or not",
-	"flavor.fields":    "Fields are used for the Update API to specify which fields to apply",
-	"flavor.key.name":  "Flavor name",
-	"flavor.ram":       "RAM in megabytes",
-	"flavor.vcpus":     "Number of virtual CPUs",
-	"flavor.disk":      "Amount of disk space in gigabytes",
-	"flavor.optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"internalname":         "VM internal name",
+	"externalnetwork":      "VM has external network defined or not",
+	"internalnetwork":      "VM has internal network defined or not",
+	"flavor.fields":        "Fields are used for the Update API to specify which fields to apply",
+	"flavor.key.name":      "Flavor name",
+	"flavor.ram":           "RAM in megabytes",
+	"flavor.vcpus":         "Number of virtual CPUs",
+	"flavor.disk":          "Amount of disk space in gigabytes",
+	"flavor.optresmap":     "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"flavor.deleteprepare": "Preparing to be deleted",
 }
 var VMSpecSpecialArgs = map[string]string{
 	"flavor.fields":    "StringArray",

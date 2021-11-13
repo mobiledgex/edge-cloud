@@ -31,19 +31,24 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		tags[tag] = struct{}{}
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.Flavors[i0].DeletePrepare = false
+		}
 	}
 	for i1 := 0; i1 < len(in.Settings.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i1++ {
 	}
 	for i0 := 0; i0 < len(in.OperatorCodes); i0++ {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.ResTagTables[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.TrustPolicies); i0++ {
 		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
 		}
-	}
-	for i0 := 0; i0 < len(in.Networks); i0++ {
-		for i1 := 0; i1 < len(in.Networks[i0].Routes); i1++ {
+		if _, found := tags["nocmp"]; found {
+			in.TrustPolicies[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
@@ -91,6 +96,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].HostController = ""
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -136,14 +144,30 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.CloudletPools[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
+		if _, found := tags["nocmp"]; found {
+			in.CloudletPools[i0].DeletePrepare = false
+		}
+	}
+	for i0 := 0; i0 < len(in.Networks); i0++ {
+		for i1 := 0; i1 < len(in.Networks[i0].Routes); i1++ {
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Networks[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicies); i0++ {
 		for i1 := 0; i1 < len(in.AutoProvPolicies[i0].Cloudlets); i1++ {
+		}
+		if _, found := tags["nocmp"]; found {
+			in.AutoProvPolicies[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicyCloudlets); i0++ {
 	}
 	for i0 := 0; i0 < len(in.AutoScalePolicies); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.AutoScalePolicies[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -190,6 +214,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].ReservationEndedAt = distributed_match_engine.Timestamp{}
+		}
+		if _, found := tags["nocmp"]; found {
+			in.ClusterInsts[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
@@ -295,8 +322,14 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
 		}
+		if _, found := tags["nocmp"]; found {
+			in.GpuDrivers[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.AlertPolicies); i0++ {
+		if _, found := tags["nocmp"]; found {
+			in.AlertPolicies[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.FlowRateLimitSettings); i0++ {
 	}
@@ -316,6 +349,7 @@ var AllDataOptionalArgs = []string{
 	"flavors:#.vcpus",
 	"flavors:#.disk",
 	"flavors:#.optresmap",
+	"flavors:#.deleteprepare",
 	"settings.fields",
 	"settings.shepherdmetricscollectioninterval",
 	"settings.shepherdalertevaluationinterval",
@@ -363,6 +397,7 @@ var AllDataOptionalArgs = []string{
 	"restagtables:#.key.organization",
 	"restagtables:#.tags",
 	"restagtables:#.azone",
+	"restagtables:#.deleteprepare",
 	"trustpolicies:#.fields",
 	"trustpolicies:#.key.organization",
 	"trustpolicies:#.key.name",
@@ -370,16 +405,11 @@ var AllDataOptionalArgs = []string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr",
-	"networks:#.fields",
-	"networks:#.key.cloudletkey.organization",
-	"networks:#.key.cloudletkey.name",
-	"networks:#.key.name",
-	"networks:#.routes:#.destinationcidr",
-	"networks:#.routes:#.nexthopip",
-	"networks:#.connectiontype",
+	"trustpolicies:#.deleteprepare",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
+	"cloudlets:#.key.federatedorganization",
 	"cloudlets:#.location.latitude",
 	"cloudlets:#.location.longitude",
 	"cloudlets:#.location.horizontalaccuracy",
@@ -470,9 +500,11 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.enabledefaultserverlesscluster",
 	"cloudlets:#.allianceorgs",
 	"cloudlets:#.singlekubernetesclusterowner",
+	"cloudlets:#.deleteprepare",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
+	"cloudletinfos:#.key.federatedorganization",
 	"cloudletinfos:#.state",
 	"cloudletinfos:#.notifyid",
 	"cloudletinfos:#.controller",
@@ -541,6 +573,16 @@ var AllDataOptionalArgs = []string{
 	"cloudletpools:#.createdat.nanos",
 	"cloudletpools:#.updatedat.seconds",
 	"cloudletpools:#.updatedat.nanos",
+	"cloudletpools:#.deleteprepare",
+	"networks:#.fields",
+	"networks:#.key.cloudletkey.organization",
+	"networks:#.key.cloudletkey.name",
+	"networks:#.key.cloudletkey.federatedorganization",
+	"networks:#.key.name",
+	"networks:#.routes:#.destinationcidr",
+	"networks:#.routes:#.nexthopip",
+	"networks:#.connectiontype",
+	"networks:#.deleteprepare",
 	"autoprovpolicies:#.fields",
 	"autoprovpolicies:#.key.organization",
 	"autoprovpolicies:#.key.name",
@@ -548,6 +590,7 @@ var AllDataOptionalArgs = []string{
 	"autoprovpolicies:#.deployintervalcount",
 	"autoprovpolicies:#.cloudlets:#.key.organization",
 	"autoprovpolicies:#.cloudlets:#.key.name",
+	"autoprovpolicies:#.cloudlets:#.key.federatedorganization",
 	"autoprovpolicies:#.cloudlets:#.loc.latitude",
 	"autoprovpolicies:#.cloudlets:#.loc.longitude",
 	"autoprovpolicies:#.cloudlets:#.loc.horizontalaccuracy",
@@ -561,10 +604,12 @@ var AllDataOptionalArgs = []string{
 	"autoprovpolicies:#.maxinstances",
 	"autoprovpolicies:#.undeployclientcount",
 	"autoprovpolicies:#.undeployintervalcount",
+	"autoprovpolicies:#.deleteprepare",
 	"autoprovpolicycloudlets:#.key.organization",
 	"autoprovpolicycloudlets:#.key.name",
 	"autoprovpolicycloudlets:#.cloudletkey.organization",
 	"autoprovpolicycloudlets:#.cloudletkey.name",
+	"autoprovpolicycloudlets:#.cloudletkey.federatedorganization",
 	"autoscalepolicies:#.fields",
 	"autoscalepolicies:#.key.organization",
 	"autoscalepolicies:#.key.name",
@@ -577,11 +622,13 @@ var AllDataOptionalArgs = []string{
 	"autoscalepolicies:#.targetcpu",
 	"autoscalepolicies:#.targetmem",
 	"autoscalepolicies:#.targetactiveconnections",
+	"autoscalepolicies:#.deleteprepare",
 	"idlereservableclusterinsts.idletime",
 	"clusterinsts:#.fields",
 	"clusterinsts:#.key.clusterkey.name",
 	"clusterinsts:#.key.cloudletkey.organization",
 	"clusterinsts:#.key.cloudletkey.name",
+	"clusterinsts:#.key.cloudletkey.federatedorganization",
 	"clusterinsts:#.key.organization",
 	"clusterinsts:#.flavor.name",
 	"clusterinsts:#.liveness",
@@ -630,6 +677,7 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.reservationendedat.nanos",
 	"clusterinsts:#.multitenant",
 	"clusterinsts:#.networks",
+	"clusterinsts:#.deleteprepare",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -681,6 +729,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.key.clusterinstkey.clusterkey.name",
 	"appinstances:#.key.clusterinstkey.cloudletkey.organization",
 	"appinstances:#.key.clusterinstkey.cloudletkey.name",
+	"appinstances:#.key.clusterinstkey.cloudletkey.federatedorganization",
 	"appinstances:#.key.clusterinstkey.organization",
 	"appinstances:#.cloudletloc.latitude",
 	"appinstances:#.cloudletloc.longitude",
@@ -742,6 +791,7 @@ var AllDataOptionalArgs = []string{
 	"clusterrefs:#.key.clusterkey.name",
 	"clusterrefs:#.key.cloudletkey.organization",
 	"clusterrefs:#.key.cloudletkey.name",
+	"clusterrefs:#.key.cloudletkey.federatedorganization",
 	"clusterrefs:#.key.organization",
 	"clusterrefs:#.apps:#.appkey.organization",
 	"clusterrefs:#.apps:#.appkey.name",
@@ -787,6 +837,7 @@ var AllDataOptionalArgs = []string{
 	"gpudrivers:#.properties",
 	"gpudrivers:#.state",
 	"gpudrivers:#.ignorestate",
+	"gpudrivers:#.deleteprepare",
 	"alertpolicies:#.fields",
 	"alertpolicies:#.key.organization",
 	"alertpolicies:#.key.name",
@@ -799,6 +850,7 @@ var AllDataOptionalArgs = []string{
 	"alertpolicies:#.labels",
 	"alertpolicies:#.annotations",
 	"alertpolicies:#.description",
+	"alertpolicies:#.deleteprepare",
 	"flowratelimitsettings:#.fields",
 	"flowratelimitsettings:#.key.flowsettingsname",
 	"flowratelimitsettings:#.key.ratelimitkey.apiname",
@@ -836,6 +888,7 @@ var AllDataComments = map[string]string{
 	"flavors:#.vcpus":                                                               "Number of virtual CPUs",
 	"flavors:#.disk":                                                                "Amount of disk space in gigabytes",
 	"flavors:#.optresmap":                                                           "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"flavors:#.deleteprepare":                                                       "Preparing to be deleted",
 	"settings.fields":                                                               "Fields are used for the Update API to specify which fields to apply",
 	"settings.shepherdmetricscollectioninterval":                                    "Shepherd metrics collection interval for k8s and docker appInstances (duration)",
 	"settings.shepherdalertevaluationinterval":                                      "Shepherd alert evaluation interval for k8s and docker appInstances (duration)",
@@ -882,6 +935,7 @@ var AllDataComments = map[string]string{
 	"restagtables:#.key.organization":                                               "Operator organization of the cloudlet site.",
 	"restagtables:#.tags":                                                           "one or more string tags",
 	"restagtables:#.azone":                                                          "availability zone(s) of resource if required",
+	"restagtables:#.deleteprepare":                                                  "Preparing to be deleted",
 	"trustpolicies:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"trustpolicies:#.key.organization":                                              "Name of the organization for the cluster that this policy will apply to",
 	"trustpolicies:#.key.name":                                                      "Policy name",
@@ -889,16 +943,11 @@ var AllDataComments = map[string]string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin":                          "TCP or UDP port range start",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax":                          "TCP or UDP port range end",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr":                            "remote CIDR X.X.X.X/X",
-	"networks:#.fields":                                                             "Fields are used for the Update API to specify which fields to apply",
-	"networks:#.key.cloudletkey.organization":                                       "Organization of the cloudlet site",
-	"networks:#.key.cloudletkey.name":                                               "Name of the cloudlet",
-	"networks:#.key.name":                                                           "Network Name",
-	"networks:#.routes:#.destinationcidr":                                           "Destination CIDR",
-	"networks:#.routes:#.nexthopip":                                                 "Next hop IP",
-	"networks:#.connectiontype":                                                     "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
+	"trustpolicies:#.deleteprepare":                                                 "Preparing to be deleted",
 	"cloudlets:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                                                  "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                                          "Name of the cloudlet",
+	"cloudlets:#.key.federatedorganization":                                         "Federated operator organization who shared this cloudlet",
 	"cloudlets:#.location.latitude":                                                 "Latitude in WGS 84 coordinates",
 	"cloudlets:#.location.longitude":                                                "Longitude in WGS 84 coordinates",
 	"cloudlets:#.location.horizontalaccuracy":                                       "Horizontal accuracy (radius in meters)",
@@ -919,7 +968,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                                             "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudlets:#.crmoverride":                                                       "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                                   "Deploy cloudlet services locally",
-	"cloudlets:#.platformtype":                                                      "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
+	"cloudlets:#.platformtype":                                                      "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation",
 	"cloudlets:#.notifysrvaddr":                                                     "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                                       "Flavor name",
 	"cloudlets:#.physicalname":                                                      "Physical infrastructure cloudlet name",
@@ -976,9 +1025,11 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.enabledefaultserverlesscluster":                                    "Enable experimental default multitenant (serverless) cluster",
 	"cloudlets:#.allianceorgs":                                                      "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet",
 	"cloudlets:#.singlekubernetesclusterowner":                                      "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
+	"cloudlets:#.deleteprepare":                                                     "Preparing to be deleted",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
+	"cloudletinfos:#.key.federatedorganization":                                     "Federated operator organization who shared this cloudlet",
 	"cloudletinfos:#.state":                                                         "State of cloudlet, one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync",
 	"cloudletinfos:#.notifyid":                                                      "Id of client assigned by server (internal use only)",
 	"cloudletinfos:#.controller":                                                    "Connected controller unique id",
@@ -1029,6 +1080,16 @@ var AllDataComments = map[string]string{
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
 	"cloudletpools:#.cloudlets":                                                     "Cloudlets part of the pool",
+	"cloudletpools:#.deleteprepare":                                                 "Preparing to be deleted",
+	"networks:#.fields":                                                             "Fields are used for the Update API to specify which fields to apply",
+	"networks:#.key.cloudletkey.organization":                                       "Organization of the cloudlet site",
+	"networks:#.key.cloudletkey.name":                                               "Name of the cloudlet",
+	"networks:#.key.cloudletkey.federatedorganization":                              "Federated operator organization who shared this cloudlet",
+	"networks:#.key.name":                                                           "Network Name",
+	"networks:#.routes:#.destinationcidr":                                           "Destination CIDR",
+	"networks:#.routes:#.nexthopip":                                                 "Next hop IP",
+	"networks:#.connectiontype":                                                     "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
+	"networks:#.deleteprepare":                                                      "Preparing to be deleted",
 	"autoprovpolicies:#.fields":                                                     "Fields are used for the Update API to specify which fields to apply",
 	"autoprovpolicies:#.key.organization":                                           "Name of the organization for the cluster that this policy will apply to",
 	"autoprovpolicies:#.key.name":                                                   "Policy name",
@@ -1036,6 +1097,7 @@ var AllDataComments = map[string]string{
 	"autoprovpolicies:#.deployintervalcount":                                        "Number of intervals to check before triggering deployment",
 	"autoprovpolicies:#.cloudlets:#.key.organization":                               "Organization of the cloudlet site",
 	"autoprovpolicies:#.cloudlets:#.key.name":                                       "Name of the cloudlet",
+	"autoprovpolicies:#.cloudlets:#.key.federatedorganization":                      "Federated operator organization who shared this cloudlet",
 	"autoprovpolicies:#.cloudlets:#.loc.latitude":                                   "Latitude in WGS 84 coordinates",
 	"autoprovpolicies:#.cloudlets:#.loc.longitude":                                  "Longitude in WGS 84 coordinates",
 	"autoprovpolicies:#.cloudlets:#.loc.horizontalaccuracy":                         "Horizontal accuracy (radius in meters)",
@@ -1047,10 +1109,12 @@ var AllDataComments = map[string]string{
 	"autoprovpolicies:#.maxinstances":                                               "Maximum number of instances (active or not)",
 	"autoprovpolicies:#.undeployclientcount":                                        "Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy",
 	"autoprovpolicies:#.undeployintervalcount":                                      "Number of intervals to check before triggering undeployment",
+	"autoprovpolicies:#.deleteprepare":                                              "Preparing to be deleted",
 	"autoprovpolicycloudlets:#.key.organization":                                    "Name of the organization for the cluster that this policy will apply to",
 	"autoprovpolicycloudlets:#.key.name":                                            "Policy name",
 	"autoprovpolicycloudlets:#.cloudletkey.organization":                            "Organization of the cloudlet site",
 	"autoprovpolicycloudlets:#.cloudletkey.name":                                    "Name of the cloudlet",
+	"autoprovpolicycloudlets:#.cloudletkey.federatedorganization":                   "Federated operator organization who shared this cloudlet",
 	"autoscalepolicies:#.fields":                                                    "Fields are used for the Update API to specify which fields to apply",
 	"autoscalepolicies:#.key.organization":                                          "Name of the organization for the cluster that this policy will apply to",
 	"autoscalepolicies:#.key.name":                                                  "Policy name",
@@ -1063,11 +1127,13 @@ var AllDataComments = map[string]string{
 	"autoscalepolicies:#.targetcpu":                                                 "Target per-node cpu utilization (percentage 1 to 100), 0 means disabled",
 	"autoscalepolicies:#.targetmem":                                                 "Target per-node memory utilization (percentage 1 to 100), 0 means disabled",
 	"autoscalepolicies:#.targetactiveconnections":                                   "Target per-node number of active connections, 0 means disabled",
+	"autoscalepolicies:#.deleteprepare":                                             "Preparing to be deleted",
 	"idlereservableclusterinsts.idletime":                                           "Idle time (duration)",
 	"clusterinsts:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"clusterinsts:#.key.clusterkey.name":                                            "Cluster name",
 	"clusterinsts:#.key.cloudletkey.organization":                                   "Organization of the cloudlet site",
 	"clusterinsts:#.key.cloudletkey.name":                                           "Name of the cloudlet",
+	"clusterinsts:#.key.cloudletkey.federatedorganization":                          "Federated operator organization who shared this cloudlet",
 	"clusterinsts:#.key.organization":                                               "Name of Developer organization that this cluster belongs to",
 	"clusterinsts:#.flavor.name":                                                    "Flavor name",
 	"clusterinsts:#.liveness":                                                       "Liveness of instance (see Liveness), one of Unknown, Static, Dynamic, Autoprov",
@@ -1102,6 +1168,7 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.resources.vms:#.containers:#.restarts":                          "Restart count, applicable to kubernetes only",
 	"clusterinsts:#.multitenant":                                                    "Multi-tenant kubernetes cluster",
 	"clusterinsts:#.networks":                                                       "networks to connect to",
+	"clusterinsts:#.deleteprepare":                                                  "Preparing to be deleted",
 	"apps:#.fields":                                                                 "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                                       "App developer organization",
 	"apps:#.key.name":                                                               "App name",
@@ -1149,6 +1216,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.key.clusterinstkey.clusterkey.name":                             "Cluster name",
 	"appinstances:#.key.clusterinstkey.cloudletkey.organization":                    "Organization of the cloudlet site",
 	"appinstances:#.key.clusterinstkey.cloudletkey.name":                            "Name of the cloudlet",
+	"appinstances:#.key.clusterinstkey.cloudletkey.federatedorganization":           "Federated operator organization who shared this cloudlet",
 	"appinstances:#.key.clusterinstkey.organization":                                "Name of Developer organization that this cluster belongs to",
 	"appinstances:#.cloudletloc.latitude":                                           "Latitude in WGS 84 coordinates",
 	"appinstances:#.cloudletloc.longitude":                                          "Longitude in WGS 84 coordinates",
@@ -1194,6 +1262,7 @@ var AllDataComments = map[string]string{
 	"clusterrefs:#.key.clusterkey.name":                                             "Cluster name",
 	"clusterrefs:#.key.cloudletkey.organization":                                    "Organization of the cloudlet site",
 	"clusterrefs:#.key.cloudletkey.name":                                            "Name of the cloudlet",
+	"clusterrefs:#.key.cloudletkey.federatedorganization":                           "Federated operator organization who shared this cloudlet",
 	"clusterrefs:#.key.organization":                                                "Name of Developer organization that this cluster belongs to",
 	"clusterrefs:#.apps:#.appkey.organization":                                      "App developer organization",
 	"clusterrefs:#.apps:#.appkey.name":                                              "App name",
@@ -1233,6 +1302,7 @@ var AllDataComments = map[string]string{
 	"gpudrivers:#.properties":                                                       "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
 	"gpudrivers:#.state":                                                            "State to figure out if any action on the GPU driver is in-progress",
 	"gpudrivers:#.ignorestate":                                                      "Ignore state will ignore any action in-progress on the GPU driver",
+	"gpudrivers:#.deleteprepare":                                                    "Preparing to be deleted",
 	"alertpolicies:#.key.organization":                                              "Name of the organization for the app that this alert can be applied to",
 	"alertpolicies:#.key.name":                                                      "Alert Policy name",
 	"alertpolicies:#.cpuutilizationlimit":                                           "Container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100",
@@ -1244,6 +1314,7 @@ var AllDataComments = map[string]string{
 	"alertpolicies:#.labels":                                                        "Additional Labels",
 	"alertpolicies:#.annotations":                                                   "Additional Annotations for extra information about the alert",
 	"alertpolicies:#.description":                                                   "Description of the alert policy",
+	"alertpolicies:#.deleteprepare":                                                 "Preparing to be deleted",
 	"flowratelimitsettings:#.fields":                                                "Fields are used for the Update API to specify which fields to apply",
 	"flowratelimitsettings:#.key.flowsettingsname":                                  "Unique name for FlowRateLimitSettings (there can be multiple FlowSettings per RateLimitSettingsKey)",
 	"flowratelimitsettings:#.key.ratelimitkey.apiname":                              "Name of API (eg. CreateApp or RegisterClient) (Use Global if not a specific API)",

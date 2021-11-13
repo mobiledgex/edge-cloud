@@ -390,15 +390,27 @@ func (s *OperatorCode) HasFields() bool {
 	return false
 }
 
-type OperatorCodeStore struct {
+type OperatorCodeStore interface {
+	Create(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *OperatorCode, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*OperatorCode, int64, error)
+	Get(ctx context.Context, key *OperatorCodeKey, buf *OperatorCode) bool
+	STMGet(stm concurrency.STM, key *OperatorCodeKey, buf *OperatorCode) bool
+	STMPut(stm concurrency.STM, obj *OperatorCode, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *OperatorCodeKey)
+}
+
+type OperatorCodeStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewOperatorCodeStore(kvstore objstore.KVStore) OperatorCodeStore {
-	return OperatorCodeStore{kvstore: kvstore}
+func NewOperatorCodeStore(kvstore objstore.KVStore) *OperatorCodeStoreImpl {
+	return &OperatorCodeStoreImpl{kvstore: kvstore}
 }
 
-func (s *OperatorCodeStore) Create(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
+func (s *OperatorCodeStoreImpl) Create(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -418,7 +430,7 @@ func (s *OperatorCodeStore) Create(ctx context.Context, m *OperatorCode, wait fu
 	return &Result{}, err
 }
 
-func (s *OperatorCodeStore) Update(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
+func (s *OperatorCodeStoreImpl) Update(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -439,7 +451,7 @@ func (s *OperatorCodeStore) Update(ctx context.Context, m *OperatorCode, wait fu
 	return &Result{}, err
 }
 
-func (s *OperatorCodeStore) Put(ctx context.Context, m *OperatorCode, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *OperatorCodeStoreImpl) Put(ctx context.Context, m *OperatorCode, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -460,7 +472,7 @@ func (s *OperatorCodeStore) Put(ctx context.Context, m *OperatorCode, wait func(
 	return &Result{}, err
 }
 
-func (s *OperatorCodeStore) Delete(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
+func (s *OperatorCodeStoreImpl) Delete(ctx context.Context, m *OperatorCode, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -476,7 +488,7 @@ func (s *OperatorCodeStore) Delete(ctx context.Context, m *OperatorCode, wait fu
 	return &Result{}, err
 }
 
-func (s *OperatorCodeStore) LoadOne(key string) (*OperatorCode, int64, error) {
+func (s *OperatorCodeStoreImpl) LoadOne(key string) (*OperatorCode, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -490,14 +502,30 @@ func (s *OperatorCodeStore) LoadOne(key string) (*OperatorCode, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *OperatorCodeStore) STMGet(stm concurrency.STM, key *OperatorCodeKey, buf *OperatorCode) bool {
+func (s *OperatorCodeStoreImpl) Get(ctx context.Context, key *OperatorCodeKey, buf *OperatorCode) bool {
+	keystr := objstore.DbKeyString("OperatorCode", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *OperatorCodeStoreImpl) STMGet(stm concurrency.STM, key *OperatorCodeKey, buf *OperatorCode) bool {
 	keystr := objstore.DbKeyString("OperatorCode", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *OperatorCodeStoreImpl) parseGetData(val []byte, buf *OperatorCode) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = OperatorCode{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -505,17 +533,17 @@ func (s *OperatorCodeStore) STMGet(stm concurrency.STM, key *OperatorCodeKey, bu
 	return true
 }
 
-func (s *OperatorCodeStore) STMPut(stm concurrency.STM, obj *OperatorCode, ops ...objstore.KVOp) {
+func (s *OperatorCodeStoreImpl) STMPut(stm concurrency.STM, obj *OperatorCode, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("OperatorCode", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("OperatorCode json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("OperatorCode json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *OperatorCodeStore) STMDel(stm concurrency.STM, key *OperatorCodeKey) {
+func (s *OperatorCodeStoreImpl) STMDel(stm concurrency.STM, key *OperatorCodeKey) {
 	keystr := objstore.DbKeyString("OperatorCode", key)
 	stm.Del(keystr)
 }
