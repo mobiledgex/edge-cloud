@@ -644,7 +644,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			cur.DeploymentManifest = ""
 		}
 		newRevision := in.Revision
-		if newRevision == "" {
+		if newRevision == "" && revisionUpdateNeeded(fields) {
 			newRevision = time.Now().Format("2006-01-02T150405")
 			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
 		}
@@ -656,6 +656,14 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return nil
 	})
 	return &edgeproto.Result{}, err
+}
+
+func revisionUpdateNeeded(fields map[string]struct{}) bool {
+	_, alertPoliciesSpecified := fields[edgeproto.AppFieldAlertPolicies]
+	if alertPoliciesSpecified && len(fields) == 1 {
+		return false
+	}
+	return true
 }
 
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (res *edgeproto.Result, reterr error) {
