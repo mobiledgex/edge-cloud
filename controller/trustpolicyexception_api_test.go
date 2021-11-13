@@ -41,42 +41,26 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	testutil.InternalAppInstCreate(t, apis.appInstApi, testutil.AppInstData)
 	testutil.InternalCloudletPoolTest(t, "cud", apis.cloudletPoolApi, testutil.CloudletPoolData)
 
-	app := edgeproto.App{
-		Key: edgeproto.AppKey{
-			Organization: "org",
-			Name:         "someapp",
-			Version:      "1.0.1",
-		},
-		ImageType:          edgeproto.ImageType_IMAGE_TYPE_DOCKER,
-		AccessPorts:        "tcp:445,udp:1212",
-		Deployment:         "docker", // avoid trying to parse k8s manifest
-		DeploymentManifest: "some manifest",
-		DefaultFlavor:      testutil.FlavorData[2].Key,
-	}
-	_, err := apis.appApi.CreateApp(ctx, &app)
-	require.Nil(t, err, "Create app with deployment manifest")
-	checkApp := edgeproto.App{}
-	found := apis.appApi.Get(&app.Key, &checkApp)
-	require.True(t, found, "found app")
-	require.Equal(t, "", checkApp.ImagePath, "image path empty")
-	_, err = apis.appApi.DeleteApp(ctx, &app)
-	require.Nil(t, err)
-
 	// CUD for Trust Policy Exception
 	testutil.InternalTrustPolicyExceptionTest(t, "cud", apis.trustPolicyExceptionApi, testutil.TrustPolicyExceptionData)
 
-	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &testutil.TrustPolicyExceptionData[0])
+	// Basic error case - when TPE already exists
+	_, err := apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &testutil.TrustPolicyExceptionData[0])
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), " already exists")
 
 	tpeData := edgeproto.TrustPolicyException{
 		Key: edgeproto.TrustPolicyExceptionKey{
-			AppKey: app.Key,
+			AppKey: edgeproto.AppKey{
+				Organization: testutil.DevData[0],
+				Name:         "Pokemon Go!",
+				Version:      "1.0.0",
+			},
 			CloudletPoolKey: edgeproto.CloudletPoolKey{
-				Organization: "Verizon",
+				Organization: testutil.OperatorData[2],
 				Name:         "test-and-dev",
 			},
-			Name: "someapp-tpe",
+			Name: "someapp-tpe2",
 		},
 		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
@@ -89,11 +73,46 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 		},
 	}
 	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+
+	// test that TPE update state to STATE_ACTIVE, passes
+	tpeData.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+
+	// test that TPE update state to STATE_APPROVAL_REQUESTED, fails
+	tpeData.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "New state must be either Active or Rejected")
 
+	// test that TPE create when specified CloudletPool does not exist, fails
+	tpeData.Key.CloudletPoolKey.Organization = "Mission Mars"
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "TrustPolicyExceptionKey: CloudletPoolKey does not exist")
+	// Restore tpeData Key to original values
+	tpeData.Key.CloudletPoolKey.Organization = testutil.OperatorData[2]
+
+	// test that TPE create when specified App does not exist, fails
+	tpeData.Key.AppKey.Organization = testutil.DevData[2]
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "TrustPolicyExceptionKey: App does not exist")
+	// Restore tpeData Key to original values
+	tpeData.Key.AppKey.Organization = testutil.DevData[0]
+
+	// test that App delete fails if TPE exists that refers to it
+	app0 := testutil.AppData[0]
+	_, err = apis.appApi.DeleteApp(ctx, &app0)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Application in use by Trust Policy Exception")
+
+	// Success : Delete
 	_, err = apis.trustPolicyExceptionApi.DeleteTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
 
-	// error cases for Trust Policy Exception
+	// error cases for Create Trust Policy Exception
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[0], "cannot be higher than max")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[1], "invalid CIDR")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[2], "Invalid min port")
