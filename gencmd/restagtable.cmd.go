@@ -25,6 +25,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func ResTagTableHideTags(in *edgeproto.ResTagTable) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var ResTagTableApiCmd edgeproto.ResTagTableApiClient
 
 var CreateResTagTableCmd = &cli.Command{
@@ -251,6 +264,7 @@ func ShowResTagTable(c *cli.Command, in *edgeproto.ResTagTable) error {
 			}
 			return fmt.Errorf("ShowResTagTable recv failed: %s", errstr)
 		}
+		ResTagTableHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -427,6 +441,7 @@ func GetResTagTable(c *cli.Command, in *edgeproto.ResTagTableKey) error {
 		}
 		return fmt.Errorf("GetResTagTable failed: %s", errstr)
 	}
+	ResTagTableHideTags(obj)
 	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 	return nil
 }
@@ -480,10 +495,11 @@ var ResTagTableAliasArgs = []string{
 	"organization=key.organization",
 }
 var ResTagTableComments = map[string]string{
-	"res":          "Resource Table Name",
-	"organization": "Operator organization of the cloudlet site.",
-	"tags":         "one or more string tags, specify tags:empty=true to clear",
-	"azone":        "availability zone(s) of resource if required",
+	"res":           "Resource Table Name",
+	"organization":  "Operator organization of the cloudlet site.",
+	"tags":          "one or more string tags, specify tags:empty=true to clear",
+	"azone":         "availability zone(s) of resource if required",
+	"deleteprepare": "Preparing to be deleted",
 }
 var ResTagTableSpecialArgs = map[string]string{
 	"fields": "StringArray",

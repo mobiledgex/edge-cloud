@@ -40,7 +40,7 @@ message VMResource {
 // CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
 message CloudletRefs {
   // Cloudlet key
-  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  CloudletKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "Cloudlet"];
   // Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol
   // bitmap: bit 0: tcp, bit 1: udp
   map<int32, int32> root_lb_ports = 8;
@@ -53,7 +53,7 @@ message CloudletRefs {
   // Track reservable autoclusterinsts ids in use. This is a bitmap.
   fixed64 reserved_auto_cluster_ids = 12;
   // Clusters instantiated on the Cloudlet
-  repeated ClusterInstRefKey cluster_insts = 13 [(gogoproto.nullable) = false];
+  repeated ClusterInstRefKey cluster_insts = 13 [(gogoproto.nullable) = false, (protogen.tracks_refs_by) = "ClusterInst"];
   // VM apps instantiated on the Cloudlet
   repeated AppInstRefKey vm_app_insts = 14 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
@@ -61,6 +61,7 @@ message CloudletRefs {
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
   option (protogen.uses_org) = "none";
+  option (protogen.tracks_refers_to) = true;
 }
 
 // ClusterRefs AppInst Key
@@ -85,15 +86,16 @@ message ClusterRefsAppInstKey {
 // ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst.
 message ClusterRefs {
   // Cluster Instance key
-  ClusterInstKey key = 1 [(gogoproto.nullable) = false];
-  // Apps instances in the Cluster Instance
-  repeated ClusterRefsAppInstKey apps = 2 [(gogoproto.nullable) = false];
+  ClusterInstKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "ClusterInst"];
+  // App instances in the Cluster Instance
+  repeated ClusterRefsAppInstKey apps = 2 [(gogoproto.nullable) = false, (protogen.tracks_refs_by) = "AppInst"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
   option (protogen.uses_org) = "none";
   option (protogen.notify_cache) = true;
+  option (protogen.tracks_refers_to) = true;
 }
 
 // This API should be admin-only
@@ -113,9 +115,9 @@ service ClusterRefsApi {
 
 message AppInstRefs {
   // App key
-  AppKey key = 1 [(gogoproto.nullable) = false];
+  AppKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "App"];
   // AppInsts for App (key is JSON of AppInst Key)
-  map<string, uint32> insts = 2 [(gogoproto.nullable) = false];
+  map<string, uint32> insts = 2 [(gogoproto.nullable) = false, (protogen.tracks_refs_by) = "AppInst"];
   // AppInsts being deleted (key is JSON of AppInst Key)
   map<string, uint32> delete_requested_insts = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
@@ -124,6 +126,7 @@ message AppInstRefs {
   option (protogen.generate_show_test) = true;
   option (protogen.uses_org) = "none";
   option (protogen.notify_cache) = true;
+  option (protogen.tracks_refers_to) = true;
 }
 
 service AppInstRefsApi {

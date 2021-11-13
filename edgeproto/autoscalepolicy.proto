@@ -47,6 +47,8 @@ message AutoScalePolicy {
   uint32 target_mem = 10;
   // Target per-node number of active connections, 0 means disabled
   uint64 target_active_connections = 11;
+  // Preparing to be deleted
+  bool delete_prepare = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -54,6 +56,7 @@ message AutoScalePolicy {
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name,cluster-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.noconfig) = "DeletePrepare";
 }
 
 service AutoScalePolicyApi {

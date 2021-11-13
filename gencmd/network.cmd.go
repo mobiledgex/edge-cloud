@@ -25,6 +25,21 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func NetworkHideTags(in *edgeproto.Network) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Routes); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var NetworkApiCmd edgeproto.NetworkApiClient
 
 var CreateNetworkCmd = &cli.Command{
@@ -319,6 +334,7 @@ func ShowNetwork(c *cli.Command, in *edgeproto.Network) error {
 			}
 			return fmt.Errorf("ShowNetwork recv failed: %s", errstr)
 		}
+		NetworkHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -403,6 +419,7 @@ var NetworkComments = map[string]string{
 	"routes:#.destinationcidr": "Destination CIDR",
 	"routes:#.nexthopip":       "Next hop IP",
 	"connectiontype":           "Network connection type, one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll",
+	"deleteprepare":            "Preparing to be deleted",
 }
 var NetworkSpecialArgs = map[string]string{
 	"fields": "StringArray",

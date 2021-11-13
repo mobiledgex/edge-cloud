@@ -25,6 +25,19 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func AlertPolicyHideTags(in *edgeproto.AlertPolicy) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 var AlertPolicyApiCmd edgeproto.AlertPolicyApiClient
 
 var CreateAlertPolicyCmd = &cli.Command{
@@ -251,6 +264,7 @@ func ShowAlertPolicy(c *cli.Command, in *edgeproto.AlertPolicy) error {
 			}
 			return fmt.Errorf("ShowAlertPolicy recv failed: %s", errstr)
 		}
+		AlertPolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -329,6 +343,7 @@ var AlertPolicyComments = map[string]string{
 	"labels":             "Additional Labels, specify labels:empty=true to clear",
 	"annotations":        "Additional Annotations for extra information about the alert, specify annotations:empty=true to clear",
 	"description":        "Description of the alert policy",
+	"deleteprepare":      "Preparing to be deleted",
 }
 var AlertPolicySpecialArgs = map[string]string{
 	"annotations": "StringToString",

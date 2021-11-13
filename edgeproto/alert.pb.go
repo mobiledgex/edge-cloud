@@ -502,15 +502,27 @@ func (s *Alert) HasFields() bool {
 	return false
 }
 
-type AlertStore struct {
+type AlertStore interface {
+	Create(ctx context.Context, m *Alert, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *Alert, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *Alert, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *Alert, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*Alert, int64, error)
+	Get(ctx context.Context, key *AlertKey, buf *Alert) bool
+	STMGet(stm concurrency.STM, key *AlertKey, buf *Alert) bool
+	STMPut(stm concurrency.STM, obj *Alert, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *AlertKey)
+}
+
+type AlertStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewAlertStore(kvstore objstore.KVStore) AlertStore {
-	return AlertStore{kvstore: kvstore}
+func NewAlertStore(kvstore objstore.KVStore) *AlertStoreImpl {
+	return &AlertStoreImpl{kvstore: kvstore}
 }
 
-func (s *AlertStore) Create(ctx context.Context, m *Alert, wait func(int64)) (*Result, error) {
+func (s *AlertStoreImpl) Create(ctx context.Context, m *Alert, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -530,7 +542,7 @@ func (s *AlertStore) Create(ctx context.Context, m *Alert, wait func(int64)) (*R
 	return &Result{}, err
 }
 
-func (s *AlertStore) Update(ctx context.Context, m *Alert, wait func(int64)) (*Result, error) {
+func (s *AlertStoreImpl) Update(ctx context.Context, m *Alert, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -551,7 +563,7 @@ func (s *AlertStore) Update(ctx context.Context, m *Alert, wait func(int64)) (*R
 	return &Result{}, err
 }
 
-func (s *AlertStore) Put(ctx context.Context, m *Alert, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *AlertStoreImpl) Put(ctx context.Context, m *Alert, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -572,7 +584,7 @@ func (s *AlertStore) Put(ctx context.Context, m *Alert, wait func(int64), ops ..
 	return &Result{}, err
 }
 
-func (s *AlertStore) Delete(ctx context.Context, m *Alert, wait func(int64)) (*Result, error) {
+func (s *AlertStoreImpl) Delete(ctx context.Context, m *Alert, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -588,7 +600,7 @@ func (s *AlertStore) Delete(ctx context.Context, m *Alert, wait func(int64)) (*R
 	return &Result{}, err
 }
 
-func (s *AlertStore) LoadOne(key string) (*Alert, int64, error) {
+func (s *AlertStoreImpl) LoadOne(key string) (*Alert, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -602,14 +614,30 @@ func (s *AlertStore) LoadOne(key string) (*Alert, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *AlertStore) STMGet(stm concurrency.STM, key *AlertKey, buf *Alert) bool {
+func (s *AlertStoreImpl) Get(ctx context.Context, key *AlertKey, buf *Alert) bool {
+	keystr := objstore.DbKeyString("Alert", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *AlertStoreImpl) STMGet(stm concurrency.STM, key *AlertKey, buf *Alert) bool {
 	keystr := objstore.DbKeyString("Alert", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *AlertStoreImpl) parseGetData(val []byte, buf *Alert) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = Alert{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -617,17 +645,17 @@ func (s *AlertStore) STMGet(stm concurrency.STM, key *AlertKey, buf *Alert) bool
 	return true
 }
 
-func (s *AlertStore) STMPut(stm concurrency.STM, obj *Alert, ops ...objstore.KVOp) {
+func (s *AlertStoreImpl) STMPut(stm concurrency.STM, obj *Alert, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Alert", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("Alert json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("Alert json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *AlertStore) STMDel(stm concurrency.STM, key *AlertKey) {
+func (s *AlertStoreImpl) STMDel(stm concurrency.STM, key *AlertKey) {
 	keystr := objstore.DbKeyString("Alert", key)
 	stm.Del(keystr)
 }
