@@ -27,6 +27,21 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func GPUDriverHideTags(in *edgeproto.GPUDriver) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Builds); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if cli.HideTags == "" {
 		return
@@ -78,6 +93,9 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.HostController = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
 	}
 }
 
@@ -424,6 +442,7 @@ func ShowGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 			}
 			return fmt.Errorf("ShowGPUDriver recv failed: %s", errstr)
 		}
+		GPUDriverHideTags(obj)
 		if cli.OutputStream {
 			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
@@ -2420,6 +2439,7 @@ var GPUDriverComments = map[string]string{
 	"properties":               "Additional properties associated with GPU driver build For example: license server information, driver release date, etc, specify properties:empty=true to clear",
 	"state":                    "State to figure out if any action on the GPU driver is in-progress",
 	"ignorestate":              "Ignore state will ignore any action in-progress on the GPU driver",
+	"deleteprepare":            "Preparing to be deleted",
 }
 var GPUDriverSpecialArgs = map[string]string{
 	"fields":     "StringArray",
@@ -2584,6 +2604,7 @@ var CloudletComments = map[string]string{
 	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
 	"allianceorgs":                        "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet, specify allianceorgs:empty=true to clear",
 	"singlekubernetesclusterowner":        "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
+	"deleteprepare":                       "Preparing to be deleted",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",

@@ -1087,15 +1087,27 @@ func (s *Node) HasFields() bool {
 	return true
 }
 
-type NodeStore struct {
+type NodeStore interface {
+	Create(ctx context.Context, m *Node, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *Node, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *Node, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *Node, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*Node, int64, error)
+	Get(ctx context.Context, key *NodeKey, buf *Node) bool
+	STMGet(stm concurrency.STM, key *NodeKey, buf *Node) bool
+	STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *NodeKey)
+}
+
+type NodeStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewNodeStore(kvstore objstore.KVStore) NodeStore {
-	return NodeStore{kvstore: kvstore}
+func NewNodeStore(kvstore objstore.KVStore) *NodeStoreImpl {
+	return &NodeStoreImpl{kvstore: kvstore}
 }
 
-func (s *NodeStore) Create(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
+func (s *NodeStoreImpl) Create(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
 	err := m.Validate(NodeAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -1115,7 +1127,7 @@ func (s *NodeStore) Create(ctx context.Context, m *Node, wait func(int64)) (*Res
 	return &Result{}, err
 }
 
-func (s *NodeStore) Update(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
+func (s *NodeStoreImpl) Update(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1149,7 +1161,7 @@ func (s *NodeStore) Update(ctx context.Context, m *Node, wait func(int64)) (*Res
 	return &Result{}, err
 }
 
-func (s *NodeStore) Put(ctx context.Context, m *Node, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *NodeStoreImpl) Put(ctx context.Context, m *Node, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(NodeAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -1171,7 +1183,7 @@ func (s *NodeStore) Put(ctx context.Context, m *Node, wait func(int64), ops ...o
 	return &Result{}, err
 }
 
-func (s *NodeStore) Delete(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
+func (s *NodeStoreImpl) Delete(ctx context.Context, m *Node, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -1187,7 +1199,7 @@ func (s *NodeStore) Delete(ctx context.Context, m *Node, wait func(int64)) (*Res
 	return &Result{}, err
 }
 
-func (s *NodeStore) LoadOne(key string) (*Node, int64, error) {
+func (s *NodeStoreImpl) LoadOne(key string) (*Node, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -1201,14 +1213,30 @@ func (s *NodeStore) LoadOne(key string) (*Node, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *NodeStore) STMGet(stm concurrency.STM, key *NodeKey, buf *Node) bool {
+func (s *NodeStoreImpl) Get(ctx context.Context, key *NodeKey, buf *Node) bool {
+	keystr := objstore.DbKeyString("Node", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *NodeStoreImpl) STMGet(stm concurrency.STM, key *NodeKey, buf *Node) bool {
 	keystr := objstore.DbKeyString("Node", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *NodeStoreImpl) parseGetData(val []byte, buf *Node) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = Node{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -1216,17 +1244,17 @@ func (s *NodeStore) STMGet(stm concurrency.STM, key *NodeKey, buf *Node) bool {
 	return true
 }
 
-func (s *NodeStore) STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp) {
+func (s *NodeStoreImpl) STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Node", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("Node json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("Node json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *NodeStore) STMDel(stm concurrency.STM, key *NodeKey) {
+func (s *NodeStoreImpl) STMDel(stm concurrency.STM, key *NodeKey) {
 	keystr := objstore.DbKeyString("Node", key)
 	stm.Del(keystr)
 }

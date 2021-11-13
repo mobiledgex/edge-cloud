@@ -80,6 +80,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["timestamp"]; found {
 		in.ReservationEndedAt = distributed_match_engine.Timestamp{}
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
@@ -659,6 +662,7 @@ var ClusterInstComments = map[string]string{
 	"resources.vms:#.containers:#.restarts":  "Restart count, applicable to kubernetes only",
 	"multitenant":                            "Multi-tenant kubernetes cluster",
 	"networks":                               "networks to connect to, specify networks:empty=true to clear",
+	"deleteprepare":                          "Preparing to be deleted",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",
