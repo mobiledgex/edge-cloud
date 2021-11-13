@@ -211,6 +211,41 @@ func TestAppApi(t *testing.T) {
 	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.NotNil(t, err, "Create app with maxpktsize fails")
 
+	// test updating app with a list of alertpolicies
+	alertPolicyApp := testutil.AppData[1]
+	alertPolicyApp.Deployment = cloudcommon.DeploymentTypeKubernetes
+	_, err = apis.appApi.DeleteApp(ctx, &alertPolicyApp)
+	require.Nil(t, err, "Deleted old app")
+	_, err = apis.appApi.CreateApp(ctx, &alertPolicyApp)
+	require.Nil(t, err, "Create app without policies")
+	// get the revision
+	found = apis.appApi.Get(alertPolicyApp.GetKey(), &storedApp)
+	require.True(t, found, "Found app")
+	rev := storedApp.Revision
+	// update with alert policy - should fail, no alert policies
+	upapp = alertPolicyApp
+	upapp.AlertPolicies = []string{testutil.AlertPolicyData[0].Key.Name}
+	upapp.Fields = []string{edgeproto.AppFieldAlertPolicies}
+	_, err = apis.appApi.UpdateApp(ctx, &upapp)
+	require.NotNil(t, err, "Update with a non-existent alert policy")
+	// create alert policy
+	userAlert := testutil.AlertPolicyData[0]
+	_, err = apis.alertPolicyApi.CreateAlertPolicy(ctx, &userAlert)
+	require.Nil(t, err, "Create Alert policy")
+	// update app with existing alert policy
+	_, err = apis.appApi.UpdateApp(ctx, &upapp)
+	require.Nil(t, err, "Update with an alert policy")
+	// get the revision
+	found = apis.appApi.Get(alertPolicyApp.GetKey(), &storedApp)
+	require.True(t, found, "Found app")
+	// new revision should be the same as the old one
+	require.Equal(t, rev, storedApp.Revision, "Revions is not updated for updated list of alert policies")
+	// clean up
+	_, err = apis.appApi.DeleteApp(ctx, &alertPolicyApp)
+	require.Nil(t, err, "Deleted app with alert policy")
+	_, err = apis.alertPolicyApi.DeleteAlertPolicy(ctx, &userAlert)
+	require.Nil(t, err, "Delete alert policy")
+
 	dummy.Stop()
 }
 
