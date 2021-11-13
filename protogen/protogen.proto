@@ -96,6 +96,12 @@ extend google.protobuf.MessageOptions {
   string generate_lookup_by_subfield = 51049;
   // message has custom yaml/json marshalers
   bool custom_yaml_json_marshalers = 51052;
+  // set to true to ignore refers_to in this message or subfields
+  bool ignore_refers_to = 51054;
+  // refs object which tracks references from other objects
+  bool tracks_refers_to = 51055;
+  // controller api struct name
+  string controller_api_struct = 51056;
 }
 
 extend google.protobuf.EnumOptions {
@@ -129,6 +135,10 @@ extend google.protobuf.FieldOptions {
   string keytag = 51047;
   // Skip KeyTag conflict check, for intentional duplicates
   bool skip_keytag_conflict_check = 51050;
+  // field references another database object
+  string refers_to = 51053;
+  // tracked object that makes references to refers_to object
+  string tracks_refs_by = 51056;
 }
 
 extend google.protobuf.MethodOptions {

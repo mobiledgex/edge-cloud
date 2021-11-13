@@ -360,7 +360,7 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) dme.Cloud
 }
 
 func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey, action cloudcommon.Action) error {
-	if cctx != nil && ignoreCRM(cctx) {
+	if cctx != nil && (ignoreCRM(cctx) || cctx.SkipCloudletReadyCheck) {
 		return nil
 	}
 	// Get tracked state, it could be that cloudlet has initiated
@@ -369,8 +369,8 @@ func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.
 	if !s.all.cloudletApi.store.STMGet(stm, key, &cloudlet) {
 		return key.NotFoundError()
 	}
-	if action == cloudcommon.Delete && cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE {
-		return nil
+	if action == cloudcommon.Delete && (cloudlet.DeletePrepare || cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE) {
+		return fmt.Errorf("Cloudlet %s is being deleted", key.GetKeyString())
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {

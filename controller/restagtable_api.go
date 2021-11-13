@@ -64,15 +64,46 @@ func (s *ResTagTableApi) CreateResTagTable(ctx context.Context, in *edgeproto.Re
 	return &edgeproto.Result{}, err
 }
 
-func (s *ResTagTableApi) DeleteResTagTable(ctx context.Context, in *edgeproto.ResTagTable) (*edgeproto.Result, error) {
+func (s *ResTagTableApi) DeleteResTagTable(ctx context.Context, in *edgeproto.ResTagTable) (res *edgeproto.Result, reterr error) {
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, nil) {
+		cur := edgeproto.ResTagTable{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		s.store.STMDel(stm, &in.Key)
+		if cur.DeletePrepare {
+			return fmt.Errorf("ResTagTable already being deleted")
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
-	return &edgeproto.Result{}, err
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.ResTagTable{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
+	if k := s.all.cloudletApi.UsesResTagTable(&in.Key); k != nil {
+		return &edgeproto.Result{}, fmt.Errorf("ResTagTable in use by Cloudlet %s", k.GetKeyString())
+	}
+	return s.store.Delete(ctx, in, s.sync.syncWait)
 }
 
 func (s *ResTagTableApi) GetResTagTable(ctx context.Context, in *edgeproto.ResTagTableKey) (*edgeproto.ResTagTable, error) {

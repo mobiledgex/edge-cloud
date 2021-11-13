@@ -43,6 +43,8 @@ message Flavor {
   // Optional Resources request, key = gpu
   // form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1
   map<string, string> opt_res_map = 6;
+  // Preparing to be deleted
+  bool delete_prepare = 7 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -51,6 +53,7 @@ message Flavor {
   option (protogen.notify_cache) = true;
   option (protogen.alias) = "name=Key.Name";
   option (protogen.uses_org) = "none";
+  option (protogen.noconfig) = "DeletePrepare";
 }
 
 service FlavorApi {

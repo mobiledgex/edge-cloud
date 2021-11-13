@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -39,7 +40,7 @@ func (s *NetworkApi) UpdateNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 	ctx := cb.Context()
 	cur := edgeproto.Network{}
 
-	if s.all.clusterInstApi.UsesNetwork(&in.Key) {
+	if s.all.clusterInstApi.UsesNetwork(&in.Key) != nil {
 		return errors.New("Network cannot be modified while associated with a Cluster Instance")
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -63,15 +64,47 @@ func (s *NetworkApi) UpdateNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 	return nil
 }
 
-func (s *NetworkApi) DeleteNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_DeleteNetworkServer) error {
+func (s *NetworkApi) DeleteNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_DeleteNetworkServer) (reterr error) {
 	ctx := cb.Context()
-	if !s.cache.HasKey(&in.Key) {
-		return in.Key.NotFoundError()
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.Network{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("Network already being deleted")
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return err
 	}
-	if s.all.clusterInstApi.UsesNetwork(&in.Key) {
-		return errors.New("Network in use by Cluster Instance")
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.Network{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
+	if k := s.all.clusterInstApi.UsesNetwork(&in.Key); k != nil {
+		return fmt.Errorf("Network in use by ClusterInst %s", k.GetKeyString())
 	}
-	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
+	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
 
@@ -81,4 +114,15 @@ func (s *NetworkApi) ShowNetwork(in *edgeproto.Network, cb edgeproto.NetworkApi_
 		return err
 	})
 	return err
+}
+
+func (s *NetworkApi) UsesCloudlet(in *edgeproto.CloudletKey) *edgeproto.NetworkKey {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key := range s.cache.Objs {
+		if key.CloudletKey.Matches(in) {
+			return &key
+		}
+	}
+	return nil
 }

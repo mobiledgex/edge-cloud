@@ -41,7 +41,7 @@ message Route {
 
 message NetworkKey {
   // Cloudlet that this network can be provisioned on
-  CloudletKey cloudlet_key = 1 [(gogoproto.nullable) = false];
+  CloudletKey cloudlet_key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "Cloudlet"];
   // Network Name
   string name = 2 [(protogen.keytag) = "network"];
   option (protogen.generate_matches) = true;
@@ -60,6 +60,8 @@ message Network {
   repeated Route routes = 3 [(gogoproto.nullable) = false];
   // Network connection type
   NetworkConnectionType connection_type = 4;
+  // Preparing to be deleted
+  bool delete_prepare = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;  
@@ -69,6 +71,7 @@ message Network {
   option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.CloudletKey.Organization,federated-org=Key.CloudletKey.FederatedOrganization";
   option (protogen.not_required) = "Key.CloudletKey.FederatedOrganization";
   option (protogen.uses_org) = "key=CloudletKey.Organization";
+  option (protogen.noconfig) = "DeletePrepare";
 }
 
 service NetworkApi {

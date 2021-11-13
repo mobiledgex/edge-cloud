@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -47,16 +46,16 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
 
-func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
+func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) *edgeproto.AppKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.DefaultFlavor.Matches(key) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
-			return true
+			return &k
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
@@ -127,23 +126,23 @@ func (s *AppApi) CheckAppCompatibleWithTrustPolicy(ctx context.Context, ckey *ed
 	return nil
 }
 
-func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
+func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) *edgeproto.AppKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Key.Organization == key.Organization {
 			if app.AutoProvPolicy == key.Name {
-				return true
+				return &k
 			}
 			for _, name := range app.AutoProvPolicies {
 				if name == key.Name {
-					return true
+					return &k
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *AppApi) AutoDeleteAppsForOrganization(ctx context.Context, org string) {
@@ -659,21 +658,18 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	return &edgeproto.Result{}, err
 }
 
-func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	if !s.HasApp(&in.Key) {
-		// key doesn't exist
-		return &edgeproto.Result{}, in.Key.NotFoundError()
-	}
-	if s.all.trustPolicyExceptionApi.TrustPolicyExceptionForAppKeyExists(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Application in use by Trust Policy Exception")
-	}
-
+func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (res *edgeproto.Result, reterr error) {
 	// set state to prevent new AppInsts from being created from this App
 	dynInsts := []*edgeproto.AppInst{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, in) {
+		cur := edgeproto.App{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("App already being deleted")
+		}
+
 		// use refs to check existing AppInsts to avoid race conditions
 		refs := edgeproto.AppInstRefs{}
 		s.all.appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
@@ -686,35 +682,47 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				log.SpanLog(ctx, log.DebugLevelApi, "AppInst not found by refs, skipping for delete", "AppInst", inst.Key)
 				continue
 			}
-			if inst.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
-				return errors.New("Application in use by static AppInst")
+			if isAutoDeleteAppInstOk(in.Key.Organization, &inst, &cur) {
+				dynInsts = append(dynInsts, &inst)
+				continue
 			}
-			dynInsts = append(dynInsts, &inst)
+			return fmt.Errorf("Application in use by static AppInst %s", inst.Key.GetKeyString())
 		}
 
-		in.DeletePrepare = true
-		s.store.STMPut(stm, in)
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.App{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", err)
+		}
+	}()
+
+	if tpeKey := s.all.trustPolicyExceptionApi.TrustPolicyExceptionForAppKeyExists(&in.Key); tpeKey != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Application in use by Trust Policy Exception %s", tpeKey.GetKeyString())
+	}
 
 	// delete auto-appinsts
 	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in.Key)
 	if err = s.all.appInstApi.AutoDelete(ctx, dynInsts); err != nil {
-		// failed, so remove delete prepare and don't delete
-		unseterr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !s.store.STMGet(stm, &in.Key, in) {
-				return in.Key.NotFoundError()
-			}
-			in.DeletePrepare = false
-			s.store.STMPut(stm, in)
-			return nil
-		})
-		if unseterr != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Delete App unset delete prepare", "unseterr", unseterr)
-		}
 		return &edgeproto.Result{}, err
 	}
 
@@ -948,20 +956,20 @@ func (s *AppApi) validateAlertPolicies(stm concurrency.STM, app *edgeproto.App) 
 	return nil
 }
 
-func (s *AppApi) UsesAlertPolicy(key *edgeproto.AlertPolicyKey) bool {
+func (s *AppApi) UsesAlertPolicy(key *edgeproto.AlertPolicyKey) *edgeproto.AppKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Key.Organization == key.Organization {
 			for _, name := range app.AlertPolicies {
 				if name == key.Name {
-					return true
+					return &k
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *AppApi) tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo,

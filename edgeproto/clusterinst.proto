@@ -25,7 +25,7 @@ message ClusterInstKey {
   // Name of Cluster
   ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
   // Name of Cloudlet on which the Cluster is instantiated
-  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false, (protogen.refers_to) = "Cloudlet"];
   // Name of Developer organization that this cluster belongs to
   string organization = 3 [(protogen.keytag) = "clusterorg"];
   option (protogen.generate_matches) = true;
@@ -44,7 +44,7 @@ message ClusterInst {
   // Unique key
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
   // Flavor of the k8s node 
-  FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.refers_to) = "Flavor"];
   // Liveness of instance (see Liveness)
   Liveness liveness = 9 [(protogen.backend) = true];
   // Auto is set to true when automatically created by back-end (internal use only)
@@ -72,7 +72,7 @@ message ClusterInst {
   // Size of external volume to be attached to nodes.  This is for the root partition
   uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
   // Auto scale policy name
-  string auto_scale_policy = 18;
+  string auto_scale_policy = 18 [(protogen.refers_to) = "AutoScalePolicy"];
   // Optional Resource AZ if any
   string availability_zone = 19;
   // Optional resource specific image to launch
@@ -100,7 +100,9 @@ message ClusterInst {
   // Multi-tenant kubernetes cluster
   bool multi_tenant = 32;
   // networks to connect to
-  repeated string networks = 33;
+  repeated string networks = 33 [(protogen.refers_to) = "Network"];
+  // Preparing to be deleted
+  bool delete_prepare = 34 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -109,7 +111,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt";
+  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt,DeletePrepare";
   option (protogen.not_required) = "Key.CloudletKey.FederatedOrganization";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,federated-org=Key.CloudletKey.FederatedOrganization,cluster-org=Key.Organization,flavor=Flavor.Name";
@@ -199,6 +201,7 @@ message ClusterInstInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.uses_org) = "none";
+  option (protogen.ignore_refers_to) = true;
 }
 
 service ClusterInstInfoApi {

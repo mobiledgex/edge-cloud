@@ -5,10 +5,11 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 // Generic caller context
 
 type CallContext struct {
-	Undo        bool
-	CRMUndo     bool
-	Override    edgeproto.CRMOverride
-	AutoCluster bool
+	Undo                   bool
+	CRMUndo                bool
+	Override               edgeproto.CRMOverride
+	AutoCluster            bool
+	SkipCloudletReadyCheck bool
 }
 
 func DefCallContext() *CallContext {
@@ -52,4 +53,9 @@ func (c *CallContext) SetOverride(o *edgeproto.CRMOverride) {
 	}
 	c.Override = *o
 	*o = edgeproto.CRMOverride_NO_OVERRIDE
+}
+
+func (c *CallContext) Clone() *CallContext {
+	clone := *c
+	return &clone
 }

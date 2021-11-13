@@ -33,6 +33,7 @@ message AppInstClientKey {
   option (protogen.alias) = "uniqueid=UniqueId,uniqueidtype=UniqueIdType,appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,federated-org=AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
   option (protogen.uses_org) = "none";
   option (gogoproto.gostring) = true;
+  option (protogen.ignore_refers_to) = true;
 }
 
 
