@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
@@ -25,6 +26,8 @@ import (
 type Platform struct {
 	consoleServer *httptest.Server
 	caches        *platform.Caches
+	clusterTPEs   map[cloudcommon.TrustPolicyExceptionKeyClusterInstKey]struct{}
+	mux           sync.Mutex
 }
 
 var (
@@ -556,14 +559,45 @@ func (s *Platform) UpdateTrustPolicy(ctx context.Context, TrustPolicy *edgeproto
 	return nil
 }
 
-func (s *Platform) UpdateTrustPolicyException(ctx context.Context, TrustPolicyException *edgeproto.TrustPolicyException, clusterInstKey *edgeproto.ClusterInstKey) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "fake UpdateTrustPolicyException", "policy", TrustPolicyException)
+func (s *Platform) UpdateTrustPolicyException(ctx context.Context, tpe *edgeproto.TrustPolicyException, clusterInstKey *edgeproto.ClusterInstKey) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	key := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
+		TpeKey:         tpe.Key,
+		ClusterInstKey: *clusterInstKey,
+	}
+	s.clusterTPEs[key] = struct{}{}
+	log.SpanLog(ctx, log.DebugLevelInfra, "fake UpdateTrustPolicyException", "policy", tpe)
 	return nil
 }
 
-func (s *Platform) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey, clusterInstKey *edgeproto.ClusterInstKey) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "fake DeleteTrustPolicyException", "policyKey", TrustPolicyExceptionKey)
+func (s *Platform) DeleteTrustPolicyException(ctx context.Context, tpeKey *edgeproto.TrustPolicyExceptionKey, clusterInstKey *edgeproto.ClusterInstKey) error {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	key := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
+		TpeKey:         *tpeKey,
+		ClusterInstKey: *clusterInstKey,
+	}
+	delete(s.clusterTPEs, key)
+	log.SpanLog(ctx, log.DebugLevelInfra, "fake DeleteTrustPolicyException", "policyKey", tpeKey)
 	return nil
+}
+
+func (s *Platform) HasTrustPolicyException(tpeKey *edgeproto.TrustPolicyExceptionKey, clusterInst *edgeproto.ClusterInst) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	key := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
+		TpeKey:         *tpeKey,
+		ClusterInstKey: clusterInst.Key,
+	}
+	_, found := s.clusterTPEs[key]
+	return found
+}
+
+func (s *Platform) TrustPolicyExceptionCount(trustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey, clusterInst *edgeproto.ClusterInst) int {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	return len(s.clusterTPEs)
 }
 
 func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {

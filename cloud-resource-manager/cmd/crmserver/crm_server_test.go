@@ -177,6 +177,22 @@ networks:
   - destinationcidr: 10.140.20.0/24
     nexthopip: 10.140.20.1
   connectiontype: ConnectToClusterNodes
+
+trustpolicyexceptions:
+- key:
+    appkey:
+        organization: 1000realities
+        name: VRmax
+        version: 1.0.0
+    cloudletpoolkey:
+        organization: TMUS
+        name: cloud2-pool
+    name: tpe1
+    requiredoutboundconnections:
+    - protocol: tcp
+      remotecidr: "35.247.68.151/32"
+      portrangemin: 443
+      portrangemax: 443
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -298,6 +314,11 @@ func TestCRM(t *testing.T) {
 	for ii := range data.Networks {
 		ctrlHandler.NetworkCache.Update(ctx, &data.Networks[ii], 0)
 	}
+
+	for ii := range data.TrustPolicyExceptions {
+		ctrlHandler.TrustPolicyExceptionCache.Update(ctx, &data.TrustPolicyExceptions[ii], 0)
+	}
+
 	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 3))
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
@@ -313,6 +334,8 @@ func TestCRM(t *testing.T) {
 	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 1))
 	require.Nil(t, notify.WaitFor(&controllerData.NetworkCache, 1))
 
+	require.Nil(t, notify.WaitFor(&controllerData.TrustPolicyExceptionCache, 1))
+
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
 	log.SpanLog(ctx, log.DebugLevelApi, "check counts")
@@ -323,6 +346,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
 	require.Equal(t, 1, len(controllerData.CloudletPoolCache.Objs))
 	require.Equal(t, 1, len(controllerData.NetworkCache.Objs))
+	require.Equal(t, 1, len(controllerData.TrustPolicyExceptionCache.Objs))
 
 	testVMPoolUpdates(t, ctx, &data.VmPools[0], ctrlHandler)
 
@@ -349,6 +373,9 @@ func TestCRM(t *testing.T) {
 	for ii := range data.Networks {
 		ctrlHandler.NetworkCache.Delete(ctx, &data.Networks[ii], 0)
 	}
+	for ii := range data.TrustPolicyExceptions {
+		ctrlHandler.TrustPolicyExceptionCache.Delete(ctx, &data.TrustPolicyExceptions[ii], 0)
+	}
 	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 0))
@@ -356,6 +383,7 @@ func TestCRM(t *testing.T) {
 	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 0))
 	require.Nil(t, notify.WaitFor(controllerData.CloudletPoolCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.NetworkCache, 0))
+	require.Nil(t, notify.WaitFor(&controllerData.TrustPolicyExceptionCache, 0))
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
 	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
@@ -365,6 +393,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
 	require.Equal(t, 0, len(controllerData.CloudletPoolCache.Objs))
 	require.Equal(t, 0, len(controllerData.NetworkCache.Objs))
+	require.Equal(t, 0, len(controllerData.TrustPolicyExceptionCache.Objs))
 }
 
 func TestNotifyOrder(t *testing.T) {
