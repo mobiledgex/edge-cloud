@@ -15,6 +15,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	edgetls "github.com/mobiledgex/edge-cloud/tls"
 	"golang.org/x/crypto/ed25519"
@@ -60,7 +61,7 @@ func (s *AccessKeyClient) InitFlags() {
 	flag.BoolVar(&s.requireAccessKey, "requireAccessKey", true, "Require access key for RegionalCloudlet service")
 }
 
-func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey, deploymentTag string) error {
+func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer string, key edgeproto.CloudletKey, deploymentTag string, haRole process.HARole) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "access key client init")
 	if tlsClientIssuer == NoTlsClientIssuer {
 		// unit test mode
@@ -99,9 +100,7 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 	}
 	s.cloudletKey = key
 	s.cloudletKeyStr = string(keystr)
-	secondaryInstance := nodeType == NodeTypeCRMSecondary
-
-	if nodeType == NodeTypeCRM || nodeType == NodeTypeCRMSecondary {
+	if nodeType == NodeTypeCRM {
 		// Attempt to upgrade access key. May not exist if upgrading
 		// old crm, so ignore and log error. Shepherd/DME will not
 		// go through upgrade process. If correct key is backup key,
@@ -110,14 +109,14 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 		err = s.loadAccessKey(ctx, s.AccessKeyFile)
 		log.SpanLog(ctx, log.DebugLevelInfo, "access key upgrade load", "err", err)
 		// Upgrade access key
-		_, err = s.upgradeAccessKey(ctx, AccessKeyUpgrade, PrimaryKey, secondaryInstance)
+		_, err = s.upgradeAccessKey(ctx, AccessKeyUpgrade, PrimaryKey, haRole)
 		if err != nil {
 			// attempt to upgrade using backup key
 			log.SpanLog(ctx, log.DebugLevelInfo, "upgrade failed, try backup key", "err", err)
 			bkerr := s.loadAccessKey(ctx, s.backupKeyFile())
 			log.SpanLog(ctx, log.DebugLevelInfo, "backup key load", "err", bkerr)
 			if bkerr == nil {
-				upgraded, err := s.upgradeAccessKey(ctx, AccessKeyUpgrade, BackupKey, secondaryInstance)
+				upgraded, err := s.upgradeAccessKey(ctx, AccessKeyUpgrade, BackupKey, haRole)
 				if err == nil && !upgraded {
 					// backup key is valid and key was not
 					// upgraded, move backup to primary.
@@ -141,7 +140,7 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 				log.SpanLog(ctx, log.DebugLevelInfo, "verify access key load", "err", err)
 				continue
 			}
-			_, err = s.upgradeAccessKey(ctx, AccessKeyVerify, PrimaryKey, secondaryInstance)
+			_, err = s.upgradeAccessKey(ctx, AccessKeyVerify, PrimaryKey, haRole)
 			if err == nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "access key verified", "err", err)
 				break
@@ -192,7 +191,7 @@ func (s *AccessKeyClient) loadAccessKey(ctx context.Context, keyFile string) err
 	return nil
 }
 
-func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly AccessKeyVerifyOnly, keyType KeyType, secondaryInstance bool) (bool, error) {
+func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly AccessKeyVerifyOnly, keyType KeyType, haRole process.HARole) (bool, error) {
 	// Request an updated AccessKey from the controller.
 	// The server (controller) determines whether or not to issue a new one.
 	// There are two cases where this is needed.
@@ -233,12 +232,7 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 	defer clientConn.Close()
 
 	client := edgeproto.NewCloudletAccessKeyApiClient(clientConn)
-	var stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyClient
-	if secondaryInstance {
-		stream, err = client.UpgradeSecondaryAccessKey(ctx)
-	} else {
-		stream, err = client.UpgradeAccessKey(ctx)
-	}
+	stream, err := client.UpgradeAccessKey(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -246,6 +240,7 @@ func (s *AccessKeyClient) upgradeAccessKey(ctx context.Context, verifyOnly Acces
 	err = stream.Send(&edgeproto.UpgradeAccessKeyClientMsg{
 		Msg:        "verify-only",
 		VerifyOnly: bool(verifyOnly),
+		HaRole:     string(haRole),
 	})
 	if err != nil {
 		return false, err

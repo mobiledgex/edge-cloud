@@ -92,10 +92,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.Cloudlets[i0].HostController = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].CrmSecondaryAccessPublicKey = ""
+			in.Cloudlets[i0].SecondaryCrmAccessPublicKey = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].CrmSecondaryAccessKeyUpgradeRequired = false
+			in.Cloudlets[i0].SecondaryCrmAccessKeyUpgradeRequired = false
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].SecondaryNotifySrvAddr = ""
@@ -446,7 +446,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.crmaccessprivatekey",
 	"cloudlets:#.config.accessapiaddr",
 	"cloudlets:#.config.cachedir",
-	"cloudlets:#.config.crmsecondaryaccessprivatekey",
+	"cloudlets:#.config.secondarycrmaccessprivatekey",
 	"cloudlets:#.restagmap:#.key",
 	"cloudlets:#.restagmap:#.value.name",
 	"cloudlets:#.restagmap:#.value.organization",
@@ -483,8 +483,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.allianceorgs",
 	"cloudlets:#.singlekubernetesclusterowner",
 	"cloudlets:#.platformhighavailability",
-	"cloudlets:#.crmsecondaryaccesspublickey",
-	"cloudlets:#.crmsecondaryaccesskeyupgraderequired",
+	"cloudlets:#.secondarycrmaccesspublickey",
+	"cloudlets:#.secondarycrmaccesskeyupgraderequired",
 	"cloudlets:#.secondarynotifysrvaddr",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
@@ -966,7 +966,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.crmaccessprivatekey":                                        "crm access private key",
 	"cloudlets:#.config.accessapiaddr":                                              "controller access API address",
 	"cloudlets:#.config.cachedir":                                                   "cache dir",
-	"cloudlets:#.config.crmsecondaryaccessprivatekey":                               "crm secondary access private key",
+	"cloudlets:#.config.secondarycrmaccessprivatekey":                               "secondary crm access private key",
 	"cloudlets:#.restagmap:#.value.name":                                            "Resource Table Name",
 	"cloudlets:#.restagmap:#.value.organization":                                    "Operator organization of the cloudlet site.",
 	"cloudlets:#.accessvars":                                                        "Variables required to access cloudlet",
@@ -998,8 +998,8 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.allianceorgs":                                                      "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet",
 	"cloudlets:#.singlekubernetesclusterowner":                                      "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
 	"cloudlets:#.platformhighavailability":                                          "Enable platform H/A",
-	"cloudlets:#.crmsecondaryaccesspublickey":                                       "CRM secondary access public key for H/A",
-	"cloudlets:#.crmsecondaryaccesskeyupgraderequired":                              "CRM secondary access key upgrade required for H/A",
+	"cloudlets:#.secondarycrmaccesspublickey":                                       "CRM secondary access public key for H/A",
+	"cloudlets:#.secondarycrmaccesskeyupgraderequired":                              "CRM secondary access key upgrade required for H/A",
 	"cloudlets:#.secondarynotifysrvaddr":                                            "Address for the secondary CRM notify listener to run on",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",

@@ -100,8 +100,8 @@ message PlatformConfig {
   string access_api_addr = 23;
   // cache dir
   string cache_dir = 24;
-   // crm secondary access private key
-  string crm_secondary_access_private_key = 25;
+  // secondary crm access private key
+  string secondary_crm_access_private_key = 25;
 }
 
 // Platform Type
@@ -479,9 +479,9 @@ message Cloudlet {
   // Enable platform H/A
   bool platform_high_availability = 49;
   // CRM secondary access public key for H/A
-  string crm_secondary_access_public_key = 50 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string secondary_crm_access_public_key = 50 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // CRM secondary access key upgrade required for H/A
-  bool crm_secondary_access_key_upgrade_required = 51 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  bool secondary_crm_access_key_upgrade_required = 51 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Address for the secondary CRM notify listener to run on
   string secondary_notify_srv_addr = 52 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
@@ -493,7 +493,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CrmSecondaryAccessPublicKey,CrmSecondaryAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,SecondaryCrmAccessPublicKey,SecondaryCrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization";
   option (protogen.mc2_target_cloudlet) = "Key";
   option (protogen.uses_org) = "key=Organization";

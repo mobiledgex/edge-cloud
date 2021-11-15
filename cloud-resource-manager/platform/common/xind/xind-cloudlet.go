@@ -18,7 +18,7 @@ func (s *Xind) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet,
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleNone)
+	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary, "")
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet create failed", "err", err)
 		return true, err
@@ -50,7 +50,7 @@ func (s *Xind) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet,
 	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
-	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARoleNone)
+	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARolePrimary)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "xind cloudlet delete failed", "err", err)
 		return err

@@ -322,18 +322,17 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		for k, v := range ctrl.Common.EnvVars {
 			pfConfig.EnvVar[k] = v
 		}
-
+		redisAddr := ""
 		if c.PlatformHighAvailability {
-			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary); err != nil {
-				return err
-			}
+			redisAddr = cloudcommon.LocalRedisAddr
+		}
+		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary, redisAddr); err != nil {
+			return err
+		}
+		if c.PlatformHighAvailability {
 			// wait briefly before starting the secondary for unit test consistency
 			time.Sleep(time.Second * 1)
-			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleSecondary); err != nil {
-				return err
-			}
-		} else {
-			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleNone); err != nil {
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleSecondary, redisAddr); err != nil {
 				return err
 			}
 		}

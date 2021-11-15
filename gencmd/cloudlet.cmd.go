@@ -80,10 +80,10 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.HostController = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.CrmSecondaryAccessPublicKey = ""
+		in.SecondaryCrmAccessPublicKey = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.CrmSecondaryAccessKeyUpgradeRequired = false
+		in.SecondaryCrmAccessKeyUpgradeRequired = false
 	}
 	if _, found := tags["nocmp"]; found {
 		in.SecondaryNotifySrvAddr = ""
@@ -2241,7 +2241,7 @@ var PlatformConfigOptionalArgs = []string{
 	"crmaccessprivatekey",
 	"accessapiaddr",
 	"cachedir",
-	"crmsecondaryaccessprivatekey",
+	"secondarycrmaccessprivatekey",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -2266,7 +2266,7 @@ var PlatformConfigComments = map[string]string{
 	"crmaccessprivatekey":          "crm access private key",
 	"accessapiaddr":                "controller access API address",
 	"cachedir":                     "cache dir",
-	"crmsecondaryaccessprivatekey": "crm secondary access private key",
+	"secondarycrmaccessprivatekey": "secondary crm access private key",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -2556,7 +2556,7 @@ var CloudletComments = map[string]string{
 	"config.crmaccessprivatekey":           "crm access private key",
 	"config.accessapiaddr":                 "controller access API address",
 	"config.cachedir":                      "cache dir",
-	"config.crmsecondaryaccessprivatekey":  "crm secondary access private key",
+	"config.secondarycrmaccessprivatekey":  "secondary crm access private key",
 	"restagmap:empty":                      "Optional resource to restagtbl key map key values = [gpu, nas, nic], specify restagmap:empty=true to clear",
 	"restagmap:#.value.name":               "Resource Table Name",
 	"restagmap:#.value.organization":       "Operator organization of the cloudlet site.",
@@ -2590,8 +2590,8 @@ var CloudletComments = map[string]string{
 	"allianceorgs":                         "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet, specify allianceorgs:empty=true to clear",
 	"singlekubernetesclusterowner":         "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
 	"platformhighavailability":             "Enable platform H/A",
-	"crmsecondaryaccesspublickey":          "CRM secondary access public key for H/A",
-	"crmsecondaryaccesskeyupgraderequired": "CRM secondary access key upgrade required for H/A",
+	"secondarycrmaccesspublickey":          "CRM secondary access public key for H/A",
+	"secondarycrmaccesskeyupgraderequired": "CRM secondary access key upgrade required for H/A",
 	"secondarynotifysrvaddr":               "Address for the secondary CRM notify listener to run on",
 }
 var CloudletSpecialArgs = map[string]string{

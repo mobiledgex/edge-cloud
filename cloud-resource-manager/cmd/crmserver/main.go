@@ -73,6 +73,7 @@ const (
 )
 
 func main() {
+	var highAvailabilityManager redundancy.HighAvailabilityManager
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
 	highAvailabilityManager.InitFlags()
@@ -92,10 +93,17 @@ func main() {
 	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
 
 	nodeType := node.NodeTypeCRM
-	if highAvailabilityManager.HARole == string(process.HARoleSecondary) {
-		nodeType = node.NodeTypeCRMSecondary
+	nodeOps := []node.NodeOp{
+		node.WithName(*hostname),
+		node.WithCloudletKey(&myCloudletInfo.Key),
+		node.WithNoUpdateMyNode(),
+		node.WithRegion(*region),
+		node.WithParentSpan(*parentSpan),
 	}
-	ctx, span, err := nodeMgr.Init(nodeType, node.CertIssuerRegionalCloudlet, node.WithName(*hostname), node.WithCloudletKey(&myCloudletInfo.Key), node.WithNoUpdateMyNode(), node.WithRegion(*region), node.WithParentSpan(*parentSpan))
+	if highAvailabilityManager.HARole == string(process.HARoleSecondary) {
+		nodeOps = append(nodeOps, node.WithHARole(process.HARoleSecondary))
+	}
+	ctx, span, err := nodeMgr.Init(nodeType, node.CertIssuerRegionalCloudlet, nodeOps...)
 	if err != nil {
 		log.FatalLog(err.Error())
 	}
@@ -127,7 +135,7 @@ func main() {
 		span.Finish()
 		log.FatalLog("access key client is not enabled")
 	}
-	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr)
+	controllerData = crmutil.NewControllerData(platform, &myCloudletInfo.Key, &nodeMgr, &highAvailabilityManager)
 
 	updateCloudletStatus := func(updateType edgeproto.CacheUpdateType, value string) {
 		switch updateType {
@@ -136,7 +144,7 @@ func main() {
 		case edgeproto.UpdateStep:
 			myCloudletInfo.Status.SetStep(value)
 		}
-		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 	}
 
 	//ctl notify
@@ -190,14 +198,12 @@ func main() {
 				myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is not active", "role", highAvailabilityManager.HARole)
-				myCloudletInfo.StandbyCrm = true
 			}
 			controllerData.StartHAManagerActiveCheck(ctx, &highAvailabilityManager)
 		}
-
 		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
-		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 
 		var cloudlet edgeproto.Cloudlet
 		log.SpanLog(ctx, log.DebugLevelInfo, "wait for cloudlet cache", "key", myCloudletInfo.Key)
@@ -252,7 +258,7 @@ func main() {
 		}
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, updateCloudletStatus); err != nil {
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, highAvailabilityManager.PlatformInstanceActive, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -268,7 +274,7 @@ func main() {
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 				controllerData.ControllerSyncInProgress = true
-				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 
 				// Wait for CRM to receive cluster and appinst data from notify
 				select {
@@ -276,12 +282,14 @@ func main() {
 					if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
 						log.FatalLog("failed to get sync data from controller")
 					}
+					// TEMP
+					time.Sleep(time.Second)
 				case <-time.After(ControllerTimeout):
 					log.FatalLog("Timed out waiting for sync data from controller")
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
 				myCloudletInfo.ControllerCacheReceived = true
-				controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 				err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
@@ -289,7 +297,6 @@ func main() {
 
 				// Update AppInst runtime info in case it has changed
 				controllerData.RefreshAppInstRuntime(ctx)
-
 				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
 				if resources != nil {
 					resMap := make(map[string]edgeproto.InfraResource)
@@ -303,6 +310,7 @@ func main() {
 					}
 					myCloudletInfo.ResourcesSnapshot = *resources
 				}
+
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				if cloudlet.TrustPolicy == "" {
@@ -313,9 +321,7 @@ func main() {
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 			}
 		}
-		// trigger send of info upstream to controller
-		myCloudletInfo.StandbyCrm = !redundancy.PlatformInstanceActive
-		controllerData.CloudletInfoCache.Update(ctx, &myCloudletInfo, 0)
+		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 
 		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion
 		getMexReleaseInfo(ctx)
@@ -342,7 +348,7 @@ func main() {
 			log.SpanLog(ctx, log.DebugLevelInfra, "Get rootLB certs", "key", myCloudletInfo.Key)
 			proxycerts.Init(ctx, platform, accessapi.NewControllerClient(nodeMgr.AccessApiClient))
 			pfType := pf.GetType(cloudlet.PlatformType.String())
-			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, wildcardName, &nodeMgr, pfType, rootlb, *commercialCerts)
+			proxycerts.GetRootLbCerts(ctx, &myCloudletInfo.Key, wildcardName, &nodeMgr, pfType, rootlb, *commercialCerts, &highAvailabilityManager)
 			// setup debug func to trigger refresh of rootlb certs
 			nodeMgr.Debug.AddDebugFunc(crmutil.RefreshRootLBCerts, func(ctx context.Context, req *edgeproto.DebugRequest) string {
 				proxycerts.TriggerRootLBCertsRefresh()
@@ -373,7 +379,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, updateCallback edgeproto.CacheUpdateCallback) error {
+func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, platformActive bool, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 	accessApi := accessapi.NewControllerClient(accessClient)
@@ -400,7 +406,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 	}
 	pfType := pf.GetType(cloudlet.PlatformType.String())
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
-	err := platform.Init(ctx, &pc, caches, updateCallback)
+	err := platform.Init(ctx, &pc, caches, platformActive, updateCallback)
 	return err
 }
 

@@ -38,6 +38,8 @@ message UpgradeAccessKeyClientMsg {
   string msg = 1;
   // Client node type
   bool verify_only = 2;
+  // optional HA role, defaults to HARolePrimary
+  string ha_role = 3;
 }
 
 message UpgradeAccessKeyServerMsg {
@@ -75,5 +77,4 @@ service CloudletAccessApi {
 service CloudletAccessKeyApi {
   // Upgrade AccessKey for existing Vault-CRM, or one-time key
   rpc UpgradeAccessKey(stream UpgradeAccessKeyClientMsg) returns (stream UpgradeAccessKeyServerMsg);
-  rpc UpgradeSecondaryAccessKey(stream UpgradeAccessKeyClientMsg) returns (stream UpgradeAccessKeyServerMsg);
 }

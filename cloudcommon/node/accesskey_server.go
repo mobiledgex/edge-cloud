@@ -14,6 +14,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"golang.org/x/crypto/ed25519"
@@ -27,7 +28,6 @@ import (
 
 var BadAuthDelay = 3 * time.Second
 var UpgradeAccessKeyMethod = "/edgeproto.CloudletAccessKeyApi/UpgradeAccessKey"
-var UpgradeSecondaryAccessKeyMethod = "/edgeproto.CloudletAccessKeyApi/UpgradeSecondaryAccessKey"
 var GetAccessDataMethod = "/edgeproto.CloudletAccessApi/GetAccessData"
 
 type accessKeyVerifiedTagType string
@@ -38,6 +38,8 @@ type AccessKeyVerified struct {
 	Key             edgeproto.CloudletKey
 	UpgradeRequired bool
 }
+
+type AccessKeyCommitFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, role process.HARole) error
 
 func ContextSetAccessKeyVerified(ctx context.Context, info *AccessKeyVerified) context.Context {
 	return context.WithValue(ctx, accessKeyVerifiedTag, info)
@@ -124,18 +126,17 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 			return nil, fmt.Errorf("failed to base64 decode access key signature, %v", err)
 		}
 
-		if cloudlet.CrmAccessPublicKey == "" && cloudlet.CrmSecondaryAccessPublicKey == "" {
+		if cloudlet.CrmAccessPublicKey == "" && cloudlet.SecondaryCrmAccessPublicKey == "" {
 			return nil, fmt.Errorf("No crm access public key registered for cloudlet %s", data)
 		}
 		upgradeRequired := cloudlet.CrmAccessKeyUpgradeRequired
 		upgradeMethod := UpgradeAccessKeyMethod
 		err = s.verifyPublicKey(ctx, cloudlet.CrmAccessPublicKey, data[0], sig)
 		if err != nil {
-			if cloudlet.CrmSecondaryAccessPublicKey != "" {
+			if cloudlet.SecondaryCrmAccessPublicKey != "" {
 				log.SpanLog(ctx, log.DebugLevelApi, "failed to verify primary access key, try secondary", "err", err)
-				err = s.verifyPublicKey(ctx, cloudlet.CrmSecondaryAccessPublicKey, data[0], sig)
-				upgradeRequired = cloudlet.CrmSecondaryAccessKeyUpgradeRequired
-				upgradeMethod = UpgradeSecondaryAccessKeyMethod
+				err = s.verifyPublicKey(ctx, cloudlet.SecondaryCrmAccessPublicKey, data[0], sig)
+				upgradeRequired = cloudlet.SecondaryCrmAccessKeyUpgradeRequired
 			}
 		}
 		if err != nil {
@@ -259,9 +260,10 @@ func (s *AccessKeyServer) isTlsAccessKeyRequired(ctx context.Context) (bool, err
 	return false, nil
 }
 
-func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error) error {
+func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, role process.HARole) error) error {
 	ctx := stream.Context()
 	verified := ContextGetAccessKeyVerified(ctx)
+	haRole := process.HARolePrimary
 	if verified == nil {
 		// this should never happen, the interceptor should error out first
 		return fmt.Errorf("access key not verified")
@@ -280,6 +282,9 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 		return stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
 			Msg: "verified",
 		})
+	}
+	if msg.HaRole != "" {
+		haRole = process.HARole(msg.HaRole)
 	}
 
 	if !verified.UpgradeRequired {
@@ -310,7 +315,7 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "ack received, committing new key")
-	err = commitKeyFunc(ctx, &verified.Key, keyPair.PublicPEM)
+	err = commitKeyFunc(ctx, &verified.Key, keyPair.PublicPEM, haRole)
 	if err != nil {
 		return err
 	}
@@ -389,30 +394,19 @@ func (s *BasicUpgradeHandler) UpgradeAccessKey(stream edgeproto.CloudletAccessKe
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
 }
 
-func (s *BasicUpgradeHandler) UpgradeSecondaryAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeSecondaryAccessKeyServer) error {
-	return s.KeyServer.UpgradeAccessKey(stream, s.commitSecondaryKey)
-}
-
-func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, role process.HARole) error {
 	// Not thread safe, unit-test only.
 	cloudlet := &edgeproto.Cloudlet{}
 	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
 		return key.NotFoundError()
 	}
-	cloudlet.CrmAccessPublicKey = pubPEM
-	cloudlet.CrmAccessKeyUpgradeRequired = false
-	s.KeyServer.cloudletCache.Update(ctx, cloudlet, 0)
-	return nil
-}
-
-func (s *BasicUpgradeHandler) commitSecondaryKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
-	// Not thread safe, unit-test only.
-	cloudlet := &edgeproto.Cloudlet{}
-	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
-		return key.NotFoundError()
+	if role == process.HARoleSecondary {
+		cloudlet.SecondaryCrmAccessPublicKey = pubPEM
+		cloudlet.SecondaryCrmAccessKeyUpgradeRequired = false
+	} else {
+		cloudlet.CrmAccessPublicKey = pubPEM
+		cloudlet.CrmAccessKeyUpgradeRequired = false
 	}
-	cloudlet.CrmSecondaryAccessPublicKey = pubPEM
-	cloudlet.CrmSecondaryAccessKeyUpgradeRequired = false
 	s.KeyServer.cloudletCache.Update(ctx, cloudlet, 0)
 	return nil
 }

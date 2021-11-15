@@ -86,6 +86,7 @@ type Crm struct {
 	AppDNSRoot          string
 	ChefServerPath      string
 	CacheDir            string
+	RedisAddr           string
 	HARole              HARole
 }
 type LocApiSim struct {

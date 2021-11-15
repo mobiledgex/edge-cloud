@@ -508,9 +508,12 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cacheDir")
 		args = append(args, p.CacheDir)
 	}
-	if p.HARole != HARoleNone {
-		args = append(args, "--HARole")
-		args = append(args, string(p.HARole))
+	args = append(args, "--HARole")
+	args = append(args, string(p.HARole))
+
+	if p.RedisAddr != "" {
+		args = append(args, "--redisAddr")
+		args = append(args, p.RedisAddr)
 	}
 
 	options := StartOptions{}
@@ -551,8 +554,8 @@ func (p *Crm) LookupArgs() string {
 	return retval
 }
 
-func LookupArgsForHARole(HARole HARole) string {
-	retval := "--HARole " + string(HARole)
+func (p *Crm) LookupArgsWithHARole(HARole HARole) string {
+	retval := p.LookupArgs() + ".*--HARole " + string(HARole)
 	return retval
 }
 

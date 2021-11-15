@@ -533,14 +533,14 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		in.CrmAccessKeyUpgradeRequired = true
 		pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
 
-		secondaryAccessKey, err := node.GenerateAccessKey()
-		if err != nil {
-			return err
-		}
-		in.CrmSecondaryAccessPublicKey = secondaryAccessKey.PublicPEM
 		if in.PlatformHighAvailability {
-			in.CrmSecondaryAccessKeyUpgradeRequired = true
-			pfConfig.CrmSecondaryAccessPrivateKey = secondaryAccessKey.PrivatePEM
+			secondaryAccessKey, err := node.GenerateAccessKey()
+			if err != nil {
+				return err
+			}
+			in.SecondaryCrmAccessPublicKey = secondaryAccessKey.PublicPEM
+			in.SecondaryCrmAccessKeyUpgradeRequired = true
+			pfConfig.SecondaryCrmAccessPrivateKey = secondaryAccessKey.PrivatePEM
 		}
 	}
 
@@ -630,7 +630,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
-		err = cloudcommon.StartCRMService(ctx, in, pfConfig, process.HARolePrimary)
+		err = cloudcommon.StartCRMService(ctx, in, pfConfig, process.HARolePrimary, "")
 	} else {
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err == nil {
@@ -1316,7 +1316,7 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 	}
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
-		return cloudcommon.StopCRMService(ctx, in, process.HARoleNone)
+		return cloudcommon.StopCRMService(ctx, in, process.HARoleAll)
 	}
 
 	// Some platform types require caches
@@ -1827,11 +1827,15 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 		return nil, err
 	}
 	pfConfig.CrmAccessPrivateKey = accessKey.PrivatePEM
-	secondaryAccessKey, err := node.GenerateAccessKey()
-	if err != nil {
-		return nil, err
+	var secondaryAccessKeyPublicPEM string
+	if cloudlet.PlatformHighAvailability {
+		secondaryAccessKey, err := node.GenerateAccessKey()
+		if err != nil {
+			return nil, err
+		}
+		secondaryAccessKeyPublicPEM = secondaryAccessKey.PublicPEM
+		pfConfig.SecondaryCrmAccessPrivateKey = secondaryAccessKey.PrivatePEM
 	}
-	pfConfig.CrmSecondaryAccessPrivateKey = secondaryAccessKey.PrivatePEM
 	vmPool := edgeproto.VMPool{}
 	caches := getCaches(ctx, &vmPool)
 	manifest, err := cloudletPlatform.GetCloudletManifest(ctx, cloudlet, pfConfig, accessApi, &pfFlavor, caches)
@@ -1843,13 +1847,15 @@ func (s *CloudletApi) GetCloudletManifest(ctx context.Context, key *edgeproto.Cl
 		if !s.store.STMGet(stm, key, cloudlet) {
 			return key.NotFoundError()
 		}
-		if cloudlet.CrmAccessPublicKey != "" || cloudlet.CrmSecondaryAccessPublicKey != "" {
+		if cloudlet.CrmAccessPublicKey != "" || cloudlet.SecondaryCrmAccessPublicKey != "" {
 			return fmt.Errorf("Cloudlet has access key registered, please revoke the current access key first so a new one can be generated for the manifest")
 		}
 		cloudlet.CrmAccessPublicKey = accessKey.PublicPEM
 		cloudlet.CrmAccessKeyUpgradeRequired = true
-		cloudlet.CrmSecondaryAccessPublicKey = secondaryAccessKey.PublicPEM
-		cloudlet.CrmSecondaryAccessKeyUpgradeRequired = true
+		if cloudlet.PlatformHighAvailability {
+			cloudlet.SecondaryCrmAccessPublicKey = secondaryAccessKeyPublicPEM
+			cloudlet.SecondaryCrmAccessKeyUpgradeRequired = true
+		}
 		s.store.STMPut(stm, cloudlet)
 		return nil
 	})

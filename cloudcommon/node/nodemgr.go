@@ -9,6 +9,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -18,7 +19,6 @@ import (
 )
 
 var NodeTypeCRM = "crm"
-var NodeTypeCRMSecondary = "crmsecondary"
 var NodeTypeDME = "dme"
 var NodeTypeController = "controller"
 var NodeTypeClusterSvc = "cluster-svc"
@@ -102,8 +102,7 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	s.tlsClientIssuer = tlsClientIssuer
 	s.CloudletPoolLookup = opts.cloudletPoolLookup
 	s.CloudletLookup = opts.cloudletLookup
-
-	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag); err != nil {
+	if err := s.AccessKeyClient.init(initCtx, nodeType, tlsClientIssuer, opts.cloudletKey, s.DeploymentTag, opts.haRole); err != nil {
 		log.SpanLog(initCtx, log.DebugLevelInfo, "access key client init failed", "err", err)
 		return initCtx, nil, err
 	}
@@ -230,6 +229,7 @@ type NodeOptions struct {
 	parentSpan         string
 	cloudletPoolLookup CloudletPoolLookup
 	cloudletLookup     CloudletLookup
+	haRole             process.HARole
 }
 
 type CloudletInPoolFunc func(region, key edgeproto.CloudletKey) bool
@@ -274,6 +274,10 @@ func WithCloudletPoolLookup(cloudletPoolLookup CloudletPoolLookup) NodeOp {
 
 func WithCloudletLookup(cloudletLookup CloudletLookup) NodeOp {
 	return func(opts *NodeOptions) { opts.cloudletLookup = cloudletLookup }
+}
+
+func WithHARole(haRole process.HARole) NodeOp {
+	return func(opts *NodeOptions) { opts.haRole = haRole }
 }
 
 func (s *NodeMgr) UpdateMyNode(ctx context.Context) {

@@ -123,7 +123,7 @@ func UpdateResourcesMax() error {
 	return nil
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, platformActive bool, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
@@ -138,6 +138,7 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	FakeVcpusUsed += 2 + 2
 	FakeDiskUsed += 40 + 40
 	FakeExternalIpsUsed += 1
+	log.WarnLog("FAKEINCR2", "INSTANCES", FakeInstancesUsed)
 	FakeInstancesUsed += 2
 
 	err := UpdateResourcesMax()
@@ -191,6 +192,7 @@ func UpdateCommonResourcesUsed(flavor string, add bool) {
 		}
 	}
 	if add {
+		log.WarnLog("FAKEINCR1", "INSTANCES", FakeInstancesUsed)
 		FakeInstancesUsed += 1
 	} else {
 		FakeInstancesUsed -= 1
@@ -541,13 +543,17 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	}
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
+	redisAddr := ""
+	if cloudlet.PlatformHighAvailability {
+		redisAddr = cloudcommon.LocalRedisAddr
+	}
+	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary, redisAddr)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start CRM", "err", err)
+		return true, err
+	}
 	if cloudlet.PlatformHighAvailability {
 		log.SpanLog(ctx, log.DebugLevelInfra, "creating 2 instances for H/A", "key", cloudlet.Key)
-		err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start primary CRM", "err", err)
-			return true, err
-		}
 		// Pause before starting the secondary to let the primary become active first for the sake of
 		// e2e tests that need consistent ordering. Secondary will be started up in a separate thread after
 		// cloudletInfo shows up from the primary
@@ -567,7 +573,7 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to get cloudlet info after starting primary CRM, will retry", "cloudletKey", s.cloudletKey)
 				} else {
 					log.SpanLog(ctx, log.DebugLevelInfra, "got cloudlet info from primary CRM, will start secondary", "cloudletKey", cloudlet.Key, "active", cloudletInfo.ActiveCrmInstance, "ci", cloudletInfo)
-					err = cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleSecondary)
+					err = cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleSecondary, redisAddr)
 					if err != nil {
 						log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start secondary CRM", "err", err)
 					}
@@ -581,12 +587,6 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 				caches.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
 			}
 		}()
-	} else {
-		err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleNone)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start CRM", "err", err)
-			return true, err
-		}
 	}
 	return true, nil
 }
@@ -618,7 +618,7 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
-	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARoleNone)
+	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARoleAll)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet delete failed", "err", err)
 		return err
@@ -676,8 +676,17 @@ func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Cac
 		appInstKeys = append(appInstKeys, *k)
 	})
 	for _, k := range appInstKeys {
-		var app edgeproto.App
-		if caches.AppCache.Get(&k.AppKey, &app) {
+		var appInst edgeproto.AppInst
+		if caches.AppInstCache.Get(&k, &appInst) {
+			var app edgeproto.App
+			if caches.AppCache.Get(&k.AppKey, &app) {
+				if app.Deployment == cloudcommon.DeploymentTypeVM {
+					var clusterInst = edgeproto.ClusterInst{
+						Key: *appInst.ClusterInstKey(),
+					}
+					updateVmAppResCount(ctx, &clusterInst, &app, &appInst)
+				}
+			}
 		}
 	}
 	return nil

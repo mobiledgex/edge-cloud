@@ -13,7 +13,7 @@ import (
 )
 
 type Process interface {
-	// Get the name of the process
+	// Get e name of the process
 	GetName() string
 	// Get the hostname of the process
 	GetHostname() string
@@ -44,7 +44,7 @@ type Common struct {
 
 type HARole string
 
-var HARoleNone HARole = ""
+var HARoleAll HARole = "all"
 var HARolePrimary HARole = "primary"
 var HARoleSecondary HARole = "secondary"
 

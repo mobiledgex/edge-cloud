@@ -84,7 +84,7 @@ type Platform interface {
 	// Get platform features
 	GetFeatures() *Features
 	// Init is called once during CRM startup.
-	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, updateCallback edgeproto.CacheUpdateCallback) error
+	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, platformActive bool, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	// Returns true if sync with controller is required

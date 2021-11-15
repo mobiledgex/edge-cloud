@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 
@@ -20,45 +20,44 @@ const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 const MaxRedisWait = time.Second * 30
 const CheckActiveLogInterval = time.Second * 10
 
-var PlatformInstanceActive bool
+type HAProcess interface {
+	BecomeActiveCallback(context.Context, process.HARole) error
+}
 
 type HighAvailabilityManager struct {
-	redisAddr          string
-	nodeGroupKey       string
-	cloudletKey        *edgeproto.CloudletKey
-	redisClient        *redis.Client
-	HARole             string
-	platform           pf.Platform
-	activeDuration     time.Duration
-	activePollInterval time.Duration
-	cloudletInfoCache  *edgeproto.CloudletInfoCache
+	redisAddr              string
+	nodeGroupKey           string
+	redisClient            *redis.Client
+	HARole                 string
+	HAEnabled              bool
+	activeDuration         time.Duration
+	activePollInterval     time.Duration
+	PlatformInstanceActive bool
+	haProcess              HAProcess
+	nodeMgr                *node.NodeMgr
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
-	flag.StringVar(&s.redisAddr, "redisAddr", "127.0.0.1:6379", "redis address")
+	flag.StringVar(&s.redisAddr, "redisAddr", "", "redis address")
 	flag.StringVar(&s.HARole, "HARole", "", string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
-func (s *HighAvailabilityManager) Init(nodeGroupKey string, activeDuration, activePollInterval edgeproto.Duration, platform pf.Platform, cloudletKey *edgeproto.CloudletKey, cloudletInfoCache *edgeproto.CloudletInfoCache) error {
+func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haProcess HAProcess) error {
 	ctx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
 	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
 	s.activeDuration = activeDuration.TimeDuration()
 	s.activePollInterval = activePollInterval.TimeDuration()
-	s.platform = platform
-	s.cloudletKey = cloudletKey
-	s.cloudletInfoCache = cloudletInfoCache
-
-	if s.HARole == "" {
-		PlatformInstanceActive = true
-		return fmt.Errorf("%s HA Role not specified", HighAvailabilityManagerDisabled)
-	}
+	s.nodeMgr = nodeMgr
+	s.haProcess = haProcess
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
-		return fmt.Errorf("invalid node type")
+		return fmt.Errorf("invalid HA Role type")
 	}
 	if s.redisAddr == "" {
-		return fmt.Errorf("Redis address not specified")
+		s.PlatformInstanceActive = true
+		return fmt.Errorf("%s Redis Addr for HA not specified", HighAvailabilityManagerDisabled)
 	}
 	s.nodeGroupKey = nodeGroupKey
+	s.HAEnabled = true
 	if s.nodeGroupKey == "" {
 		return fmt.Errorf("group key node specified")
 	}
@@ -110,19 +109,42 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 	return fmt.Errorf("pingRedis failed - %v", err)
 }
 
+// TryActive is called on startup
 func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
 
-	if PlatformInstanceActive {
+	if s.PlatformInstanceActive {
 		// this should not happen. Only 1 thread should be doing TryActive
 		log.FatalLog("Platform already active")
+	}
+	// see if we are already active, which can happen if the process just died and was restarted quickly
+	// before the SetNX expired
+	alreadyActive := s.CheckActive(ctx)
+	if alreadyActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Platform already active", "key", s.nodeGroupKey)
+		s.PlatformInstanceActive = true
+		// bump the active timer in case it is close to expiry
+		s.BumpActiveExpire(ctx)
+		return true
 	}
 	cmd := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
 	}
-	PlatformInstanceActive = v
+	s.PlatformInstanceActive = v
 	return v
+}
+
+func (s *HighAvailabilityManager) CheckActive(ctx context.Context) bool {
+
+	cmd := s.redisClient.Get(s.nodeGroupKey)
+	v, err := cmd.Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		return false
+	}
+	isActive := v == s.HARole
+	return isActive
 }
 
 func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
@@ -137,45 +159,53 @@ func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
 	}
 	return nil
 }
-func (s *HighAvailabilityManager) UpdateCloudletInfoForActive(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoForActive")
-
-	var cloudletInfo edgeproto.CloudletInfo
-	if !s.cloudletInfoCache.Get(s.cloudletKey, &cloudletInfo) {
-		log.SpanLog(ctx, log.DebugLevelInfra, "failed to update cloudlet info, cannot find in cache", "cloudletKey", s.cloudletKey)
-		return fmt.Errorf("Cannot find in cloudlet info in cache for key %s", s.cloudletKey.String())
-	}
-	cloudletInfo.ActiveCrmInstance = s.HARole
-	cloudletInfo.StandbyCrm = false
-	s.cloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-	return nil
-}
 
 func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "CheckActiveLoop")
-	timeSinceLog := time.Now() // log only once every X seconds in this loop
+	log.SpanLog(ctx, log.DebugLevelInfra, "CheckActiveLoop", "activePollInterval", s.activePollInterval, "activeDuration", s.activeDuration)
+	timeLastLog := time.Now() // log only once every X seconds in this loop
+	timeLastBumpActive := time.Now()
+	timeLastCheckActive := time.Now()
 	for {
-		elaspsed := time.Since(timeSinceLog)
-		if !PlatformInstanceActive {
-			if elaspsed >= CheckActiveLogInterval {
+		elapsedSinceLog := time.Since(timeLastLog)
+		elapsedSinceBumpActive := time.Since(timeLastBumpActive)
+		elapsedSinceCheckActive := time.Since(timeLastCheckActive)
+
+		if !s.PlatformInstanceActive {
+			if elapsedSinceLog >= CheckActiveLogInterval {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform inactive, doing TryActive")
-				timeSinceLog = time.Now()
+				timeLastLog = time.Now()
 			}
 			newActive := s.TryActive(ctx)
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
-				if s.platform != nil {
-					err := s.UpdateCloudletInfoForActive(ctx)
-					if err != nil {
-						log.FatalLog("Unable to update cloudlet info", "err", err)
-					}
-					s.platform.BecomeActive(ctx, s.HARole)
-				}
+				elapsedSinceBumpActive = time.Since(time.Now())
+				s.haProcess.BecomeActiveCallback(ctx, process.HARole(s.HARole))
+				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
 			}
 		} else {
-			if elaspsed >= CheckActiveLogInterval {
+			if elapsedSinceLog >= CheckActiveLogInterval {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform active, doing BumpActiveExpire")
-				timeSinceLog = time.Now()
+				timeLastLog = time.Now()
+			}
+			checkStillActive := false
+			if elapsedSinceBumpActive >= s.activePollInterval*2 {
+				// Somehow we missed at least one poll. this can cause another process to seize activity
+				// We need to check we are still active to avoid a split brain situation
+				log.SpanLog(ctx, log.DebugLevelInfra, "Missed active poll", "elapsedSinceBumpActive", elapsedSinceBumpActive)
+				checkStillActive = true
+			}
+			// periodically we check that we are still active to detect an unexpected split brain scenario
+			if elapsedSinceCheckActive > s.activeDuration {
+				checkStillActive = true
+			}
+			if checkStillActive {
+				stillActive := s.CheckActive(ctx)
+				if !stillActive {
+					// somehow we lost activity, this is a big problem
+					log.SpanLog(ctx, log.DebugLevelInfo, "ERROR!: Lost activity")
+					s.PlatformInstanceActive = false
+				}
+				timeLastCheckActive = time.Now()
 			}
 			err := s.BumpActiveExpire(ctx)
 			if err != nil {
@@ -185,6 +215,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					log.FatalLog("BumpActiveExpire failed!", "err", err)
 				}
 			}
+			timeLastBumpActive = time.Now()
+
 		}
 		time.Sleep(s.activePollInterval)
 	}

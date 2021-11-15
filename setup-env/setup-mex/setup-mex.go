@@ -23,7 +23,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	edgeutil "github.com/mobiledgex/edge-cloud/util"
 
 	uutil "github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
@@ -57,13 +56,23 @@ func GetCtrlNameFromCrmStartArgs(args []string) string {
 	return ""
 }
 
+func GetHARoleFromActionArgs(args []string) string {
+	for ii := range args {
+		act, param := GetActionParam(args[ii])
+		if act == "harole" {
+			return param
+		}
+	}
+	return ""
+}
+
 // Change "cluster-svc1 scrapeInterval=30s updateAll" int []{"cluster-svc1", "scrapeInterval=30s", "updateApp"}
 func GetActionArgs(a string) []string {
 	argSlice := strings.Fields(a)
 	return argSlice
 }
 
-// actions can be split with a dash like ctrlapi-show
+// actions can be split with a dash like ctrlapi-show or 2 dashes like stop-crm-primary
 func GetActionSubtype(a string) (string, string) {
 	argslice := strings.SplitN(a, "-", 2)
 	action := argslice[0]
@@ -346,18 +355,6 @@ func StopProcesses(processName string, allprocs []process.Process) bool {
 		go process.StopProcess(allprocs[ii], maxWait, c)
 		count++
 	}
-	if strings.HasPrefix(processName, "crm-") {
-		s := strings.Split(processName, "-")
-		if len(s) != 2 {
-			log.Printf("Error: cannot parse CRM process name with HA Role %v\n", processName)
-			return false
-		}
-		HARole := process.HARole(s[1])
-		maxwait := 10 * time.Millisecond
-		args := edgeutil.EscapeJson(process.LookupArgsForHARole(HARole))
-		go process.KillProcessesByName("crmserver", maxwait, args, c)
-		count++
-	}
 	if processName != "" && count == 0 {
 		log.Printf("Error: unable to find process name %v in setup\n", processName)
 		return false
@@ -631,7 +628,7 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 }
 
 func Cleanup(ctx context.Context) error {
-	err := cloudcommon.StopCRMService(ctx, nil, process.HARoleNone)
+	err := cloudcommon.StopCRMService(ctx, nil, process.HARolePrimary)
 	if err != nil {
 		return err
 	}
@@ -714,8 +711,19 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 			errors = append(errors, "wait for process failed")
 		}
 	case "stop":
-		if actionSubtype == "crm" {
-			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, process.HARoleNone); err != nil {
+		if actionSubtype == "argument" {
+			// extract the action param and action args
+			actionArgs = GetActionArgs(actionParam)
+			actionParam = actionArgs[0]
+			actionArgs = actionArgs[1:]
+		}
+		if actionSubtype == "crm" || actionParam == "crm" {
+			haRole := process.HARoleAll
+			rolearg := GetHARoleFromActionArgs(actionArgs)
+			if rolearg != "" {
+				haRole = process.HARole(rolearg)
+			}
+			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, haRole); err != nil {
 				errors = append(errors, err.Error())
 			}
 		} else {

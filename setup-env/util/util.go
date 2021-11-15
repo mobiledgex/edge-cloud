@@ -907,7 +907,7 @@ func clearCloudletInfoNocmp(data *edgeproto.AllData) {
 		data.Cloudlets[ii].CrmAccessPublicKey = ""
 	}
 	for ii, _ := range data.Cloudlets {
-		data.Cloudlets[ii].CrmSecondaryAccessPublicKey = ""
+		data.Cloudlets[ii].SecondaryCrmAccessPublicKey = ""
 	}
 }
 
