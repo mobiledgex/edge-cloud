@@ -282,8 +282,6 @@ func main() {
 					if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
 						log.FatalLog("failed to get sync data from controller")
 					}
-					// TEMP
-					time.Sleep(time.Second)
 				case <-time.After(ControllerTimeout):
 					log.FatalLog("Timed out waiting for sync data from controller")
 				}
