@@ -245,6 +245,10 @@ func (s *SendRecv) send(stream StreamNotify) {
 		if streamDone || s.done {
 			break
 		}
+		// Manual send all must be triggered before gathering
+		// the data to send.
+		sendAllEnd := s.sendAllEnd
+
 		hasData := false
 		// UpdateAll/PrepData in reverse order, otherwise
 		// we may capture a dependent object update without
@@ -258,7 +262,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 				hasData = true
 			}
 		}
-		if !hasData && !s.done && !sendAll && !s.sendAllEnd {
+		if !hasData && !s.done && !sendAll && !sendAllEnd {
 			continue
 		}
 		if s.done {
@@ -281,7 +285,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 		if err != nil {
 			break
 		}
-		if s.sendAllEnd {
+		if sendAllEnd {
 			s.sendAllEnd = false
 			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all end", "peer", s.peer)
 			notice.Action = edgeproto.NoticeAction_SENDALL_END
