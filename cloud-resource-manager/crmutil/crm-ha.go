@@ -13,31 +13,6 @@ type CrmHAProcess struct {
 	controllerData *ControllerData
 }
 
-func (s *CrmHAProcess) RefreshInfoCaches(ctx context.Context) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "RefreshInfoCaches")
-
-	clusterInstKeys := []edgeproto.ClusterInstKey{}
-	s.controllerData.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
-		clusterInstKeys = append(clusterInstKeys, *k)
-	})
-	for _, k := range clusterInstKeys {
-		var clusterInst edgeproto.ClusterInst
-		if s.controllerData.ClusterInstCache.Get(&k, &clusterInst) {
-			s.controllerData.ClusterInstInfoCache.RefreshObj(ctx, &clusterInst)
-		}
-	}
-	appInstKeys := []edgeproto.AppInstKey{}
-	s.controllerData.AppInstCache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
-		appInstKeys = append(appInstKeys, *k)
-	})
-	for _, k := range appInstKeys {
-		var appInst edgeproto.AppInst
-		if s.controllerData.AppInstCache.Get(&k, &appInst) {
-			s.controllerData.AppInstInfoCache.RefreshObj(ctx, &appInst)
-		}
-	}
-}
-
 func (s *CrmHAProcess) BecomeActiveCallback(ctx context.Context, haRole process.HARole) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "BecomeActiveCallback")
 	var cloudletInfo edgeproto.CloudletInfo
