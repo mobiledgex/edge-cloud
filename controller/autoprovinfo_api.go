@@ -11,18 +11,20 @@ import (
 )
 
 type AutoProvInfoApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.AutoProvInfoStore
 	cache edgeproto.AutoProvInfoCache
 }
 
-var autoProvInfoApi = AutoProvInfoApi{}
-
-func InitAutoProvInfoApi(sync *Sync) {
+func NewAutoProvInfoApi(sync *Sync, all *AllApis) *AutoProvInfoApi {
+	autoProvInfoApi := AutoProvInfoApi{}
+	autoProvInfoApi.all = all
 	autoProvInfoApi.sync = sync
 	autoProvInfoApi.store = edgeproto.NewAutoProvInfoStore(sync.store)
 	edgeproto.InitAutoProvInfoCache(&autoProvInfoApi.cache)
 	sync.RegisterCache(&autoProvInfoApi.cache)
+	return &autoProvInfoApi
 }
 
 func (s *AutoProvInfoApi) Update(ctx context.Context, in *edgeproto.AutoProvInfo, rev int64) {

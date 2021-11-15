@@ -24,29 +24,29 @@ func TestDeviceApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	log.SpanLog(ctx, log.DebugLevelApi, "Starting tests")
 	// Test Update of the platform device
 	for _, obj := range testutil.PlarformDeviceClientData {
-		deviceApi.Update(ctx, &obj, 0)
+		apis.deviceApi.Update(ctx, &obj, 0)
 	}
-	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
+	testutil.InternalDeviceTest(t, "show", apis.deviceApi, testutil.PlarformDeviceClientData)
 	// Add the existing platform device with the new timestamp
 	dev := testutil.PlarformDeviceClientData[0]
 	dev.FirstSeen = testutil.GetTimestamp(time.Date(2009, time.November, 11, 23, 0, 0, 0, time.UTC))
-	deviceApi.Update(ctx, &dev, 0)
-	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
+	apis.deviceApi.Update(ctx, &dev, 0)
+	testutil.InternalDeviceTest(t, "show", apis.deviceApi, testutil.PlarformDeviceClientData)
 	// Test Update of a platform device without uniqueID
 	dev = testutil.PlarformDeviceClientData[0]
 	dev.Key.UniqueId = ""
-	deviceApi.Update(ctx, &dev, 0)
-	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
+	apis.deviceApi.Update(ctx, &dev, 0)
+	testutil.InternalDeviceTest(t, "show", apis.deviceApi, testutil.PlarformDeviceClientData)
 	// Test that flush doesn't remove the entries
-	deviceApi.Flush(ctx, 0)
-	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
+	apis.deviceApi.Flush(ctx, 0)
+	testutil.InternalDeviceTest(t, "show", apis.deviceApi, testutil.PlarformDeviceClientData)
 	// Test report to show only a single device in December
 	report := edgeproto.DeviceReport{
 		Begin: testutil.GetTimestamp(time.Date(2009, time.December, 1, 23, 0, 0, 0, time.UTC)),
@@ -54,7 +54,7 @@ func TestDeviceApi(t *testing.T) {
 	}
 	show := testutil.ShowDevice{}
 	show.Init()
-	err := deviceApi.ShowDeviceReport(&report, &show)
+	err := apis.deviceApi.ShowDeviceReport(&report, &show)
 	require.Nil(t, err)
 	require.Equal(t, 2, len(show.Data))
 	// Verify that the two devices got were correct
@@ -70,14 +70,14 @@ func TestDeviceApi(t *testing.T) {
 
 	// Evict all the platform device
 	for _, obj := range testutil.PlarformDeviceClientData {
-		deviceApi.EvictDevice(ctx, &obj)
+		apis.deviceApi.EvictDevice(ctx, &obj)
 	}
-	testutil.InternalDeviceTest(t, "show", &deviceApi, []edgeproto.Device{})
+	testutil.InternalDeviceTest(t, "show", apis.deviceApi, []edgeproto.Device{})
 	// Test Inject of the platform devices
 	for _, obj := range testutil.PlarformDeviceClientData {
-		deviceApi.InjectDevice(ctx, &obj)
+		apis.deviceApi.InjectDevice(ctx, &obj)
 	}
-	testutil.InternalDeviceTest(t, "show", &deviceApi, testutil.PlarformDeviceClientData)
+	testutil.InternalDeviceTest(t, "show", apis.deviceApi, testutil.PlarformDeviceClientData)
 
 	dummy.Stop()
 }

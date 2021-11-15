@@ -30,29 +30,29 @@ func TestAlertApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
 	for _, alert := range testutil.AlertData {
-		alertApi.Update(ctx, &alert, 0)
+		apis.alertApi.Update(ctx, &alert, 0)
 	}
-	testutil.InternalAlertTest(t, "show", &alertApi, testutil.AlertData)
+	testutil.InternalAlertTest(t, "show", apis.alertApi, testutil.AlertData)
 
 	cloudletData := testutil.CloudletData()
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, cloudletData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, cloudletData)
 	testCloudlet := cloudletData[0]
 	testCloudlet.Key.Name = "testcloudlet"
-	testutil.InternalCloudletCreate(t, &cloudletApi, []edgeproto.Cloudlet{testCloudlet})
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, []edgeproto.Cloudlet{testCloudlet})
 	testCloudletInfo := testutil.CloudletInfoData[0]
 	testCloudletInfo.Key.Name = testCloudlet.Key.Name
-	insertCloudletInfo(ctx, []edgeproto.CloudletInfo{testCloudletInfo})
+	insertCloudletInfo(ctx, apis, []edgeproto.CloudletInfo{testCloudletInfo})
 	getAlertsCount := func() (int, int) {
 		count := 0
 		totalCount := 0
-		for _, data := range alertApi.cache.Objs {
+		for _, data := range apis.alertApi.cache.Objs {
 			val := data.Obj
 			totalCount++
 			if cloudletName, found := val.Labels[edgeproto.CloudletKeyTagName]; !found ||
@@ -70,7 +70,7 @@ func TestAlertApi(t *testing.T) {
 	cloudletCount, totalCount := getAlertsCount()
 	require.Greater(t, cloudletCount, 0, "cloudlet alerts exists")
 	require.Greater(t, totalCount, 0, "alerts exists")
-	err := cloudletApi.DeleteCloudlet(&testCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err := apis.cloudletApi.DeleteCloudlet(&testCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, "delete cloudlet")
 	expectedTotalCount := totalCount - cloudletCount
 	cloudletCount, totalCount = getAlertsCount()
@@ -93,50 +93,50 @@ func TestAppInstDownAlert(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi, &clusterInstInfoApi)
+	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
+		apis.appInstInfoApi, apis.clusterInstInfoApi)
 
 	// create supporting data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
-	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData())
-	insertCloudletInfo(ctx, testutil.CloudletInfoData)
-	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
-	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
-	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
-	testutil.InternalAppInstCreate(t, &appInstApi, testutil.AppInstData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
+	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAutoScalePolicyCreate(t, apis.autoScalePolicyApi, testutil.AutoScalePolicyData)
+	testutil.InternalAppCreate(t, apis.appApi, testutil.AppData)
+	testutil.InternalClusterInstCreate(t, apis.clusterInstApi, testutil.ClusterInstData)
+	testutil.InternalAppInstCreate(t, apis.appInstApi, testutil.AppInstData)
 	// Create a reservable clusterInst
 	cinst := testutil.ClusterInstData[7]
 	streamOut := testutil.NewCudStreamoutAppInst(ctx)
 	appinst := edgeproto.AppInst{}
 	appinst.Key.AppKey = testutil.AppData[0].Key
 	appinst.Key.ClusterInstKey = *cinst.Key.Virtual("")
-	err := appInstApi.CreateAppInst(&appinst, streamOut)
+	err := apis.appInstApi.CreateAppInst(&appinst, streamOut)
 	require.Nil(t, err, "create AppInst")
 	// Inject AppInst info check that all appInsts are Healthy
 	for ii, _ := range testutil.AppInstInfoData {
 		in := &testutil.AppInstInfoData[ii]
-		appInstInfoApi.Update(ctx, in, 0)
+		apis.appInstInfoApi.Update(ctx, in, 0)
 	}
-	for _, val := range appInstApi.cache.Objs {
+	for _, val := range apis.appInstApi.cache.Objs {
 		require.Equal(t, dme.HealthCheck_HEALTH_CHECK_OK, val.Obj.HealthCheck)
 	}
 	// Trigger Alerts
 	for _, alert := range testutil.AlertData {
-		alertApi.Update(ctx, &alert, 0)
+		apis.alertApi.Update(ctx, &alert, 0)
 	}
 	// Check reservable cluster
 
-	found := appInstApi.Get(&appinst.Key, &appinst)
+	found := apis.appInstApi.Get(&appinst.Key, &appinst)
 	require.True(t, found)
 	require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE, appinst.HealthCheck)
 	// check other appInstances
 	for ii, testData := range testutil.CreatedAppInstData() {
-		found = appInstApi.Get(&testData.Key, &appinst)
+		found = apis.appInstApi.Get(&testData.Key, &appinst)
 		require.True(t, found)
 		if ii == 0 {
 			require.Equal(t, dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL, appinst.HealthCheck)

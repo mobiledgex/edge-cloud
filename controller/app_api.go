@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"strings"
@@ -23,18 +22,20 @@ import (
 
 // Should only be one of these instantiated in main
 type AppApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.AppStore
 	cache edgeproto.AppCache
 }
 
-var appApi = AppApi{}
-
-func InitAppApi(sync *Sync) {
+func NewAppApi(sync *Sync, all *AllApis) *AppApi {
+	appApi := AppApi{}
+	appApi.all = all
 	appApi.sync = sync
 	appApi.store = edgeproto.NewAppStore(sync.store)
 	edgeproto.InitAppCache(&appApi.cache)
 	sync.RegisterCache(&appApi.cache)
+	return &appApi
 }
 
 func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
@@ -45,16 +46,16 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
 
-func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
+func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) *edgeproto.AppKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.DefaultFlavor.Matches(key) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
-			return true
+			return &k
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
@@ -66,20 +67,20 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	}
 }
 
-func validateAppExists(key *edgeproto.AppKey) bool {
-	return appApi.HasApp(key)
+func (s *AppApi) validateAppExists(key *edgeproto.AppKey) bool {
+	return s.HasApp(key)
 }
 
-func CheckAppCompatibleWithTrustPolicy(ctx context.Context, ckey *edgeproto.CloudletKey, app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
+func (s *AppApi) CheckAppCompatibleWithTrustPolicy(ctx context.Context, ckey *edgeproto.CloudletKey, app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
 	if !app.Trusted {
 		return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), trustPolicy.Key.String())
 	}
 
 	allowedRules := []*edgeproto.SecurityRule{}
-	list, err := cloudletPoolApi.GetCloudletPoolKeysForCloudletKey(ckey)
+	list, err := s.all.cloudletPoolApi.GetCloudletPoolKeysForCloudletKey(ckey)
 	if err == nil {
 		for _, cloudletPoolKey := range list {
-			rules := trustPolicyExceptionApi.GetTrustPolicyExceptionRules(&cloudletPoolKey, &app.Key)
+			rules := s.all.trustPolicyExceptionApi.GetTrustPolicyExceptionRules(&cloudletPoolKey, &app.Key)
 			log.SpanLog(ctx, log.DebugLevelApi, "CheckAppCompatibleWithTrustPolicy() GetTrustPolicyExceptionRules returned", "rules", rules)
 
 			allowedRules = append(allowedRules, rules...)
@@ -125,23 +126,23 @@ func CheckAppCompatibleWithTrustPolicy(ctx context.Context, ckey *edgeproto.Clou
 	return nil
 }
 
-func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) bool {
+func (s *AppApi) UsesAutoProvPolicy(key *edgeproto.PolicyKey) *edgeproto.AppKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Key.Organization == key.Organization {
 			if app.AutoProvPolicy == key.Name {
-				return true
+				return &k
 			}
 			for _, name := range app.AutoProvPolicies {
 				if name == key.Name {
-					return true
+					return &k
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
 func (s *AppApi) AutoDeleteAppsForOrganization(ctx context.Context, org string) {
@@ -420,7 +421,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if in.DefaultFlavor.Name == "" {
 		return fmt.Errorf("Default flavor must be specified")
 	}
-	if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
+	if !s.all.flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
 		return in.DefaultFlavor.NotFoundError()
 	}
 
@@ -521,7 +522,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if err != nil {
 			return err
 		}
-		appInstRefsApi.createRef(stm, &in.Key)
+		s.all.appInstRefsApi.createRef(stm, &in.Key)
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, in)
@@ -560,7 +561,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			return in.Key.NotFoundError()
 		}
 		refs := edgeproto.AppInstRefs{}
-		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
+		s.all.appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
 		appInstExists := len(refs.Insts) > 0
 		if appInstExists {
 			if cur.Deployment != cloudcommon.DeploymentTypeKubernetes &&
@@ -629,7 +630,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				edgeproto.AppInstKeyStringParse(k, &inst.Key)
 				appInstKeys[inst.Key] = struct{}{}
 			}
-			err = cloudletApi.VerifyTrustPoliciesForAppInsts(ctx, &cur, appInstKeys)
+			err = s.all.cloudletApi.VerifyTrustPoliciesForAppInsts(ctx, &cur, appInstKeys)
 			if err != nil {
 				if TrustedSpecified && !in.Trusted {
 					// override the usual errmsg to be clear for this scenario
@@ -643,7 +644,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			cur.DeploymentManifest = ""
 		}
 		newRevision := in.Revision
-		if newRevision == "" {
+		if newRevision == "" && revisionUpdateNeeded(fields) {
 			newRevision = time.Now().Format("2006-01-02T150405")
 			log.SpanLog(ctx, log.DebugLevelApi, "Setting new revision to current timestamp", "Revision", in.Revision)
 		}
@@ -657,62 +658,79 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	return &edgeproto.Result{}, err
 }
 
-func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	if !appApi.HasApp(&in.Key) {
-		// key doesn't exist
-		return &edgeproto.Result{}, in.Key.NotFoundError()
+func revisionUpdateNeeded(fields map[string]struct{}) bool {
+	_, alertPoliciesSpecified := fields[edgeproto.AppFieldAlertPolicies]
+	if alertPoliciesSpecified && len(fields) == 1 {
+		return false
 	}
-	if TrustPolicyExceptionForAppKeyExists(&in.Key) {
-		return &edgeproto.Result{}, errors.New("Application in use by Trust Policy Exception")
-	}
+	return true
+}
 
+func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (res *edgeproto.Result, reterr error) {
 	// set state to prevent new AppInsts from being created from this App
 	dynInsts := []*edgeproto.AppInst{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, &in.Key, in) {
+		cur := edgeproto.App{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("App already being deleted")
+		}
+
 		// use refs to check existing AppInsts to avoid race conditions
 		refs := edgeproto.AppInstRefs{}
-		appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
+		s.all.appInstRefsApi.store.STMGet(stm, &in.Key, &refs)
 		for k, _ := range refs.Insts {
 			// disallow delete if static instances are present
 			inst := edgeproto.AppInst{}
 			edgeproto.AppInstKeyStringParse(k, &inst.Key)
-			if !appInstApi.store.STMGet(stm, &inst.Key, &inst) {
+			if !s.all.appInstApi.store.STMGet(stm, &inst.Key, &inst) {
 				// no inst?
 				log.SpanLog(ctx, log.DebugLevelApi, "AppInst not found by refs, skipping for delete", "AppInst", inst.Key)
 				continue
 			}
-			if inst.Liveness == edgeproto.Liveness_LIVENESS_STATIC {
-				return errors.New("Application in use by static AppInst")
+			if isAutoDeleteAppInstOk(in.Key.Organization, &inst, &cur) {
+				dynInsts = append(dynInsts, &inst)
+				continue
 			}
-			dynInsts = append(dynInsts, &inst)
+			return fmt.Errorf("Application in use by static AppInst %s", inst.Key.GetKeyString())
 		}
 
-		in.DeletePrepare = true
-		s.store.STMPut(stm, in)
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
 		return nil
 	})
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.App{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", err)
+		}
+	}()
+
+	if tpeKey := s.all.trustPolicyExceptionApi.TrustPolicyExceptionForAppKeyExists(&in.Key); tpeKey != nil {
+		return &edgeproto.Result{}, fmt.Errorf("Application in use by Trust Policy Exception %s", tpeKey.GetKeyString())
+	}
 
 	// delete auto-appinsts
 	log.SpanLog(ctx, log.DebugLevelApi, "Auto-deleting AppInsts for App", "app", in.Key)
-	if err = appInstApi.AutoDelete(ctx, dynInsts); err != nil {
-		// failed, so remove delete prepare and don't delete
-		unseterr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			if !s.store.STMGet(stm, &in.Key, in) {
-				return in.Key.NotFoundError()
-			}
-			in.DeletePrepare = false
-			s.store.STMPut(stm, in)
-			return nil
-		})
-		if unseterr != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Delete App unset delete prepare", "unseterr", unseterr)
-		}
+	if err = s.all.appInstApi.AutoDelete(ctx, dynInsts); err != nil {
 		return &edgeproto.Result{}, err
 	}
 
@@ -725,7 +743,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// delete app
 		s.store.STMDel(stm, &in.Key)
 		// delete refs
-		appInstRefsApi.deleteRef(stm, &in.Key)
+		s.all.appInstRefsApi.deleteRef(stm, &in.Key)
 		return nil
 	})
 	return &edgeproto.Result{}, err
@@ -831,7 +849,7 @@ func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error
 		policyKey.Organization = app.Key.Organization
 		policyKey.Name = name
 		policy := edgeproto.AutoProvPolicy{}
-		if !autoProvPolicyApi.store.STMGet(stm, &policyKey, &policy) {
+		if !s.all.autoProvPolicyApi.store.STMGet(stm, &policyKey, &policy) {
 			return policyKey.NotFoundError()
 		}
 		numPolicies++
@@ -939,30 +957,30 @@ func (s *AppApi) validateAlertPolicies(stm concurrency.STM, app *edgeproto.App) 
 			Organization: app.Key.Organization,
 		}
 		alert := edgeproto.AlertPolicy{}
-		if !userAlertApi.store.STMGet(stm, &alertKey, &alert) {
+		if !s.all.alertPolicyApi.store.STMGet(stm, &alertKey, &alert) {
 			return alertKey.NotFoundError()
 		}
 	}
 	return nil
 }
 
-func (s *AppApi) UsesAlertPolicy(key *edgeproto.AlertPolicyKey) bool {
+func (s *AppApi) UsesAlertPolicy(key *edgeproto.AlertPolicyKey) *edgeproto.AppKey {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for _, data := range s.cache.Objs {
+	for k, data := range s.cache.Objs {
 		app := data.Obj
 		if app.Key.Organization == key.Organization {
 			for _, name := range app.AlertPolicies {
 				if name == key.Name {
-					return true
+					return &k
 				}
 			}
 		}
 	}
-	return false
+	return nil
 }
 
-func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo,
+func (s *AppApi) tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo,
 	cloudletRefs *edgeproto.CloudletRefs, numNodes uint32) error {
 
 	deployment := app.Deployment
@@ -977,9 +995,9 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 	}
 	if deployment == cloudcommon.DeploymentTypeKubernetes || deployment == cloudcommon.DeploymentTypeDocker {
 		// look for reservable ClusterInst. This emulates behavior in createAppInstInternal().
-		clusterInstApi.cache.Mux.Lock()
+		s.all.clusterInstApi.cache.Mux.Lock()
 		canDeploy := false
-		for _, data := range clusterInstApi.cache.Objs {
+		for _, data := range s.all.clusterInstApi.cache.Objs {
 			if !cloudlet.Key.Matches(&data.Obj.Key.CloudletKey) {
 				continue
 			}
@@ -989,7 +1007,7 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 				break
 			}
 		}
-		clusterInstApi.cache.Mux.Unlock()
+		s.all.clusterInstApi.cache.Mux.Unlock()
 		if canDeploy {
 			log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy Ok for reservable cluster", "cloudlet", cloudlet.Key.Name)
 			return nil
@@ -997,7 +1015,7 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 		// see if we can create a new ClusterInst
 		targetCluster := edgeproto.ClusterInst{}
 		if deployment == cloudcommon.DeploymentTypeKubernetes {
-			targetCluster.MasterNodeFlavor = settingsApi.Get().MasterNodeFlavor
+			targetCluster.MasterNodeFlavor = s.all.settingsApi.Get().MasterNodeFlavor
 		}
 		targetCluster.NodeFlavor = app.DefaultFlavor.Name
 		targetCluster.Deployment = deployment
@@ -1005,10 +1023,10 @@ func tryDeployApp(ctx context.Context, stm concurrency.STM, app *edgeproto.App, 
 			targetCluster.NumMasters = 1
 			targetCluster.NumNodes = numNodes
 		}
-		return validateResources(ctx, stm, &targetCluster, nil, nil, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
+		return s.all.clusterInstApi.validateResources(ctx, stm, &targetCluster, nil, nil, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
 	}
 	if deployment == cloudcommon.DeploymentTypeVM {
-		return validateResources(ctx, stm, nil, app, appInst, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
+		return s.all.clusterInstApi.validateResources(ctx, stm, nil, app, appInst, cloudlet, cloudletInfo, cloudletRefs, NoGenResourceAlerts)
 	}
 	return fmt.Errorf("Unsupported deployment type %s\n", app.Deployment)
 }
@@ -1026,7 +1044,7 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 	if flavor.Name == "" {
 		return fmt.Errorf("No flavor specified for App")
 	}
-	cloudletApi.cache.GetAllKeys(ctx, func(k *edgeproto.CloudletKey, modRev int64) {
+	s.all.cloudletApi.cache.GetAllKeys(ctx, func(k *edgeproto.CloudletKey, modRev int64) {
 		allclds[*k] = ""
 	})
 
@@ -1038,7 +1056,7 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 		}
 		// since the validate is going to consider the appInst.VmFlavor, we'll need spec.FlavorName set in the test
 		// AppInst object, not the meta flavor.
-		spec, err := cloudletApi.FindFlavorMatch(ctx, &fm)
+		spec, err := s.all.cloudletApi.FindFlavorMatch(ctx, &fm)
 		if err != nil {
 			delete(allclds, cldkey)
 			continue
@@ -1065,21 +1083,21 @@ func (s *AppApi) ShowCloudletsForAppDeployment(in *edgeproto.DeploymentCloudletR
 			for key, _ := range allclds {
 				appInst.VmFlavor = allclds[key]
 				cloudlet := edgeproto.Cloudlet{}
-				if !cloudletApi.store.STMGet(stm, &key, &cloudlet) {
+				if !s.all.cloudletApi.store.STMGet(stm, &key, &cloudlet) {
 					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cloudlet not found", "cloudlet", key)
 					continue
 				}
 				cloudletRefs := edgeproto.CloudletRefs{}
-				if !cloudletRefsApi.store.STMGet(stm, &key, &cloudletRefs) {
+				if !s.all.cloudletRefsApi.store.STMGet(stm, &key, &cloudletRefs) {
 					initCloudletRefs(&cloudletRefs, &key)
 				}
 				cloudletInfo := edgeproto.CloudletInfo{}
-				if !cloudletInfoApi.store.STMGet(stm, &key, &cloudletInfo) {
+				if !s.all.cloudletInfoApi.store.STMGet(stm, &key, &cloudletInfo) {
 					log.SpanLog(ctx, log.DebugLevelApi, "ShowCloudletsForAppDeployment cloudletinfo not found, skipping", "cloudlet", key)
 					delete(allclds, key)
 					continue
 				}
-				err = tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, numNodes)
+				err = s.tryDeployApp(ctx, stm, app, &appInst, &cloudlet, &cloudletInfo, &cloudletRefs, numNodes)
 				if err != nil {
 					delete(allclds, key)
 					log.SpanLog(ctx, log.DebugLevelApi, "DryRunDeploy failed for", "cloudlet", cloudlet.Key, "error", err)

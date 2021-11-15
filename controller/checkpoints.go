@@ -84,7 +84,7 @@ func getNextCheckpoint(t time.Time) time.Time {
 	return time.Date(y, m+1, 1, 0, 0, 0, 0, time.UTC)
 }
 
-func runCheckpoints(ctx context.Context) {
+func (s *ClusterInstApi) runCheckpoints(ctx context.Context) {
 	checkpointSpan := log.StartSpan(log.DebugLevelInfo, "Checkpointing thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 	defer checkpointSpan.Finish()
 	err := InitUsage()
@@ -97,11 +97,11 @@ func runCheckpoints(ctx context.Context) {
 		// resulting in creating a checkpoint for the future, which is not allowed
 		case <-time.After(NextCheckpoint.Add(time.Second * 2).Sub(time.Now())):
 			checkpointTime := NextCheckpoint
-			err = CreateClusterCheckpoint(ctx, checkpointTime)
+			err = s.CreateClusterCheckpoint(ctx, checkpointTime)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create cluster checkpoint", "time", checkpointTime, "err", err)
 			}
-			err = CreateAppCheckpoint(ctx, checkpointTime)
+			err = s.all.appApi.CreateAppCheckpoint(ctx, checkpointTime)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelInfo, "Could not create app checkpoint", "time", checkpointTime, "err", err)
 			}

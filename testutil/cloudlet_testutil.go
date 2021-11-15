@@ -361,9 +361,36 @@ func ClientGPUDriverCreate(t *testing.T, api edgeproto.GPUDriverApiClient, testD
 func CreateGPUDriverData(t *testing.T, ctx context.Context, api *GPUDriverCommonApi, testData []edgeproto.GPUDriver) {
 	var err error
 
-	for _, obj := range testData {
+	for ii := range testData {
+		obj := testData[ii]
 		_, err = api.CreateGPUDriver(ctx, &obj)
 		require.Nil(t, err, "Create GPUDriver %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func InternalGPUDriverDelete(t *testing.T, api edgeproto.GPUDriverApiServer, testData []edgeproto.GPUDriver) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalGPUDriverDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteGPUDriverData(t, ctx, NewInternalGPUDriverApi(api), testData)
+}
+
+func ClientGPUDriverDelete(t *testing.T, api edgeproto.GPUDriverApiClient, testData []edgeproto.GPUDriver) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientGPUDriverDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteGPUDriverData(t, ctx, NewClientGPUDriverApi(api), testData)
+}
+
+func DeleteGPUDriverData(t *testing.T, ctx context.Context, api *GPUDriverCommonApi, testData []edgeproto.GPUDriver) {
+	var err error
+
+	for ii := range testData {
+		obj := testData[ii]
+		_, err = api.DeleteGPUDriver(ctx, &obj)
+		require.Nil(t, err, "Delete GPUDriver %s", obj.GetKey().GetKeyString())
 	}
 }
 
@@ -707,9 +734,36 @@ func ClientCloudletCreate(t *testing.T, api edgeproto.CloudletApiClient, testDat
 func CreateCloudletData(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
 
-	for _, obj := range testData {
+	for ii := range testData {
+		obj := testData[ii]
 		_, err = api.CreateCloudlet(ctx, &obj)
 		require.Nil(t, err, "Create Cloudlet %s", obj.GetKey().GetKeyString())
+	}
+}
+
+func InternalCloudletDelete(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+	span := log.StartSpan(log.DebugLevelApi, "InternalCloudletDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteCloudletData(t, ctx, NewInternalCloudletApi(api), testData)
+}
+
+func ClientCloudletDelete(t *testing.T, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
+	span := log.StartSpan(log.DebugLevelApi, "ClientCloudletDelete")
+	defer span.Finish()
+	ctx := log.ContextWithSpan(context.Background(), span)
+
+	DeleteCloudletData(t, ctx, NewClientCloudletApi(api), testData)
+}
+
+func DeleteCloudletData(t *testing.T, ctx context.Context, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+	var err error
+
+	for ii := range testData {
+		obj := testData[ii]
+		_, err = api.DeleteCloudlet(ctx, &obj)
+		require.Nil(t, err, "Delete Cloudlet %s", obj.GetKey().GetKeyString())
 	}
 }
 

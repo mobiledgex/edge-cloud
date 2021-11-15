@@ -9,18 +9,20 @@ import (
 )
 
 type TrustPolicyApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.TrustPolicyStore
 	cache edgeproto.TrustPolicyCache
 }
 
-var trustPolicyApi = TrustPolicyApi{}
-
-func InitTrustPolicyApi(sync *Sync) {
+func NewTrustPolicyApi(sync *Sync, all *AllApis) *TrustPolicyApi {
+	trustPolicyApi := TrustPolicyApi{}
+	trustPolicyApi.all = all
 	trustPolicyApi.sync = sync
 	trustPolicyApi.store = edgeproto.NewTrustPolicyStore(sync.store)
 	edgeproto.InitTrustPolicyCache(&trustPolicyApi.cache)
 	sync.RegisterCache(&trustPolicyApi.cache)
+	return &trustPolicyApi
 }
 
 func (s *TrustPolicyApi) CreateTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_CreateTrustPolicyServer) error {
@@ -63,7 +65,7 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
-		if err := cloudletApi.ValidateCloudletsUsingTrustPolicy(ctx, &cur); err != nil {
+		if err := s.all.cloudletApi.ValidateCloudletsUsingTrustPolicy(ctx, &cur); err != nil {
 			return err
 		}
 		if changed == 0 {
@@ -75,19 +77,51 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 	if err != nil {
 		return err
 	}
-	return cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
+	return s.all.cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
 }
 
-func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) error {
+func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) (reterr error) {
 	ctx := cb.Context()
-	if !s.cache.HasKey(&in.Key) {
-		return in.Key.NotFoundError()
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.TrustPolicy{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return fmt.Errorf("AutoProvPolicy already being deleted")
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.TrustPolicy{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
 	// look for cloudlets in any state
-	if cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
-		return fmt.Errorf("Policy in use by Cloudlet")
+	if k := s.all.cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN); k != nil {
+		return fmt.Errorf("Policy in use by Cloudlet %s", k.GetKeyString())
 	}
-	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
+	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
 

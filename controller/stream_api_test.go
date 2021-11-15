@@ -12,9 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testStreamObjExists(t *testing.T, ctx context.Context, streamKey *edgeproto.AppInstKey, exists bool) {
-	err := streamObjApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !streamObjApi.store.STMGet(stm, streamKey, &edgeproto.StreamObj{}) {
+func testStreamObjExists(t *testing.T, ctx context.Context, apis *AllApis, streamKey *edgeproto.AppInstKey, exists bool) {
+	err := apis.streamObjApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !apis.streamObjApi.store.STMGet(stm, streamKey, &edgeproto.StreamObj{}) {
 			return streamKey.NotFoundError()
 		}
 		return nil
@@ -40,53 +40,53 @@ func TestStreamObjApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi, &clusterInstInfoApi)
+	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
+		apis.appInstInfoApi, apis.clusterInstInfoApi)
 
-	reduceInfoTimeouts(t, ctx)
+	reduceInfoTimeouts(t, ctx, apis)
 
 	// create supporting data
-	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalAutoProvPolicyCreate(t, &autoProvPolicyApi, testutil.AutoProvPolicyData)
-	testutil.InternalAutoScalePolicyCreate(t, &autoScalePolicyApi, testutil.AutoScalePolicyData)
-	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
-	testutil.InternalGPUDriverCreate(t, &gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
+	testutil.InternalAutoScalePolicyCreate(t, apis.autoScalePolicyApi, testutil.AutoScalePolicyData)
+	testutil.InternalAppCreate(t, apis.appApi, testutil.AppData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
 
 	// ensure that streamObj is cleaned up after removal of parent object
 	exists := true
 	cloudlet := testutil.CloudletData()[0]
 	clStreamKey := edgeproto.GetStreamKeyFromCloudletKey(&cloudlet.Key)
-	err := cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err := apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, "create cloudlet")
-	testStreamObjExists(t, ctx, &clStreamKey, exists)
+	testStreamObjExists(t, ctx, apis, &clStreamKey, exists)
 	clInfo := testutil.CloudletInfoData[0]
 	clInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-	cloudletInfoApi.Update(ctx, &clInfo, 0)
+	apis.cloudletInfoApi.Update(ctx, &clInfo, 0)
 
 	clusterInst := testutil.ClusterInstData[0]
 	clusterStreamKey := edgeproto.AppInstKey{ClusterInstKey: *clusterInst.Key.Virtual("")}
-	err = clusterInstApi.CreateClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
+	err = apis.clusterInstApi.CreateClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "create clusterinst")
-	testStreamObjExists(t, ctx, &clusterStreamKey, exists)
+	testStreamObjExists(t, ctx, apis, &clusterStreamKey, exists)
 
 	appInst := testutil.AppInstData[0]
-	err = appInstApi.CreateAppInst(&appInst, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.CreateAppInst(&appInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "create appinst")
-	testStreamObjExists(t, ctx, &appInst.Key, exists)
+	testStreamObjExists(t, ctx, apis, &appInst.Key, exists)
 
-	err = appInstApi.DeleteAppInst(&appInst, testutil.NewCudStreamoutAppInst(ctx))
+	err = apis.appInstApi.DeleteAppInst(&appInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete appinst")
-	testStreamObjExists(t, ctx, &appInst.Key, !exists)
+	testStreamObjExists(t, ctx, apis, &appInst.Key, !exists)
 
-	err = clusterInstApi.DeleteClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
+	err = apis.clusterInstApi.DeleteClusterInst(&clusterInst, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "delete clusterinst")
-	testStreamObjExists(t, ctx, &clusterStreamKey, !exists)
+	testStreamObjExists(t, ctx, apis, &clusterStreamKey, !exists)
 
-	err = cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err = apis.cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, "delete cloudlet")
-	testStreamObjExists(t, ctx, &clStreamKey, !exists)
+	testStreamObjExists(t, ctx, apis, &clStreamKey, !exists)
 }

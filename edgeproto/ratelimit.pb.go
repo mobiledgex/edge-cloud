@@ -1889,15 +1889,27 @@ func (s *FlowRateLimitSettings) HasFields() bool {
 	return true
 }
 
-type FlowRateLimitSettingsStore struct {
+type FlowRateLimitSettingsStore interface {
+	Create(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *FlowRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*FlowRateLimitSettings, int64, error)
+	Get(ctx context.Context, key *FlowRateLimitSettingsKey, buf *FlowRateLimitSettings) bool
+	STMGet(stm concurrency.STM, key *FlowRateLimitSettingsKey, buf *FlowRateLimitSettings) bool
+	STMPut(stm concurrency.STM, obj *FlowRateLimitSettings, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *FlowRateLimitSettingsKey)
+}
+
+type FlowRateLimitSettingsStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewFlowRateLimitSettingsStore(kvstore objstore.KVStore) FlowRateLimitSettingsStore {
-	return FlowRateLimitSettingsStore{kvstore: kvstore}
+func NewFlowRateLimitSettingsStore(kvstore objstore.KVStore) *FlowRateLimitSettingsStoreImpl {
+	return &FlowRateLimitSettingsStoreImpl{kvstore: kvstore}
 }
 
-func (s *FlowRateLimitSettingsStore) Create(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *FlowRateLimitSettingsStoreImpl) Create(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.Validate(FlowRateLimitSettingsAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -1917,7 +1929,7 @@ func (s *FlowRateLimitSettingsStore) Create(ctx context.Context, m *FlowRateLimi
 	return &Result{}, err
 }
 
-func (s *FlowRateLimitSettingsStore) Update(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *FlowRateLimitSettingsStoreImpl) Update(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1951,7 +1963,7 @@ func (s *FlowRateLimitSettingsStore) Update(ctx context.Context, m *FlowRateLimi
 	return &Result{}, err
 }
 
-func (s *FlowRateLimitSettingsStore) Put(ctx context.Context, m *FlowRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *FlowRateLimitSettingsStoreImpl) Put(ctx context.Context, m *FlowRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(FlowRateLimitSettingsAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -1973,7 +1985,7 @@ func (s *FlowRateLimitSettingsStore) Put(ctx context.Context, m *FlowRateLimitSe
 	return &Result{}, err
 }
 
-func (s *FlowRateLimitSettingsStore) Delete(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *FlowRateLimitSettingsStoreImpl) Delete(ctx context.Context, m *FlowRateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -1989,7 +2001,7 @@ func (s *FlowRateLimitSettingsStore) Delete(ctx context.Context, m *FlowRateLimi
 	return &Result{}, err
 }
 
-func (s *FlowRateLimitSettingsStore) LoadOne(key string) (*FlowRateLimitSettings, int64, error) {
+func (s *FlowRateLimitSettingsStoreImpl) LoadOne(key string) (*FlowRateLimitSettings, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -2003,14 +2015,30 @@ func (s *FlowRateLimitSettingsStore) LoadOne(key string) (*FlowRateLimitSettings
 	return &obj, rev, nil
 }
 
-func (s *FlowRateLimitSettingsStore) STMGet(stm concurrency.STM, key *FlowRateLimitSettingsKey, buf *FlowRateLimitSettings) bool {
+func (s *FlowRateLimitSettingsStoreImpl) Get(ctx context.Context, key *FlowRateLimitSettingsKey, buf *FlowRateLimitSettings) bool {
+	keystr := objstore.DbKeyString("FlowRateLimitSettings", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *FlowRateLimitSettingsStoreImpl) STMGet(stm concurrency.STM, key *FlowRateLimitSettingsKey, buf *FlowRateLimitSettings) bool {
 	keystr := objstore.DbKeyString("FlowRateLimitSettings", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *FlowRateLimitSettingsStoreImpl) parseGetData(val []byte, buf *FlowRateLimitSettings) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = FlowRateLimitSettings{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -2018,17 +2046,17 @@ func (s *FlowRateLimitSettingsStore) STMGet(stm concurrency.STM, key *FlowRateLi
 	return true
 }
 
-func (s *FlowRateLimitSettingsStore) STMPut(stm concurrency.STM, obj *FlowRateLimitSettings, ops ...objstore.KVOp) {
+func (s *FlowRateLimitSettingsStoreImpl) STMPut(stm concurrency.STM, obj *FlowRateLimitSettings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("FlowRateLimitSettings", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("FlowRateLimitSettings json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("FlowRateLimitSettings json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *FlowRateLimitSettingsStore) STMDel(stm concurrency.STM, key *FlowRateLimitSettingsKey) {
+func (s *FlowRateLimitSettingsStoreImpl) STMDel(stm concurrency.STM, key *FlowRateLimitSettingsKey) {
 	keystr := objstore.DbKeyString("FlowRateLimitSettings", key)
 	stm.Del(keystr)
 }
@@ -2737,15 +2765,27 @@ func (s *MaxReqsRateLimitSettings) HasFields() bool {
 	return true
 }
 
-type MaxReqsRateLimitSettingsStore struct {
+type MaxReqsRateLimitSettingsStore interface {
+	Create(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*MaxReqsRateLimitSettings, int64, error)
+	Get(ctx context.Context, key *MaxReqsRateLimitSettingsKey, buf *MaxReqsRateLimitSettings) bool
+	STMGet(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey, buf *MaxReqsRateLimitSettings) bool
+	STMPut(stm concurrency.STM, obj *MaxReqsRateLimitSettings, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey)
+}
+
+type MaxReqsRateLimitSettingsStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewMaxReqsRateLimitSettingsStore(kvstore objstore.KVStore) MaxReqsRateLimitSettingsStore {
-	return MaxReqsRateLimitSettingsStore{kvstore: kvstore}
+func NewMaxReqsRateLimitSettingsStore(kvstore objstore.KVStore) *MaxReqsRateLimitSettingsStoreImpl {
+	return &MaxReqsRateLimitSettingsStoreImpl{kvstore: kvstore}
 }
 
-func (s *MaxReqsRateLimitSettingsStore) Create(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) Create(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.Validate(MaxReqsRateLimitSettingsAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -2765,7 +2805,7 @@ func (s *MaxReqsRateLimitSettingsStore) Create(ctx context.Context, m *MaxReqsRa
 	return &Result{}, err
 }
 
-func (s *MaxReqsRateLimitSettingsStore) Update(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) Update(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -2799,7 +2839,7 @@ func (s *MaxReqsRateLimitSettingsStore) Update(ctx context.Context, m *MaxReqsRa
 	return &Result{}, err
 }
 
-func (s *MaxReqsRateLimitSettingsStore) Put(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) Put(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(MaxReqsRateLimitSettingsAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -2821,7 +2861,7 @@ func (s *MaxReqsRateLimitSettingsStore) Put(ctx context.Context, m *MaxReqsRateL
 	return &Result{}, err
 }
 
-func (s *MaxReqsRateLimitSettingsStore) Delete(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) Delete(ctx context.Context, m *MaxReqsRateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -2837,7 +2877,7 @@ func (s *MaxReqsRateLimitSettingsStore) Delete(ctx context.Context, m *MaxReqsRa
 	return &Result{}, err
 }
 
-func (s *MaxReqsRateLimitSettingsStore) LoadOne(key string) (*MaxReqsRateLimitSettings, int64, error) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) LoadOne(key string) (*MaxReqsRateLimitSettings, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -2851,14 +2891,30 @@ func (s *MaxReqsRateLimitSettingsStore) LoadOne(key string) (*MaxReqsRateLimitSe
 	return &obj, rev, nil
 }
 
-func (s *MaxReqsRateLimitSettingsStore) STMGet(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey, buf *MaxReqsRateLimitSettings) bool {
+func (s *MaxReqsRateLimitSettingsStoreImpl) Get(ctx context.Context, key *MaxReqsRateLimitSettingsKey, buf *MaxReqsRateLimitSettings) bool {
+	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *MaxReqsRateLimitSettingsStoreImpl) STMGet(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey, buf *MaxReqsRateLimitSettings) bool {
 	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *MaxReqsRateLimitSettingsStoreImpl) parseGetData(val []byte, buf *MaxReqsRateLimitSettings) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = MaxReqsRateLimitSettings{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -2866,17 +2922,17 @@ func (s *MaxReqsRateLimitSettingsStore) STMGet(stm concurrency.STM, key *MaxReqs
 	return true
 }
 
-func (s *MaxReqsRateLimitSettingsStore) STMPut(stm concurrency.STM, obj *MaxReqsRateLimitSettings, ops ...objstore.KVOp) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) STMPut(stm concurrency.STM, obj *MaxReqsRateLimitSettings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("MaxReqsRateLimitSettings json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("MaxReqsRateLimitSettings json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *MaxReqsRateLimitSettingsStore) STMDel(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey) {
+func (s *MaxReqsRateLimitSettingsStoreImpl) STMDel(stm concurrency.STM, key *MaxReqsRateLimitSettingsKey) {
 	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", key)
 	stm.Del(keystr)
 }
@@ -3513,15 +3569,27 @@ func (s *RateLimitSettings) HasFields() bool {
 	return false
 }
 
-type RateLimitSettingsStore struct {
+type RateLimitSettingsStore interface {
+	Create(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *RateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*RateLimitSettings, int64, error)
+	Get(ctx context.Context, key *RateLimitSettingsKey, buf *RateLimitSettings) bool
+	STMGet(stm concurrency.STM, key *RateLimitSettingsKey, buf *RateLimitSettings) bool
+	STMPut(stm concurrency.STM, obj *RateLimitSettings, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *RateLimitSettingsKey)
+}
+
+type RateLimitSettingsStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewRateLimitSettingsStore(kvstore objstore.KVStore) RateLimitSettingsStore {
-	return RateLimitSettingsStore{kvstore: kvstore}
+func NewRateLimitSettingsStore(kvstore objstore.KVStore) *RateLimitSettingsStoreImpl {
+	return &RateLimitSettingsStoreImpl{kvstore: kvstore}
 }
 
-func (s *RateLimitSettingsStore) Create(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *RateLimitSettingsStoreImpl) Create(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -3541,7 +3609,7 @@ func (s *RateLimitSettingsStore) Create(ctx context.Context, m *RateLimitSetting
 	return &Result{}, err
 }
 
-func (s *RateLimitSettingsStore) Update(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *RateLimitSettingsStoreImpl) Update(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -3562,7 +3630,7 @@ func (s *RateLimitSettingsStore) Update(ctx context.Context, m *RateLimitSetting
 	return &Result{}, err
 }
 
-func (s *RateLimitSettingsStore) Put(ctx context.Context, m *RateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *RateLimitSettingsStoreImpl) Put(ctx context.Context, m *RateLimitSettings, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -3583,7 +3651,7 @@ func (s *RateLimitSettingsStore) Put(ctx context.Context, m *RateLimitSettings, 
 	return &Result{}, err
 }
 
-func (s *RateLimitSettingsStore) Delete(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
+func (s *RateLimitSettingsStoreImpl) Delete(ctx context.Context, m *RateLimitSettings, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -3599,7 +3667,7 @@ func (s *RateLimitSettingsStore) Delete(ctx context.Context, m *RateLimitSetting
 	return &Result{}, err
 }
 
-func (s *RateLimitSettingsStore) LoadOne(key string) (*RateLimitSettings, int64, error) {
+func (s *RateLimitSettingsStoreImpl) LoadOne(key string) (*RateLimitSettings, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -3613,14 +3681,30 @@ func (s *RateLimitSettingsStore) LoadOne(key string) (*RateLimitSettings, int64,
 	return &obj, rev, nil
 }
 
-func (s *RateLimitSettingsStore) STMGet(stm concurrency.STM, key *RateLimitSettingsKey, buf *RateLimitSettings) bool {
+func (s *RateLimitSettingsStoreImpl) Get(ctx context.Context, key *RateLimitSettingsKey, buf *RateLimitSettings) bool {
+	keystr := objstore.DbKeyString("RateLimitSettings", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *RateLimitSettingsStoreImpl) STMGet(stm concurrency.STM, key *RateLimitSettingsKey, buf *RateLimitSettings) bool {
 	keystr := objstore.DbKeyString("RateLimitSettings", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *RateLimitSettingsStoreImpl) parseGetData(val []byte, buf *RateLimitSettings) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = RateLimitSettings{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -3628,17 +3712,17 @@ func (s *RateLimitSettingsStore) STMGet(stm concurrency.STM, key *RateLimitSetti
 	return true
 }
 
-func (s *RateLimitSettingsStore) STMPut(stm concurrency.STM, obj *RateLimitSettings, ops ...objstore.KVOp) {
+func (s *RateLimitSettingsStoreImpl) STMPut(stm concurrency.STM, obj *RateLimitSettings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("RateLimitSettings", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("RateLimitSettings json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("RateLimitSettings json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *RateLimitSettingsStore) STMDel(stm concurrency.STM, key *RateLimitSettingsKey) {
+func (s *RateLimitSettingsStoreImpl) STMDel(stm concurrency.STM, key *RateLimitSettingsKey) {
 	keystr := objstore.DbKeyString("RateLimitSettings", key)
 	stm.Del(keystr)
 }

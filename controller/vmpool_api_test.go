@@ -22,18 +22,18 @@ func TestVMPoolApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalVMPoolTest(t, "cud", &vmPoolApi, testutil.VMPoolData)
+	testutil.InternalVMPoolTest(t, "cud", apis.vmPoolApi, testutil.VMPoolData)
 
-	testAddRemoveVM(t, ctx)
+	testAddRemoveVM(t, ctx, apis)
 
 	dummy.Stop()
 }
 
-func testAddRemoveVM(t *testing.T, ctx context.Context) {
+func testAddRemoveVM(t *testing.T, ctx context.Context, apis *AllApis) {
 	// test adding cloudlet vm to the pool
 	cm1 := edgeproto.VMPoolMember{}
 	cm1.Key = testutil.VMPoolData[1].Key
@@ -45,11 +45,11 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 		},
 	}
 
-	_, err := vmPoolApi.AddVMPoolMember(ctx, &cm1)
+	_, err := apis.vmPoolApi.AddVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
 	vmPool := edgeproto.VMPool{}
-	found := vmPoolApi.cache.Get(&cm1.Key, &vmPool)
+	found := apis.vmPoolApi.cache.Get(&cm1.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm1.Key)
 	require.Equal(t, 4, len(vmPool.Vms))
 
@@ -63,7 +63,7 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 			InternalIp: "192.168.100.121",
 		},
 	}
-	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm2)
 	require.NotNil(t, err, "invalid external ip")
 
 	cm2.Vm = edgeproto.VM{
@@ -73,7 +73,7 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 			InternalIp: "127.0.0.1",
 		},
 	}
-	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm2)
 	require.NotNil(t, err, "invalid internal ip")
 
 	cm2.Vm = edgeproto.VM{
@@ -83,10 +83,10 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 			InternalIp: "192.168.100.121",
 		},
 	}
-	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm2)
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm2)
 	require.Nil(t, err, "add cloudlet vm to cloudlet vm pool")
 
-	found = vmPoolApi.cache.Get(&cm2.Key, &vmPool)
+	found = apis.vmPoolApi.cache.Get(&cm2.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
 	require.Equal(t, 5, len(vmPool.Vms))
 
@@ -101,7 +101,7 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 		},
 	}
 
-	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm3)
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm3)
 	require.NotNil(t, err, "add cloudlet vm to cloudlet vm pool should fail as same externalIP exists")
 
 	cm3.Vm = edgeproto.VM{
@@ -111,7 +111,7 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 		},
 	}
 
-	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm3)
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm3)
 	require.NotNil(t, err, "add cloudlet vm to cloudlet vm pool should fail as same internalIP exists")
 
 	updateCM := edgeproto.VMPool{}
@@ -135,29 +135,29 @@ func testAddRemoveVM(t *testing.T, ctx context.Context) {
 		edgeproto.VMPoolFieldVmsNetInfoExternalIp,
 		edgeproto.VMPoolFieldVmsNetInfoInternalIp,
 	}
-	_, err = vmPoolApi.UpdateVMPool(ctx, &updateCM)
+	_, err = apis.vmPoolApi.UpdateVMPool(ctx, &updateCM)
 	require.NotNil(t, err, "update cloudlet vm should fail as same internalIP exists")
 
-	found = vmPoolApi.cache.Get(&cm3.Key, &vmPool)
+	found = apis.vmPoolApi.cache.Get(&cm3.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm3.Key)
 	require.Equal(t, 5, len(vmPool.Vms))
 
 	// remove cloudlet vm from pool
-	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm1)
+	_, err = apis.vmPoolApi.RemoveVMPoolMember(ctx, &cm1)
 	require.Nil(t, err, "remove cloudlet vm from pool")
-	found = vmPoolApi.cache.Get(&cm1.Key, &vmPool)
+	found = apis.vmPoolApi.cache.Get(&cm1.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm1.Key)
 	require.Equal(t, 4, len(vmPool.Vms))
 
 	// remove cloudlet vm from pool
-	_, err = vmPoolApi.RemoveVMPoolMember(ctx, &cm2)
+	_, err = apis.vmPoolApi.RemoveVMPoolMember(ctx, &cm2)
 	require.Nil(t, err, "remove cloudlet vm from pool")
-	found = vmPoolApi.cache.Get(&cm2.Key, &vmPool)
+	found = apis.vmPoolApi.cache.Get(&cm2.Key, &vmPool)
 	require.True(t, found, "get cloudlet vm pool %v", cm2.Key)
 	require.Equal(t, 3, len(vmPool.Vms))
 
 	// try to add cloudlet vm to non-existent pool
 	cm1.Key.Name = "SomeNonExistentCloudlet"
-	_, err = vmPoolApi.AddVMPoolMember(ctx, &cm1)
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm1)
 	require.NotNil(t, err)
 }

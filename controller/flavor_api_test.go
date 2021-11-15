@@ -24,16 +24,16 @@ func TestFlavorApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalFlavorTest(t, "cud", &flavorApi, testutil.FlavorData)
-	testMasterFlavor(t, ctx)
+	testutil.InternalFlavorTest(t, "cud", apis.flavorApi, testutil.FlavorData)
+	testMasterFlavor(t, ctx, apis)
 	dummy.Stop()
 }
 
-func testMasterFlavor(t *testing.T, ctx context.Context) {
+func testMasterFlavor(t *testing.T, ctx context.Context, apis *AllApis) {
 	// We optionally maintain one generic modestly sized flavor for use
 	// by the MasterNode of a nominal k8s cluster where numnodes (workers)
 	// > 0 such that we don't run client workloads on that master. We can therefore
@@ -50,23 +50,23 @@ func testMasterFlavor(t *testing.T, ctx context.Context) {
 	// of settings.MasterNodeFlavor
 	cl := testutil.CloudletData()[1]
 	var cli edgeproto.CloudletInfo = testutil.CloudletInfoData[0]
-	settings := settingsApi.Get()
+	settings := apis.settingsApi.Get()
 	masterFlavor := edgeproto.Flavor{}
 	flavorKey := edgeproto.FlavorKey{}
 	flavorKey.Name = settings.MasterNodeFlavor
 
-	err = cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !flavorApi.store.STMGet(stm, &flavorKey, &masterFlavor) {
+	err = apis.cloudletApi.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !apis.flavorApi.store.STMGet(stm, &flavorKey, &masterFlavor) {
 			// create the missing flavor
 			masterFlavor.Key.Name = "MasterNodeFlavor"
 			masterFlavor.Vcpus = 2
 			masterFlavor.Disk = 40
 			masterFlavor.Ram = 4096
-			_, err = flavorApi.CreateFlavor(ctx, &masterFlavor)
+			_, err = apis.flavorApi.CreateFlavor(ctx, &masterFlavor)
 			require.Nil(t, err, "Create Master Node Flavor")
 		}
 
-		vmspec, err := resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cl, cli)
+		vmspec, err := apis.resTagTableApi.GetVMSpec(ctx, stm, masterFlavor, cl, cli)
 		require.Nil(t, err, "GetVmSpec masterNodeFlavor")
 		require.Equal(t, "flavor.medium", vmspec.FlavorName)
 

@@ -7,18 +7,20 @@ import (
 )
 
 type CloudletRefsApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.CloudletRefsStore
 	cache edgeproto.CloudletRefsCache
 }
 
-var cloudletRefsApi = CloudletRefsApi{}
-
-func InitCloudletRefsApi(sync *Sync) {
+func NewCloudletRefsApi(sync *Sync, all *AllApis) *CloudletRefsApi {
+	cloudletRefsApi := CloudletRefsApi{}
+	cloudletRefsApi.all = all
 	cloudletRefsApi.sync = sync
 	cloudletRefsApi.store = edgeproto.NewCloudletRefsStore(sync.store)
 	edgeproto.InitCloudletRefsCache(&cloudletRefsApi.cache)
 	sync.RegisterCache(&cloudletRefsApi.cache)
+	return &cloudletRefsApi
 }
 
 func (s *CloudletRefsApi) Delete(ctx context.Context, key *edgeproto.CloudletKey, wait func(int64)) {

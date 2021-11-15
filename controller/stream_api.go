@@ -15,8 +15,7 @@ import (
 )
 
 var (
-	streamObjs   = cloudcommon.StreamObj{}
-	streamObjApi = StreamObjApi{}
+	streamObjs = cloudcommon.StreamObj{}
 
 	StreamTimeout = 30 * time.Minute
 )
@@ -34,6 +33,7 @@ type streamSend struct {
 }
 
 type StreamObjApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.StreamObjStore
 	cache edgeproto.StreamObjCache
@@ -49,11 +49,14 @@ type CbWrapper struct {
 	streamSendObj *streamSend
 }
 
-func InitStreamObjApi(sync *Sync) {
+func NewStreamObjApi(sync *Sync, all *AllApis) *StreamObjApi {
+	streamObjApi := StreamObjApi{}
+	streamObjApi.all = all
 	streamObjApi.sync = sync
 	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
 	edgeproto.InitStreamObjCache(&streamObjApi.cache)
 	sync.RegisterCache(&streamObjApi.cache)
+	return &streamObjApi
 }
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
@@ -108,7 +111,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	// than it did earlier, then end-user might not see any status messages.
 	// For now we won't handle this case, as it will just affect the status updates
 	// which shouldn't be a big deal
-	err := controllerApi.RunJobs(func(arg interface{}, addr string) error {
+	err := s.all.controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		if addr == *externalApiAddr {
 			// local node
 			return s.StreamLocalMsgs(key, cb)

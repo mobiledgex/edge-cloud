@@ -6,18 +6,20 @@ import (
 )
 
 type AppInstRefsApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.AppInstRefsStore
 	cache edgeproto.AppInstRefsCache
 }
 
-var appInstRefsApi = AppInstRefsApi{}
-
-func InitAppInstRefsApi(sync *Sync) {
+func NewAppInstRefsApi(sync *Sync, all *AllApis) *AppInstRefsApi {
+	appInstRefsApi := AppInstRefsApi{}
+	appInstRefsApi.all = all
 	appInstRefsApi.sync = sync
 	appInstRefsApi.store = edgeproto.NewAppInstRefsStore(sync.store)
 	edgeproto.InitAppInstRefsCache(&appInstRefsApi.cache)
 	sync.RegisterCache(&appInstRefsApi.cache)
+	return &appInstRefsApi
 }
 
 func (s *AppInstRefsApi) ShowAppInstRefs(in *edgeproto.AppInstRefs, cb edgeproto.AppInstRefsApi_ShowAppInstRefsServer) error {

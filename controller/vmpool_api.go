@@ -10,18 +10,20 @@ import (
 )
 
 type VMPoolApi struct {
+	all   *AllApis
 	sync  *Sync
 	store edgeproto.VMPoolStore
 	cache edgeproto.VMPoolCache
 }
 
-var vmPoolApi = VMPoolApi{}
-
-func InitVMPoolApi(sync *Sync) {
+func NewVMPoolApi(sync *Sync, all *AllApis) *VMPoolApi {
+	vmPoolApi := VMPoolApi{}
+	vmPoolApi.all = all
 	vmPoolApi.sync = sync
 	vmPoolApi.store = edgeproto.NewVMPoolStore(sync.store)
 	edgeproto.InitVMPoolCache(&vmPoolApi.cache)
 	sync.RegisterCache(&vmPoolApi.cache)
+	return &vmPoolApi
 }
 
 func (s *VMPoolApi) CreateVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
@@ -51,7 +53,7 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 	cctx.SetOverride(&in.CrmOverride)
 
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
+	if s.all.cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		for _, vm := range in.Vms {
 			if vm.State != edgeproto.VMState_VM_FORCE_FREE {
@@ -93,7 +95,7 @@ func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 		return &edgeproto.Result{}, err
 	}
 	// Validate if pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) {
+	if s.all.cloudletApi.UsesVMPool(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("VM pool in use by Cloudlet")
 	}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -124,7 +126,7 @@ func (s *VMPoolApi) AddVMPoolMember(ctx context.Context, in *edgeproto.VMPoolMem
 
 	var err error
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
+	if s.all.cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_ADD
 		updateVMs[in.Vm.Name] = in.Vm
@@ -169,7 +171,7 @@ func (s *VMPoolApi) RemoveVMPoolMember(ctx context.Context, in *edgeproto.VMPool
 	cctx.SetOverride(&in.CrmOverride)
 
 	// Let cloudlet update the pool, if the pool is in use by Cloudlet
-	if cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
+	if s.all.cloudletApi.UsesVMPool(&in.Key) && !ignoreCRM(cctx) {
 		updateVMs := make(map[string]edgeproto.VM)
 		in.Vm.State = edgeproto.VMState_VM_REMOVE
 		updateVMs[in.Vm.Name] = in.Vm
@@ -275,7 +277,7 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = vmPoolApi.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY, UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR, settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(), "Updated VM Pool Successfully", nil)
+	err = s.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY, UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR, s.all.settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(), "Updated VM Pool Successfully", nil)
 	// State state back to Unknown & Error to nil, as user is notified about the error, if any
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.VMPool{}

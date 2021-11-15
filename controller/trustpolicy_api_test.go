@@ -22,21 +22,21 @@ func TestTrustPolicyApi(t *testing.T) {
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalTrustPolicyTest(t, "cud", &trustPolicyApi, testutil.TrustPolicyData)
+	testutil.InternalTrustPolicyTest(t, "cud", apis.trustPolicyApi, testutil.TrustPolicyData)
 	// error cases
-	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[0], "cannot be higher than max")
-	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[1], "invalid CIDR")
-	expectCreatePolicyError(t, ctx, &testutil.TrustPolicyErrorData[2], "Invalid min port: 0")
+	expectCreatePolicyError(t, ctx, apis, &testutil.TrustPolicyErrorData[0], "cannot be higher than max")
+	expectCreatePolicyError(t, ctx, apis, &testutil.TrustPolicyErrorData[1], "invalid CIDR")
+	expectCreatePolicyError(t, ctx, apis, &testutil.TrustPolicyErrorData[2], "Invalid min port: 0")
 
 	dummy.Stop()
 }
 
-func expectCreatePolicyError(t *testing.T, ctx context.Context, in *edgeproto.TrustPolicy, msg string) {
-	err := trustPolicyApi.CreateTrustPolicy(in, testutil.NewCudStreamoutTrustPolicy(ctx))
+func expectCreatePolicyError(t *testing.T, ctx context.Context, apis *AllApis, in *edgeproto.TrustPolicy, msg string) {
+	err := apis.trustPolicyApi.CreateTrustPolicy(in, testutil.NewCudStreamoutTrustPolicy(ctx))
 	require.NotNil(t, err, "create %v", in)
 	require.Contains(t, err.Error(), msg, "error %v contains %s", err, msg)
 }

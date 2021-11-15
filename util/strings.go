@@ -60,8 +60,20 @@ func CapitalizeMessage(msg string) string {
 		return msg
 	}
 	// Capitalize first character and append to rest of msg
-	t := string(msg[1:len(msg)])
+	t := string(msg[1:])
 	c ^= ' '
+	t = string(c) + t
+	return t
+}
+
+func UncapitalizeMessage(msg string) string {
+	c := msg[0]
+	// Return msg if already lower case
+	if !isASCIIUpper(c) {
+		return msg
+	}
+	t := string(msg[1:])
+	c += 'a' - 'A'
 	t = string(c) + t
 	return t
 }
@@ -82,4 +94,13 @@ func SplitCamelCase(name string) []string {
 		out = append(out, name[startIndex:])
 	}
 	return out
+}
+
+// UnCamelCase converts camel case to lowercase separated by underscore
+func UnCamelCase(name string) string {
+	parts := SplitCamelCase(name)
+	for ii := range parts {
+		parts[ii] = strings.ToLower(parts[ii])
+	}
+	return strings.Join(parts, "_")
 }
