@@ -154,6 +154,10 @@ type Platform interface {
 	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
 	// Get RootLB Flavor
 	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
+	// Check if TrustPolicyException is present
+	HasTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey, clusterInst *edgeproto.ClusterInst) bool
+	// Get #TrustPolicyExceptions
+	TrustPolicyExceptionCount(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey) int
 }
 
 type ClusterSvc interface {
