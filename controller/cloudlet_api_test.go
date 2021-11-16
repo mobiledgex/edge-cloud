@@ -159,6 +159,7 @@ func TestCloudletApi(t *testing.T) {
 	cloudletData := testutil.CloudletData()
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverTest(t, "cud", apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalCloudletTest(t, "cud", apis.cloudletApi, cloudletData)
 
 	// test invalid location values
@@ -854,7 +855,7 @@ func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context, apis *AllApis
 
 	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
-	require.Equal(t, 4, len(show.Data))
+	require.Equal(t, 5, len(show.Data))
 
 	// Show flavors for a chosen cloudlet name.
 	show.Init()
@@ -954,6 +955,7 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	// test data
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 

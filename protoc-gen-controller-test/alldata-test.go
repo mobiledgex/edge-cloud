@@ -57,6 +57,20 @@ func (s *testSupportData) delete(t *testing.T, ctx context.Context, all *AllApis
 {{- end}}
 }
 
+{{- range .Fields}}
+
+func (s *testSupportData) getOne{{.Type}}() *edgeproto.{{.Type}} {
+{{- if .Repeated}}
+	if len(s.{{.Name}}) == 0 {
+		return nil
+	}
+	return &s.{{.Name}}[0]
+{{- else}}
+	return s.{{.Name}}
+{{- end}}
+}
+{{- end}}
+
 `
 
 func (s *ControllerTest) generateDataStore(desc *generator.Descriptor) {

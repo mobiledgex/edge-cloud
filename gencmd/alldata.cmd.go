@@ -318,6 +318,9 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].CrmOverride = 0
 		}
+		if _, found := tags["nocmp"]; found {
+			in.VmPools[i0].DeletePrepare = false
+		}
 	}
 	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
@@ -822,6 +825,7 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.status.msgcount",
 	"vmpools:#.status.msgs",
 	"vmpools:#.crmoverride",
+	"vmpools:#.deleteprepare",
 	"gpudrivers:#.fields",
 	"gpudrivers:#.key.name",
 	"gpudrivers:#.key.organization",
@@ -968,7 +972,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.state":                                                             "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"cloudlets:#.crmoverride":                                                       "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"cloudlets:#.deploymentlocal":                                                   "Deploy cloudlet services locally",
-	"cloudlets:#.platformtype":                                                      "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation",
+	"cloudlets:#.platformtype":                                                      "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool",
 	"cloudlets:#.notifysrvaddr":                                                     "Address for the CRM notify listener to run on",
 	"cloudlets:#.flavor.name":                                                       "Flavor name",
 	"cloudlets:#.physicalname":                                                      "Physical infrastructure cloudlet name",
@@ -1287,6 +1291,7 @@ var AllDataComments = map[string]string{
 	"vmpools:#.state":                                                               "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"vmpools:#.errors":                                                              "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"vmpools:#.deleteprepare":                                                       "Preparing to be deleted",
 	"gpudrivers:#.fields":                                                           "Fields are used for the Update API to specify which fields to apply",
 	"gpudrivers:#.key.name":                                                         "Name of the driver",
 	"gpudrivers:#.key.organization":                                                 "Organization to which the driver belongs to",

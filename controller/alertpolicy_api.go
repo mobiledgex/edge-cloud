@@ -67,7 +67,7 @@ func (a *AlertPolicyApi) DeleteAlertPolicy(ctx context.Context, in *edgeproto.Al
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("AlertPolicy already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
 		a.store.STMPut(stm, &cur)

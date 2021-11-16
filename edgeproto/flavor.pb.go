@@ -687,6 +687,10 @@ func (m *FlavorKey) ExistsError() error {
 	return fmt.Errorf("Flavor key %s already exists", m.GetKeyString())
 }
 
+func (m *FlavorKey) BeingDeletedError() error {
+	return fmt.Errorf("Flavor %s is being deleted", m.GetKeyString())
+}
+
 var FlavorKeyTagName = "flavor"
 
 func (m *FlavorKey) GetTags() map[string]string {
