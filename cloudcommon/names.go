@@ -194,7 +194,7 @@ func GetAppFQN(key *edgeproto.AppKey) string {
 	app := util.DNSSanitize(key.Name)
 	dev := util.DNSSanitize(key.Organization)
 	ver := util.DNSSanitize(key.Version)
-	return fmt.Sprintf("%s%s%s", dev, app, ver)
+	return fmt.Sprintf("%s-%s%s", dev, app, ver)
 }
 
 // GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
