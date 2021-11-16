@@ -178,6 +178,9 @@ func (s *SettingsApi) UpdateSettings(ctx context.Context, in *edgeproto.Settings
 		if cur.ShepherdAlertEvaluationInterval < cur.ShepherdMetricsScrapeInterval {
 			return fmt.Errorf("Shepherd alert evaluation interval cannot be less than Shepherd metrics scrape interval")
 		}
+		if cur.PlatformHaInstanceActiveExpireTime <= cur.PlatformHaInstancePollInterval {
+			return fmt.Errorf("Platform HA Instance Active Expire Time cannot be less than Platform HA Instance Poll Interval")
+		}
 		newCqs := false
 		for _, field := range in.Fields {
 			if field == edgeproto.SettingsFieldMasterNodeFlavor {
