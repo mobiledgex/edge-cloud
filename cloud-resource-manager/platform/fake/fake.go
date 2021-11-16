@@ -138,7 +138,6 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	FakeVcpusUsed += 2 + 2
 	FakeDiskUsed += 40 + 40
 	FakeExternalIpsUsed += 1
-	log.WarnLog("FAKEINCR2", "INSTANCES", FakeInstancesUsed)
 	FakeInstancesUsed += 2
 
 	err := UpdateResourcesMax()
@@ -192,7 +191,6 @@ func UpdateCommonResourcesUsed(flavor string, add bool) {
 		}
 	}
 	if add {
-		log.WarnLog("FAKEINCR1", "INSTANCES", FakeInstancesUsed)
 		FakeInstancesUsed += 1
 	} else {
 		FakeInstancesUsed -= 1
