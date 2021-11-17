@@ -56,7 +56,7 @@ func (s *CloudletPoolApi) DeleteCloudletPool(ctx context.Context, in *edgeproto.
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("CloudletPool already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
 		s.store.STMPut(stm, &cur)
@@ -131,8 +131,12 @@ func (s *CloudletPoolApi) checkCloudletsExist(stm concurrency.STM, in *edgeproto
 			Name:         name,
 			Organization: in.Key.Organization,
 		}
-		if !s.all.cloudletApi.store.STMGet(stm, &key, nil) {
+		cloudlet := edgeproto.Cloudlet{}
+		if !s.all.cloudletApi.store.STMGet(stm, &key, &cloudlet) {
 			notFound = append(notFound, name)
+		}
+		if cloudlet.DeletePrepare {
+			return key.BeingDeletedError()
 		}
 	}
 	if len(notFound) > 0 {
@@ -160,14 +164,10 @@ func (s *CloudletPoolApi) AddCloudletPoolMember(ctx context.Context, in *edgepro
 				return fmt.Errorf("Cloudlet already part of pool")
 			}
 		}
-		ckey := edgeproto.CloudletKey{
-			Name:         in.CloudletName,
-			Organization: in.Key.Organization,
-		}
-		if !s.all.cloudletApi.store.STMGet(stm, &ckey, nil) {
-			return ckey.NotFoundError()
-		}
 		cur.Cloudlets = append(cur.Cloudlets, in.CloudletName)
+		if err := s.checkCloudletsExist(stm, &cur); err != nil {
+			return err
+		}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})

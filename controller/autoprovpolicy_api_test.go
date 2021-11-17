@@ -39,6 +39,7 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	cloudletData := testutil.CloudletData()
 	testutil.InternalAutoProvPolicyTest(t, "cud", apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalCloudletCreate(t, apis.cloudletApi, cloudletData)
 

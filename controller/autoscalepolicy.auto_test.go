@@ -25,6 +25,43 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+// AutoScalePolicyStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type AutoScalePolicyStoreTracker struct {
+	edgeproto.AutoScalePolicyStore
+	getSTM concurrency.STM
+	putSTM concurrency.STM
+}
+
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapAutoScalePolicyTrackerStore(api *AutoScalePolicyApi) (*AutoScalePolicyStoreTracker, func()) {
+	orig := api.store
+	tracker := &AutoScalePolicyStoreTracker{
+		AutoScalePolicyStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *AutoScalePolicyStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.PolicyKey, buf *edgeproto.AutoScalePolicy) bool {
+	found := s.AutoScalePolicyStore.STMGet(stm, key, buf)
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
+	return found
+}
+
+func (s *AutoScalePolicyStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.AutoScalePolicy, ops ...objstore.KVOp) {
+	s.AutoScalePolicyStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
 // Caller must write by hand the test data generator.
 // Each Ref object should only have a single reference to the key,
 // in order to properly test each reference (i.e. don't have a single
@@ -131,7 +168,7 @@ func deleteAutoScalePolicyChecks(t *testing.T, ctx context.Context, all *AllApis
 	testObj, _ = dataGen.GetAutoScalePolicyTestObj()
 	_, err = api.DeleteAutoScalePolicy(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 

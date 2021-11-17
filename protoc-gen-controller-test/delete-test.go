@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -136,16 +137,12 @@ func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, data
 	}
 	api.store = deleteStore
 {{- range .TrackedBys}}
-	orig{{.ApiObj}}Store := all.{{.ApiObj}}.store
-	{{.ApiObj}}Store := &{{.Type}}DeleteStore{
-		{{.Type}}Store: orig{{.ApiObj}}Store,
-	}
-	all.{{.ApiObj}}.store = {{.ApiObj}}Store
+	{{.ApiObj}}Store, {{.ApiObj}}Unwrap := wrap{{.Type}}TrackerStore(all.{{.ApiObj}})
 {{- end}}
 	defer func() {
 		api.store = origStore
 {{- range .TrackedBys}}
-		all.{{.ApiObj}}.store = orig{{.ApiObj}}Store
+		{{.ApiObj}}Unwrap()
 {{- end}}
 	}()
 
@@ -166,8 +163,8 @@ func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, data
 		// as delete prepare is set
 		require.NotNil(t, deleteStore.putDeletePrepareSTM, "must set delete prepare in STM")
 {{- range .TrackedBys}}
-		require.NotNil(t, {{.ApiObj}}Store.getRefSTM, "must check for refs from {{.Type}} in STM")
-		require.Equal(t, deleteStore.putDeletePrepareSTM, {{.ApiObj}}Store.getRefSTM, "delete prepare and ref check for {{.Type}} must be done in the same STM")
+		require.NotNil(t, {{.ApiObj}}Store.getSTM, "must check for refs from {{.Type}} in STM")
+		require.Equal(t, deleteStore.putDeletePrepareSTM, {{.ApiObj}}Store.getSTM, "delete prepare and ref check for {{.Type}} must be done in the same STM")
 {{- end}}
 	}
 {{- end}}
@@ -184,7 +181,7 @@ func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, data
 	// delete should fail with already being deleted
 {{- template "runDelete" .}}
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
@@ -240,8 +237,22 @@ func delete{{.Type}}Checks(t *testing.T, ctx context.Context, all *AllApis, data
 
 `
 
-func (s *ControllerTest) generateDeleteTest(refToGroup *gensupport.RefToGroup) {
-	desc := refToGroup.To.TypeDesc
+func (s *ControllerTest) getDeleteRefTos(desc *generator.Descriptor) *gensupport.RefToGroup {
+	refToGroup, ok := s.refData.RefTos[*desc.Name]
+	if !ok {
+		return nil
+	}
+	if !refToGroup.To.GenerateCud {
+		return nil
+	}
+	return refToGroup
+}
+
+func (s *ControllerTest) generateDeleteTest(desc *generator.Descriptor) {
+	refToGroup := s.getDeleteRefTos(desc)
+	if refToGroup == nil {
+		return
+	}
 	message := desc.DescriptorProto
 	args := deleteArgs{
 		Type:               refToGroup.To.Type,
@@ -271,6 +282,9 @@ func (s *ControllerTest) generateDeleteTest(refToGroup *gensupport.RefToGroup) {
 	// for untracked refs, we inject an object into the db
 	for _, byObjField := range refToGroup.Bys {
 		if _, ok := tracked[byObjField.By.Type]; ok {
+			continue
+		}
+		if !byObjField.By.GenerateCud {
 			continue
 		}
 		byArgs := refByArgs{}
@@ -303,6 +317,14 @@ func getApiObj(desc *generator.Descriptor) string {
 	return apiObj
 }
 
+func getApiObjDef(desc *generator.Descriptor) string {
+	return *desc.Name + "Api"
+}
+
+func getApiObjService(service *descriptor.ServiceDescriptorProto) string {
+	return util.UncapitalizeMessage(*service.Name)
+}
+
 func (s *ControllerTest) generateAllDeleteTest() {
 	names := []string{}
 	for name := range s.refData.RefTos {
@@ -327,34 +349,67 @@ func (s *ControllerTest) generateAllDeleteTest() {
 }
 
 type trackerArgs struct {
-	Type    string
-	KeyType string
-	ApiObj  string
+	Type      string
+	KeyType   string
+	ApiObjDef string
 }
 
 var trackerTmpl = `
-// {{.Type}}DeleteStore wraps around the usual
-// store to instrument checks for tracked ref objects.
-type {{.Type}}DeleteStore struct {
+// {{.Type}}StoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type {{.Type}}StoreTracker struct {
 	edgeproto.{{.Type}}Store
-	getRefSTM concurrency.STM
+	getSTM concurrency.STM
+	putSTM concurrency.STM
 }
 
-func (s *{{.Type}}DeleteStore) STMGet(stm concurrency.STM, key *edgeproto.{{.KeyType}}, buf *edgeproto.{{.Type}}) bool {
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrap{{.Type}}TrackerStore(api *{{.ApiObjDef}}) (*{{.Type}}StoreTracker, func()) {
+	orig := api.store
+	tracker := &{{.Type}}StoreTracker{
+		{{.Type}}Store: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *{{.Type}}StoreTracker) STMGet(stm concurrency.STM, key *edgeproto.{{.KeyType}}, buf *edgeproto.{{.Type}}) bool {
 	found := s.{{.Type}}Store.STMGet(stm, key, buf)
-	s.getRefSTM = stm
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
 	return found
+}
+
+func (s *{{.Type}}StoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.{{.Type}}, ops ...objstore.KVOp) {
+	s.{{.Type}}Store.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
 }
 
 `
 
-func (s *ControllerTest) generateDeleteTracker(tracker *gensupport.RefTracker) {
+func (s *ControllerTest) generateStoreTracker(desc *generator.Descriptor) {
+	name := *desc.Name
+	if s.refData.RefBys[name] == nil && s.refData.RefTos[name] == nil && s.refData.Trackers[name] == nil {
+		return
+	}
+	if !GetGenerateCud(desc.DescriptorProto) {
+		return
+	}
+	keyDesc := gensupport.GetDescKey(s.Generator, desc)
 	args := trackerArgs{
-		Type:    tracker.Type,
-		KeyType: tracker.KeyType,
-		ApiObj:  getApiObj(tracker.TypeDesc),
+		Type:      name,
+		KeyType:   *keyDesc.Name,
+		ApiObjDef: getApiObjDef(desc),
 	}
 	s.trackerTmpl.Execute(s.Generator, args)
 	s.importEdgeproto = true
 	s.importConcurrency = true
+	s.importObjstore = true
 }

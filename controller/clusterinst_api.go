@@ -845,6 +845,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if !s.all.cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
 		}
+		if cloudlet.DeletePrepare {
+			return in.Key.CloudletKey.BeingDeletedError()
+		}
 		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
 		if err != nil {
 			return fmt.Errorf("Failed to get features for platform: %s", err)
@@ -890,6 +893,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		nodeFlavor := edgeproto.Flavor{}
 		if !s.all.flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			return fmt.Errorf("flavor %s not found", in.Flavor.Name)
+		}
+		if nodeFlavor.DeletePrepare {
+			return in.Flavor.BeingDeletedError()
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "nodeFlavor found find match", "nodeFlavor", nodeFlavor)
 		vmspec, err := s.all.resTagTableApi.GetVMSpec(ctx, stm, nodeFlavor, cloudlet, info)
@@ -955,6 +961,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 			if !s.all.networkApi.store.STMGet(stm, &networkKey, &network) {
 				return networkKey.NotFoundError()
+			}
+			if network.DeletePrepare {
+				return networkKey.BeingDeletedError()
 			}
 			if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED {
 				if network.ConnectionType == edgeproto.NetworkConnectionType_CONNECT_TO_LOAD_BALANCER || network.ConnectionType == edgeproto.NetworkConnectionType_CONNECT_TO_ALL {
@@ -1191,8 +1200,13 @@ func (s *ClusterInstApi) validateClusterInstUpdates(ctx context.Context, stm con
 	}
 	if in.AutoScalePolicy != "" {
 		policy := edgeproto.AutoScalePolicy{}
-		if err := s.all.autoScalePolicyApi.STMFind(stm, in.AutoScalePolicy, in.Key.Organization, &policy); err != nil {
-			return err
+		policy.Key.Name = in.AutoScalePolicy
+		policy.Key.Organization = in.Key.Organization
+		if !s.all.autoScalePolicyApi.store.STMGet(stm, &policy.Key, &policy) {
+			return policy.Key.NotFoundError()
+		}
+		if policy.DeletePrepare {
+			return policy.Key.BeingDeletedError()
 		}
 		if in.NumNodes < policy.MinNodes {
 			in.NumNodes = policy.MinNodes
@@ -1249,7 +1263,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("ClusterInst already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		if err := s.all.cloudletInfoApi.checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Delete); err != nil {
 			return err

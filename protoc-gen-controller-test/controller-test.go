@@ -20,6 +20,7 @@ type ControllerTest struct {
 	deleteTmpl        *template.Template
 	trackerTmpl       *template.Template
 	dataStoreTmpl     *template.Template
+	addRefsApiTmpl    *template.Template
 	importContext     bool
 	importTesting     bool
 	importEdgeproto   bool
@@ -43,6 +44,8 @@ func (s *ControllerTest) Init(g *generator.Generator) {
 	s.deleteTmpl = template.Must(s.deleteTmpl.Parse(dataGenTmpl))
 	s.trackerTmpl = template.Must(template.New("tracker").Parse(trackerTmpl))
 	s.dataStoreTmpl = template.Must(template.New("dataStore").Parse(dataStoreTmpl))
+	s.addRefsApiTmpl = template.Must(template.New("addRefs").Parse(addRefsApiTmpl))
+	s.addRefsApiTmpl = template.Must(s.addRefsApiTmpl.Parse(runApiTmpl))
 }
 
 func (s *ControllerTest) GenerateImports(file *generator.FileDescriptor) {
@@ -87,7 +90,7 @@ func (s *ControllerTest) Generate(file *generator.FileDescriptor) {
 		s.firstFile = false
 	}
 	for _, desc := range file.Messages() {
-		if _, ok := s.refData.RefTos[*desc.Name]; ok {
+		if s.getDeleteRefTos(desc) != nil {
 			s.genFile = true
 			break
 		}
@@ -100,27 +103,45 @@ func (s *ControllerTest) Generate(file *generator.FileDescriptor) {
 			break
 		}
 	}
+	for _, service := range file.Service {
+		if len(service.Method) == 0 {
+			continue
+		}
+		for _, method := range service.Method {
+			if s.getAddRefsApiArgs(service, method) != nil {
+				s.genFile = true
+				break
+			}
+		}
+		if s.genFile {
+			break
+		}
+	}
 	if !s.genFile {
 		return
 	}
 	s.P(gensupport.AutoGenComment)
 
+	if s.firstGen {
+		s.generateAllDeleteTest()
+		s.generateAllAddRefsTest()
+		s.firstGen = false
+	}
 	for _, desc := range file.Messages() {
-		if refToGroup, ok := s.refData.RefTos[*desc.Name]; ok {
-			s.generateDeleteTest(refToGroup)
-		}
-		if tracker, ok := s.refData.Trackers[*desc.Name]; ok {
-			s.generateDeleteTracker(tracker)
-		}
+		s.generateStoreTracker(desc)
+		s.generateDeleteTest(desc)
 		if *desc.Name == AllDataName {
 			s.generateDataStore(desc)
 		}
 	}
-	if s.firstGen {
-		s.generateAllDeleteTest()
-		s.firstGen = false
+	for _, service := range file.Service {
+		if len(service.Method) == 0 {
+			continue
+		}
+		for _, method := range service.Method {
+			s.generateAddRefsApiTest(service, method)
+		}
 	}
-
 	gensupport.RunParseCheck(s.Generator, file)
 
 }
@@ -135,4 +156,8 @@ func GetControllerApiStruct(message *descriptor.DescriptorProto) string {
 
 func GetGenerateCud(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
+}
+
+func GetMethodNoconfig(method *descriptor.MethodDescriptorProto) string {
+	return gensupport.GetStringExtension(method.Options, protogen.E_MethodNoconfig, "")
 }

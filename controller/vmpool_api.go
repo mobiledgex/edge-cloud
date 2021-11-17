@@ -90,15 +90,47 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 	return &edgeproto.Result{}, err
 }
 
-func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (*edgeproto.Result, error) {
-	if err := in.Key.ValidateKey(); err != nil {
+func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (res *edgeproto.Result, reterr error) {
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.VMPool{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return in.Key.BeingDeletedError()
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.VMPool{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
 	// Validate if pool is in use by Cloudlet
 	if s.all.cloudletApi.UsesVMPool(&in.Key) {
 		return &edgeproto.Result{}, fmt.Errorf("VM pool in use by Cloudlet")
 	}
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.NotFoundError()
 		}

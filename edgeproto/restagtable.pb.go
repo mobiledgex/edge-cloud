@@ -794,6 +794,10 @@ func (m *ResTagTableKey) ExistsError() error {
 	return fmt.Errorf("ResTagTable key %s already exists", m.GetKeyString())
 }
 
+func (m *ResTagTableKey) BeingDeletedError() error {
+	return fmt.Errorf("ResTagTable %s is being deleted", m.GetKeyString())
+}
+
 var ResTagTableKeyTagName = "restagtable"
 var ResTagTableKeyTagOrganization = "restagtableorg"
 

@@ -50,6 +50,7 @@ func TestClusterInstApi(t *testing.T) {
 	cloudletData := testutil.CloudletData()
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalCloudletCreate(t, apis.cloudletApi, cloudletData)
 	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
@@ -624,8 +625,6 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context, apis *AllAp
 	require.Contains(t, err.Error(), "Not enough")
 
 	// create appinst
-	testutil.InternalResTagTableTest(t, "cud", apis.resTagTableApi, testutil.ResTagTableData)
-	testutil.InternalResTagTableTest(t, "show", apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalAppCreate(t, apis.appApi, []edgeproto.App{
 		testutil.AppData[0], testutil.AppData[12],
 	})
@@ -905,6 +904,7 @@ func TestDefaultMTCluster(t *testing.T) {
 	cloudlet := testutil.CloudletData()[0]
 	cloudlet.EnableDefaultServerlessCluster = true
 	cloudlet.GpuConfig = edgeproto.GPUConfig{}
+	cloudlet.ResTagMap = nil
 	cloudletInfo := testutil.CloudletInfoData[0]
 	cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 	apis.cloudletInfoApi.Update(ctx, &cloudletInfo, 0)

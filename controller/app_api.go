@@ -67,10 +67,6 @@ func (s *AppApi) GetAllApps(apps map[edgeproto.AppKey]*edgeproto.App) {
 	}
 }
 
-func (s *AppApi) validateAppExists(key *edgeproto.AppKey) bool {
-	return s.HasApp(key)
-}
-
 func (s *AppApi) CheckAppCompatibleWithTrustPolicy(ctx context.Context, ckey *edgeproto.CloudletKey, app *edgeproto.App, trustPolicy *edgeproto.TrustPolicy) error {
 	if !app.Trusted {
 		return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), trustPolicy.Key.String())
@@ -424,6 +420,9 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if !s.all.flavorApi.store.STMGet(stm, &in.DefaultFlavor, flavor) {
 		return in.DefaultFlavor.NotFoundError()
 	}
+	if flavor.DeletePrepare {
+		return flavor.Key.BeingDeletedError()
+	}
 
 	if in.AllowServerless {
 		if in.Deployment != cloudcommon.DeploymentTypeKubernetes {
@@ -675,7 +674,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (res *edgepro
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("App already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 
 		// use refs to check existing AppInsts to avoid race conditions
@@ -853,6 +852,9 @@ func (s *AppApi) validatePolicies(stm concurrency.STM, app *edgeproto.App) error
 			return policyKey.NotFoundError()
 		}
 		numPolicies++
+		if policy.DeletePrepare {
+			return policyKey.BeingDeletedError()
+		}
 	}
 	if numPolicies > 0 {
 		if err := validateAutoDeployApp(stm, app); err != nil {
@@ -959,6 +961,9 @@ func (s *AppApi) validateAlertPolicies(stm concurrency.STM, app *edgeproto.App) 
 		alert := edgeproto.AlertPolicy{}
 		if !s.all.alertPolicyApi.store.STMGet(stm, &alertKey, &alert) {
 			return alertKey.NotFoundError()
+		}
+		if alert.DeletePrepare {
+			return alertKey.BeingDeletedError()
 		}
 	}
 	return nil

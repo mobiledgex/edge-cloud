@@ -1430,6 +1430,10 @@ func (m *ClusterInstKey) ExistsError() error {
 	return fmt.Errorf("ClusterInst key %s already exists", m.GetKeyString())
 }
 
+func (m *ClusterInstKey) BeingDeletedError() error {
+	return fmt.Errorf("ClusterInst %s is being deleted", m.GetKeyString())
+}
+
 var ClusterInstKeyTagOrganization = "clusterorg"
 
 func (m *ClusterInstKey) GetTags() map[string]string {
