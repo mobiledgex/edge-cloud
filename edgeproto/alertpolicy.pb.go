@@ -690,6 +690,10 @@ func (m *AlertPolicyKey) ExistsError() error {
 	return fmt.Errorf("AlertPolicy key %s already exists", m.GetKeyString())
 }
 
+func (m *AlertPolicyKey) BeingDeletedError() error {
+	return fmt.Errorf("AlertPolicy %s is being deleted", m.GetKeyString())
+}
+
 var AlertPolicyKeyTagOrganization = "alertorg"
 var AlertPolicyKeyTagName = "alert"
 

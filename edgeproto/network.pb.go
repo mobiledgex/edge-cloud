@@ -849,6 +849,10 @@ func (m *NetworkKey) ExistsError() error {
 	return fmt.Errorf("Network key %s already exists", m.GetKeyString())
 }
 
+func (m *NetworkKey) BeingDeletedError() error {
+	return fmt.Errorf("Network %s is being deleted", m.GetKeyString())
+}
+
 var NetworkKeyTagName = "network"
 
 func (m *NetworkKey) GetTags() map[string]string {

@@ -25,6 +25,117 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+type AllDeleteDataGen interface {
+	AlertPolicyDeleteDataGen
+	AppDeleteDataGen
+	AutoProvPolicyDeleteDataGen
+	AutoScalePolicyDeleteDataGen
+	CloudletDeleteDataGen
+	CloudletPoolDeleteDataGen
+	ClusterInstDeleteDataGen
+	FlavorDeleteDataGen
+	GPUDriverDeleteDataGen
+	NetworkDeleteDataGen
+	ResTagTableDeleteDataGen
+	TrustPolicyDeleteDataGen
+	VMPoolDeleteDataGen
+}
+
+func allDeleteChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllDeleteDataGen) {
+	deleteAlertPolicyChecks(t, ctx, all, dataGen)
+	deleteAppChecks(t, ctx, all, dataGen)
+	deleteAutoProvPolicyChecks(t, ctx, all, dataGen)
+	deleteAutoScalePolicyChecks(t, ctx, all, dataGen)
+	deleteCloudletChecks(t, ctx, all, dataGen)
+	deleteCloudletPoolChecks(t, ctx, all, dataGen)
+	deleteClusterInstChecks(t, ctx, all, dataGen)
+	deleteFlavorChecks(t, ctx, all, dataGen)
+	deleteGPUDriverChecks(t, ctx, all, dataGen)
+	deleteNetworkChecks(t, ctx, all, dataGen)
+	deleteResTagTableChecks(t, ctx, all, dataGen)
+	deleteTrustPolicyChecks(t, ctx, all, dataGen)
+	deleteVMPoolChecks(t, ctx, all, dataGen)
+}
+
+type AllAddRefsDataGen interface {
+	GetAddAppAlertPolicyTestObj() (*edgeproto.AppAlertPolicy, *testSupportData)
+	GetAddAppAutoProvPolicyTestObj() (*edgeproto.AppAutoProvPolicy, *testSupportData)
+	GetAddAutoProvPolicyCloudletTestObj() (*edgeproto.AutoProvPolicyCloudlet, *testSupportData)
+	GetAddCloudletPoolMemberTestObj() (*edgeproto.CloudletPoolMember, *testSupportData)
+	GetAddCloudletResMappingTestObj() (*edgeproto.CloudletResMap, *testSupportData)
+	GetCreateAppTestObj() (*edgeproto.App, *testSupportData)
+	GetCreateAppInstTestObj() (*edgeproto.AppInst, *testSupportData)
+	GetCreateAutoProvPolicyTestObj() (*edgeproto.AutoProvPolicy, *testSupportData)
+	GetCreateCloudletTestObj() (*edgeproto.Cloudlet, *testSupportData)
+	GetCreateCloudletPoolTestObj() (*edgeproto.CloudletPool, *testSupportData)
+	GetCreateClusterInstTestObj() (*edgeproto.ClusterInst, *testSupportData)
+	GetCreateNetworkTestObj() (*edgeproto.Network, *testSupportData)
+	GetCreateTrustPolicyExceptionTestObj() (*edgeproto.TrustPolicyException, *testSupportData)
+	GetUpdateAppTestObj() (*edgeproto.App, *testSupportData)
+	GetUpdateAutoProvPolicyTestObj() (*edgeproto.AutoProvPolicy, *testSupportData)
+	GetUpdateCloudletTestObj() (*edgeproto.Cloudlet, *testSupportData)
+	GetUpdateCloudletPoolTestObj() (*edgeproto.CloudletPool, *testSupportData)
+	GetUpdateClusterInstTestObj() (*edgeproto.ClusterInst, *testSupportData)
+}
+
+func allAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	AddAppAlertPolicyAddRefsChecks(t, ctx, all, dataGen)
+	AddAppAutoProvPolicyAddRefsChecks(t, ctx, all, dataGen)
+	AddAutoProvPolicyCloudletAddRefsChecks(t, ctx, all, dataGen)
+	AddCloudletPoolMemberAddRefsChecks(t, ctx, all, dataGen)
+	AddCloudletResMappingAddRefsChecks(t, ctx, all, dataGen)
+	CreateAppAddRefsChecks(t, ctx, all, dataGen)
+	CreateAppInstAddRefsChecks(t, ctx, all, dataGen)
+	CreateAutoProvPolicyAddRefsChecks(t, ctx, all, dataGen)
+	CreateCloudletAddRefsChecks(t, ctx, all, dataGen)
+	CreateCloudletPoolAddRefsChecks(t, ctx, all, dataGen)
+	CreateClusterInstAddRefsChecks(t, ctx, all, dataGen)
+	CreateNetworkAddRefsChecks(t, ctx, all, dataGen)
+	CreateTrustPolicyExceptionAddRefsChecks(t, ctx, all, dataGen)
+	UpdateAppAddRefsChecks(t, ctx, all, dataGen)
+	UpdateAutoProvPolicyAddRefsChecks(t, ctx, all, dataGen)
+	UpdateCloudletAddRefsChecks(t, ctx, all, dataGen)
+	UpdateCloudletPoolAddRefsChecks(t, ctx, all, dataGen)
+	UpdateClusterInstAddRefsChecks(t, ctx, all, dataGen)
+}
+
+// AlertPolicyStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type AlertPolicyStoreTracker struct {
+	edgeproto.AlertPolicyStore
+	getSTM concurrency.STM
+	putSTM concurrency.STM
+}
+
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapAlertPolicyTrackerStore(api *AlertPolicyApi) (*AlertPolicyStoreTracker, func()) {
+	orig := api.store
+	tracker := &AlertPolicyStoreTracker{
+		AlertPolicyStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *AlertPolicyStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.AlertPolicyKey, buf *edgeproto.AlertPolicy) bool {
+	found := s.AlertPolicyStore.STMGet(stm, key, buf)
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
+	return found
+}
+
+func (s *AlertPolicyStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.AlertPolicy, ops ...objstore.KVOp) {
+	s.AlertPolicyStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
 // Caller must write by hand the test data generator.
 // Each Ref object should only have a single reference to the key,
 // in order to properly test each reference (i.e. don't have a single
@@ -131,7 +242,7 @@ func deleteAlertPolicyChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	testObj, _ = dataGen.GetAlertPolicyTestObj()
 	_, err = api.DeleteAlertPolicy(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
@@ -164,34 +275,4 @@ func deleteAlertPolicyChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	testObj, _ = dataGen.GetAlertPolicyTestObj()
 	_, err = api.DeleteAlertPolicy(ctx, testObj)
 	require.Nil(t, err, "cleanup must succeed")
-}
-
-type AllDeleteDataGen interface {
-	AlertPolicyDeleteDataGen
-	AppDeleteDataGen
-	AutoProvPolicyDeleteDataGen
-	AutoScalePolicyDeleteDataGen
-	CloudletDeleteDataGen
-	CloudletPoolDeleteDataGen
-	ClusterInstDeleteDataGen
-	FlavorDeleteDataGen
-	GPUDriverDeleteDataGen
-	NetworkDeleteDataGen
-	ResTagTableDeleteDataGen
-	TrustPolicyDeleteDataGen
-}
-
-func allDeleteChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllDeleteDataGen) {
-	deleteAlertPolicyChecks(t, ctx, all, dataGen)
-	deleteAppChecks(t, ctx, all, dataGen)
-	deleteAutoProvPolicyChecks(t, ctx, all, dataGen)
-	deleteAutoScalePolicyChecks(t, ctx, all, dataGen)
-	deleteCloudletChecks(t, ctx, all, dataGen)
-	deleteCloudletPoolChecks(t, ctx, all, dataGen)
-	deleteClusterInstChecks(t, ctx, all, dataGen)
-	deleteFlavorChecks(t, ctx, all, dataGen)
-	deleteGPUDriverChecks(t, ctx, all, dataGen)
-	deleteNetworkChecks(t, ctx, all, dataGen)
-	deleteResTagTableChecks(t, ctx, all, dataGen)
-	deleteTrustPolicyChecks(t, ctx, all, dataGen)
 }

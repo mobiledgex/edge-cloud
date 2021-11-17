@@ -674,6 +674,10 @@ func (m *TrustPolicyExceptionKey) ExistsError() error {
 	return fmt.Errorf("TrustPolicyException key %s already exists", m.GetKeyString())
 }
 
+func (m *TrustPolicyExceptionKey) BeingDeletedError() error {
+	return fmt.Errorf("TrustPolicyException %s is being deleted", m.GetKeyString())
+}
+
 var TrustPolicyExceptionKeyTagName = "name"
 
 func (m *TrustPolicyExceptionKey) GetTags() map[string]string {

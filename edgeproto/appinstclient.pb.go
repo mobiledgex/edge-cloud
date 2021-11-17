@@ -1123,6 +1123,10 @@ func (m *AppInstClientKey) ExistsError() error {
 	return fmt.Errorf("AppInstClient key %s already exists", m.GetKeyString())
 }
 
+func (m *AppInstClientKey) BeingDeletedError() error {
+	return fmt.Errorf("AppInstClient %s is being deleted", m.GetKeyString())
+}
+
 var AppInstClientKeyTagUniqueId = "uniqueid"
 var AppInstClientKeyTagUniqueIdType = "uniqueidtype"
 

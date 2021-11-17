@@ -32,7 +32,21 @@ func (s *NetworkApi) CreateNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 	if err := in.Validate(nil); err != nil {
 		return err
 	}
-	_, err := s.store.Create(ctx, in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.Network{}
+		if s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.ExistsError()
+		}
+		cloudlet := edgeproto.Cloudlet{}
+		if !s.all.cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+			return in.Key.CloudletKey.NotFoundError()
+		}
+		if cloudlet.DeletePrepare {
+			return in.Key.CloudletKey.BeingDeletedError()
+		}
+		s.store.STMPut(stm, in)
+		return nil
+	})
 	return err
 }
 
@@ -72,7 +86,7 @@ func (s *NetworkApi) DeleteNetwork(in *edgeproto.Network, cb edgeproto.NetworkAp
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("Network already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
 		s.store.STMPut(stm, &cur)

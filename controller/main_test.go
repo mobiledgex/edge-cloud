@@ -83,6 +83,7 @@ func TestController(t *testing.T) {
 
 	appClient := edgeproto.NewAppApiClient(conn)
 	gpuDriverClient := edgeproto.NewGPUDriverApiClient(conn)
+	resTagTableClient := edgeproto.NewResTagTableApiClient(conn)
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
@@ -104,6 +105,7 @@ func TestController(t *testing.T) {
 	testutil.ClientAutoScalePolicyTest(t, "cud", autoScalePolicyClient, testutil.AutoScalePolicyData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientGPUDriverTest(t, "cud", gpuDriverClient, testutil.GPUDriverData)
+	testutil.ClientResTagTableTest(t, "cud", resTagTableClient, testutil.ResTagTableData)
 	testutil.ClientCloudletTest(t, "cud", cloudletClient, cloudletData)
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData, testutil.WithCreatedAppInstTestData(testutil.CreatedAppInstData()))
@@ -448,6 +450,7 @@ func testClusterInstDeleteChecks(t *testing.T, ctx context.Context, apis1, apis2
 	var err error
 	testutil.InternalFlavorCreate(t, apis1.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, apis1.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis1.resTagTableApi, testutil.ResTagTableData)
 
 	numTries := 0
 	deleteDelay := 700 * time.Millisecond
@@ -536,6 +539,7 @@ func testClusterInstDeleteChecks(t *testing.T, ctx context.Context, apis1, apis2
 		_, err = apis1.appApi.DeleteApp(ctx, &app)
 		require.Nil(t, err)
 	}
+	testutil.InternalResTagTableDelete(t, apis1.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalGPUDriverDelete(t, apis1.gpuDriverApi, testutil.GPUDriverData)
 	testutil.InternalFlavorDelete(t, apis1.flavorApi, testutil.FlavorData)
 }

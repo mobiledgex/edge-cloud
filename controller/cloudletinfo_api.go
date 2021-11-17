@@ -147,8 +147,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo state transition error",
 			"key", in.Key, "err", err)
 	}
-	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
+	if changedToOnline {
 		s.ClearCloudletAndAppInstDownAlerts(ctx, in)
+	}
+	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
 		// Validate cloudlet resources and generate appropriate warnings
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !s.all.cloudletApi.store.STMGet(stm, key, &cloudlet) {
@@ -370,7 +372,7 @@ func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.
 		return key.NotFoundError()
 	}
 	if action == cloudcommon.Delete && (cloudlet.DeletePrepare || cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE) {
-		return fmt.Errorf("Cloudlet %s is being deleted", key.GetKeyString())
+		return key.BeingDeletedError()
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {

@@ -123,6 +123,7 @@ message PlatformConfig {
 // 14: `PLATFORM_TYPE_KINDINFRA`
 // 15: `PLATFORM_TYPE_FAKE_SINGLE_CLUSTER`
 // 16: `PLATFORM_TYPE_FEDERATION`
+// 17: `PLATFORM_TYPE_FAKE_VM_POOL`
 enum PlatformType {
   // Fake Cloudlet
   PLATFORM_TYPE_FAKE = 0;
@@ -158,14 +159,16 @@ enum PlatformType {
   PLATFORM_TYPE_FAKE_SINGLE_CLUSTER = 15;
   // Cloudlet shared as part of federation
   PLATFORM_TYPE_FEDERATION  = 16;
+  // Fake VM Pool Cloudlet
+  PLATFORM_TYPE_FAKE_VM_POOL = 17;
 }
 
 // optional resource input consists of a resource specifier and clouldkey name
 message CloudletResMap {
   // Resource cloudlet key
-  CloudletKey key = 1[(gogoproto.nullable) = false];
+  CloudletKey key = 1[(gogoproto.nullable) = false, (protogen.refers_to) = "Cloudlet"];
   // Resource mapping info
-  map<string, string> mapping = 2;
+  map<string, string> mapping = 2 [(protogen.refers_to) = "ResTagTable"];
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
   option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.also_required) = "Mapping";
@@ -448,7 +451,7 @@ message Cloudlet {
   // Override container version from policy file
   bool override_policy_container_version = 31;
   // VM Pool
-  string vm_pool = 32;
+  string vm_pool = 32 [(protogen.refers_to) = "VMPool"];
   // CRM access public key
   string crm_access_public_key = 33 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // CRM access key upgrade required
