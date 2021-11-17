@@ -71,7 +71,7 @@ func (s *ResTagTableApi) DeleteResTagTable(ctx context.Context, in *edgeproto.Re
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("ResTagTable already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
 		s.store.STMPut(stm, &cur)

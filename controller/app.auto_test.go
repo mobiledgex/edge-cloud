@@ -26,6 +26,43 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+// AppStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type AppStoreTracker struct {
+	edgeproto.AppStore
+	getSTM concurrency.STM
+	putSTM concurrency.STM
+}
+
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapAppTrackerStore(api *AppApi) (*AppStoreTracker, func()) {
+	orig := api.store
+	tracker := &AppStoreTracker{
+		AppStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *AppStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.AppKey, buf *edgeproto.App) bool {
+	found := s.AppStore.STMGet(stm, key, buf)
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
+	return found
+}
+
+func (s *AppStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.App, ops ...objstore.KVOp) {
+	s.AppStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
 // Caller must write by hand the test data generator.
 // Each Ref object should only have a single reference to the key,
 // in order to properly test each reference (i.e. don't have a single
@@ -108,14 +145,10 @@ func deleteAppChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen Ap
 		allApis:  all,
 	}
 	api.store = deleteStore
-	origappInstRefsApiStore := all.appInstRefsApi.store
-	appInstRefsApiStore := &AppInstRefsDeleteStore{
-		AppInstRefsStore: origappInstRefsApiStore,
-	}
-	all.appInstRefsApi.store = appInstRefsApiStore
+	appInstRefsApiStore, appInstRefsApiUnwrap := wrapAppInstRefsTrackerStore(all.appInstRefsApi)
 	defer func() {
 		api.store = origStore
-		all.appInstRefsApi.store = origappInstRefsApiStore
+		appInstRefsApiUnwrap()
 	}()
 
 	// inject testObj directly, bypassing create checks/deps
@@ -133,8 +166,8 @@ func deleteAppChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen Ap
 		// make sure ref objects reads happen in same stm
 		// as delete prepare is set
 		require.NotNil(t, deleteStore.putDeletePrepareSTM, "must set delete prepare in STM")
-		require.NotNil(t, appInstRefsApiStore.getRefSTM, "must check for refs from AppInstRefs in STM")
-		require.Equal(t, deleteStore.putDeletePrepareSTM, appInstRefsApiStore.getRefSTM, "delete prepare and ref check for AppInstRefs must be done in the same STM")
+		require.NotNil(t, appInstRefsApiStore.getSTM, "must check for refs from AppInstRefs in STM")
+		require.Equal(t, deleteStore.putDeletePrepareSTM, appInstRefsApiStore.getSTM, "delete prepare and ref check for AppInstRefs must be done in the same STM")
 	}
 	testObj, _ = dataGen.GetAppTestObj()
 	_, err = api.DeleteApp(ctx, testObj)
@@ -149,7 +182,7 @@ func deleteAppChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen Ap
 	testObj, _ = dataGen.GetAppTestObj()
 	_, err = api.DeleteApp(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
@@ -200,4 +233,264 @@ func deleteAppChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen Ap
 	testObj, _ = dataGen.GetAppTestObj()
 	_, err = api.DeleteApp(ctx, testObj)
 	require.Nil(t, err, "cleanup must succeed")
+}
+
+func CreateAppAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetCreateAppTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Flavor
+		ref := supportData.getOneFlavor()
+		require.NotNil(t, ref, "support data must include one referenced Flavor")
+		ref.DeletePrepare = true
+		_, err = all.flavorApi.store.Put(ctx, ref, all.flavorApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateAppTestObj()
+		_, err = all.appApi.CreateApp(ctx, testObj)
+		require.NotNil(t, err, "CreateApp must fail with Flavor.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Flavor
+		ref.DeletePrepare = false
+		_, err = all.flavorApi.store.Put(ctx, ref, all.flavorApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced AutoProvPolicy
+		ref := supportData.getOneAutoProvPolicy()
+		require.NotNil(t, ref, "support data must include one referenced AutoProvPolicy")
+		ref.DeletePrepare = true
+		_, err = all.autoProvPolicyApi.store.Put(ctx, ref, all.autoProvPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateAppTestObj()
+		_, err = all.appApi.CreateApp(ctx, testObj)
+		require.NotNil(t, err, "CreateApp must fail with AutoProvPolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AutoProvPolicy
+		ref.DeletePrepare = false
+		_, err = all.autoProvPolicyApi.store.Put(ctx, ref, all.autoProvPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced AlertPolicy
+		ref := supportData.getOneAlertPolicy()
+		require.NotNil(t, ref, "support data must include one referenced AlertPolicy")
+		ref.DeletePrepare = true
+		_, err = all.alertPolicyApi.store.Put(ctx, ref, all.alertPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateAppTestObj()
+		_, err = all.appApi.CreateApp(ctx, testObj)
+		require.NotNil(t, err, "CreateApp must fail with AlertPolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AlertPolicy
+		ref.DeletePrepare = false
+		_, err = all.alertPolicyApi.store.Put(ctx, ref, all.alertPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	appApiStore, appApiUnwrap := wrapAppTrackerStore(all.appApi)
+	defer appApiUnwrap()
+	flavorApiStore, flavorApiUnwrap := wrapFlavorTrackerStore(all.flavorApi)
+	defer flavorApiUnwrap()
+	autoProvPolicyApiStore, autoProvPolicyApiUnwrap := wrapAutoProvPolicyTrackerStore(all.autoProvPolicyApi)
+	defer autoProvPolicyApiUnwrap()
+	alertPolicyApiStore, alertPolicyApiUnwrap := wrapAlertPolicyTrackerStore(all.alertPolicyApi)
+	defer alertPolicyApiUnwrap()
+
+	// CreateApp should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetCreateAppTestObj()
+	_, err = all.appApi.CreateApp(ctx, testObj)
+	require.Nil(t, err, "CreateApp should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, appApiStore.putSTM, "CreateApp put App must be done in STM")
+	require.NotNil(t, flavorApiStore.getSTM, "CreateApp check Flavor ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, flavorApiStore.getSTM, "CreateApp check Flavor ref must be done in same STM as App put")
+	require.NotNil(t, autoProvPolicyApiStore.getSTM, "CreateApp check AutoProvPolicy ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, autoProvPolicyApiStore.getSTM, "CreateApp check AutoProvPolicy ref must be done in same STM as App put")
+	require.NotNil(t, alertPolicyApiStore.getSTM, "CreateApp check AlertPolicy ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, alertPolicyApiStore.getSTM, "CreateApp check AlertPolicy ref must be done in same STM as App put")
+
+	// clean up
+	// delete created test obj
+	testObj, _ = dataGen.GetCreateAppTestObj()
+	_, err = all.appApi.DeleteApp(ctx, testObj)
+	require.Nil(t, err)
+	supportData.delete(t, ctx, all)
+}
+
+func UpdateAppAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetUpdateAppTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Flavor
+		ref := supportData.getOneFlavor()
+		require.NotNil(t, ref, "support data must include one referenced Flavor")
+		ref.DeletePrepare = true
+		_, err = all.flavorApi.store.Put(ctx, ref, all.flavorApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateAppTestObj()
+		_, err = all.appApi.UpdateApp(ctx, testObj)
+		require.NotNil(t, err, "UpdateApp must fail with Flavor.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Flavor
+		ref.DeletePrepare = false
+		_, err = all.flavorApi.store.Put(ctx, ref, all.flavorApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced AutoProvPolicy
+		ref := supportData.getOneAutoProvPolicy()
+		require.NotNil(t, ref, "support data must include one referenced AutoProvPolicy")
+		ref.DeletePrepare = true
+		_, err = all.autoProvPolicyApi.store.Put(ctx, ref, all.autoProvPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateAppTestObj()
+		_, err = all.appApi.UpdateApp(ctx, testObj)
+		require.NotNil(t, err, "UpdateApp must fail with AutoProvPolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AutoProvPolicy
+		ref.DeletePrepare = false
+		_, err = all.autoProvPolicyApi.store.Put(ctx, ref, all.autoProvPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced AlertPolicy
+		ref := supportData.getOneAlertPolicy()
+		require.NotNil(t, ref, "support data must include one referenced AlertPolicy")
+		ref.DeletePrepare = true
+		_, err = all.alertPolicyApi.store.Put(ctx, ref, all.alertPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateAppTestObj()
+		_, err = all.appApi.UpdateApp(ctx, testObj)
+		require.NotNil(t, err, "UpdateApp must fail with AlertPolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AlertPolicy
+		ref.DeletePrepare = false
+		_, err = all.alertPolicyApi.store.Put(ctx, ref, all.alertPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	appApiStore, appApiUnwrap := wrapAppTrackerStore(all.appApi)
+	defer appApiUnwrap()
+	flavorApiStore, flavorApiUnwrap := wrapFlavorTrackerStore(all.flavorApi)
+	defer flavorApiUnwrap()
+	autoProvPolicyApiStore, autoProvPolicyApiUnwrap := wrapAutoProvPolicyTrackerStore(all.autoProvPolicyApi)
+	defer autoProvPolicyApiUnwrap()
+	alertPolicyApiStore, alertPolicyApiUnwrap := wrapAlertPolicyTrackerStore(all.alertPolicyApi)
+	defer alertPolicyApiUnwrap()
+
+	// UpdateApp should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetUpdateAppTestObj()
+	_, err = all.appApi.UpdateApp(ctx, testObj)
+	require.Nil(t, err, "UpdateApp should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, appApiStore.putSTM, "UpdateApp put App must be done in STM")
+	require.NotNil(t, flavorApiStore.getSTM, "UpdateApp check Flavor ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, flavorApiStore.getSTM, "UpdateApp check Flavor ref must be done in same STM as App put")
+	require.NotNil(t, autoProvPolicyApiStore.getSTM, "UpdateApp check AutoProvPolicy ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, autoProvPolicyApiStore.getSTM, "UpdateApp check AutoProvPolicy ref must be done in same STM as App put")
+	require.NotNil(t, alertPolicyApiStore.getSTM, "UpdateApp check AlertPolicy ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, alertPolicyApiStore.getSTM, "UpdateApp check AlertPolicy ref must be done in same STM as App put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
+}
+
+func AddAppAutoProvPolicyAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetAddAppAutoProvPolicyTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced AutoProvPolicy
+		ref := supportData.getOneAutoProvPolicy()
+		require.NotNil(t, ref, "support data must include one referenced AutoProvPolicy")
+		ref.DeletePrepare = true
+		_, err = all.autoProvPolicyApi.store.Put(ctx, ref, all.autoProvPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetAddAppAutoProvPolicyTestObj()
+		_, err = all.appApi.AddAppAutoProvPolicy(ctx, testObj)
+		require.NotNil(t, err, "AddAppAutoProvPolicy must fail with AutoProvPolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AutoProvPolicy
+		ref.DeletePrepare = false
+		_, err = all.autoProvPolicyApi.store.Put(ctx, ref, all.autoProvPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	appApiStore, appApiUnwrap := wrapAppTrackerStore(all.appApi)
+	defer appApiUnwrap()
+	autoProvPolicyApiStore, autoProvPolicyApiUnwrap := wrapAutoProvPolicyTrackerStore(all.autoProvPolicyApi)
+	defer autoProvPolicyApiUnwrap()
+
+	// AddAppAutoProvPolicy should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetAddAppAutoProvPolicyTestObj()
+	_, err = all.appApi.AddAppAutoProvPolicy(ctx, testObj)
+	require.Nil(t, err, "AddAppAutoProvPolicy should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, appApiStore.putSTM, "AddAppAutoProvPolicy put App must be done in STM")
+	require.NotNil(t, autoProvPolicyApiStore.getSTM, "AddAppAutoProvPolicy check AutoProvPolicy ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, autoProvPolicyApiStore.getSTM, "AddAppAutoProvPolicy check AutoProvPolicy ref must be done in same STM as App put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
+}
+
+func AddAppAlertPolicyAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetAddAppAlertPolicyTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced AlertPolicy
+		ref := supportData.getOneAlertPolicy()
+		require.NotNil(t, ref, "support data must include one referenced AlertPolicy")
+		ref.DeletePrepare = true
+		_, err = all.alertPolicyApi.store.Put(ctx, ref, all.alertPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetAddAppAlertPolicyTestObj()
+		_, err = all.appApi.AddAppAlertPolicy(ctx, testObj)
+		require.NotNil(t, err, "AddAppAlertPolicy must fail with AlertPolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AlertPolicy
+		ref.DeletePrepare = false
+		_, err = all.alertPolicyApi.store.Put(ctx, ref, all.alertPolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	appApiStore, appApiUnwrap := wrapAppTrackerStore(all.appApi)
+	defer appApiUnwrap()
+	alertPolicyApiStore, alertPolicyApiUnwrap := wrapAlertPolicyTrackerStore(all.alertPolicyApi)
+	defer alertPolicyApiUnwrap()
+
+	// AddAppAlertPolicy should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetAddAppAlertPolicyTestObj()
+	_, err = all.appApi.AddAppAlertPolicy(ctx, testObj)
+	require.Nil(t, err, "AddAppAlertPolicy should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, appApiStore.putSTM, "AddAppAlertPolicy put App must be done in STM")
+	require.NotNil(t, alertPolicyApiStore.getSTM, "AddAppAlertPolicy check AlertPolicy ref must be done in STM")
+	require.Equal(t, appApiStore.putSTM, alertPolicyApiStore.getSTM, "AddAppAlertPolicy check AlertPolicy ref must be done in same STM as App put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
 }

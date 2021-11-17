@@ -431,7 +431,7 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("GPUDriver already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		if !cctx.Undo {
 			if err := isBusyState(&in.Key, cur.State, ignoreState); err != nil {

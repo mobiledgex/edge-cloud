@@ -543,7 +543,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if in.Flavor.Name != "" && in.Flavor.Name != DefaultPlatformFlavor.Key.Name {
 			if !s.all.flavorApi.store.STMGet(stm, &in.Flavor, &pfFlavor) {
-				return fmt.Errorf("Platform Flavor %s not found", in.Flavor.Name)
+				return in.Flavor.NotFoundError()
+			}
+			if pfFlavor.DeletePrepare {
+				return in.Flavor.BeingDeletedError()
 			}
 		}
 		if in.VmPool != "" {
@@ -552,7 +555,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				Organization: in.Key.Organization,
 			}
 			if !s.all.vmPoolApi.store.STMGet(stm, &vmPoolKey, &vmPool) {
-				return fmt.Errorf("VM Pool %s not found", in.VmPool)
+				return vmPoolKey.NotFoundError()
+			}
+			if vmPool.DeletePrepare {
+				return vmPoolKey.BeingDeletedError()
 			}
 		}
 		if in.GpuConfig.Driver.Name != "" {
@@ -561,7 +567,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 			gpuDriver := edgeproto.GPUDriver{}
 			if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
-				return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
+				return in.GpuConfig.Driver.NotFoundError()
+			}
+			if gpuDriver.DeletePrepare {
+				return in.GpuConfig.Driver.BeingDeletedError()
 			}
 			if gpuDriver.State == ChangeInProgress {
 				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
@@ -569,10 +578,25 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 		if in.TrustPolicy != "" {
 			policy := edgeproto.TrustPolicy{}
-			if err := s.all.trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
-				return err
+			policy.Key.Name = in.TrustPolicy
+			policy.Key.Organization = in.Key.Organization
+			if !s.all.trustPolicyApi.store.STMGet(stm, &policy.Key, &policy) {
+				return policy.Key.NotFoundError()
+			}
+			if policy.DeletePrepare {
+				return policy.Key.BeingDeletedError()
 			}
 		}
+		for _, rttKey := range in.ResTagMap {
+			resTagTable := edgeproto.ResTagTable{}
+			if !s.all.resTagTableApi.store.STMGet(stm, rttKey, &resTagTable) {
+				return rttKey.NotFoundError()
+			}
+			if resTagTable.DeletePrepare {
+				return rttKey.BeingDeletedError()
+			}
+		}
+
 		err := in.Validate(edgeproto.CloudletAllFieldsMap)
 		if err != nil {
 			return err
@@ -1009,6 +1033,9 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
 					return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
 				}
+				if gpuDriver.DeletePrepare {
+					return in.GpuConfig.Driver.BeingDeletedError()
+				}
 				if gpuDriver.State == ChangeInProgress {
 					return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
 				}
@@ -1046,8 +1073,13 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 					return fmt.Errorf("Trust Policy not supported on %s", platName)
 				}
 				policy := edgeproto.TrustPolicy{}
-				if err := s.all.trustPolicyApi.STMFind(stm, in.TrustPolicy, in.Key.Organization, &policy); err != nil {
-					return err
+				policy.Key.Name = in.TrustPolicy
+				policy.Key.Organization = in.Key.Organization
+				if !s.all.trustPolicyApi.store.STMGet(stm, &policy.Key, &policy) {
+					return policy.Key.NotFoundError()
+				}
+				if policy.DeletePrepare {
+					return policy.Key.BeingDeletedError()
 				}
 				if err := s.all.appInstApi.CheckCloudletAppinstsCompatibleWithTrustPolicy(ctx, &in.Key, &policy); err != nil {
 					return err
@@ -1345,7 +1377,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return in.Key.NotFoundError()
 		}
 		if in.DeletePrepare {
-			return fmt.Errorf("Cloudlet already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		features, err = GetCloudletFeatures(ctx, in.PlatformType)
 		if err != nil {
@@ -1578,6 +1610,9 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 		if !s.store.STMGet(stm, &in.Key, &cl) {
 			return in.Key.NotFoundError()
 		}
+		if cl.DeletePrepare {
+			return in.Key.BeingDeletedError()
+		}
 		if cl.ResTagMap == nil {
 			cl.ResTagMap = make(map[string]*edgeproto.ResTagTableKey)
 		}
@@ -1591,9 +1626,10 @@ func (s *CloudletApi) AddCloudletResMapping(ctx context.Context, in *edgeproto.C
 			key.Organization = in.Key.Organization
 			tbl := edgeproto.ResTagTable{}
 			if !s.all.resTagTableApi.store.STMGet(stm, &key, &tbl) {
-				// auto-create empty
-				tbl.Key = key
-				s.all.resTagTableApi.store.STMPut(stm, &tbl)
+				return key.NotFoundError()
+			}
+			if tbl.DeletePrepare {
+				return key.BeingDeletedError()
 			}
 			cl.ResTagMap[resource] = &key
 		}

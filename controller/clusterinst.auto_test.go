@@ -27,6 +27,43 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+// ClusterInstStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type ClusterInstStoreTracker struct {
+	edgeproto.ClusterInstStore
+	getSTM concurrency.STM
+	putSTM concurrency.STM
+}
+
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapClusterInstTrackerStore(api *ClusterInstApi) (*ClusterInstStoreTracker, func()) {
+	orig := api.store
+	tracker := &ClusterInstStoreTracker{
+		ClusterInstStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *ClusterInstStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterInst) bool {
+	found := s.ClusterInstStore.STMGet(stm, key, buf)
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
+	return found
+}
+
+func (s *ClusterInstStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.ClusterInst, ops ...objstore.KVOp) {
+	s.ClusterInstStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
 // Caller must write by hand the test data generator.
 // Each Ref object should only have a single reference to the key,
 // in order to properly test each reference (i.e. don't have a single
@@ -108,14 +145,10 @@ func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, da
 		allApis:          all,
 	}
 	api.store = deleteStore
-	origclusterRefsApiStore := all.clusterRefsApi.store
-	clusterRefsApiStore := &ClusterRefsDeleteStore{
-		ClusterRefsStore: origclusterRefsApiStore,
-	}
-	all.clusterRefsApi.store = clusterRefsApiStore
+	clusterRefsApiStore, clusterRefsApiUnwrap := wrapClusterRefsTrackerStore(all.clusterRefsApi)
 	defer func() {
 		api.store = origStore
-		all.clusterRefsApi.store = origclusterRefsApiStore
+		clusterRefsApiUnwrap()
 	}()
 
 	// inject testObj directly, bypassing create checks/deps
@@ -133,8 +166,8 @@ func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, da
 		// make sure ref objects reads happen in same stm
 		// as delete prepare is set
 		require.NotNil(t, deleteStore.putDeletePrepareSTM, "must set delete prepare in STM")
-		require.NotNil(t, clusterRefsApiStore.getRefSTM, "must check for refs from ClusterRefs in STM")
-		require.Equal(t, deleteStore.putDeletePrepareSTM, clusterRefsApiStore.getRefSTM, "delete prepare and ref check for ClusterRefs must be done in the same STM")
+		require.NotNil(t, clusterRefsApiStore.getSTM, "must check for refs from ClusterRefs in STM")
+		require.Equal(t, deleteStore.putDeletePrepareSTM, clusterRefsApiStore.getSTM, "delete prepare and ref check for ClusterRefs must be done in the same STM")
 	}
 	testObj, _ = dataGen.GetClusterInstTestObj()
 	err = api.DeleteClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
@@ -149,7 +182,7 @@ func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	testObj, _ = dataGen.GetClusterInstTestObj()
 	err = api.DeleteClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
@@ -180,4 +213,157 @@ func deleteClusterInstChecks(t *testing.T, ctx context.Context, all *AllApis, da
 	testObj, _ = dataGen.GetClusterInstTestObj()
 	err = api.DeleteClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err, "cleanup must succeed")
+}
+
+func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetCreateClusterInstTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateClusterInstTestObj()
+		err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "CreateClusterInst must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced Flavor
+		ref := supportData.getOneFlavor()
+		require.NotNil(t, ref, "support data must include one referenced Flavor")
+		ref.DeletePrepare = true
+		_, err = all.flavorApi.store.Put(ctx, ref, all.flavorApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateClusterInstTestObj()
+		err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "CreateClusterInst must fail with Flavor.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Flavor
+		ref.DeletePrepare = false
+		_, err = all.flavorApi.store.Put(ctx, ref, all.flavorApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced AutoScalePolicy
+		ref := supportData.getOneAutoScalePolicy()
+		require.NotNil(t, ref, "support data must include one referenced AutoScalePolicy")
+		ref.DeletePrepare = true
+		_, err = all.autoScalePolicyApi.store.Put(ctx, ref, all.autoScalePolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateClusterInstTestObj()
+		err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "CreateClusterInst must fail with AutoScalePolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AutoScalePolicy
+		ref.DeletePrepare = false
+		_, err = all.autoScalePolicyApi.store.Put(ctx, ref, all.autoScalePolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	{
+		// set delete_prepare on referenced Network
+		ref := supportData.getOneNetwork()
+		require.NotNil(t, ref, "support data must include one referenced Network")
+		ref.DeletePrepare = true
+		_, err = all.networkApi.store.Put(ctx, ref, all.networkApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateClusterInstTestObj()
+		err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "CreateClusterInst must fail with Network.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Network
+		ref.DeletePrepare = false
+		_, err = all.networkApi.store.Put(ctx, ref, all.networkApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	clusterInstApiStore, clusterInstApiUnwrap := wrapClusterInstTrackerStore(all.clusterInstApi)
+	defer clusterInstApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+	flavorApiStore, flavorApiUnwrap := wrapFlavorTrackerStore(all.flavorApi)
+	defer flavorApiUnwrap()
+	autoScalePolicyApiStore, autoScalePolicyApiUnwrap := wrapAutoScalePolicyTrackerStore(all.autoScalePolicyApi)
+	defer autoScalePolicyApiUnwrap()
+	networkApiStore, networkApiUnwrap := wrapNetworkTrackerStore(all.networkApi)
+	defer networkApiUnwrap()
+
+	// CreateClusterInst should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetCreateClusterInstTestObj()
+	err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "CreateClusterInst should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, clusterInstApiStore.putSTM, "CreateClusterInst put ClusterInst must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "CreateClusterInst check Cloudlet ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, cloudletApiStore.getSTM, "CreateClusterInst check Cloudlet ref must be done in same STM as ClusterInst put")
+	require.NotNil(t, flavorApiStore.getSTM, "CreateClusterInst check Flavor ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, flavorApiStore.getSTM, "CreateClusterInst check Flavor ref must be done in same STM as ClusterInst put")
+	require.NotNil(t, autoScalePolicyApiStore.getSTM, "CreateClusterInst check AutoScalePolicy ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, autoScalePolicyApiStore.getSTM, "CreateClusterInst check AutoScalePolicy ref must be done in same STM as ClusterInst put")
+	require.NotNil(t, networkApiStore.getSTM, "CreateClusterInst check Network ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, networkApiStore.getSTM, "CreateClusterInst check Network ref must be done in same STM as ClusterInst put")
+
+	// clean up
+	// delete created test obj
+	testObj, _ = dataGen.GetCreateClusterInstTestObj()
+	err = all.clusterInstApi.DeleteClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+	supportData.delete(t, ctx, all)
+}
+
+func UpdateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetUpdateClusterInstTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced AutoScalePolicy
+		ref := supportData.getOneAutoScalePolicy()
+		require.NotNil(t, ref, "support data must include one referenced AutoScalePolicy")
+		ref.DeletePrepare = true
+		_, err = all.autoScalePolicyApi.store.Put(ctx, ref, all.autoScalePolicyApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateClusterInstTestObj()
+		err = all.clusterInstApi.UpdateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "UpdateClusterInst must fail with AutoScalePolicy.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced AutoScalePolicy
+		ref.DeletePrepare = false
+		_, err = all.autoScalePolicyApi.store.Put(ctx, ref, all.autoScalePolicyApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	clusterInstApiStore, clusterInstApiUnwrap := wrapClusterInstTrackerStore(all.clusterInstApi)
+	defer clusterInstApiUnwrap()
+	autoScalePolicyApiStore, autoScalePolicyApiUnwrap := wrapAutoScalePolicyTrackerStore(all.autoScalePolicyApi)
+	defer autoScalePolicyApiUnwrap()
+
+	// UpdateClusterInst should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetUpdateClusterInstTestObj()
+	err = all.clusterInstApi.UpdateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err, "UpdateClusterInst should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, clusterInstApiStore.putSTM, "UpdateClusterInst put ClusterInst must be done in STM")
+	require.NotNil(t, autoScalePolicyApiStore.getSTM, "UpdateClusterInst check AutoScalePolicy ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, autoScalePolicyApiStore.getSTM, "UpdateClusterInst check AutoScalePolicy ref must be done in same STM as ClusterInst put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
 }

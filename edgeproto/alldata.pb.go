@@ -1087,6 +1087,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "VmPools.CrmOverride")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "VmPools.DeletePrepare")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "GpuDrivers.DeletePrepare")
 	}
 	if _, found := tags["nocmp"]; found {
