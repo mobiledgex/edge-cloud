@@ -104,7 +104,6 @@ func (s *ControllerTest) getAddRefsApiArgs(service *descriptor.ServiceDescriptor
 	}
 	in := gensupport.GetDesc(s.Generator, method.GetInputType())
 	refByGroup := s.refData.RefBys[*in.Name]
-	//dpField := gensupport.GetDeletePrepareField(s.Generator, in)
 	if refByGroup == nil {
 		return nil
 	}
@@ -125,17 +124,6 @@ func (s *ControllerTest) getAddRefsApiArgs(service *descriptor.ServiceDescriptor
 			firstRefIsStore = true
 		}
 	}
-
-	/*
-		if prefix == gensupport.PrefixAdd || prefix == gensupport.PrefixRemove {
-			if refByGroup == nil || len(refByGroup.Tos) == 0 {
-				s.Fail(*in.Name, "for API", *method.Name, "must have a protogen.refers_to option to denote the protobuf message that will be modified")
-			}
-			storeDesc = refByGroup.Tos[0].To.TypeDesc
-			dpField = gensupport.GetDeletePrepareField(s.Generator, storeDesc)
-		} else {
-			storeDesc = in
-		}*/
 
 	noconfig := map[string]struct{}{}
 	if nc := GetMethodNoconfig(method); nc != "" {
