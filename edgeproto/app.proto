@@ -233,18 +233,18 @@ message ServerlessConfig {
 
 message AppAutoProvPolicy {
   // App key
-  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "App"];
   // Auto provisioning policy name
-  string auto_prov_policy = 2;
+  string auto_prov_policy = 2 [(protogen.refers_to) = "AutoProvPolicy"];
   option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization";
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
 message AppAlertPolicy {
   // App key
-  AppKey app_key = 1 [(gogoproto.nullable) = false];
+  AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "App"];
   // Alert name 
-  string alert_policy = 2;
+  string alert_policy = 2 [(protogen.refers_to) = "AlertPolicy"];
   option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization,alertpolicy-name=AlertPolicy";
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AlertPolicy";
 }

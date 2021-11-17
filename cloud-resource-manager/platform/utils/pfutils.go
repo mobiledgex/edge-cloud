@@ -27,6 +27,8 @@ func GetPlatform(ctx context.Context, plat string, setVersionProps func(context.
 		return &fake.PlatformSingleCluster{}, nil
 	} else if plat == "PLATFORM_TYPE_KIND" {
 		return &kind.Platform{}, nil
+	} else if plat == "PLATFORM_TYPE_FAKE_VM_POOL" {
+		return &fake.PlatformVMPool{}, nil
 	}
 	if GetPlatformFunc == nil {
 		plug, err := loadPlugin(ctx)

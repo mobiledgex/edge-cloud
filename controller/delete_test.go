@@ -260,3 +260,15 @@ func (s *DeleteDataGen) GetCloudletTrustPolicyRef(key *edgeproto.PolicyKey) (*ed
 	ref.TrustPolicy = key.Name
 	return &ref, noSupportData
 }
+
+// VMPool
+func (s *DeleteDataGen) GetVMPoolTestObj() (*edgeproto.VMPool, *testSupportData) {
+	obj := testutil.VMPoolData[0]
+	return &obj, noSupportData
+}
+func (s *DeleteDataGen) GetCloudletVmPoolRef(key *edgeproto.VMPoolKey) (*edgeproto.Cloudlet, *testSupportData) {
+	ref := testutil.CloudletData()[0]
+	ref.Key.Organization = key.Organization
+	ref.VmPool = key.Name
+	return &ref, noSupportData
+}

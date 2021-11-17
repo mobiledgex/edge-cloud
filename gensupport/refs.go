@@ -23,25 +23,28 @@ type RefData struct {
 // RefBy is the object that is referring to another object.
 // RefBy -> points to RefTo.
 type RefByObj struct {
-	Type     string
-	TypeDesc *generator.Descriptor
-	KeyType  string
-	KeyDesc  *generator.Descriptor
+	Type        string
+	TypeDesc    *generator.Descriptor
+	KeyType     string
+	KeyDesc     *generator.Descriptor
+	GenerateCud bool
 }
 
 // RefTo is the object that another object is referring to.
 // RefTo <- is pointed to by RefBy.
 type RefToObj struct {
-	Type     string
-	TypeDesc *generator.Descriptor
-	KeyType  string
-	KeyDesc  *generator.Descriptor
+	Type        string
+	TypeDesc    *generator.Descriptor
+	KeyType     string
+	KeyDesc     *generator.Descriptor
+	GenerateCud bool
 }
 
 // Particular field in the RefByObj that is making reference.
 type RefByField struct {
 	Desc     *descriptor.FieldDescriptorProto
 	HierName string
+	InKey    bool
 }
 
 // All references to a particular refTo object
@@ -91,11 +94,6 @@ func (s *PluginSupport) GatherRefData(g *generator.Generator) *RefData {
 			continue
 		}
 		for _, message := range file.Messages() {
-			if !GetGenerateCud(message.DescriptorProto) {
-				// only objects stored in the database
-				// should need refs
-				continue
-			}
 			if GetIgnoreRefersTo(message.DescriptorProto) {
 				continue
 			}
@@ -103,13 +101,14 @@ func (s *PluginSupport) GatherRefData(g *generator.Generator) *RefData {
 				refData.BuildTrackers(g, file, message)
 				continue
 			}
-			refData.BuildRefData(g, file, message, []string{}, message, []*generator.Descriptor{})
+			inKey := false
+			refData.BuildRefData(g, file, message, []string{}, message, []*generator.Descriptor{}, inKey)
 		}
 	}
 	return &refData
 }
 
-func (s *RefData) BuildRefData(g *generator.Generator, file *generator.FileDescriptor, top *generator.Descriptor, parents []string, message *generator.Descriptor, visited []*generator.Descriptor) {
+func (s *RefData) BuildRefData(g *generator.Generator, file *generator.FileDescriptor, top *generator.Descriptor, parents []string, message *generator.Descriptor, visited []*generator.Descriptor, inKey bool) {
 	if WasVisited(message, visited) {
 		return
 	}
@@ -119,24 +118,30 @@ func (s *RefData) BuildRefData(g *generator.Generator, file *generator.FileDescr
 
 		refersTo := GetRefersTo(field)
 		if refersTo != "" {
-			keyDesc := GetDescKey(g, top)
 			byObj := RefByObj{
-				Type:     *top.Name,
-				TypeDesc: top,
-				KeyType:  *keyDesc.Name,
-				KeyDesc:  keyDesc,
+				Type:        *top.Name,
+				TypeDesc:    top,
+				GenerateCud: GetGenerateCud(top.DescriptorProto),
+			}
+			if byObj.GenerateCud {
+				keyDesc := GetDescKey(g, top)
+				byObj.KeyType = *keyDesc.Name
+				byObj.KeyDesc = keyDesc
 			}
 			byField := RefByField{
 				Desc:     field,
 				HierName: hierName,
+				InKey:    inKey,
 			}
 			toObj := RefToObj{
 				Type:     refersTo,
 				TypeDesc: GetPackageDesc(g, file, refersTo),
 			}
-			toObj.KeyDesc = GetDescKey(g, toObj.TypeDesc)
-			toObj.KeyType = *toObj.KeyDesc.Name
-
+			toObj.GenerateCud = GetGenerateCud(toObj.TypeDesc.DescriptorProto)
+			if toObj.GenerateCud {
+				toObj.KeyDesc = GetDescKey(g, toObj.TypeDesc)
+				toObj.KeyType = *toObj.KeyDesc.Name
+			}
 			// allow lookup by refTo
 			toGroup, found := s.RefTos[toObj.Type]
 			if !found {
@@ -165,8 +170,12 @@ func (s *RefData) BuildRefData(g *generator.Generator, file *generator.FileDescr
 			continue
 		}
 		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subInKey := inKey
+			if len(parents) == 0 && GetMessageKey(message.DescriptorProto) == field {
+				subInKey = true
+			}
 			subDesc := GetDesc(g, field.GetTypeName())
-			s.BuildRefData(g, file, top, append(parents, name), subDesc, append(visited, message))
+			s.BuildRefData(g, file, top, append(parents, name), subDesc, append(visited, message), subInKey)
 		}
 	}
 }

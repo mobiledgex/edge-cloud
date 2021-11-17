@@ -2186,6 +2186,10 @@ func (m *VirtualClusterInstKey) ExistsError() error {
 	return fmt.Errorf("VirtualClusterInst key %s already exists", m.GetKeyString())
 }
 
+func (m *VirtualClusterInstKey) BeingDeletedError() error {
+	return fmt.Errorf("VirtualClusterInst %s is being deleted", m.GetKeyString())
+}
+
 var VirtualClusterInstKeyTagOrganization = "clusterorg"
 
 func (m *VirtualClusterInstKey) GetTags() map[string]string {
@@ -2292,6 +2296,10 @@ func (m *AppInstKey) NotFoundError() error {
 
 func (m *AppInstKey) ExistsError() error {
 	return fmt.Errorf("AppInst key %s already exists", m.GetKeyString())
+}
+
+func (m *AppInstKey) BeingDeletedError() error {
+	return fmt.Errorf("AppInst %s is being deleted", m.GetKeyString())
 }
 
 func (m *AppInstKey) GetTags() map[string]string {

@@ -205,3 +205,154 @@ func (s *testSupportData) delete(t *testing.T, ctx context.Context, all *AllApis
 		require.Nil(t, err)
 	}
 }
+
+func (s *testSupportData) getOneFlavor() *edgeproto.Flavor {
+	if len(s.Flavors) == 0 {
+		return nil
+	}
+	return &s.Flavors[0]
+}
+
+func (s *testSupportData) getOneSettings() *edgeproto.Settings {
+	return s.Settings
+}
+
+func (s *testSupportData) getOneOperatorCode() *edgeproto.OperatorCode {
+	if len(s.OperatorCodes) == 0 {
+		return nil
+	}
+	return &s.OperatorCodes[0]
+}
+
+func (s *testSupportData) getOneResTagTable() *edgeproto.ResTagTable {
+	if len(s.ResTagTables) == 0 {
+		return nil
+	}
+	return &s.ResTagTables[0]
+}
+
+func (s *testSupportData) getOneTrustPolicy() *edgeproto.TrustPolicy {
+	if len(s.TrustPolicies) == 0 {
+		return nil
+	}
+	return &s.TrustPolicies[0]
+}
+
+func (s *testSupportData) getOneCloudlet() *edgeproto.Cloudlet {
+	if len(s.Cloudlets) == 0 {
+		return nil
+	}
+	return &s.Cloudlets[0]
+}
+
+func (s *testSupportData) getOneCloudletInfo() *edgeproto.CloudletInfo {
+	if len(s.CloudletInfos) == 0 {
+		return nil
+	}
+	return &s.CloudletInfos[0]
+}
+
+func (s *testSupportData) getOneCloudletPool() *edgeproto.CloudletPool {
+	if len(s.CloudletPools) == 0 {
+		return nil
+	}
+	return &s.CloudletPools[0]
+}
+
+func (s *testSupportData) getOneNetwork() *edgeproto.Network {
+	if len(s.Networks) == 0 {
+		return nil
+	}
+	return &s.Networks[0]
+}
+
+func (s *testSupportData) getOneAutoProvPolicy() *edgeproto.AutoProvPolicy {
+	if len(s.AutoProvPolicies) == 0 {
+		return nil
+	}
+	return &s.AutoProvPolicies[0]
+}
+
+func (s *testSupportData) getOneAutoScalePolicy() *edgeproto.AutoScalePolicy {
+	if len(s.AutoScalePolicies) == 0 {
+		return nil
+	}
+	return &s.AutoScalePolicies[0]
+}
+
+func (s *testSupportData) getOneClusterInst() *edgeproto.ClusterInst {
+	if len(s.ClusterInsts) == 0 {
+		return nil
+	}
+	return &s.ClusterInsts[0]
+}
+
+func (s *testSupportData) getOneApp() *edgeproto.App {
+	if len(s.Apps) == 0 {
+		return nil
+	}
+	return &s.Apps[0]
+}
+
+func (s *testSupportData) getOneAppInst() *edgeproto.AppInst {
+	if len(s.AppInstances) == 0 {
+		return nil
+	}
+	return &s.AppInstances[0]
+}
+
+func (s *testSupportData) getOneAppInstRefs() *edgeproto.AppInstRefs {
+	if len(s.AppInstRefs) == 0 {
+		return nil
+	}
+	return &s.AppInstRefs[0]
+}
+
+func (s *testSupportData) getOneClusterRefs() *edgeproto.ClusterRefs {
+	if len(s.ClusterRefs) == 0 {
+		return nil
+	}
+	return &s.ClusterRefs[0]
+}
+
+func (s *testSupportData) getOneVMPool() *edgeproto.VMPool {
+	if len(s.VmPools) == 0 {
+		return nil
+	}
+	return &s.VmPools[0]
+}
+
+func (s *testSupportData) getOneGPUDriver() *edgeproto.GPUDriver {
+	if len(s.GpuDrivers) == 0 {
+		return nil
+	}
+	return &s.GpuDrivers[0]
+}
+
+func (s *testSupportData) getOneAlertPolicy() *edgeproto.AlertPolicy {
+	if len(s.AlertPolicies) == 0 {
+		return nil
+	}
+	return &s.AlertPolicies[0]
+}
+
+func (s *testSupportData) getOneFlowRateLimitSettings() *edgeproto.FlowRateLimitSettings {
+	if len(s.FlowRateLimitSettings) == 0 {
+		return nil
+	}
+	return &s.FlowRateLimitSettings[0]
+}
+
+func (s *testSupportData) getOneMaxReqsRateLimitSettings() *edgeproto.MaxReqsRateLimitSettings {
+	if len(s.MaxReqsRateLimitSettings) == 0 {
+		return nil
+	}
+	return &s.MaxReqsRateLimitSettings[0]
+}
+
+func (s *testSupportData) getOneTrustPolicyException() *edgeproto.TrustPolicyException {
+	if len(s.TrustPolicyExceptions) == 0 {
+		return nil
+	}
+	return &s.TrustPolicyExceptions[0]
+}

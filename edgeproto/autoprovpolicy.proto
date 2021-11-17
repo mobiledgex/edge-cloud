@@ -89,9 +89,9 @@ message AutoProvCounts {
 // AutoProvPolicyCloudlet is used to add and remove Cloudlets from the Auto Provisioning Policy
 message AutoProvPolicyCloudlet {
   // Unique policy identifier key
-  PolicyKey key = 1 [(gogoproto.nullable) = false];
+  PolicyKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "AutoProvPolicy"];
   // Cloudlet identifier key
-  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false, (protogen.refers_to) = "Cloudlet"];
   option (protogen.alias) = "name=Key.Name,app-org=Key.Organization,cloudlet=CloudletKey.Name,cloudlet-org=CloudletKey.Organization,federated-org=CloudletKey.FederatedOrganization";
 }
 

@@ -69,7 +69,7 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (res
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("Flavor already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		if !s.all.settingsApi.store.STMGet(stm, &edgeproto.SettingsKeySingular, &settings) {
 			// should never happen (initDefaults)

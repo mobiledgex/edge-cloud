@@ -27,6 +27,43 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+// AutoProvPolicyStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type AutoProvPolicyStoreTracker struct {
+	edgeproto.AutoProvPolicyStore
+	getSTM concurrency.STM
+	putSTM concurrency.STM
+}
+
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapAutoProvPolicyTrackerStore(api *AutoProvPolicyApi) (*AutoProvPolicyStoreTracker, func()) {
+	orig := api.store
+	tracker := &AutoProvPolicyStoreTracker{
+		AutoProvPolicyStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *AutoProvPolicyStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.PolicyKey, buf *edgeproto.AutoProvPolicy) bool {
+	found := s.AutoProvPolicyStore.STMGet(stm, key, buf)
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
+	return found
+}
+
+func (s *AutoProvPolicyStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.AutoProvPolicy, ops ...objstore.KVOp) {
+	s.AutoProvPolicyStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
 // Caller must write by hand the test data generator.
 // Each Ref object should only have a single reference to the key,
 // in order to properly test each reference (i.e. don't have a single
@@ -133,7 +170,7 @@ func deleteAutoProvPolicyChecks(t *testing.T, ctx context.Context, all *AllApis,
 	testObj, _ = dataGen.GetAutoProvPolicyTestObj()
 	_, err = api.DeleteAutoProvPolicy(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
@@ -166,4 +203,137 @@ func deleteAutoProvPolicyChecks(t *testing.T, ctx context.Context, all *AllApis,
 	testObj, _ = dataGen.GetAutoProvPolicyTestObj()
 	_, err = api.DeleteAutoProvPolicy(ctx, testObj)
 	require.Nil(t, err, "cleanup must succeed")
+}
+
+func CreateAutoProvPolicyAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetCreateAutoProvPolicyTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateAutoProvPolicyTestObj()
+		_, err = all.autoProvPolicyApi.CreateAutoProvPolicy(ctx, testObj)
+		require.NotNil(t, err, "CreateAutoProvPolicy must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	autoProvPolicyApiStore, autoProvPolicyApiUnwrap := wrapAutoProvPolicyTrackerStore(all.autoProvPolicyApi)
+	defer autoProvPolicyApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+
+	// CreateAutoProvPolicy should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetCreateAutoProvPolicyTestObj()
+	_, err = all.autoProvPolicyApi.CreateAutoProvPolicy(ctx, testObj)
+	require.Nil(t, err, "CreateAutoProvPolicy should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, autoProvPolicyApiStore.putSTM, "CreateAutoProvPolicy put AutoProvPolicy must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "CreateAutoProvPolicy check Cloudlet ref must be done in STM")
+	require.Equal(t, autoProvPolicyApiStore.putSTM, cloudletApiStore.getSTM, "CreateAutoProvPolicy check Cloudlet ref must be done in same STM as AutoProvPolicy put")
+
+	// clean up
+	// delete created test obj
+	testObj, _ = dataGen.GetCreateAutoProvPolicyTestObj()
+	_, err = all.autoProvPolicyApi.DeleteAutoProvPolicy(ctx, testObj)
+	require.Nil(t, err)
+	supportData.delete(t, ctx, all)
+}
+
+func UpdateAutoProvPolicyAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetUpdateAutoProvPolicyTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateAutoProvPolicyTestObj()
+		_, err = all.autoProvPolicyApi.UpdateAutoProvPolicy(ctx, testObj)
+		require.NotNil(t, err, "UpdateAutoProvPolicy must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	autoProvPolicyApiStore, autoProvPolicyApiUnwrap := wrapAutoProvPolicyTrackerStore(all.autoProvPolicyApi)
+	defer autoProvPolicyApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+
+	// UpdateAutoProvPolicy should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetUpdateAutoProvPolicyTestObj()
+	_, err = all.autoProvPolicyApi.UpdateAutoProvPolicy(ctx, testObj)
+	require.Nil(t, err, "UpdateAutoProvPolicy should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, autoProvPolicyApiStore.putSTM, "UpdateAutoProvPolicy put AutoProvPolicy must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "UpdateAutoProvPolicy check Cloudlet ref must be done in STM")
+	require.Equal(t, autoProvPolicyApiStore.putSTM, cloudletApiStore.getSTM, "UpdateAutoProvPolicy check Cloudlet ref must be done in same STM as AutoProvPolicy put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
+}
+
+func AddAutoProvPolicyCloudletAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetAddAutoProvPolicyCloudletTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetAddAutoProvPolicyCloudletTestObj()
+		_, err = all.autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, testObj)
+		require.NotNil(t, err, "AddAutoProvPolicyCloudlet must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	autoProvPolicyApiStore, autoProvPolicyApiUnwrap := wrapAutoProvPolicyTrackerStore(all.autoProvPolicyApi)
+	defer autoProvPolicyApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+
+	// AddAutoProvPolicyCloudlet should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetAddAutoProvPolicyCloudletTestObj()
+	_, err = all.autoProvPolicyApi.AddAutoProvPolicyCloudlet(ctx, testObj)
+	require.Nil(t, err, "AddAutoProvPolicyCloudlet should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, autoProvPolicyApiStore.putSTM, "AddAutoProvPolicyCloudlet put AutoProvPolicy must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "AddAutoProvPolicyCloudlet check Cloudlet ref must be done in STM")
+	require.Equal(t, autoProvPolicyApiStore.putSTM, cloudletApiStore.getSTM, "AddAutoProvPolicyCloudlet check Cloudlet ref must be done in same STM as AutoProvPolicy put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
 }

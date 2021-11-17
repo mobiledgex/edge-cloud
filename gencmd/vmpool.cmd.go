@@ -62,6 +62,9 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
@@ -559,6 +562,7 @@ var VMPoolOptionalArgs = []string{
 	"vms:#.netinfo.internalip",
 	"vms:#.state",
 	"crmoverride",
+	"deleteprepare",
 }
 var VMPoolAliasArgs = []string{
 	"vmpool-org=key.organization",
@@ -585,6 +589,7 @@ var VMPoolComments = map[string]string{
 	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool, specify errors:empty=true to clear",
 	"crmoverride":              "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"deleteprepare":            "Preparing to be deleted",
 }
 var VMPoolSpecialArgs = map[string]string{
 	"errors":               "StringArray",
@@ -725,6 +730,7 @@ var CreateVMPoolOptionalArgs = []string{
 	"vms:#.netinfo.externalip",
 	"vms:#.netinfo.internalip",
 	"crmoverride",
+	"deleteprepare",
 }
 var AddVMPoolMemberRequiredArgs = []string{
 	"vmpool-org",

@@ -1063,6 +1063,10 @@ func (m *DeviceKey) ExistsError() error {
 	return fmt.Errorf("Device key %s already exists", m.GetKeyString())
 }
 
+func (m *DeviceKey) BeingDeletedError() error {
+	return fmt.Errorf("Device %s is being deleted", m.GetKeyString())
+}
+
 var DeviceKeyTagUniqueIdType = "deviceidtype"
 var DeviceKeyTagUniqueId = "deviceid"
 

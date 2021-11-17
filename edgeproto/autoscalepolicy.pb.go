@@ -654,6 +654,10 @@ func (m *PolicyKey) ExistsError() error {
 	return fmt.Errorf("Policy key %s already exists", m.GetKeyString())
 }
 
+func (m *PolicyKey) BeingDeletedError() error {
+	return fmt.Errorf("Policy %s is being deleted", m.GetKeyString())
+}
+
 var PolicyKeyTagOrganization = "policyorg"
 var PolicyKeyTagName = "policy"
 
