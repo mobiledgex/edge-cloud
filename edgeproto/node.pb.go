@@ -679,6 +679,10 @@ func (m *NodeKey) ExistsError() error {
 	return fmt.Errorf("Node key %s already exists", m.GetKeyString())
 }
 
+func (m *NodeKey) BeingDeletedError() error {
+	return fmt.Errorf("Node %s is being deleted", m.GetKeyString())
+}
+
 var NodeKeyTagName = "node"
 var NodeKeyTagType = "nodetype"
 var NodeKeyTagRegion = "noderegion"

@@ -88,7 +88,7 @@ func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("AutoProvPolicy already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
 		s.store.STMPut(stm, &cur)
@@ -131,16 +131,6 @@ func (s *TrustPolicyApi) ShowTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto
 		return err
 	})
 	return err
-}
-
-func (s *TrustPolicyApi) STMFind(stm concurrency.STM, name, org string, policy *edgeproto.TrustPolicy) error {
-	key := edgeproto.PolicyKey{}
-	key.Name = name
-	key.Organization = org
-	if !s.store.STMGet(stm, &key, policy) {
-		return fmt.Errorf("TrustPolicy %s for organization %s not found", name, org)
-	}
-	return nil
 }
 
 func (s *TrustPolicyApi) GetTrustPolicies(policies map[edgeproto.PolicyKey]*edgeproto.TrustPolicy) {

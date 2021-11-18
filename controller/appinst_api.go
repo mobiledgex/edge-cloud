@@ -504,6 +504,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !s.all.appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
 		}
+		if app.DeletePrepare {
+			return in.Key.AppKey.BeingDeletedError()
+		}
 		if cloudcommon.IsClusterInstReqd(&app) && in.Key.ClusterInstKey.ClusterKey.Name == cloudcommon.DefaultClust {
 			return fmt.Errorf("Cannot use blank or default Cluster name when ClusterInst is required")
 		}
@@ -518,6 +521,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cloudlet := edgeproto.Cloudlet{}
 		if !s.all.cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
 			return errors.New("Specified Cloudlet not found")
+		}
+		if cloudlet.DeletePrepare {
+			return cloudlet.Key.BeingDeletedError()
 		}
 		cloudletPlatformType = cloudlet.PlatformType
 		cloudletLoc = cloudlet.Location
@@ -553,9 +559,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		if err := s.all.cloudletInfoApi.checkCloudletReady(cctx, stm, &in.Key.ClusterInstKey.CloudletKey, cloudcommon.Create); err != nil {
 			return err
-		}
-		if app.DeletePrepare {
-			return fmt.Errorf("Cannot create AppInst against App which is being deleted")
 		}
 
 		if cloudletFeatures.IsSingleKubernetesCluster {
@@ -593,6 +596,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				clusterInst := edgeproto.ClusterInst{}
 				if !s.all.clusterInstApi.store.STMGet(stm, key, &clusterInst) {
 					return key.NotFoundError()
+				}
+				if clusterInst.DeletePrepare {
+					return key.BeingDeletedError()
 				}
 				err := useMultiTenantClusterInst(stm, ctx, in, &app, sidecarApp, &clusterInst)
 				if err != nil {
@@ -636,6 +642,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !s.all.clusterInstApi.store.STMGet(stm, key, &clusterInst) {
 				return fmt.Errorf("Specified real %s", key.NotFoundError())
 			}
+			if clusterInst.DeletePrepare {
+				return key.BeingDeletedError()
+			}
 			if clusterInst.MultiTenant {
 				// multi-tenant base cluster
 				err := useMultiTenantClusterInst(stm, ctx, in, &app, sidecarApp, &clusterInst)
@@ -661,6 +670,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			key.ClusterKey.Name = cloudcommon.DefaultMultiTenantCluster
 			clusterInst := edgeproto.ClusterInst{}
 			if s.all.clusterInstApi.store.STMGet(stm, key, &clusterInst) {
+				if clusterInst.DeletePrepare {
+					return key.BeingDeletedError()
+				}
 				err := useMultiTenantClusterInst(stm, ctx, in, &app, sidecarApp, &clusterInst)
 				if err == nil {
 					autoClusterType = MultiTenantAutoCluster
@@ -680,6 +692,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cibuf := edgeproto.ClusterInst{}
 				if !s.all.clusterInstApi.store.STMGet(stm, &key, &cibuf) {
 					continue
+				}
+				if cibuf.DeletePrepare {
+					return key.BeingDeletedError()
 				}
 				if s.useReservableClusterInst(stm, ctx, in, &app, sidecarApp, &cibuf) == nil {
 					autoClusterType = ReservableAutoCluster
@@ -728,6 +743,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if s.all.clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &cibuf) {
 				// if it already exists, this means we just
 				// want to spawn more apps into it
+				if cibuf.DeletePrepare {
+					return in.ClusterInstKey().BeingDeletedError()
+				}
 			} else {
 				if sidecarApp {
 					return fmt.Errorf("Sidecar App %s requires an existing ClusterInst", app.Key.Name)
@@ -743,6 +761,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			var clusterInst edgeproto.ClusterInst
 			if !s.all.clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &clusterInst) {
 				return in.ClusterInstKey().NotFoundError()
+			}
+			if clusterInst.DeletePrepare {
+				return in.ClusterInstKey().BeingDeletedError()
 			}
 			if clusterInst.MultiTenant && !sidecarApp {
 				return fmt.Errorf("Cannot directly specify multi-tenant cluster, must use %s prefix on cluster name and specify real cluster name", cloudcommon.AutoClusterPrefix)
@@ -771,6 +792,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !s.all.trustPolicyApi.store.STMGet(stm, &tpKey, &trustPolicy) {
 				return errors.New("Trust Policy for cloudlet not found")
 			}
+			if trustPolicy.DeletePrepare {
+				return tpKey.BeingDeletedError()
+			}
 			err = s.all.appApi.CheckAppCompatibleWithTrustPolicy(ctx, &cloudlet.Key, &app, &trustPolicy)
 			if err != nil {
 				return fmt.Errorf("App is not compatible with cloudlet trust policy: %v", err)
@@ -790,7 +814,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !s.all.flavorApi.store.STMGet(stm, &in.Flavor, &vmFlavor) {
 			return in.Flavor.NotFoundError()
 		}
-
+		if vmFlavor.DeletePrepare {
+			return in.Flavor.BeingDeletedError()
+		}
 		if app.DeploymentManifest != "" {
 			err = cloudcommon.IsValidDeploymentManifestForFlavor(app.Deployment, app.DeploymentManifest, &vmFlavor)
 			if err != nil {

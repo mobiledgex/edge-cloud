@@ -248,6 +248,10 @@ func (m *CloudletKey) ExistsError() error {
 	return fmt.Errorf("Cloudlet key %s already exists", m.GetKeyString())
 }
 
+func (m *CloudletKey) BeingDeletedError() error {
+	return fmt.Errorf("Cloudlet %s is being deleted", m.GetKeyString())
+}
+
 var CloudletKeyTagOrganization = "cloudletorg"
 var CloudletKeyTagName = "cloudlet"
 var CloudletKeyTagFederatedOrganization = "federatedorg"
