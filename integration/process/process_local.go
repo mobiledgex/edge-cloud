@@ -1278,8 +1278,7 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 
 func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 	args := p.GetRunArgs()
-	redisPort := "6379"
-	redisAddr := "localhost:" + redisPort
+	redisPort := LocalRedisPort
 	args = append(args,
 		"-p", redisPort+":"+redisPort,
 		"redis",
@@ -1293,7 +1292,7 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 	maxRedisWait := 10 * time.Second
 	start := time.Now()
 	for {
-		conn, err := net.Dial("tcp", redisAddr)
+		conn, err := net.Dial("tcp", LocalRedisAddr)
 		if err == nil {
 			conn.Close()
 			break

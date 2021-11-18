@@ -24,7 +24,6 @@ tests:
       yaml2: "{{datadir}}/appdata_show.yml"
       filetype: appdata
 
-
   - name: stop primary crm on tmus1
     actions: [stop-argument=crm harole=primary]
     apifile: "{{datadir}}/tmus_cloudlet_1.yml"

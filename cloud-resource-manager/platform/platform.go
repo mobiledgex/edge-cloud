@@ -156,8 +156,8 @@ type Platform interface {
 	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
 	// Get RootLB Flavor
 	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
-	// Called when the platform instance becomes active
-	BecomeActive(ctx context.Context, activeInstance string)
+	// Called when the platform instance switches activity
+	ActiveChanged(ctx context.Context, platformActive bool)
 }
 
 type ClusterSvc interface {

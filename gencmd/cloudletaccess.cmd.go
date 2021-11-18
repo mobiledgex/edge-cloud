@@ -250,7 +250,7 @@ var UpgradeAccessKeyClientMsgAliasArgs = []string{}
 var UpgradeAccessKeyClientMsgComments = map[string]string{
 	"msg":        "Message type",
 	"verifyonly": "Client node type",
-	"harole":     "optional HA role, defaults to HARolePrimary",
+	"harole":     "Optional HA role, defaults to HARolePrimary",
 }
 var UpgradeAccessKeyClientMsgSpecialArgs = map[string]string{}
 var UpgradeAccessKeyServerMsgRequiredArgs = []string{}

@@ -324,7 +324,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		}
 		redisAddr := ""
 		if c.PlatformHighAvailability {
-			redisAddr = cloudcommon.LocalRedisAddr
+			redisAddr = process.LocalRedisAddr
 		}
 		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary, redisAddr); err != nil {
 			return err

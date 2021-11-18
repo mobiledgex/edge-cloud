@@ -187,7 +187,7 @@ type UpgradeAccessKeyClientMsg struct {
 	Msg string `protobuf:"bytes,1,opt,name=msg,proto3" json:"msg,omitempty"`
 	// Client node type
 	VerifyOnly bool `protobuf:"varint,2,opt,name=verify_only,json=verifyOnly,proto3" json:"verify_only,omitempty"`
-	// optional HA role, defaults to HARolePrimary
+	// Optional HA role, defaults to HARolePrimary
 	HaRole string `protobuf:"bytes,3,opt,name=ha_role,json=haRole,proto3" json:"ha_role,omitempty"`
 }
 

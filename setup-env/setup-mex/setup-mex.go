@@ -72,7 +72,7 @@ func GetActionArgs(a string) []string {
 	return argSlice
 }
 
-// actions can be split with a dash like ctrlapi-show or 2 dashes like stop-crm-primary
+// actions can be split with a dash like ctrlapi-show
 func GetActionSubtype(a string) (string, string) {
 	argslice := strings.SplitN(a, "-", 2)
 	action := argslice[0]

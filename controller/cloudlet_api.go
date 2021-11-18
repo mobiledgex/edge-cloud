@@ -633,7 +633,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Starting CRMServer")
-		err = cloudcommon.StartCRMService(ctx, in, pfConfig, process.HARolePrimary, "")
+		err = cloudcommon.StartCRMService(ctx, in, pfConfig, process.HARolePrimary, process.NoRedisAddr)
 	} else {
 		cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
 		if err == nil {

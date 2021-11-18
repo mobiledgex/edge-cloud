@@ -130,7 +130,6 @@ type trackedProcessKey struct {
 
 var trackedProcess = map[trackedProcessKey]*process.Crm{}
 var trackedProcessMux sync.Mutex
-var LocalRedisAddr = "127.0.0.1:6379"
 
 func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole) ([]string, *map[string]string, error) {
 	crmProc, opts, err := getCrmProc(cloudlet, pfConfig, haRole)

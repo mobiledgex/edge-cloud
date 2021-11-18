@@ -38,7 +38,7 @@ message UpgradeAccessKeyClientMsg {
   string msg = 1;
   // Client node type
   bool verify_only = 2;
-  // optional HA role, defaults to HARolePrimary
+  // Optional HA role, defaults to HARolePrimary
   string ha_role = 3;
 }
 

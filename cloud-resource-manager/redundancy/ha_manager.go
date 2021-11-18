@@ -20,8 +20,8 @@ const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 const MaxRedisWait = time.Second * 30
 const CheckActiveLogInterval = time.Second * 10
 
-type HAProcess interface {
-	BecomeActiveCallback(context.Context, process.HARole) error
+type HAWatcher interface {
+	ActiveChanged(ctx context.Context, platformActive bool) error
 }
 
 type HighAvailabilityManager struct {
@@ -33,7 +33,7 @@ type HighAvailabilityManager struct {
 	activeDuration         time.Duration
 	activePollInterval     time.Duration
 	PlatformInstanceActive bool
-	haProcess              HAProcess
+	haWatcher              HAWatcher
 	nodeMgr                *node.NodeMgr
 }
 
@@ -42,13 +42,13 @@ func (s *HighAvailabilityManager) InitFlags() {
 	flag.StringVar(&s.HARole, "HARole", "", string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
-func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haProcess HAProcess) error {
+func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haWatcher HAWatcher) error {
 	ctx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
 	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
 	s.activeDuration = activeDuration.TimeDuration()
 	s.activePollInterval = activePollInterval.TimeDuration()
 	s.nodeMgr = nodeMgr
-	s.haProcess = haProcess
+	s.haWatcher = haWatcher
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid HA Role type")
 	}
@@ -58,9 +58,6 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	}
 	s.nodeGroupKey = nodeGroupKey
 	s.HAEnabled = true
-	if s.nodeGroupKey == "" {
-		return fmt.Errorf("group key node specified")
-	}
 	err := s.connectRedis(ctx)
 	if err != nil {
 		return err
@@ -131,7 +128,6 @@ func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
 	}
-	s.PlatformInstanceActive = v
 	return v
 }
 
@@ -178,8 +174,9 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			newActive := s.TryActive(ctx)
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
+				s.PlatformInstanceActive = true
 				elapsedSinceBumpActive = time.Since(time.Now())
-				s.haProcess.BecomeActiveCallback(ctx, process.HARole(s.HARole))
+				s.haWatcher.ActiveChanged(ctx, true)
 				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
 			}
 		} else {
@@ -204,6 +201,7 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					// somehow we lost activity, this is a big problem
 					log.SpanLog(ctx, log.DebugLevelInfo, "ERROR!: Lost activity")
 					s.PlatformInstanceActive = false
+					s.haWatcher.ActiveChanged(ctx, false)
 				}
 				timeLastCheckActive = time.Now()
 			}

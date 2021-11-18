@@ -16,5 +16,5 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	return s.Xind.Init(ctx, platformConfig, caches, s, updateCallback)
 }
 
-func (s *Platform) BecomeActive(ctx context.Context, activeInstance string) {
+func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) {
 }

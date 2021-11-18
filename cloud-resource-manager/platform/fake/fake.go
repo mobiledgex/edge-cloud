@@ -543,7 +543,7 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	redisAddr := ""
 	if cloudlet.PlatformHighAvailability {
-		redisAddr = cloudcommon.LocalRedisAddr
+		redisAddr = process.LocalRedisAddr
 	}
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary, redisAddr)
 	if err != nil {
@@ -730,6 +730,6 @@ func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, erro
 	return &RootLBFlavor, nil
 }
 
-func (s *Platform) BecomeActive(ctx context.Context, activeInstance string) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "BecomeActive", "activeInstance", activeInstance)
+func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChanged", "platformActive", platformActive)
 }

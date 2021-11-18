@@ -13,7 +13,7 @@ import (
 )
 
 type Process interface {
-	// Get e name of the process
+	// Get the name of the process
 	GetName() string
 	// Get the hostname of the process
 	GetHostname() string
@@ -47,6 +47,10 @@ type HARole string
 var HARoleAll HARole = "all"
 var HARolePrimary HARole = "primary"
 var HARoleSecondary HARole = "secondary"
+
+var LocalRedisPort = "6379"
+var LocalRedisAddr = "127.0.0.1:" + LocalRedisPort
+var NoRedisAddr = ""
 
 func (c *Common) GetName() string {
 	return c.Name
