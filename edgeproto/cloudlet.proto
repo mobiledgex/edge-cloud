@@ -389,6 +389,11 @@ message GPUConfig {
   GPUDriverKey driver = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "GPUDriver"];
   // Properties to identify specifics of GPU
   map<string, string> properties = 2;
+  // Cloudlet specific license config to setup license (will be stored in secure storage)
+  string license_config = 3;
+  // Cloudlet specific license config md5sum, to ensure integrity of license config
+  string license_config_md5sum = 4;
+  option (protogen.noconfig) = "LicenseConfigMd5Sum";
 }
 
 // Cloudlet
@@ -505,7 +510,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,SecondaryCrmAccessPublicKey,SecondaryCrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,SecondaryCrmAccessPublicKey,SecondaryCrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare,GpuConfig.LicenseConfigMd5Sum";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
   option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.mc2_target_cloudlet) = "Key";
