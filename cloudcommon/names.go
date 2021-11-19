@@ -163,6 +163,10 @@ var RootLBHostname = "shared"
 func GetCloudletBaseFQDN(key *edgeproto.CloudletKey, domain string) string {
 	loc := util.DNSSanitize(key.Name)
 	oper := util.DNSSanitize(key.Organization)
+	// exception for CreateAppInst type vmApp in vmlayer
+	if domain == "" {
+		return fmt.Sprintf("%s.%s", loc, oper)
+	}
 	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
 }
 
