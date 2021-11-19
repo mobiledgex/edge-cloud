@@ -1362,12 +1362,6 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 		return err
 	}
 
-	gpuDriverLicenseConfig := ""
-	if in.GpuConfig.LicenseConfig != "" {
-		gpuDriverLicenseConfig = in.GpuConfig.LicenseConfig
-		in.GpuConfig.LicenseConfig = ""
-	}
-
 	var pfConfig *edgeproto.PlatformConfig
 	vmPool := edgeproto.VMPool{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -1398,22 +1392,6 @@ func (s *CloudletApi) PlatformDeleteCloudlet(in *edgeproto.Cloudlet, cb edgeprot
 	if in.DeploymentLocal {
 		updatecb.cb(edgeproto.UpdateTask, "Stopping CRMServer")
 		return cloudcommon.StopCRMService(ctx, in, process.HARoleAll)
-	}
-
-	if gpuDriverLicenseConfig != "" {
-		storageClient, err := getGCSStorageClient(ctx)
-		if err != nil {
-			return err
-		}
-		defer storageClient.Close()
-		// Delete license config from GCS
-		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, in.Key.Name)
-		cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
-		if err != nil {
-			cb.Send(&edgeproto.Result{
-				Message: fmt.Sprintf("Unable to delete GPU driver license config from secure storage, %v. Please clean it up manually, continuing", err),
-			})
-		}
 	}
 
 	// Some platform types require caches
@@ -1641,9 +1619,22 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err == nil {
 			vault.DeleteKV(client, node.GetKafkaVaultPath(*region, in.Key.Name, in.Key.Organization))
 		} else {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "key", in.Key, "err", err)
 		}
 	}
+	if updateCloudlet.GpuConfig.LicenseConfig != "" {
+		storageClient, err := getGCSStorageClient(ctx)
+		if err != nil {
+			return err
+		}
+		defer storageClient.Close()
+		// Delete license config from GCS
+		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &updateCloudlet.GpuConfig.Driver, in.Key.Name)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to delete GPU driver license config from secure storage", "key", in.Key, "err", err)
+		}
+	}
+
 	s.all.cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
 	s.all.autoProvInfoApi.Delete(ctx, &edgeproto.AutoProvInfo{Key: in.Key}, 0)
 	s.all.alertApi.CleanupCloudletAlerts(ctx, &in.Key)
