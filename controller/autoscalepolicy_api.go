@@ -60,7 +60,7 @@ func (s *AutoScalePolicyApi) DeleteAutoScalePolicy(ctx context.Context, in *edge
 			return in.Key.NotFoundError()
 		}
 		if cur.DeletePrepare {
-			return fmt.Errorf("AutoScalePolicy already being deleted")
+			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
 		s.store.STMPut(stm, &cur)
@@ -101,14 +101,4 @@ func (s *AutoScalePolicyApi) ShowAutoScalePolicy(in *edgeproto.AutoScalePolicy, 
 		return err
 	})
 	return err
-}
-
-func (s *AutoScalePolicyApi) STMFind(stm concurrency.STM, name, dev string, policy *edgeproto.AutoScalePolicy) error {
-	key := edgeproto.PolicyKey{}
-	key.Name = name
-	key.Organization = dev
-	if !s.store.STMGet(stm, &key, policy) {
-		return fmt.Errorf("AutoScalePolicy %s for developer %s not found", name, dev)
-	}
-	return nil
 }

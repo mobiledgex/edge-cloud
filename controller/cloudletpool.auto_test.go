@@ -26,6 +26,43 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
+// CloudletPoolStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type CloudletPoolStoreTracker struct {
+	edgeproto.CloudletPoolStore
+	getSTM concurrency.STM
+	putSTM concurrency.STM
+}
+
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapCloudletPoolTrackerStore(api *CloudletPoolApi) (*CloudletPoolStoreTracker, func()) {
+	orig := api.store
+	tracker := &CloudletPoolStoreTracker{
+		CloudletPoolStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *CloudletPoolStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.CloudletPoolKey, buf *edgeproto.CloudletPool) bool {
+	found := s.CloudletPoolStore.STMGet(stm, key, buf)
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
+	return found
+}
+
+func (s *CloudletPoolStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.CloudletPool, ops ...objstore.KVOp) {
+	s.CloudletPoolStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
 // Caller must write by hand the test data generator.
 // Each Ref object should only have a single reference to the key,
 // in order to properly test each reference (i.e. don't have a single
@@ -132,7 +169,7 @@ func deleteCloudletPoolChecks(t *testing.T, ctx context.Context, all *AllApis, d
 	testObj, _ = dataGen.GetCloudletPoolTestObj()
 	_, err = api.DeleteCloudletPool(ctx, testObj)
 	require.NotNil(t, err, "delete must fail if already being deleted")
-	require.Contains(t, err.Error(), "already being deleted")
+	require.Equal(t, testObj.GetKey().BeingDeletedError().Error(), err.Error())
 	// failed delete must not interfere with existing delete prepare state
 	require.True(t, deleteStore.getDeletePrepare(ctx, testObj), "delete prepare must not be modified by failed delete")
 
@@ -165,4 +202,137 @@ func deleteCloudletPoolChecks(t *testing.T, ctx context.Context, all *AllApis, d
 	testObj, _ = dataGen.GetCloudletPoolTestObj()
 	_, err = api.DeleteCloudletPool(ctx, testObj)
 	require.Nil(t, err, "cleanup must succeed")
+}
+
+func CreateCloudletPoolAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetCreateCloudletPoolTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateCloudletPoolTestObj()
+		_, err = all.cloudletPoolApi.CreateCloudletPool(ctx, testObj)
+		require.NotNil(t, err, "CreateCloudletPool must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	cloudletPoolApiStore, cloudletPoolApiUnwrap := wrapCloudletPoolTrackerStore(all.cloudletPoolApi)
+	defer cloudletPoolApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+
+	// CreateCloudletPool should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetCreateCloudletPoolTestObj()
+	_, err = all.cloudletPoolApi.CreateCloudletPool(ctx, testObj)
+	require.Nil(t, err, "CreateCloudletPool should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, cloudletPoolApiStore.putSTM, "CreateCloudletPool put CloudletPool must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "CreateCloudletPool check Cloudlet ref must be done in STM")
+	require.Equal(t, cloudletPoolApiStore.putSTM, cloudletApiStore.getSTM, "CreateCloudletPool check Cloudlet ref must be done in same STM as CloudletPool put")
+
+	// clean up
+	// delete created test obj
+	testObj, _ = dataGen.GetCreateCloudletPoolTestObj()
+	_, err = all.cloudletPoolApi.DeleteCloudletPool(ctx, testObj)
+	require.Nil(t, err)
+	supportData.delete(t, ctx, all)
+}
+
+func UpdateCloudletPoolAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetUpdateCloudletPoolTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateCloudletPoolTestObj()
+		_, err = all.cloudletPoolApi.UpdateCloudletPool(ctx, testObj)
+		require.NotNil(t, err, "UpdateCloudletPool must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	cloudletPoolApiStore, cloudletPoolApiUnwrap := wrapCloudletPoolTrackerStore(all.cloudletPoolApi)
+	defer cloudletPoolApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+
+	// UpdateCloudletPool should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetUpdateCloudletPoolTestObj()
+	_, err = all.cloudletPoolApi.UpdateCloudletPool(ctx, testObj)
+	require.Nil(t, err, "UpdateCloudletPool should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, cloudletPoolApiStore.putSTM, "UpdateCloudletPool put CloudletPool must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "UpdateCloudletPool check Cloudlet ref must be done in STM")
+	require.Equal(t, cloudletPoolApiStore.putSTM, cloudletApiStore.getSTM, "UpdateCloudletPool check Cloudlet ref must be done in same STM as CloudletPool put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
+}
+
+func AddCloudletPoolMemberAddRefsChecks(t *testing.T, ctx context.Context, all *AllApis, dataGen AllAddRefsDataGen) {
+	var err error
+
+	testObj, supportData := dataGen.GetAddCloudletPoolMemberTestObj()
+	supportData.put(t, ctx, all)
+	{
+		// set delete_prepare on referenced Cloudlet
+		ref := supportData.getOneCloudlet()
+		require.NotNil(t, ref, "support data must include one referenced Cloudlet")
+		ref.DeletePrepare = true
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetAddCloudletPoolMemberTestObj()
+		_, err = all.cloudletPoolApi.AddCloudletPoolMember(ctx, testObj)
+		require.NotNil(t, err, "AddCloudletPoolMember must fail with Cloudlet.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced Cloudlet
+		ref.DeletePrepare = false
+		_, err = all.cloudletApi.store.Put(ctx, ref, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+
+	// wrap the stores so we can make sure all checks and changes
+	// happen in the same STM.
+	cloudletPoolApiStore, cloudletPoolApiUnwrap := wrapCloudletPoolTrackerStore(all.cloudletPoolApi)
+	defer cloudletPoolApiUnwrap()
+	cloudletApiStore, cloudletApiUnwrap := wrapCloudletTrackerStore(all.cloudletApi)
+	defer cloudletApiUnwrap()
+
+	// AddCloudletPoolMember should succeed if no references are in delete_prepare
+	testObj, _ = dataGen.GetAddCloudletPoolMemberTestObj()
+	_, err = all.cloudletPoolApi.AddCloudletPoolMember(ctx, testObj)
+	require.Nil(t, err, "AddCloudletPoolMember should succeed if no references are in delete prepare")
+	// make sure everything ran in the same STM
+	require.NotNil(t, cloudletPoolApiStore.putSTM, "AddCloudletPoolMember put CloudletPool must be done in STM")
+	require.NotNil(t, cloudletApiStore.getSTM, "AddCloudletPoolMember check Cloudlet ref must be done in STM")
+	require.Equal(t, cloudletPoolApiStore.putSTM, cloudletApiStore.getSTM, "AddCloudletPoolMember check Cloudlet ref must be done in same STM as CloudletPool put")
+
+	// clean up
+	supportData.delete(t, ctx, all)
 }

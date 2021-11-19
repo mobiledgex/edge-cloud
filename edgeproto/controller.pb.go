@@ -457,6 +457,10 @@ func (m *ControllerKey) ExistsError() error {
 	return fmt.Errorf("Controller key %s already exists", m.GetKeyString())
 }
 
+func (m *ControllerKey) BeingDeletedError() error {
+	return fmt.Errorf("Controller %s is being deleted", m.GetKeyString())
+}
+
 var ControllerKeyTagAddr = "controlleraddr"
 
 func (m *ControllerKey) GetTags() map[string]string {

@@ -2293,6 +2293,11 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 
+		m.P("func (m *", message.Name, ") BeingDeletedError() error {")
+		m.P("return fmt.Errorf(\"", strings.TrimSuffix(*message.Name, "Key"), " %s is being deleted\", m.GetKeyString())")
+		m.P("}")
+		m.P("")
+
 		hasKeyTags := false
 		for _, field := range message.Field {
 			if field.Type == nil || field.OneofIndex != nil {
@@ -2767,6 +2772,9 @@ func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor
 func (m *mex) checkDeletePrepares() {
 	msgs := []string{}
 	for _, ref := range m.refData.RefTos {
+		if !ref.To.GenerateCud {
+			continue
+		}
 		// refTo object must have delete_prepare boolean field.
 		hierName := gensupport.GetDeletePrepareField(m.gen, ref.To.TypeDesc)
 		if hierName == "" {

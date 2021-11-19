@@ -1710,6 +1710,10 @@ func (m *FlowRateLimitSettingsKey) ExistsError() error {
 	return fmt.Errorf("FlowRateLimitSettings key %s already exists", m.GetKeyString())
 }
 
+func (m *FlowRateLimitSettingsKey) BeingDeletedError() error {
+	return fmt.Errorf("FlowRateLimitSettings %s is being deleted", m.GetKeyString())
+}
+
 var FlowRateLimitSettingsKeyTagFlowSettingsName = "flowsettingsname"
 
 func (m *FlowRateLimitSettingsKey) GetTags() map[string]string {
@@ -2586,6 +2590,10 @@ func (m *MaxReqsRateLimitSettingsKey) ExistsError() error {
 	return fmt.Errorf("MaxReqsRateLimitSettings key %s already exists", m.GetKeyString())
 }
 
+func (m *MaxReqsRateLimitSettingsKey) BeingDeletedError() error {
+	return fmt.Errorf("MaxReqsRateLimitSettings %s is being deleted", m.GetKeyString())
+}
+
 var MaxReqsRateLimitSettingsKeyTagMaxReqsSettingsName = "maxreqssettingsname"
 
 func (m *MaxReqsRateLimitSettingsKey) GetTags() map[string]string {
@@ -3406,6 +3414,10 @@ func (m *RateLimitSettingsKey) NotFoundError() error {
 
 func (m *RateLimitSettingsKey) ExistsError() error {
 	return fmt.Errorf("RateLimitSettings key %s already exists", m.GetKeyString())
+}
+
+func (m *RateLimitSettingsKey) BeingDeletedError() error {
+	return fmt.Errorf("RateLimitSettings %s is being deleted", m.GetKeyString())
 }
 
 var RateLimitSettingsKeyTagApiName = "apiname"

@@ -9,6 +9,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	math "math"
 )
@@ -20,41 +21,113 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 
-// CloudletRefsDeleteStore wraps around the usual
-// store to instrument checks for tracked ref objects.
-type CloudletRefsDeleteStore struct {
+// CloudletRefsStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type CloudletRefsStoreTracker struct {
 	edgeproto.CloudletRefsStore
-	getRefSTM concurrency.STM
+	getSTM concurrency.STM
+	putSTM concurrency.STM
 }
 
-func (s *CloudletRefsDeleteStore) STMGet(stm concurrency.STM, key *edgeproto.CloudletKey, buf *edgeproto.CloudletRefs) bool {
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapCloudletRefsTrackerStore(api *CloudletRefsApi) (*CloudletRefsStoreTracker, func()) {
+	orig := api.store
+	tracker := &CloudletRefsStoreTracker{
+		CloudletRefsStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *CloudletRefsStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.CloudletKey, buf *edgeproto.CloudletRefs) bool {
 	found := s.CloudletRefsStore.STMGet(stm, key, buf)
-	s.getRefSTM = stm
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
 	return found
 }
 
-// ClusterRefsDeleteStore wraps around the usual
-// store to instrument checks for tracked ref objects.
-type ClusterRefsDeleteStore struct {
+func (s *CloudletRefsStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.CloudletRefs, ops ...objstore.KVOp) {
+	s.CloudletRefsStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
+// ClusterRefsStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type ClusterRefsStoreTracker struct {
 	edgeproto.ClusterRefsStore
-	getRefSTM concurrency.STM
+	getSTM concurrency.STM
+	putSTM concurrency.STM
 }
 
-func (s *ClusterRefsDeleteStore) STMGet(stm concurrency.STM, key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterRefs) bool {
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapClusterRefsTrackerStore(api *ClusterRefsApi) (*ClusterRefsStoreTracker, func()) {
+	orig := api.store
+	tracker := &ClusterRefsStoreTracker{
+		ClusterRefsStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *ClusterRefsStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterRefs) bool {
 	found := s.ClusterRefsStore.STMGet(stm, key, buf)
-	s.getRefSTM = stm
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
 	return found
 }
 
-// AppInstRefsDeleteStore wraps around the usual
-// store to instrument checks for tracked ref objects.
-type AppInstRefsDeleteStore struct {
+func (s *ClusterRefsStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.ClusterRefs, ops ...objstore.KVOp) {
+	s.ClusterRefsStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
+}
+
+// AppInstRefsStoreTracker wraps around the usual
+// store to track the STM used for gets/puts.
+type AppInstRefsStoreTracker struct {
 	edgeproto.AppInstRefsStore
-	getRefSTM concurrency.STM
+	getSTM concurrency.STM
+	putSTM concurrency.STM
 }
 
-func (s *AppInstRefsDeleteStore) STMGet(stm concurrency.STM, key *edgeproto.AppKey, buf *edgeproto.AppInstRefs) bool {
+// Wrap the Api's store with a tracker store.
+// Returns the tracker store, and the unwrap function to defer.
+func wrapAppInstRefsTrackerStore(api *AppInstRefsApi) (*AppInstRefsStoreTracker, func()) {
+	orig := api.store
+	tracker := &AppInstRefsStoreTracker{
+		AppInstRefsStore: api.store,
+	}
+	api.store = tracker
+	unwrap := func() {
+		api.store = orig
+	}
+	return tracker, unwrap
+}
+
+func (s *AppInstRefsStoreTracker) STMGet(stm concurrency.STM, key *edgeproto.AppKey, buf *edgeproto.AppInstRefs) bool {
 	found := s.AppInstRefsStore.STMGet(stm, key, buf)
-	s.getRefSTM = stm
+	if s.getSTM == nil {
+		s.getSTM = stm
+	}
 	return found
+}
+
+func (s *AppInstRefsStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.AppInstRefs, ops ...objstore.KVOp) {
+	s.AppInstRefsStore.STMPut(stm, obj, ops...)
+	if s.putSTM == nil {
+		s.putSTM = stm
+	}
 }

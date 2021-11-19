@@ -55,9 +55,9 @@ message CloudletPool {
 // CloudletPoolMember is used to add and remove a Cloudlet from a CloudletPool
 message CloudletPoolMember {
   // CloudletPool key
-  CloudletPoolKey key = 1 [(gogoproto.nullable) = false];
+  CloudletPoolKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "CloudletPool"];
   // Cloudlet name
-  string cloudlet_name = 2;
+  string cloudlet_name = 2 [(protogen.refers_to) = "Cloudlet"];
   option (protogen.alias) = "pool=Key.Name,cloudlet=CloudletName,org=Key.Organization";
 }
 

@@ -29,11 +29,6 @@ func NewTrustPolicyExceptionApi(sync *Sync, all *AllApis) *TrustPolicyExceptionA
 func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 
 	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
-
-	if s.cache.HasKey(&in.Key) {
-		return nil, in.Key.ExistsError()
-	}
-
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
@@ -44,19 +39,30 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 	if err := in.Validate(nil); err != nil {
 		return nil, err
 	}
-
-	if s.all.appApi.validateAppExists(&in.Key.AppKey) == false {
-		return nil, fmt.Errorf("TrustPolicyExceptionKey: App does not exist")
-	}
-
-	if s.all.cloudletPoolApi.validateCloudletPoolExists(&in.Key.CloudletPoolKey) == false {
-		return nil, fmt.Errorf("TrustPolicyExceptionKey: CloudletPoolKey does not exist")
-	}
-
 	in.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
 	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", in.State)
 
-	_, err := s.store.Create(ctx, in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, &in.Key, nil) {
+			return in.Key.ExistsError()
+		}
+		app := edgeproto.App{}
+		if !s.all.appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return in.Key.AppKey.NotFoundError()
+		}
+		if app.DeletePrepare {
+			return in.Key.AppKey.BeingDeletedError()
+		}
+		cloudletPool := edgeproto.CloudletPool{}
+		if !s.all.cloudletPoolApi.store.STMGet(stm, &in.Key.CloudletPoolKey, &cloudletPool) {
+			return in.Key.CloudletPoolKey.NotFoundError()
+		}
+		if cloudletPool.DeletePrepare {
+			return in.Key.CloudletPoolKey.BeingDeletedError()
+		}
+		s.store.STMPut(stm, in)
+		return nil
+	})
 	return &edgeproto.Result{}, err
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+
 	uutil "github.com/mobiledgex/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -49,6 +50,16 @@ func GetCtrlNameFromCrmStartArgs(args []string) string {
 	for ii := range args {
 		act, param := GetActionParam(args[ii])
 		if act == "ctrl" {
+			return param
+		}
+	}
+	return ""
+}
+
+func GetHARoleFromActionArgs(args []string) string {
+	for ii := range args {
+		act, param := GetActionParam(args[ii])
+		if act == "harole" {
 			return param
 		}
 	}
@@ -608,11 +619,16 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
+	for _, p := range util.Deployment.RedisCaches {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
 	return true
 }
 
 func Cleanup(ctx context.Context) error {
-	err := cloudcommon.StopCRMService(ctx, nil)
+	err := cloudcommon.StopCRMService(ctx, nil, process.HARolePrimary)
 	if err != nil {
 		return err
 	}
@@ -695,8 +711,19 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 			errors = append(errors, "wait for process failed")
 		}
 	case "stop":
-		if actionSubtype == "crm" {
-			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars); err != nil {
+		if actionSubtype == "argument" {
+			// extract the action param and action args
+			actionArgs = GetActionArgs(actionParam)
+			actionParam = actionArgs[0]
+			actionArgs = actionArgs[1:]
+		}
+		if actionSubtype == "crm" || actionParam == "crm" {
+			haRole := process.HARoleAll
+			rolearg := GetHARoleFromActionArgs(actionArgs)
+			if rolearg != "" {
+				haRole = process.HARole(rolearg)
+			}
+			if err := apis.StopCrmsLocal(ctx, actionParam, spec.ApiFile, spec.ApiFileVars, haRole); err != nil {
 				errors = append(errors, err.Error())
 			}
 		} else {

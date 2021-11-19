@@ -671,6 +671,14 @@ func GetNonStandardShow(method *descriptor.MethodDescriptorProto) bool {
 	return proto.GetBoolExtension(method.Options, protogen.E_NonStandardShow, false)
 }
 
+const (
+	PrefixCreate = "Create"
+	PrefixDelete = "Delete"
+	PrefixUpdate = "Update"
+	PrefixAdd    = "Add"
+	PrefixRemove = "Remove"
+)
+
 type MethodInfo struct {
 	Name     string
 	Prefix   string
@@ -736,7 +744,7 @@ func GetMethodInfo(g *generator.Generator, method *descriptor.MethodDescriptorPr
 	if IsShow(method) {
 		info.IsShow = true
 	}
-	if info.Prefix == "Update" {
+	if info.Prefix == PrefixUpdate {
 		info.IsUpdate = true
 	}
 	return in, &info

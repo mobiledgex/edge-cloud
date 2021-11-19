@@ -925,6 +925,15 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.DeletePrepare")
 	}
 	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.SecondaryCrmAccessPublicKey")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.SecondaryCrmAccessKeyUpgradeRequired")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.SecondaryNotifySrvAddr")
+	}
+	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.NotifyId")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -1085,6 +1094,9 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "VmPools.CrmOverride")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "VmPools.DeletePrepare")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "GpuDrivers.DeletePrepare")

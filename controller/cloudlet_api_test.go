@@ -17,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -159,6 +160,7 @@ func TestCloudletApi(t *testing.T) {
 	cloudletData := testutil.CloudletData()
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverTest(t, "cud", apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalCloudletTest(t, "cud", apis.cloudletApi, cloudletData)
 
 	// test invalid location values
@@ -320,11 +322,11 @@ func testCloudletStates(t *testing.T, ctx context.Context, apis *AllApis) {
 		require.Nil(t, err, "stream cloudlet")
 	}()
 
-	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig)
+	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, process.HARolePrimary, "")
 	require.Nil(t, err, "start cloudlet")
 	defer func() {
 		// Delete CRM
-		err = cloudcommon.StopCRMService(ctx, &cloudlet)
+		err = cloudcommon.StopCRMService(ctx, &cloudlet, process.HARolePrimary)
 		require.Nil(t, err, "stop cloudlet")
 	}()
 
@@ -341,7 +343,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, apis *AllApis) {
 	ctrlHandler.CloudletCache.Update(ctx, &cloudlet, 0)
 
 	require.Equal(t, len(streamCloudlet.Msgs), 5, "progress messages")
-	cloudletMsgs := []string{"Setting up cloudlet", "Initializing platform", "Done intializing fake platform", "Gathering Cloudlet Info", "Cloudlet setup successfully"}
+	cloudletMsgs := []string{"Setting up cloudlet", "Initializing platform", "Done initializing fake platform", "Gathering Cloudlet Info", "Cloudlet setup successfully"}
 	for ii, msg := range cloudletMsgs {
 		require.Equal(t, streamCloudlet.Msgs[ii].Message, msg, "message matches")
 	}
@@ -854,7 +856,7 @@ func testShowFlavorsForCloudlet(t *testing.T, ctx context.Context, apis *AllApis
 
 	err = cCldApi.ShowFlavorsForCloudlet(ctx, &cld.Key, &show)
 	require.Nil(t, err)
-	require.Equal(t, 4, len(show.Data))
+	require.Equal(t, 5, len(show.Data))
 
 	// Show flavors for a chosen cloudlet name.
 	show.Init()
@@ -954,6 +956,7 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	// test data
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
 	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 
