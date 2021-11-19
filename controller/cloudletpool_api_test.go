@@ -30,6 +30,7 @@ func TestCloudletPoolApi(t *testing.T) {
 	// create supporting data
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
 	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
 	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
 
 	testutil.InternalCloudletPoolTest(t, "cud", apis.cloudletPoolApi, testutil.CloudletPoolData)
@@ -85,13 +86,6 @@ func TestCloudletPoolApi(t *testing.T) {
 	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
 	require.True(t, found, "get pool %v", poolKey)
 	require.Equal(t, 2, len(pool.Cloudlets))
-
-	// delete cloudlet, see it gets removed from pool
-	err = apis.cloudletApi.DeleteCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
-	require.Nil(t, err)
-	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
-	require.True(t, found, "get pool %v", poolKey)
-	require.Equal(t, 1, len(pool.Cloudlets))
 
 	// add cloudlet that doesn't exist, should fail
 	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)

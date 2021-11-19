@@ -80,16 +80,48 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 	return s.all.cloudletApi.UpdateCloudletsUsingTrustPolicy(ctx, &cur, cb)
 }
 
-func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) error {
+func (s *TrustPolicyApi) DeleteTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto.TrustPolicyApi_DeleteTrustPolicyServer) (reterr error) {
 	ctx := cb.Context()
-	if !s.cache.HasKey(&in.Key) {
-		return in.Key.NotFoundError()
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cur := edgeproto.TrustPolicy{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return in.Key.NotFoundError()
+		}
+		if cur.DeletePrepare {
+			return in.Key.BeingDeletedError()
+		}
+		cur.DeletePrepare = true
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	if err != nil {
+		return err
 	}
+	defer func() {
+		if reterr == nil {
+			return
+		}
+		undoErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cur := edgeproto.TrustPolicy{}
+			if !s.store.STMGet(stm, &in.Key, &cur) {
+				return nil
+			}
+			if cur.DeletePrepare {
+				cur.DeletePrepare = false
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
+		})
+		if undoErr != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to undo delete prepare", "key", in.Key, "err", undoErr)
+		}
+	}()
+
 	// look for cloudlets in any state
-	if s.all.cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN) {
-		return fmt.Errorf("Policy in use by Cloudlet")
+	if k := s.all.cloudletApi.UsesTrustPolicy(&in.Key, edgeproto.TrackedState_TRACKED_STATE_UNKNOWN); k != nil {
+		return fmt.Errorf("Policy in use by Cloudlet %s", k.GetKeyString())
 	}
-	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
+	_, err = s.store.Delete(ctx, in, s.sync.syncWait)
 	return err
 }
 
@@ -99,16 +131,6 @@ func (s *TrustPolicyApi) ShowTrustPolicy(in *edgeproto.TrustPolicy, cb edgeproto
 		return err
 	})
 	return err
-}
-
-func (s *TrustPolicyApi) STMFind(stm concurrency.STM, name, org string, policy *edgeproto.TrustPolicy) error {
-	key := edgeproto.PolicyKey{}
-	key.Name = name
-	key.Organization = org
-	if !s.store.STMGet(stm, &key, policy) {
-		return fmt.Errorf("TrustPolicy %s for organization %s not found", name, org)
-	}
-	return nil
 }
 
 func (s *TrustPolicyApi) GetTrustPolicies(policies map[edgeproto.PolicyKey]*edgeproto.TrustPolicy) {

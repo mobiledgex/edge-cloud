@@ -41,6 +41,8 @@ message ResTagTable {
   map<string, string> tags = 3;
   // availability zone(s) of resource if required
   string azone = 4;
+  // Preparing to be deleted
+  bool delete_prepare = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (gogoproto.gostring) = true;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -52,6 +54,7 @@ message ResTagTable {
   option (protogen.alias) = "res=Key.Name,organization=Key.Organization";
   option (protogen.also_required) = "Tags";
   option (protogen.uses_org) = "key=Organization";
+  option (protogen.noconfig) = "DeletePrepare";
 }
 
 // This API should be admin-only

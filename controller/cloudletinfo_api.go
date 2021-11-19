@@ -55,7 +55,12 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	var err error
+	log.SpanLog(ctx, log.DebugLevelNotify, "Cloudlet Info Update", "in", in)
 	// for now assume all fields have been specified
+	if in.StandbyCrm {
+		log.SpanLog(ctx, log.DebugLevelNotify, "skipping due to info from standby CRM")
+		return
+	}
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
@@ -147,8 +152,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo state transition error",
 			"key", in.Key, "err", err)
 	}
-	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
+	if changedToOnline {
 		s.ClearCloudletAndAppInstDownAlerts(ctx, in)
+	}
+	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
 		// Validate cloudlet resources and generate appropriate warnings
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !s.all.cloudletApi.store.STMGet(stm, key, &cloudlet) {
@@ -360,7 +367,7 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) dme.Cloud
 }
 
 func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.STM, key *edgeproto.CloudletKey, action cloudcommon.Action) error {
-	if cctx != nil && ignoreCRM(cctx) {
+	if cctx != nil && (ignoreCRM(cctx) || cctx.SkipCloudletReadyCheck) {
 		return nil
 	}
 	// Get tracked state, it could be that cloudlet has initiated
@@ -369,8 +376,8 @@ func (s *CloudletInfoApi) checkCloudletReady(cctx *CallContext, stm concurrency.
 	if !s.all.cloudletApi.store.STMGet(stm, key, &cloudlet) {
 		return key.NotFoundError()
 	}
-	if action == cloudcommon.Delete && cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE {
-		return nil
+	if action == cloudcommon.Delete && (cloudlet.DeletePrepare || cloudlet.State == edgeproto.TrackedState_DELETE_PREPARE) {
+		return key.BeingDeletedError()
 	}
 	if cloudlet.State == edgeproto.TrackedState_UPDATE_REQUESTED ||
 		cloudlet.State == edgeproto.TrackedState_UPDATING {

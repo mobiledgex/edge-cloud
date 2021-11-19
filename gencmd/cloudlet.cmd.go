@@ -27,6 +27,21 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
+func GPUDriverHideTags(in *edgeproto.GPUDriver) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	for i0 := 0; i0 < len(in.Builds); i0++ {
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+}
+
 func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if cli.HideTags == "" {
 		return
@@ -78,6 +93,18 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.HostController = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
+	if _, found := tags["nocmp"]; found {
+		in.SecondaryCrmAccessPublicKey = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.SecondaryCrmAccessKeyUpgradeRequired = false
+	}
+	if _, found := tags["nocmp"]; found {
+		in.SecondaryNotifySrvAddr = ""
 	}
 }
 
@@ -424,6 +451,7 @@ func ShowGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 			}
 			return fmt.Errorf("ShowGPUDriver recv failed: %s", errstr)
 		}
+		GPUDriverHideTags(obj)
 		if cli.OutputStream {
 			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue
@@ -2194,16 +2222,18 @@ var OperationTimeLimitsSpecialArgs = map[string]string{}
 var CloudletInternalRequiredArgs = []string{
 	"key.organization",
 	"key.name",
+	"key.federatedorganization",
 }
 var CloudletInternalOptionalArgs = []string{
 	"props",
 }
 var CloudletInternalAliasArgs = []string{}
 var CloudletInternalComments = map[string]string{
-	"fields":           "Fields are used for the Update API to specify which fields to apply.",
-	"key.organization": "Organization of the cloudlet site",
-	"key.name":         "Name of the cloudlet",
-	"props":            "Map of key value pairs for data exchanged between components",
+	"fields":                    "Fields are used for the Update API to specify which fields to apply.",
+	"key.organization":          "Organization of the cloudlet site",
+	"key.name":                  "Name of the cloudlet",
+	"key.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"props":                     "Map of key value pairs for data exchanged between components",
 }
 var CloudletInternalSpecialArgs = map[string]string{
 	"fields": "StringArray",
@@ -2232,30 +2262,32 @@ var PlatformConfigOptionalArgs = []string{
 	"crmaccessprivatekey",
 	"accessapiaddr",
 	"cachedir",
+	"secondarycrmaccessprivatekey",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
-	"containerregistrypath": "Path to Docker registry holding edge-cloud image",
-	"cloudletvmimagepath":   "Path to platform base image",
-	"notifyctrladdrs":       "Address of controller notify port (can be multiple of these)",
-	"tlscertfile":           "TLS cert file",
-	"tlskeyfile":            "TLS key file",
-	"tlscafile":             "TLS ca file",
-	"envvar":                "Environment variables",
-	"platformtag":           "Tag of edge-cloud image",
-	"testmode":              "Internal Test flag",
-	"span":                  "Span string",
-	"cleanupmode":           "Internal cleanup flag",
-	"region":                "Region",
-	"commercialcerts":       "Get certs from vault or generate your own for the root load balancer",
-	"usevaultpki":           "Use Vault certs and CAs for internal TLS communication",
-	"appdnsroot":            "App domain name root",
-	"chefserverpath":        "Path to Chef Server",
-	"chefclientinterval":    "Chef client interval",
-	"deploymenttag":         "Deployment Tag",
-	"crmaccessprivatekey":   "crm access private key",
-	"accessapiaddr":         "controller access API address",
-	"cachedir":              "cache dir",
+	"containerregistrypath":        "Path to Docker registry holding edge-cloud image",
+	"cloudletvmimagepath":          "Path to platform base image",
+	"notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
+	"tlscertfile":                  "TLS cert file",
+	"tlskeyfile":                   "TLS key file",
+	"tlscafile":                    "TLS ca file",
+	"envvar":                       "Environment variables",
+	"platformtag":                  "Tag of edge-cloud image",
+	"testmode":                     "Internal Test flag",
+	"span":                         "Span string",
+	"cleanupmode":                  "Internal cleanup flag",
+	"region":                       "Region",
+	"commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
+	"usevaultpki":                  "Use Vault certs and CAs for internal TLS communication",
+	"appdnsroot":                   "App domain name root",
+	"chefserverpath":               "Path to Chef Server",
+	"chefclientinterval":           "Chef client interval",
+	"deploymenttag":                "Deployment Tag",
+	"crmaccessprivatekey":          "crm access private key",
+	"accessapiaddr":                "controller access API address",
+	"cachedir":                     "cache dir",
+	"secondarycrmaccessprivatekey": "secondary crm access private key",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -2265,15 +2297,19 @@ var CloudletResMapRequiredArgs = []string{
 	"cloudlet",
 	"mapping",
 }
-var CloudletResMapOptionalArgs = []string{}
+var CloudletResMapOptionalArgs = []string{
+	"federated-org",
+}
 var CloudletResMapAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletResMapComments = map[string]string{
-	"cloudlet-org": "Organization of the cloudlet site",
-	"cloudlet":     "Name of the cloudlet",
-	"mapping":      "Resource mapping info",
+	"cloudlet-org":  "Organization of the cloudlet site",
+	"cloudlet":      "Name of the cloudlet",
+	"federated-org": "Federated operator organization who shared this cloudlet",
+	"mapping":       "Resource mapping info",
 }
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
@@ -2414,6 +2450,7 @@ var GPUDriverComments = map[string]string{
 	"properties":               "Additional properties associated with GPU driver build For example: license server information, driver release date, etc, specify properties:empty=true to clear",
 	"state":                    "State to figure out if any action on the GPU driver is in-progress",
 	"ignorestate":              "Ignore state will ignore any action in-progress on the GPU driver",
+	"deleteprepare":            "Preparing to be deleted",
 }
 var GPUDriverSpecialArgs = map[string]string{
 	"fields":     "StringArray",
@@ -2424,12 +2461,15 @@ var GPUConfigOptionalArgs = []string{
 	"driver.name",
 	"driver.organization",
 	"properties",
+	"licenseconfig",
 }
 var GPUConfigAliasArgs = []string{}
 var GPUConfigComments = map[string]string{
 	"driver.name":         "Name of the driver",
 	"driver.organization": "Organization to which the driver belongs to",
 	"properties":          "Properties to identify specifics of GPU",
+	"licenseconfig":       "Cloudlet specific license config to setup license (will be stored in secure storage)",
+	"licenseconfigmd5sum": "Cloudlet specific license config md5sum, to ensure integrity of license config",
 }
 var GPUConfigSpecialArgs = map[string]string{
 	"properties": "StringToString",
@@ -2439,6 +2479,7 @@ var CloudletRequiredArgs = []string{
 	"cloudlet",
 }
 var CloudletOptionalArgs = []string{
+	"federated-org",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -2484,97 +2525,110 @@ var CloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"gpuconfig.licenseconfig",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
 	"singlekubernetesclusterowner",
+	"platformhighavailability",
+	"secondarynotifysrvaddr",
 }
 var CloudletAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletComments = map[string]string{
-	"fields":                              "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":                        "Organization of the cloudlet site",
-	"cloudlet":                            "Name of the cloudlet",
-	"location.latitude":                   "Latitude in WGS 84 coordinates",
-	"location.longitude":                  "Longitude in WGS 84 coordinates",
-	"location.horizontalaccuracy":         "Horizontal accuracy (radius in meters)",
-	"location.verticalaccuracy":           "Vertical accuracy (meters)",
-	"location.altitude":                   "On android only lat and long are guaranteed to be supplied Altitude in meters",
-	"location.course":                     "Course (IOS) / bearing (Android) (degrees east relative to true north)",
-	"location.speed":                      "Speed (IOS) / velocity (Android) (meters/sec)",
-	"ipsupport":                           "Type of IP support provided by Cloudlet (see IpSupport), one of Unknown, Static, Dynamic",
-	"staticips":                           "List of static IPs for static IP support",
-	"numdynamicips":                       "Number of dynamic IPs available for dynamic IP support",
-	"timelimits.createclusterinsttimeout": "Override default max time to create a cluster instance (duration)",
-	"timelimits.updateclusterinsttimeout": "Override default max time to update a cluster instance (duration)",
-	"timelimits.deleteclusterinsttimeout": "Override default max time to delete a cluster instance (duration)",
-	"timelimits.createappinsttimeout":     "Override default max time to create an app instance (duration)",
-	"timelimits.updateappinsttimeout":     "Override default max time to update an app instance (duration)",
-	"timelimits.deleteappinsttimeout":     "Override default max time to delete an app instance (duration)",
-	"errors":                              "Any errors trying to create, update, or delete the Cloudlet., specify errors:empty=true to clear",
-	"state":                               "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-	"crmoverride":                         "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
-	"deploymentlocal":                     "Deploy cloudlet services locally",
-	"platformtype":                        "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
-	"notifysrvaddr":                       "Address for the CRM notify listener to run on",
-	"flavor.name":                         "Flavor name",
-	"physicalname":                        "Physical infrastructure cloudlet name",
-	"envvar":                              "Single Key-Value pair of env var to be passed to CRM, specify envvar:empty=true to clear",
-	"containerversion":                    "Cloudlet container version",
-	"config.containerregistrypath":        "Path to Docker registry holding edge-cloud image",
-	"config.cloudletvmimagepath":          "Path to platform base image",
-	"config.notifyctrladdrs":              "Address of controller notify port (can be multiple of these)",
-	"config.tlscertfile":                  "TLS cert file",
-	"config.tlskeyfile":                   "TLS key file",
-	"config.tlscafile":                    "TLS ca file",
-	"config.envvar":                       "Environment variables, specify config.envvar:empty=true to clear",
-	"config.platformtag":                  "Tag of edge-cloud image",
-	"config.testmode":                     "Internal Test flag",
-	"config.span":                         "Span string",
-	"config.cleanupmode":                  "Internal cleanup flag",
-	"config.region":                       "Region",
-	"config.commercialcerts":              "Get certs from vault or generate your own for the root load balancer",
-	"config.usevaultpki":                  "Use Vault certs and CAs for internal TLS communication",
-	"config.appdnsroot":                   "App domain name root",
-	"config.chefserverpath":               "Path to Chef Server",
-	"config.chefclientinterval":           "Chef client interval",
-	"config.deploymenttag":                "Deployment Tag",
-	"config.crmaccessprivatekey":          "crm access private key",
-	"config.accessapiaddr":                "controller access API address",
-	"config.cachedir":                     "cache dir",
-	"restagmap:empty":                     "Optional resource to restagtbl key map key values = [gpu, nas, nic], specify restagmap:empty=true to clear",
-	"restagmap:#.value.name":              "Resource Table Name",
-	"restagmap:#.value.organization":      "Operator organization of the cloudlet site.",
-	"accessvars":                          "Variables required to access cloudlet, specify accessvars:empty=true to clear",
-	"vmimageversion":                      "MobiledgeX baseimage version where CRM services reside",
-	"deployment":                          "Deployment type to bring up CRM services (docker, kubernetes)",
-	"infraapiaccess":                      "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
-	"infraconfig.externalnetworkname":     "Infra specific external network name",
-	"infraconfig.flavorname":              "Infra specific flavor name",
-	"chefclientkey":                       "Chef client key, specify chefclientkey:empty=true to clear",
-	"maintenancestate":                    "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
-	"overridepolicycontainerversion":      "Override container version from policy file",
-	"vmpool":                              "VM Pool",
-	"crmaccesspublickey":                  "CRM access public key",
-	"crmaccesskeyupgraderequired":         "CRM access key upgrade required",
-	"trustpolicy":                         "Optional Trust Policy",
-	"trustpolicystate":                    "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
-	"resourcequotas:empty":                "Resource quotas, specify resourcequotas:empty=true to clear",
-	"resourcequotas:#.name":               "Resource name on which to set quota",
-	"resourcequotas:#.value":              "Quota value of the resource",
-	"resourcequotas:#.alertthreshold":     "Generate alert when more than threshold percentage of resource is used",
-	"defaultresourcealertthreshold":       "Default resource alert threshold percentage",
-	"hostcontroller":                      "Address of the controller hosting the cloudlet services if it is running locally",
-	"kafkacluster":                        "Operator provided kafka cluster endpoint to push events to",
-	"kafkauser":                           "Username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
-	"kafkapassword":                       "Password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
-	"gpuconfig.driver.name":               "Name of the driver",
-	"gpuconfig.driver.organization":       "Organization to which the driver belongs to",
-	"gpuconfig.properties":                "Properties to identify specifics of GPU, specify gpuconfig.properties:empty=true to clear",
-	"enabledefaultserverlesscluster":      "Enable experimental default multitenant (serverless) cluster",
-	"allianceorgs":                        "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet, specify allianceorgs:empty=true to clear",
-	"singlekubernetesclusterowner":        "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
+	"fields":                               "Fields are used for the Update API to specify which fields to apply",
+	"cloudlet-org":                         "Organization of the cloudlet site",
+	"cloudlet":                             "Name of the cloudlet",
+	"federated-org":                        "Federated operator organization who shared this cloudlet",
+	"location.latitude":                    "Latitude in WGS 84 coordinates",
+	"location.longitude":                   "Longitude in WGS 84 coordinates",
+	"location.horizontalaccuracy":          "Horizontal accuracy (radius in meters)",
+	"location.verticalaccuracy":            "Vertical accuracy (meters)",
+	"location.altitude":                    "On android only lat and long are guaranteed to be supplied Altitude in meters",
+	"location.course":                      "Course (IOS) / bearing (Android) (degrees east relative to true north)",
+	"location.speed":                       "Speed (IOS) / velocity (Android) (meters/sec)",
+	"ipsupport":                            "Type of IP support provided by Cloudlet (see IpSupport), one of Unknown, Static, Dynamic",
+	"staticips":                            "List of static IPs for static IP support",
+	"numdynamicips":                        "Number of dynamic IPs available for dynamic IP support",
+	"timelimits.createclusterinsttimeout":  "Override default max time to create a cluster instance (duration)",
+	"timelimits.updateclusterinsttimeout":  "Override default max time to update a cluster instance (duration)",
+	"timelimits.deleteclusterinsttimeout":  "Override default max time to delete a cluster instance (duration)",
+	"timelimits.createappinsttimeout":      "Override default max time to create an app instance (duration)",
+	"timelimits.updateappinsttimeout":      "Override default max time to update an app instance (duration)",
+	"timelimits.deleteappinsttimeout":      "Override default max time to delete an app instance (duration)",
+	"errors":                               "Any errors trying to create, update, or delete the Cloudlet., specify errors:empty=true to clear",
+	"state":                                "Current state of the cloudlet, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"crmoverride":                          "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"deploymentlocal":                      "Deploy cloudlet services locally",
+	"platformtype":                         "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool",
+	"notifysrvaddr":                        "Address for the CRM notify listener to run on",
+	"flavor.name":                          "Flavor name",
+	"physicalname":                         "Physical infrastructure cloudlet name",
+	"envvar":                               "Single Key-Value pair of env var to be passed to CRM, specify envvar:empty=true to clear",
+	"containerversion":                     "Cloudlet container version",
+	"config.containerregistrypath":         "Path to Docker registry holding edge-cloud image",
+	"config.cloudletvmimagepath":           "Path to platform base image",
+	"config.notifyctrladdrs":               "Address of controller notify port (can be multiple of these)",
+	"config.tlscertfile":                   "TLS cert file",
+	"config.tlskeyfile":                    "TLS key file",
+	"config.tlscafile":                     "TLS ca file",
+	"config.envvar":                        "Environment variables, specify config.envvar:empty=true to clear",
+	"config.platformtag":                   "Tag of edge-cloud image",
+	"config.testmode":                      "Internal Test flag",
+	"config.span":                          "Span string",
+	"config.cleanupmode":                   "Internal cleanup flag",
+	"config.region":                        "Region",
+	"config.commercialcerts":               "Get certs from vault or generate your own for the root load balancer",
+	"config.usevaultpki":                   "Use Vault certs and CAs for internal TLS communication",
+	"config.appdnsroot":                    "App domain name root",
+	"config.chefserverpath":                "Path to Chef Server",
+	"config.chefclientinterval":            "Chef client interval",
+	"config.deploymenttag":                 "Deployment Tag",
+	"config.crmaccessprivatekey":           "crm access private key",
+	"config.accessapiaddr":                 "controller access API address",
+	"config.cachedir":                      "cache dir",
+	"config.secondarycrmaccessprivatekey":  "secondary crm access private key",
+	"restagmap:empty":                      "Optional resource to restagtbl key map key values = [gpu, nas, nic], specify restagmap:empty=true to clear",
+	"restagmap:#.value.name":               "Resource Table Name",
+	"restagmap:#.value.organization":       "Operator organization of the cloudlet site.",
+	"accessvars":                           "Variables required to access cloudlet, specify accessvars:empty=true to clear",
+	"vmimageversion":                       "MobiledgeX baseimage version where CRM services reside",
+	"deployment":                           "Deployment type to bring up CRM services (docker, kubernetes)",
+	"infraapiaccess":                       "Infra Access Type is the type of access available to Infra API Endpoint, one of DirectAccess, RestrictedAccess",
+	"infraconfig.externalnetworkname":      "Infra specific external network name",
+	"infraconfig.flavorname":               "Infra specific flavor name",
+	"chefclientkey":                        "Chef client key, specify chefclientkey:empty=true to clear",
+	"maintenancestate":                     "State for maintenance, one of NormalOperation, MaintenanceStart, MaintenanceStartNoFailover",
+	"overridepolicycontainerversion":       "Override container version from policy file",
+	"vmpool":                               "VM Pool",
+	"crmaccesspublickey":                   "CRM access public key",
+	"crmaccesskeyupgraderequired":          "CRM access key upgrade required",
+	"trustpolicy":                          "Optional Trust Policy",
+	"trustpolicystate":                     "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
+	"resourcequotas:empty":                 "Resource quotas, specify resourcequotas:empty=true to clear",
+	"resourcequotas:#.name":                "Resource name on which to set quota",
+	"resourcequotas:#.value":               "Quota value of the resource",
+	"resourcequotas:#.alertthreshold":      "Generate alert when more than threshold percentage of resource is used",
+	"defaultresourcealertthreshold":        "Default resource alert threshold percentage",
+	"hostcontroller":                       "Address of the controller hosting the cloudlet services if it is running locally",
+	"kafkacluster":                         "Operator provided kafka cluster endpoint to push events to",
+	"kafkauser":                            "Username for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
+	"kafkapassword":                        "Password for kafka SASL/PLAIN authentification, stored securely in secret storage and never visible externally",
+	"gpuconfig.driver.name":                "Name of the driver",
+	"gpuconfig.driver.organization":        "Organization to which the driver belongs to",
+	"gpuconfig.properties":                 "Properties to identify specifics of GPU, specify gpuconfig.properties:empty=true to clear",
+	"gpuconfig.licenseconfig":              "Cloudlet specific license config to setup license (will be stored in secure storage)",
+	"gpuconfig.licenseconfigmd5sum":        "Cloudlet specific license config md5sum, to ensure integrity of license config",
+	"enabledefaultserverlesscluster":       "Enable experimental default multitenant (serverless) cluster",
+	"allianceorgs":                         "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet, specify allianceorgs:empty=true to clear",
+	"singlekubernetesclusterowner":         "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
+	"deleteprepare":                        "Preparing to be deleted",
+	"platformhighavailability":             "Enable platform H/A",
+	"secondarycrmaccesspublickey":          "CRM secondary access public key for H/A",
+	"secondarycrmaccesskeyupgraderequired": "CRM secondary access key upgrade required for H/A",
+	"secondarynotifysrvaddr":               "Address for the secondary CRM notify listener to run on",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",
@@ -2593,16 +2647,19 @@ var FlavorMatchRequiredArgs = []string{
 	"flavor",
 }
 var FlavorMatchOptionalArgs = []string{
+	"federated-org",
 	"availabilityzone",
 }
 var FlavorMatchAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 	"flavor=flavorname",
 }
 var FlavorMatchComments = map[string]string{
 	"cloudlet-org":     "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
+	"federated-org":    "Federated operator organization who shared this cloudlet",
 	"flavor":           "Flavor name to lookup",
 	"availabilityzone": "availability zone for optional resources if any",
 }
@@ -2649,7 +2706,7 @@ var CloudletPropsOptionalArgs = []string{
 }
 var CloudletPropsAliasArgs = []string{}
 var CloudletPropsComments = map[string]string{
-	"platformtype":                   "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
+	"platformtype":                   "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool",
 	"properties:#.value.name":        "Name of the property",
 	"properties:#.value.description": "Description of the property",
 	"properties:#.value.value":       "Default value of the property",
@@ -2673,7 +2730,7 @@ var CloudletResourceQuotaPropsOptionalArgs = []string{
 }
 var CloudletResourceQuotaPropsAliasArgs = []string{}
 var CloudletResourceQuotaPropsComments = map[string]string{
-	"platformtype":                "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster",
+	"platformtype":                "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool",
 	"properties:#.name":           "Resource name",
 	"properties:#.value":          "Resource value",
 	"properties:#.inframaxvalue":  "Resource infra max value",
@@ -2689,6 +2746,7 @@ var CloudletResourceUsageRequiredArgs = []string{
 	"cloudlet",
 }
 var CloudletResourceUsageOptionalArgs = []string{
+	"federated-org",
 	"infrausage",
 	"info:#.name",
 	"info:#.value",
@@ -2701,10 +2759,12 @@ var CloudletResourceUsageOptionalArgs = []string{
 var CloudletResourceUsageAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletResourceUsageComments = map[string]string{
 	"cloudlet-org":          "Organization of the cloudlet site",
 	"cloudlet":              "Name of the cloudlet",
+	"federated-org":         "Federated operator organization who shared this cloudlet",
 	"infrausage":            "Show Infra based usage",
 	"info:#.name":           "Resource name",
 	"info:#.value":          "Resource value",
@@ -2720,15 +2780,19 @@ var CloudletAllianceOrgRequiredArgs = []string{
 	"cloudlet",
 	"organization",
 }
-var CloudletAllianceOrgOptionalArgs = []string{}
+var CloudletAllianceOrgOptionalArgs = []string{
+	"federated-org",
+}
 var CloudletAllianceOrgAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletAllianceOrgComments = map[string]string{
-	"cloudlet-org": "Organization of the cloudlet site",
-	"cloudlet":     "Name of the cloudlet",
-	"organization": "Alliance organization",
+	"cloudlet-org":  "Organization of the cloudlet site",
+	"cloudlet":      "Name of the cloudlet",
+	"federated-org": "Federated operator organization who shared this cloudlet",
+	"organization":  "Alliance organization",
 }
 var CloudletAllianceOrgSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
@@ -2778,6 +2842,7 @@ var CloudletInfoRequiredArgs = []string{
 	"cloudlet",
 }
 var CloudletInfoOptionalArgs = []string{
+	"federated-org",
 	"state",
 	"notifyid",
 	"controller",
@@ -2838,15 +2903,19 @@ var CloudletInfoOptionalArgs = []string{
 	"nodeinfos:#.allocatable:#.value",
 	"nodeinfos:#.capacity:#.key",
 	"nodeinfos:#.capacity:#.value",
+	"activecrminstance",
+	"standbycrm",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudlet-org=key.organization",
 	"cloudlet=key.name",
+	"federated-org=key.federatedorganization",
 }
 var CloudletInfoComments = map[string]string{
 	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                           "Organization of the cloudlet site",
 	"cloudlet":                               "Name of the cloudlet",
+	"federated-org":                          "Federated operator organization who shared this cloudlet",
 	"state":                                  "State of cloudlet, one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync",
 	"notifyid":                               "Id of client assigned by server (internal use only)",
 	"controller":                             "Connected controller unique id",
@@ -2893,6 +2962,8 @@ var CloudletInfoComments = map[string]string{
 	"compatibilityversion": "Version for compatibility tracking",
 	"properties":           "Cloudlet properties",
 	"nodeinfos:#.name":     "Node name",
+	"activecrminstance":    "Active HA instance",
+	"standbycrm":           "Denotes if info was reported by inactive",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
@@ -2958,6 +3029,7 @@ var CreateCloudletRequiredArgs = []string{
 	"numdynamicips",
 }
 var CreateCloudletOptionalArgs = []string{
+	"federated-org",
 	"location.altitude",
 	"ipsupport",
 	"staticips",
@@ -2995,15 +3067,19 @@ var CreateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"gpuconfig.licenseconfig",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
 	"singlekubernetesclusterowner",
+	"platformhighavailability",
+	"secondarynotifysrvaddr",
 }
 var DeleteCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
 }
 var DeleteCloudletOptionalArgs = []string{
+	"federated-org",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -3044,15 +3120,19 @@ var DeleteCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"gpuconfig.licenseconfig",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
 	"singlekubernetesclusterowner",
+	"platformhighavailability",
+	"secondarynotifysrvaddr",
 }
 var UpdateCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
 }
 var UpdateCloudletOptionalArgs = []string{
+	"federated-org",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -3082,15 +3162,19 @@ var UpdateCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"gpuconfig.licenseconfig",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
 	"singlekubernetesclusterowner",
+	"platformhighavailability",
+	"secondarynotifysrvaddr",
 }
 var ShowCloudletRequiredArgs = []string{
 	"cloudlet-org",
 	"cloudlet",
 }
 var ShowCloudletOptionalArgs = []string{
+	"federated-org",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -3131,9 +3215,12 @@ var ShowCloudletOptionalArgs = []string{
 	"gpuconfig.driver.name",
 	"gpuconfig.driver.organization",
 	"gpuconfig.properties",
+	"gpuconfig.licenseconfig",
 	"enabledefaultserverlesscluster",
 	"allianceorgs",
 	"singlekubernetesclusterowner",
+	"platformhighavailability",
+	"secondarynotifysrvaddr",
 }
 var GetCloudletPropsRequiredArgs = []string{
 	"platformtype",
@@ -3152,5 +3239,6 @@ var GetCloudletResourceUsageRequiredArgs = []string{
 	"cloudlet",
 }
 var GetCloudletResourceUsageOptionalArgs = []string{
+	"federated-org",
 	"infrausage",
 }

@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -61,6 +64,7 @@ type ControllerData struct {
 	vmActionRefAction                    int
 	finishInfraResourceThread            chan struct{}
 	vmActionLastUpdate                   time.Time
+	highAvailabilityManager              *redundancy.HighAvailabilityManager
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -74,7 +78,7 @@ func (cd *ControllerData) RecvAllStart() {
 }
 
 // NewControllerData creates a new instance to track data from the controller
-func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr *node.NodeMgr) *ControllerData {
+func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr *node.NodeMgr, haMgr *redundancy.HighAvailabilityManager) *ControllerData {
 	cd := &ControllerData{}
 	cd.platform = pf
 	cd.cloudletKey = *key
@@ -109,6 +113,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.AppInstCache.SetDeletedCb(cd.appInstDeleted)
 	cd.FlavorCache.SetUpdatedCb(cd.flavorChanged)
 	cd.CloudletCache.SetUpdatedCb(cd.cloudletChanged)
+	cd.CloudletCache.SetDeletedCb(cd.cloudletDeleted)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
 	cd.CloudletPoolCache.SetUpdatedCb(cd.cloudletPoolChanged)
@@ -121,6 +126,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.ControllerSyncDone = make(chan bool, 1)
 
 	cd.NodeMgr = nodeMgr
+	cd.highAvailabilityManager = haMgr
 
 	cd.updateVMWorkers.Init("vmpool-updatevm", cd.UpdateVMPool)
 	cd.updateTrustPolicyKeyworkers.Init("update-TrustPolicy", cd.UpdateTrustPolicy)
@@ -293,7 +299,6 @@ func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudlet
 	resources.VmAppInsts = deployedVMAppKeys
 	return resources
 }
-
 func (cd *ControllerData) vmResourceActionEnd(ctx context.Context, cloudletKey *edgeproto.CloudletKey) {
 	cd.vmActionRefMux.Lock()
 	defer cd.vmActionRefMux.Unlock()
@@ -334,10 +339,13 @@ func (cd *ControllerData) clusterInstChanged(ctx context.Context, old *edgeproto
 	}
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInstChange", "key", new.Key, "state", new.State, "old", old)
-
 	// store clusterInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
 		cd.ClusterInstInfoCache.RefreshObj(ctx, new)
+		return
+	}
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring cluster change because not active")
 		return
 	}
 
@@ -575,14 +583,16 @@ func (cd *ControllerData) handleTrustPolicyExceptionRules(ctx context.Context, a
 
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
 	var err error
-
 	if old != nil && old.State == new.State {
 		return
 	}
-
 	// store appInstInfo object on CRM bringup, if state is READY
 	if old == nil && new.State == edgeproto.TrackedState_READY {
 		cd.AppInstInfoCache.RefreshObj(ctx, new)
+		return
+	}
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring appInst change because not active")
 		return
 	}
 
@@ -979,7 +989,10 @@ func (cd *ControllerData) notifyControllerConnect() {
 
 func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *edgeproto.TrustPolicyException, new *edgeproto.TrustPolicyException) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionChanged()", "new trustPolicyException", new)
-
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy change because not active")
+		return
+	}
 	if old != nil {
 		if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 			new.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
@@ -1086,7 +1099,10 @@ func (cd *ControllerData) GetClusterInstsFromTrustPolicyExceptionKey(ctx context
 func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *edgeproto.TrustPolicyException) {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "In trustPolicyExceptionDeleted()", "TrustPolicyException:", old)
-
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy deleted because not active")
+		return
+	}
 	if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
 		tpeKey := old.Key
 		log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionDeleted", "old.key", tpeKey)
@@ -1210,14 +1226,30 @@ func (cd *ControllerData) cloudletPoolDeleted(ctx context.Context, old *edgeprot
 func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
 	// do request
 	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletChanged", "cloudlet", new)
+
 	cloudletInfo := edgeproto.CloudletInfo{}
+	// for federated cloudlet, set cloudletinfo object if it is empty
+	if old == nil && new.State == edgeproto.TrackedState_CREATING && new.Key.FederatedOrganization != "" {
+		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
+		if !found {
+			cloudletInfo.Key = new.Key
+		}
+		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+		cloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
+		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+	}
+
 	found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 	if !found {
 		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletInfo not found for cloudlet", "key", new.Key)
 		return
 	}
-
-	if new.State == edgeproto.TrackedState_CRM_INITOK {
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		// the cloudlet state can be anything if this is an inactive CRM
+		log.SpanLog(ctx, log.DebugLevelInfra, "doing notify controller connect cloudlet changed because not currently active", "newstate", new.State, "cloudinfo state", cloudletInfo.State)
+		cd.notifyControllerConnect()
+		return
+	} else if new.State == edgeproto.TrackedState_CRM_INITOK {
 		if cloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_INIT {
 			cd.notifyControllerConnect()
 		}
@@ -1245,7 +1277,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		}
 	}
 	if updateInfo {
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 	}
 	if old != nil && old.TrustPolicyState != new.TrustPolicyState {
 		switch new.TrustPolicyState {
@@ -1254,11 +1286,10 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			if new.State != edgeproto.TrackedState_READY {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Update policy cannot be done until cloudlet is ready")
 				cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATE_ERROR
-				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+				cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 			} else {
 				cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATING
-				cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-				cd.updateTrustPolicyKeyworkers.NeedsWork(ctx, new.Key)
+				cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 			}
 		}
 	}
@@ -1294,7 +1325,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		// Reset old Status
 		cloudletInfo.Status.StatusReset()
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_UPGRADE
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 
 		err := cd.platform.UpdateCloudlet(ctx, new, updateCloudletCallback)
 		if err != nil {
@@ -1303,7 +1334,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 
 			cloudletInfo.Errors = append(cloudletInfo.Errors, errstr)
 			cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 			return
 		}
 		resources, err := cd.platform.GetCloudletInfraResources(ctx)
@@ -1319,7 +1350,16 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 		cloudletInfo.ResourcesSnapshot.PlatformVms = resources.PlatformVms
 		cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfo.Status.StatusReset()
-		cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+		cd.UpdateCloudletInfo(ctx, &cloudletInfo)
+	}
+}
+
+func (cd *ControllerData) cloudletDeleted(ctx context.Context, old *edgeproto.Cloudlet) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletDeleted", "Cloudlet", old)
+	if old.Key.FederatedOrganization != "" {
+		// cloudlet info
+		info := edgeproto.CloudletInfo{Key: old.Key}
+		cd.CloudletInfoCache.Delete(ctx, &info, 0)
 	}
 }
 
@@ -1338,6 +1378,10 @@ func (cd *ControllerData) UpdateVMPoolInfo(ctx context.Context, state edgeproto.
 
 func (cd *ControllerData) VMPoolChanged(ctx context.Context, old *edgeproto.VMPool, new *edgeproto.VMPool) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "VMPoolChanged", "newvmpool", new, "oldvmpool", old)
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring VM Pool changed because not active")
+		return
+	}
 	if old == nil || old.State == new.State {
 		return
 	}
@@ -1592,7 +1636,7 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "failed to gather vmpool flavors", "vmpool", key, "cloudlet", cd.cloudletKey, "err", err)
 		} else {
-			cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 		}
 	}
 
@@ -1642,8 +1686,7 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 			cloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
 		}
 	}
-	cd.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
-
+	cd.UpdateCloudletInfo(ctx, &cloudletInfo)
 }
 
 // Common code to handle add and removal of trust policy exception rules
@@ -1753,5 +1796,41 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 
 func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 	close(cd.finishInfraResourceThread)
+}
 
+// InitHAManager returns haEnabled, error
+func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "InitHAManager", "haKey", haKey)
+	haEnabled := false
+	haCrm := CrmHAProcess{
+		controllerData: cd,
+	}
+	err := haMgr.Init(haKey, cd.NodeMgr, cd.settings.PlatformHaInstanceActiveExpireTime, cd.settings.PlatformHaInstancePollInterval, &haCrm)
+	if err == nil {
+		haEnabled = true
+	} else if strings.Contains(err.Error(), redundancy.HighAvailabilityManagerDisabled) {
+		log.SpanLog(ctx, log.DebugLevelInfo, "high availability disabled", "err", err)
+	} else {
+		return false, err
+	}
+	return haEnabled, nil
+}
+
+// UpdateCloudletInfo updates the cloudlet info cache while setting the ActiveCrmInstance and StandbyCrm fields based on HA state
+func (cd *ControllerData) UpdateCloudletInfo(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) {
+	if cd.highAvailabilityManager.HAEnabled {
+		if cd.highAvailabilityManager.PlatformInstanceActive {
+			cloudletInfo.ActiveCrmInstance = cd.highAvailabilityManager.HARole
+			cloudletInfo.StandbyCrm = false
+		} else {
+			cloudletInfo.StandbyCrm = true
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfo", "HAEnabled", cd.highAvailabilityManager.HAEnabled, "haActive", cd.highAvailabilityManager.PlatformInstanceActive, "state", cloudletInfo.State, "activeCrm", cloudletInfo.ActiveCrmInstance, "standby", cloudletInfo.StandbyCrm)
+	cd.CloudletInfoCache.Update(ctx, cloudletInfo, 0)
+}
+
+func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "StartHAManagerActiveCheck")
+	go haMgr.CheckActiveLoop(ctx)
 }

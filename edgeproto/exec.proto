@@ -66,7 +66,8 @@ message ExecRequest {
   option (protogen.notify_message) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Offer,Answer,Err,Console.Url,Timeout,AccessUrl,EdgeTurnAddr";
-  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow,node-type=Cmd.CloudletMgmtNode.Type,node-name=Cmd.CloudletMgmtNode.Name";
+  option (protogen.alias) = "appname=AppInstKey.AppKey.Name,appvers=AppInstKey.AppKey.Version,app-org=AppInstKey.AppKey.Organization,cluster=AppInstKey.ClusterInstKey.ClusterKey.Name,cluster-org=AppInstKey.ClusterInstKey.Organization,cloudlet=AppInstKey.ClusterInstKey.CloudletKey.Name,cloudlet-org=AppInstKey.ClusterInstKey.CloudletKey.Organization,federated-org=AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization,command=Cmd.Command,since=Log.Since,tail=Log.Tail,timestamps=Log.Timestamps,follow=Log.Follow,node-type=Cmd.CloudletMgmtNode.Type,node-name=Cmd.CloudletMgmtNode.Name";
+  option (protogen.not_required) = "AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
   option (protogen.also_required) = "AppInstKey";
 }
 
@@ -76,26 +77,26 @@ service ExecApi {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr,Cmd.CloudletMgmtNode";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Cmd,Console,ContainerId,AccessUrl,EdgeTurnAddr";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
   }
   // View logs for AppInst
   rpc ShowLogs(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceAppInsts,ActionView,AppInstKey.AppKey.Organization";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Cmd,Console,AccessUrl,EdgeTurnAddr";
-    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization";
+    option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
     option (protogen.non_standard_show) = true;
   }
   // Access Cloudlet VM
   rpc AccessCloudlet(ExecRequest) returns (ExecRequest) {
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,";
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,ContainerId,AccessUrl,EdgeTurnAddr,AppInstKey.AppKey.Name,AppInstKey.AppKey.Version,AppInstKey.AppKey.Organization,AppInstKey.ClusterInstKey.ClusterKey.Name,AppInstKey.ClusterInstKey.Organization";
-    option (protogen.method_also_required) = "AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization";
+    option (protogen.method_also_required) = "AppInstKey.ClusterInstKey.CloudletKey.Name,AppInstKey.ClusterInstKey.CloudletKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
   }
   // This is used internally to forward requests to other Controllers.e
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}

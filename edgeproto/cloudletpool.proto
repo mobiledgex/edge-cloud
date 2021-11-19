@@ -33,17 +33,19 @@ message CloudletPool {
   // CloudletPool key
   CloudletPoolKey key = 2 [(gogoproto.nullable) = false];
   // Cloudlets part of the pool
-  repeated string cloudlets = 3;
+  repeated string cloudlets = 3 [(protogen.refers_to) = "Cloudlet"];
     // Created at time
   distributed_match_engine.Timestamp created_at = 4 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
     // Updated at time
   distributed_match_engine.Timestamp updated_at = 5 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
+  // Preparing to be deleted
+  bool delete_prepare = 6 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
-  option (protogen.noconfig) = "Members,CreatedAt,UpdatedAt";
+  option (protogen.noconfig) = "Members,CreatedAt,UpdatedAt,DeletePrepare";
   option (protogen.alias) = "name=Key.Name,org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.notify_cache) = true;
@@ -53,9 +55,9 @@ message CloudletPool {
 // CloudletPoolMember is used to add and remove a Cloudlet from a CloudletPool
 message CloudletPoolMember {
   // CloudletPool key
-  CloudletPoolKey key = 1 [(gogoproto.nullable) = false];
+  CloudletPoolKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "CloudletPool"];
   // Cloudlet name
-  string cloudlet_name = 2;
+  string cloudlet_name = 2 [(protogen.refers_to) = "Cloudlet"];
   option (protogen.alias) = "pool=Key.Name,cloudlet=CloudletName,org=Key.Organization";
 }
 

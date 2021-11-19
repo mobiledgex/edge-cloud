@@ -62,6 +62,9 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.DeletePrepare = false
+	}
 }
 
 func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
@@ -77,6 +80,19 @@ func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
+	}
+}
+
+func VMSpecHideTags(in *edgeproto.VMSpec) {
+	if cli.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cli.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Flavor.DeletePrepare = false
 	}
 }
 
@@ -546,6 +562,7 @@ var VMPoolOptionalArgs = []string{
 	"vms:#.netinfo.internalip",
 	"vms:#.state",
 	"crmoverride",
+	"deleteprepare",
 }
 var VMPoolAliasArgs = []string{
 	"vmpool-org=key.organization",
@@ -572,6 +589,7 @@ var VMPoolComments = map[string]string{
 	"state":                    "Current state of the VM pool, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"errors":                   "Any errors trying to add/remove VM to/from VM Pool, specify errors:empty=true to clear",
 	"crmoverride":              "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+	"deleteprepare":            "Preparing to be deleted",
 }
 var VMPoolSpecialArgs = map[string]string{
 	"errors":               "StringArray",
@@ -625,18 +643,20 @@ var VMSpecOptionalArgs = []string{
 	"flavor.vcpus",
 	"flavor.disk",
 	"flavor.optresmap",
+	"flavor.deleteprepare",
 }
 var VMSpecAliasArgs = []string{}
 var VMSpecComments = map[string]string{
-	"internalname":     "VM internal name",
-	"externalnetwork":  "VM has external network defined or not",
-	"internalnetwork":  "VM has internal network defined or not",
-	"flavor.fields":    "Fields are used for the Update API to specify which fields to apply",
-	"flavor.key.name":  "Flavor name",
-	"flavor.ram":       "RAM in megabytes",
-	"flavor.vcpus":     "Number of virtual CPUs",
-	"flavor.disk":      "Amount of disk space in gigabytes",
-	"flavor.optresmap": "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"internalname":         "VM internal name",
+	"externalnetwork":      "VM has external network defined or not",
+	"internalnetwork":      "VM has internal network defined or not",
+	"flavor.fields":        "Fields are used for the Update API to specify which fields to apply",
+	"flavor.key.name":      "Flavor name",
+	"flavor.ram":           "RAM in megabytes",
+	"flavor.vcpus":         "Number of virtual CPUs",
+	"flavor.disk":          "Amount of disk space in gigabytes",
+	"flavor.optresmap":     "Optional Resources request, key = gpu form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1",
+	"flavor.deleteprepare": "Preparing to be deleted",
 }
 var VMSpecSpecialArgs = map[string]string{
 	"flavor.fields":    "StringArray",
@@ -710,6 +730,7 @@ var CreateVMPoolOptionalArgs = []string{
 	"vms:#.netinfo.externalip",
 	"vms:#.netinfo.internalip",
 	"crmoverride",
+	"deleteprepare",
 }
 var AddVMPoolMemberRequiredArgs = []string{
 	"vmpool-org",

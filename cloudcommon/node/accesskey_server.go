@@ -14,6 +14,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"golang.org/x/crypto/ed25519"
@@ -37,6 +38,8 @@ type AccessKeyVerified struct {
 	Key             edgeproto.CloudletKey
 	UpgradeRequired bool
 }
+
+type AccessKeyCommitFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, role process.HARole) error
 
 func ContextSetAccessKeyVerified(ctx context.Context, info *AccessKeyVerified) context.Context {
 	return context.WithValue(ctx, accessKeyVerifiedTag, info)
@@ -71,6 +74,19 @@ func NewAccessKeyServer(cloudletCache *edgeproto.CloudletCache, vaultAddr string
 
 func (s *AccessKeyServer) SetRequireTlsAccessKey(require bool) {
 	s.requireTlsAccessKey = require
+}
+
+func (s *AccessKeyServer) verifyPublicKey(ctx context.Context, pubKeyStr string, message string, sig []byte) error {
+	// public key is saved as PEM
+	pubKey, err := LoadPubPEM([]byte(pubKeyStr))
+	if err != nil {
+		return fmt.Errorf("Failed to decode crm public access key, %s, %s", pubKey, err)
+	}
+	ok := ed25519.Verify(pubKey, []byte(message), sig)
+	if !ok {
+		return fmt.Errorf("Failed to verify cloudlet access key signature")
+	}
+	return nil
 }
 
 // Verify an access key signature in the grpc metadata
@@ -109,24 +125,29 @@ func (s *AccessKeyServer) VerifyAccessKeySig(ctx context.Context, method string)
 		if err != nil {
 			return nil, fmt.Errorf("failed to base64 decode access key signature, %v", err)
 		}
-		if cloudlet.CrmAccessPublicKey == "" {
+
+		if cloudlet.CrmAccessPublicKey == "" && cloudlet.SecondaryCrmAccessPublicKey == "" {
 			return nil, fmt.Errorf("No crm access public key registered for cloudlet %s", data)
 		}
-		if cloudlet.CrmAccessKeyUpgradeRequired && method != UpgradeAccessKeyMethod {
+		upgradeRequired := cloudlet.CrmAccessKeyUpgradeRequired
+		upgradeMethod := UpgradeAccessKeyMethod
+		err = s.verifyPublicKey(ctx, cloudlet.CrmAccessPublicKey, data[0], sig)
+		if err != nil {
+			if cloudlet.SecondaryCrmAccessPublicKey != "" {
+				log.SpanLog(ctx, log.DebugLevelApi, "failed to verify primary access key, try secondary", "err", err)
+				err = s.verifyPublicKey(ctx, cloudlet.SecondaryCrmAccessPublicKey, data[0], sig)
+				upgradeRequired = cloudlet.SecondaryCrmAccessKeyUpgradeRequired
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		log.SpanLog(ctx, log.DebugLevelApi, "verified access key", "CloudletKey", verified.Key)
+		if upgradeRequired && method != upgradeMethod {
 			return nil, fmt.Errorf("access key requires upgrade, does not allow api call %s", method)
 		}
-		verified.UpgradeRequired = cloudlet.CrmAccessKeyUpgradeRequired
-
-		// public key is saved as PEM
-		pubKey, err := LoadPubPEM([]byte(cloudlet.CrmAccessPublicKey))
-		if err != nil {
-			return nil, fmt.Errorf("Failed to decode crm public access key, %s, %s", data, err)
-		}
-		ok = ed25519.Verify(pubKey, []byte(data[0]), sig)
-		if !ok {
-			return nil, fmt.Errorf("failed to verify cloudlet access key signature")
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "verified access key", "CloudletKey", verified.Key)
+		verified.UpgradeRequired = upgradeRequired
 		return verified, nil
 	}
 	vaultSig, found := md[cloudcommon.VaultKeySig]
@@ -239,9 +260,10 @@ func (s *AccessKeyServer) isTlsAccessKeyRequired(ctx context.Context) (bool, err
 	return false, nil
 }
 
-func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error) error {
+func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_UpgradeAccessKeyServer, commitKeyFunc func(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, role process.HARole) error) error {
 	ctx := stream.Context()
 	verified := ContextGetAccessKeyVerified(ctx)
+	haRole := process.HARolePrimary
 	if verified == nil {
 		// this should never happen, the interceptor should error out first
 		return fmt.Errorf("access key not verified")
@@ -260,6 +282,9 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 		return stream.Send(&edgeproto.UpgradeAccessKeyServerMsg{
 			Msg: "verified",
 		})
+	}
+	if msg.HaRole != "" {
+		haRole = process.HARole(msg.HaRole)
 	}
 
 	if !verified.UpgradeRequired {
@@ -290,7 +315,7 @@ func (s *AccessKeyServer) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi
 		return err
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "ack received, committing new key")
-	err = commitKeyFunc(ctx, &verified.Key, keyPair.PublicPEM)
+	err = commitKeyFunc(ctx, &verified.Key, keyPair.PublicPEM, haRole)
 	if err != nil {
 		return err
 	}
@@ -369,14 +394,19 @@ func (s *BasicUpgradeHandler) UpgradeAccessKey(stream edgeproto.CloudletAccessKe
 	return s.KeyServer.UpgradeAccessKey(stream, s.commitKey)
 }
 
-func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+func (s *BasicUpgradeHandler) commitKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, role process.HARole) error {
 	// Not thread safe, unit-test only.
 	cloudlet := &edgeproto.Cloudlet{}
 	if !s.KeyServer.cloudletCache.Get(key, cloudlet) {
 		return key.NotFoundError()
 	}
-	cloudlet.CrmAccessPublicKey = pubPEM
-	cloudlet.CrmAccessKeyUpgradeRequired = false
+	if role == process.HARoleSecondary {
+		cloudlet.SecondaryCrmAccessPublicKey = pubPEM
+		cloudlet.SecondaryCrmAccessKeyUpgradeRequired = false
+	} else {
+		cloudlet.CrmAccessPublicKey = pubPEM
+		cloudlet.CrmAccessKeyUpgradeRequired = false
+	}
 	s.KeyServer.cloudletCache.Update(ctx, cloudlet, 0)
 	return nil
 }

@@ -1337,6 +1337,10 @@ func (m *ClusterInstRefKey) ExistsError() error {
 	return fmt.Errorf("ClusterInstRef key %s already exists", m.GetKeyString())
 }
 
+func (m *ClusterInstRefKey) BeingDeletedError() error {
+	return fmt.Errorf("ClusterInstRef %s is being deleted", m.GetKeyString())
+}
+
 var ClusterInstRefKeyTagOrganization = "clusterreforg"
 
 func (m *ClusterInstRefKey) GetTags() map[string]string {
@@ -1405,6 +1409,10 @@ func (m *AppInstRefKey) NotFoundError() error {
 
 func (m *AppInstRefKey) ExistsError() error {
 	return fmt.Errorf("AppInstRef key %s already exists", m.GetKeyString())
+}
+
+func (m *AppInstRefKey) BeingDeletedError() error {
+	return fmt.Errorf("AppInstRef %s is being deleted", m.GetKeyString())
 }
 
 func (m *AppInstRefKey) GetTags() map[string]string {

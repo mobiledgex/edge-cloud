@@ -457,6 +457,10 @@ func (m *ControllerKey) ExistsError() error {
 	return fmt.Errorf("Controller key %s already exists", m.GetKeyString())
 }
 
+func (m *ControllerKey) BeingDeletedError() error {
+	return fmt.Errorf("Controller %s is being deleted", m.GetKeyString())
+}
+
 var ControllerKeyTagAddr = "controlleraddr"
 
 func (m *ControllerKey) GetTags() map[string]string {
@@ -617,15 +621,27 @@ func (s *Controller) HasFields() bool {
 	return true
 }
 
-type ControllerStore struct {
+type ControllerStore interface {
+	Create(ctx context.Context, m *Controller, wait func(int64)) (*Result, error)
+	Update(ctx context.Context, m *Controller, wait func(int64)) (*Result, error)
+	Delete(ctx context.Context, m *Controller, wait func(int64)) (*Result, error)
+	Put(ctx context.Context, m *Controller, wait func(int64), ops ...objstore.KVOp) (*Result, error)
+	LoadOne(key string) (*Controller, int64, error)
+	Get(ctx context.Context, key *ControllerKey, buf *Controller) bool
+	STMGet(stm concurrency.STM, key *ControllerKey, buf *Controller) bool
+	STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp)
+	STMDel(stm concurrency.STM, key *ControllerKey)
+}
+
+type ControllerStoreImpl struct {
 	kvstore objstore.KVStore
 }
 
-func NewControllerStore(kvstore objstore.KVStore) ControllerStore {
-	return ControllerStore{kvstore: kvstore}
+func NewControllerStore(kvstore objstore.KVStore) *ControllerStoreImpl {
+	return &ControllerStoreImpl{kvstore: kvstore}
 }
 
-func (s *ControllerStore) Create(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
+func (s *ControllerStoreImpl) Create(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
 	err := m.Validate(ControllerAllFieldsMap)
 	if err != nil {
 		return nil, err
@@ -645,7 +661,7 @@ func (s *ControllerStore) Create(ctx context.Context, m *Controller, wait func(i
 	return &Result{}, err
 }
 
-func (s *ControllerStore) Update(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
+func (s *ControllerStoreImpl) Update(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -679,7 +695,7 @@ func (s *ControllerStore) Update(ctx context.Context, m *Controller, wait func(i
 	return &Result{}, err
 }
 
-func (s *ControllerStore) Put(ctx context.Context, m *Controller, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
+func (s *ControllerStoreImpl) Put(ctx context.Context, m *Controller, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(ControllerAllFieldsMap)
 	m.Fields = nil
 	if err != nil {
@@ -701,7 +717,7 @@ func (s *ControllerStore) Put(ctx context.Context, m *Controller, wait func(int6
 	return &Result{}, err
 }
 
-func (s *ControllerStore) Delete(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
+func (s *ControllerStoreImpl) Delete(ctx context.Context, m *Controller, wait func(int64)) (*Result, error) {
 	err := m.GetKey().ValidateKey()
 	if err != nil {
 		return nil, err
@@ -717,7 +733,7 @@ func (s *ControllerStore) Delete(ctx context.Context, m *Controller, wait func(i
 	return &Result{}, err
 }
 
-func (s *ControllerStore) LoadOne(key string) (*Controller, int64, error) {
+func (s *ControllerStoreImpl) LoadOne(key string) (*Controller, int64, error) {
 	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
@@ -731,14 +747,30 @@ func (s *ControllerStore) LoadOne(key string) (*Controller, int64, error) {
 	return &obj, rev, nil
 }
 
-func (s *ControllerStore) STMGet(stm concurrency.STM, key *ControllerKey, buf *Controller) bool {
+func (s *ControllerStoreImpl) Get(ctx context.Context, key *ControllerKey, buf *Controller) bool {
+	keystr := objstore.DbKeyString("Controller", key)
+	val, _, _, err := s.kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	return s.parseGetData(val, buf)
+}
+
+func (s *ControllerStoreImpl) STMGet(stm concurrency.STM, key *ControllerKey, buf *Controller) bool {
 	keystr := objstore.DbKeyString("Controller", key)
 	valstr := stm.Get(keystr)
-	if valstr == "" {
+	return s.parseGetData([]byte(valstr), buf)
+}
+
+func (s *ControllerStoreImpl) parseGetData(val []byte, buf *Controller) bool {
+	if len(val) == 0 {
 		return false
 	}
 	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+		// clear buf, because empty values in val won't
+		// overwrite non-empty values in buf.
+		*buf = Controller{}
+		err := json.Unmarshal(val, buf)
 		if err != nil {
 			return false
 		}
@@ -746,17 +778,17 @@ func (s *ControllerStore) STMGet(stm concurrency.STM, key *ControllerKey, buf *C
 	return true
 }
 
-func (s *ControllerStore) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
+func (s *ControllerStoreImpl) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Controller", obj.GetKey())
 	val, err := json.Marshal(obj)
 	if err != nil {
-		log.InfoLog("Controller json marsahal failed", "obj", obj, "err", err)
+		log.InfoLog("Controller json marshal failed", "obj", obj, "err", err)
 	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
 
-func (s *ControllerStore) STMDel(stm concurrency.STM, key *ControllerKey) {
+func (s *ControllerStoreImpl) STMDel(stm concurrency.STM, key *ControllerKey) {
 	keystr := objstore.DbKeyString("Controller", key)
 	stm.Del(keystr)
 }

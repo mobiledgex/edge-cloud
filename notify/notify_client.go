@@ -60,6 +60,10 @@ func (s *Client) SetFilterByCloudletKey() {
 	s.sendrecv.filterCloudletKeys = true
 }
 
+func (s *Client) SetFilterByFederatedCloudlet() {
+	s.sendrecv.filterFederatedCloudlet = true
+}
+
 func (s *Client) Start() {
 	s.mux.Lock()
 	s.sendrecv.done = false
@@ -200,6 +204,7 @@ func (s *Client) negotiate(stream StreamNotify) error {
 	request.Action = edgeproto.NoticeAction_VERSION
 	request.WantObjs = s.sendrecv.localWanted
 	request.FilterCloudletKey = s.sendrecv.filterCloudletKeys
+	request.FilterFederatedCloudlet = s.sendrecv.filterFederatedCloudlet
 	request.Tags = map[string]string{
 		"name": s.name,
 	}
@@ -233,6 +238,7 @@ func (s *Client) negotiate(stream StreamNotify) error {
 		"version", s.version, "supported-version", NotifyVersion,
 		"remoteWanted", s.sendrecv.remoteWanted,
 		"filterCloudletKey", s.sendrecv.filterCloudletKeys,
+		"filterFederatedCloudlet", s.sendrecv.filterFederatedCloudlet,
 		"tries", s.sendrecv.stats.Tries,
 		"connects", s.sendrecv.stats.Connects)
 	return nil
