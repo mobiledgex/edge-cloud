@@ -39,7 +39,7 @@ type HighAvailabilityManager struct {
 
 func (s *HighAvailabilityManager) InitFlags() {
 	flag.StringVar(&s.redisAddr, "redisAddr", "", "redis address")
-	flag.StringVar(&s.HARole, "HARole", "", string(process.HARolePrimary+" or "+process.HARoleSecondary))
+	flag.StringVar(&s.HARole, "HARole", string(process.HARolePrimary), string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
 func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haWatcher HAWatcher) error {
