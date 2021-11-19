@@ -119,7 +119,7 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 func setupGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, licenseConfig, cloudletName string, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (string, string, error) {
 	cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver license config to secure storage"})
 	fileName := cloudcommon.GetGPUDriverLicenseStoragePath(driverKey)
-	if cloudletName != "" {
+	if cloudletName != AllCloudlets {
 		fileName = cloudcommon.GetGPUDriverLicenseCloudletStoragePath(driverKey, cloudletName)
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "Uploading GPU driver license config to GCS", "driver key", driverKey, "license path", fileName)
@@ -134,7 +134,7 @@ func setupGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClie
 
 func deleteGPUDriverLicenseConfig(ctx context.Context, storageClient *gcs.GCSClient, driverKey *edgeproto.GPUDriverKey, cloudletName string) error {
 	fileName := cloudcommon.GetGPUDriverLicenseStoragePath(driverKey)
-	if cloudletName != "" {
+	if cloudletName != AllCloudlets {
 		fileName = cloudcommon.GetGPUDriverLicenseCloudletStoragePath(driverKey, cloudletName)
 	}
 	log.SpanLog(ctx, log.DebugLevelApi, "Deleting GPU driver license config from GCS", "driver key", driverKey, "license path", fileName)
