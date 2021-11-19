@@ -273,8 +273,8 @@ func getConfigDirName(names *KubeNames) (string, string) {
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
-// CrCreateAllNamespacese namespaces the app will use. It does not create a manifest for
-// the namespaces, just the basic definiCreateAllNamespacesther dependencies can be defined against
+// CreateAllNamespaces creates all the namespaces the app will use. It does not create a manifest for
+// the namespaces, just allows the basic dependencies can be defined against
 // them. Manifest definition can later be used to update the namespaces.
 func CreateAllNamespaces(ctx context.Context, client ssh.Client, names *KubeNames) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "CreateAllNamespaces", "names", names)
