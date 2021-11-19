@@ -99,6 +99,15 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].DeletePrepare = false
 		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].SecondaryCrmAccessPublicKey = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].SecondaryCrmAccessKeyUpgradeRequired = false
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].SecondaryNotifySrvAddr = ""
+		}
 	}
 	for i0 := 0; i0 < len(in.CloudletInfos); i0++ {
 		if _, found := tags["nocmp"]; found {
@@ -393,6 +402,8 @@ var AllDataOptionalArgs = []string{
 	"settings.disableratelimit",
 	"settings.ratelimitmaxtrackedips",
 	"settings.resourcesnapshotthreadinterval",
+	"settings.platformhainstancepollinterval",
+	"settings.platformhainstanceactiveexpiretime",
 	"operatorcodes:#.code",
 	"operatorcodes:#.organization",
 	"restagtables:#.fields",
@@ -468,6 +479,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.config.crmaccessprivatekey",
 	"cloudlets:#.config.accessapiaddr",
 	"cloudlets:#.config.cachedir",
+	"cloudlets:#.config.secondarycrmaccessprivatekey",
 	"cloudlets:#.restagmap:#.key",
 	"cloudlets:#.restagmap:#.value.name",
 	"cloudlets:#.restagmap:#.value.organization",
@@ -504,6 +516,10 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.allianceorgs",
 	"cloudlets:#.singlekubernetesclusterowner",
 	"cloudlets:#.deleteprepare",
+	"cloudlets:#.platformhighavailability",
+	"cloudlets:#.secondarycrmaccesspublickey",
+	"cloudlets:#.secondarycrmaccesskeyupgraderequired",
+	"cloudlets:#.secondarynotifysrvaddr",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -568,6 +584,8 @@ var AllDataOptionalArgs = []string{
 	"cloudletinfos:#.nodeinfos:#.allocatable:#.value",
 	"cloudletinfos:#.nodeinfos:#.capacity:#.key",
 	"cloudletinfos:#.nodeinfos:#.capacity:#.value",
+	"cloudletinfos:#.activecrminstance",
+	"cloudletinfos:#.standbycrm",
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
@@ -933,6 +951,8 @@ var AllDataComments = map[string]string{
 	"settings.disableratelimit":                                                     "Disable rate limiting for APIs (default is false)",
 	"settings.ratelimitmaxtrackedips":                                               "Maximum number of IPs to track for rate limiting",
 	"settings.resourcesnapshotthreadinterval":                                       "ResourceSnapshot Refresh thread run interval",
+	"settings.platformhainstancepollinterval":                                       "Platform HA instance poll interval",
+	"settings.platformhainstanceactiveexpiretime":                                   "Platform HA instance active time",
 	"operatorcodes:#.code":                                                          "MCC plus MNC code, or custom carrier code designation.",
 	"operatorcodes:#.organization":                                                  "Operator Organization name",
 	"restagtables:#.key.name":                                                       "Resource Table Name",
@@ -999,6 +1019,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.config.crmaccessprivatekey":                                        "crm access private key",
 	"cloudlets:#.config.accessapiaddr":                                              "controller access API address",
 	"cloudlets:#.config.cachedir":                                                   "cache dir",
+	"cloudlets:#.config.secondarycrmaccessprivatekey":                               "secondary crm access private key",
 	"cloudlets:#.restagmap:#.value.name":                                            "Resource Table Name",
 	"cloudlets:#.restagmap:#.value.organization":                                    "Operator organization of the cloudlet site.",
 	"cloudlets:#.accessvars":                                                        "Variables required to access cloudlet",
@@ -1030,6 +1051,10 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.allianceorgs":                                                      "This cloudlet will be treated as directly connected to these additional operator organizations for the purposes of FindCloudlet",
 	"cloudlets:#.singlekubernetesclusterowner":                                      "For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant",
 	"cloudlets:#.deleteprepare":                                                     "Preparing to be deleted",
+	"cloudlets:#.platformhighavailability":                                          "Enable platform H/A",
+	"cloudlets:#.secondarycrmaccesspublickey":                                       "CRM secondary access public key for H/A",
+	"cloudlets:#.secondarycrmaccesskeyupgraderequired":                              "CRM secondary access key upgrade required for H/A",
+	"cloudlets:#.secondarynotifysrvaddr":                                            "Address for the secondary CRM notify listener to run on",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
@@ -1080,6 +1105,8 @@ var AllDataComments = map[string]string{
 	"cloudletinfos:#.compatibilityversion":                                          "Version for compatibility tracking",
 	"cloudletinfos:#.properties":                                                    "Cloudlet properties",
 	"cloudletinfos:#.nodeinfos:#.name":                                              "Node name",
+	"cloudletinfos:#.activecrminstance":                                             "Active HA instance",
+	"cloudletinfos:#.standbycrm":                                                    "Denotes if info was reported by inactive",
 	"cloudletpools:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                              "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                      "CloudletPool Name",
