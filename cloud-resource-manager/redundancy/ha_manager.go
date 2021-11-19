@@ -62,6 +62,7 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	if err != nil {
 		return err
 	}
+	s.PlatformInstanceActive = s.tryActive(ctx)
 	return nil
 }
 
@@ -107,10 +108,10 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 }
 
 // TryActive is called on startup
-func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
+func (s *HighAvailabilityManager) tryActive(ctx context.Context) bool {
 
 	if s.PlatformInstanceActive {
-		// this should not happen. Only 1 thread should be doing TryActive
+		// this should not happen. Only 1 thread should be doing tryActive
 		log.FatalLog("Platform already active")
 	}
 	// see if we are already active, which can happen if the process just died and was restarted quickly
@@ -126,7 +127,7 @@ func (s *HighAvailabilityManager) TryActive(ctx context.Context) bool {
 	cmd := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration)
 	v, err := cmd.Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "TryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "tryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
 	}
 	return v
 }
@@ -171,7 +172,7 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform inactive, doing TryActive")
 				timeLastLog = time.Now()
 			}
-			newActive := s.TryActive(ctx)
+			newActive := s.tryActive(ctx)
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
 				s.PlatformInstanceActive = true

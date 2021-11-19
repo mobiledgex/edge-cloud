@@ -193,8 +193,7 @@ func main() {
 		}
 		if haEnabled {
 			log.SpanLog(ctx, log.DebugLevelInfra, "HA enabled", "role", highAvailabilityManager.HARole)
-			if highAvailabilityManager.TryActive(ctx) {
-				highAvailabilityManager.PlatformInstanceActive = true
+			if highAvailabilityManager.PlatformInstanceActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is active", "role", highAvailabilityManager.HARole)
 				myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
 			} else {
