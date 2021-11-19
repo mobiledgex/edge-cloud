@@ -11,6 +11,7 @@ tests:
   - includefile: check_events.yml
   - includefile: check_events.yml
     mods: [cli]
+  - includefile: high_availability.yml
   - includefile: add_update_delete.yml
   - includefile: add_delete_2apps.yml
     loops: 2

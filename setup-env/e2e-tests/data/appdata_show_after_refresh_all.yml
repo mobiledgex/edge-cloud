@@ -39,6 +39,8 @@ settings:
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
 flavors:
 - key:
     name: x1.tiny
@@ -133,6 +135,7 @@ cloudlets:
   physicalname: dmuus-cloud-1
   containerversion: 2019-10-24
   defaultresourcealertthreshold: 80
+  platformhighavailability: true
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -254,6 +257,7 @@ cloudletinfos:
         clusterkey:
           name: defaultclust
         organization: AcmeAppCo1
+  activecrminstance: primary
 - key:
     organization: dmuus
     name: dmuus-cloud-2

@@ -1,0 +1,44 @@
+tests:
+ 
+  - name: Add and show provisioning and verify it is there
+    apifile: "{{datadir}}/appdata.yml"
+    actions: [ctrlapi-create,ctrlapi-show]
+    compareyaml:
+      yaml1: "{{outputdir}}/show-commands.yml"
+      yaml2: "{{datadir}}/appdata_show.yml"
+      filetype: appdata
+
+  - name: stop crm on dmuus1
+    actions: [stop-crm]
+    apifile: "{{datadir}}/dmuus_cloudlet_1.yml"
+
+  - name: start crm on dmuus1
+    actions: [start-crm]
+    apifile: "{{datadir}}/dmuus_cloudlet_1.yml"
+
+  - name: show provisioning and verify it is still there
+    apifile: "{{datadir}}/appdata.yml"
+    actions: [ctrlapi-show]
+    compareyaml:
+      yaml1: "{{outputdir}}/show-commands.yml"
+      yaml2: "{{datadir}}/appdata_show.yml"
+      filetype: appdata
+
+  - name: stop primary crm on dmuus1
+    actions: [stop-argument=crm harole=primary]
+    apifile: "{{datadir}}/dmuus_cloudlet_1.yml"
+
+  - name: show provisioning after stopping primary, secondary should be active
+    actions: [ctrlapi-show]
+    compareyaml:
+      yaml1: "{{outputdir}}/show-commands.yml"
+      yaml2: "{{datadir}}/appdata_show_standby_crm.yml"
+      filetype: appdata  
+
+  - name: delete provisioning, verify it is empty
+    actions: [ctrlapi-delete,ctrlapi-show]
+    apifile: "{{datadir}}/appdata.yml"
+    compareyaml:
+      yaml1: "{{outputdir}}/show-commands.yml"
+      yaml2: "{{datadir}}/appdata_empty.yml"
+      filetype: appdata

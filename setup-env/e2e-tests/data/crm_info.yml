@@ -43,6 +43,8 @@ settings:
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
 flavors:
 - key:
     name: x1.tiny
@@ -170,6 +172,7 @@ cloudlets:
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
   hostcontroller: 127.0.0.1:55001
+  secondarynotifysrvaddr: 127.0.0.1:0
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -188,7 +191,7 @@ cloudlets:
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
   hostcontroller: 127.0.0.1:55001
-
+  secondarynotifysrvaddr: 127.0.0.1:0
 cloudletinfos:
 - key:
     organization: dmuus

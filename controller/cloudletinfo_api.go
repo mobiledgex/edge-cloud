@@ -55,7 +55,12 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 
 func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo, rev int64) {
 	var err error
+	log.SpanLog(ctx, log.DebugLevelNotify, "Cloudlet Info Update", "in", in)
 	// for now assume all fields have been specified
+	if in.StandbyCrm {
+		log.SpanLog(ctx, log.DebugLevelNotify, "skipping due to info from standby CRM")
+		return
+	}
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
