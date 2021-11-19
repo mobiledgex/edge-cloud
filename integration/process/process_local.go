@@ -1289,7 +1289,7 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 		return err
 	}
 	// wait for redis to become ready
-	maxRedisWait := 10 * time.Second
+	maxRedisWait := 20 * time.Second
 	start := time.Now()
 	for {
 		conn, err := net.Dial("tcp", LocalRedisAddr)
