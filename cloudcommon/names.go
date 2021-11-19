@@ -380,6 +380,10 @@ func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey) string {
 	return fmt.Sprintf("%s/%s", GetGPUDriverStoragePath(key), edgeproto.GPUDriverLicenseConfig)
 }
 
+func GetGPUDriverLicenseCloudletStoragePath(key *edgeproto.GPUDriverKey, cloudletName string) string {
+	return fmt.Sprintf("%s/%s/%s", GetGPUDriverStoragePath(key), cloudletName, edgeproto.GPUDriverLicenseConfig)
+}
+
 func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, buildName, ext string) string {
 	return fmt.Sprintf("%s/%s%s", GetGPUDriverStoragePath(key), buildName, ext)
 }
@@ -388,8 +392,12 @@ func GetGPUDriverURL(key *edgeproto.GPUDriverKey, deploymentTag, buildName, ext 
 	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), GetGPUDriverBuildStoragePath(key, buildName, ext))
 }
 
-func GetGPUDriverLicenseURL(key *edgeproto.GPUDriverKey, deploymentTag string) string {
-	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), GetGPUDriverLicenseStoragePath(key))
+func GetGPUDriverLicenseURL(key *edgeproto.GPUDriverKey, cloudletName, deploymentTag string) string {
+	licensePath := GetGPUDriverLicenseStoragePath(key)
+	if cloudletName != "" {
+		licensePath = GetGPUDriverLicenseCloudletStoragePath(key, cloudletName)
+	}
+	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), licensePath)
 }
 
 func GetGPUDriverBuildPathFromURL(driverURL, deploymentTag string) string {
