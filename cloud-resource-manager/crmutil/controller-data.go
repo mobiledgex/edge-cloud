@@ -1048,6 +1048,10 @@ func (cd *ControllerData) getClusterInstsFromTrustPolicyExceptionKeyHelper(ctx c
 			continue
 		}
 
+		if clusterInst.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			continue
+		}
+
 		cloudletKey := appInst.Key.ClusterInstKey.CloudletKey
 		if cloudletKeyIn != nil {
 			// Check only for specified cloudletKey
