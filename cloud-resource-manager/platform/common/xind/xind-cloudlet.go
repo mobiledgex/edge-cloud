@@ -44,16 +44,6 @@ func (s *Xind) DeleteTrustPolicyException(ctx context.Context, TrustPolicyExcept
 	return nil
 }
 
-func (s *Xind) HasTrustPolicyException(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey, clusterInst *edgeproto.ClusterInst) bool {
-	log.SpanLog(ctx, log.DebugLevelInfra, "Has xind TrustPolicyException", "policyKey", TrustPolicyExceptionKey)
-	return false
-}
-
-func (s *Xind) TrustPolicyExceptionCount(ctx context.Context, TrustPolicyExceptionKey *edgeproto.TrustPolicyExceptionKey) int {
-	log.SpanLog(ctx, log.DebugLevelInfra, "Count xind TrustPolicyException", "policyKey", TrustPolicyExceptionKey)
-	return 0
-}
-
 func (s *Xind) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, caches *platform.Caches, accessApi platform.AccessApi, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "delete cloudlet for xind")
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")

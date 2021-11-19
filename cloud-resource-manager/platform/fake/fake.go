@@ -597,12 +597,11 @@ func (s *Platform) HasTrustPolicyException(ctx context.Context, tpeKey *edgeprot
 	return found
 }
 
-func (s *Platform) TrustPolicyExceptionCount(ctx context.Context, tpeKey *edgeproto.TrustPolicyExceptionKey) int {
+func (s *Platform) TrustPolicyExceptionCount(ctx context.Context) int {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	count := len(s.clusterTPEs)
-	log.SpanLog(ctx, log.DebugLevelInfra, "fake TrustPolicyExceptionCount", "policyKey", tpeKey, "count", count)
-
+	log.SpanLog(ctx, log.DebugLevelInfra, "fake TrustPolicyExceptionCount", "count", count)
 	return count
 }
 
