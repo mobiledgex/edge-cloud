@@ -100,6 +100,8 @@ message PlatformConfig {
   string access_api_addr = 23;
   // cache dir
   string cache_dir = 24;
+  // secondary crm access private key
+  string secondary_crm_access_private_key = 25;
 }
 
 // Platform Type
@@ -486,6 +488,14 @@ message Cloudlet {
   string single_kubernetes_cluster_owner = 48;
   // Preparing to be deleted
   bool delete_prepare = 49 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  // Enable platform H/A
+  bool platform_high_availability = 50;
+  // CRM secondary access public key for H/A
+  string secondary_crm_access_public_key = 51 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // CRM secondary access key upgrade required for H/A
+  bool secondary_crm_access_key_upgrade_required = 52 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Address for the secondary CRM notify listener to run on
+  string secondary_notify_srv_addr = 53 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -495,7 +505,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Status,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,SecondaryCrmAccessPublicKey,SecondaryCrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare";
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
   option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.mc2_target_cloudlet) = "Key";
@@ -818,6 +828,10 @@ message CloudletInfo {
   map<string,string> properties = 20;
   // Cluster node info for serverless platforms (k8s multi-tenant cluster)
   repeated NodeInfo node_infos = 21;
+  // Active HA instance
+  string active_crm_instance = 22;
+  // Denotes if info was reported by inactive
+  bool standby_crm = 23;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

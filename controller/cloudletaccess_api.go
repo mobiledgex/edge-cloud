@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
@@ -53,7 +54,7 @@ func (s *CloudletApi) UpgradeAccessKey(stream edgeproto.CloudletAccessKeyApi_Upg
 	return s.accessKeyServer.UpgradeAccessKey(stream, s.commitAccessPublicKey)
 }
 
-func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string) error {
+func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.CloudletKey, pubPEM string, haRole process.HARole) error {
 	return s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cloudlet := edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, key, &cloudlet) {
@@ -61,8 +62,13 @@ func (s *CloudletApi) commitAccessPublicKey(ctx context.Context, key *edgeproto.
 			return nil
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "commit upgraded key")
-		cloudlet.CrmAccessPublicKey = pubPEM
-		cloudlet.CrmAccessKeyUpgradeRequired = false
+		if haRole == process.HARoleSecondary {
+			cloudlet.SecondaryCrmAccessPublicKey = pubPEM
+			cloudlet.SecondaryCrmAccessKeyUpgradeRequired = false
+		} else {
+			cloudlet.CrmAccessPublicKey = pubPEM
+			cloudlet.CrmAccessKeyUpgradeRequired = false
+		}
 		s.store.STMPut(stm, &cloudlet)
 		return nil
 	})

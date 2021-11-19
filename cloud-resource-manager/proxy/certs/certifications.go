@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/accessapi"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -86,7 +87,7 @@ func Init(ctx context.Context, inPlatform pf.Platform, inAccessApi *accessapi.Co
 }
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
-func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool) {
+func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, platformType string, client ssh.Client, commercialCerts bool, haMgr *redundancy.HighAvailabilityManager) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "GetRootLbCerts", "commonName", commonName)
 	_, found := noSudoMap[platformType]
 	if found {
@@ -106,7 +107,7 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName 
 		return
 	}
 	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
-	getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+	getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts, haMgr)
 	go func() {
 		// refresh every 30 days
 		for {
@@ -115,15 +116,19 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName 
 			case <-getRootLBCertsTrigger:
 			}
 			lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-			getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts)
+			getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts, haMgr)
 			lbCertsSpan.Finish()
 		}
 	}()
 }
 
-func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool) {
+func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool, haMgr *redundancy.HighAvailabilityManager) {
 	var err error
 	tls := access.TLSCert{}
+	if !haMgr.PlatformInstanceActive {
+		log.SpanLog(ctx, log.DebugLevelInfra, "skipping lb certs update for standby CRM")
+		return
+	}
 	if commercialCerts {
 		err = getCertFromVault(ctx, &tls, commonName)
 	} else {

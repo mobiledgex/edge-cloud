@@ -1,6 +1,8 @@
 package process
 
-import "os/exec"
+import (
+	"os/exec"
+)
 
 type Vault struct {
 	Common     `yaml:",inline"`
@@ -84,6 +86,8 @@ type Crm struct {
 	AppDNSRoot          string
 	ChefServerPath      string
 	CacheDir            string
+	RedisAddr           string
+	HARole              HARole
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
@@ -163,6 +167,12 @@ type Traefik struct {
 	TLS           TLSCerts
 	cmd           *exec.Cmd
 }
+
+type RedisCache struct {
+	DockerGeneric `yaml:",inline"`
+	cmd           *exec.Cmd
+}
+
 type NotifyRoot struct {
 	Common     `yaml:",inline"`
 	NodeCommon `yaml:",inline"`

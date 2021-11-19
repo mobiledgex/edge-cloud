@@ -508,6 +508,13 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 		args = append(args, "--cacheDir")
 		args = append(args, p.CacheDir)
 	}
+	args = append(args, "--HARole")
+	args = append(args, string(p.HARole))
+
+	if p.RedisAddr != "" {
+		args = append(args, "--redisAddr")
+		args = append(args, p.RedisAddr)
+	}
 
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -542,7 +549,15 @@ func (p *Crm) Wait() error {
 
 func (p *Crm) GetExeName() string { return "crmserver" }
 
-func (p *Crm) LookupArgs() string { return "--cloudletKey " + p.CloudletKey }
+func (p *Crm) LookupArgs() string {
+	retval := "--cloudletKey " + p.CloudletKey
+	return retval
+}
+
+func (p *Crm) LookupArgsWithHARole(HARole HARole) string {
+	retval := p.LookupArgs() + ".*--HARole " + string(HARole)
+	return retval
+}
 
 func (p *Crm) String(opts ...StartOp) string {
 	cmd_str := p.GetExeName()
@@ -1259,6 +1274,36 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 		}
 	}
 	return err
+}
+
+func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
+	args := p.GetRunArgs()
+	redisPort := LocalRedisPort
+	args = append(args,
+		"-p", redisPort+":"+redisPort,
+		"redis",
+	)
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	if err != nil {
+		return err
+	}
+	// wait for redis to become ready
+	maxRedisWait := 10 * time.Second
+	start := time.Now()
+	for {
+		conn, err := net.Dial("tcp", LocalRedisAddr)
+		if err == nil {
+			conn.Close()
+			break
+		}
+		elapsed := time.Since(start)
+		if elapsed > maxRedisWait {
+			return fmt.Errorf("Timed out try to connect to redis")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	return nil
 }
 
 func (d *DockerNetwork) Create() error {
