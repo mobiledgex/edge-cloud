@@ -17,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -25,6 +26,7 @@ import (
 type Platform struct {
 	consoleServer *httptest.Server
 	caches        *platform.Caches
+	cloudletKey   *edgeproto.CloudletKey
 }
 
 var (
@@ -84,6 +86,8 @@ var fakeProps = map[string]*edgeproto.PropertyInfo{
 	},
 }
 
+var maxPrimaryCrmStartupWait = 10 * time.Second
+
 func UpdateResourcesMax() error {
 	// Make fake resource limits configurable for QA testing
 	ramMax := os.Getenv("FAKE_RAM_MAX")
@@ -119,12 +123,13 @@ func UpdateResourcesMax() error {
 	return nil
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, platformActive bool, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
 	s.caches = caches
-	updateCallback(edgeproto.UpdateTask, "Done intializing fake platform")
+	s.cloudletKey = platformConfig.CloudletKey
+	updateCallback(edgeproto.UpdateTask, "Done initializing fake platform")
 	s.consoleServer = httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Console Content")
 	}))
@@ -145,12 +150,13 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 
 func (s *Platform) GetFeatures() *platform.Features {
 	return &platform.Features{
-		SupportsMultiTenantCluster: true,
-		SupportsSharedVolume:       true,
-		SupportsTrustPolicy:        true,
-		CloudletServicesLocal:      true,
-		IsFake:                     true,
-		SupportsAdditionalNetworks: true,
+		SupportsMultiTenantCluster:       true,
+		SupportsSharedVolume:             true,
+		SupportsTrustPolicy:              true,
+		CloudletServicesLocal:            true,
+		IsFake:                           true,
+		SupportsAdditionalNetworks:       true,
+		SupportsPlatformHighAvailability: true,
 	}
 }
 
@@ -535,10 +541,50 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	}
 	updateCallback(edgeproto.UpdateTask, "Creating Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
-	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig)
+	redisAddr := ""
+	if cloudlet.PlatformHighAvailability {
+		redisAddr = process.LocalRedisAddr
+	}
+	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary, redisAddr)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed", "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start CRM", "err", err)
 		return true, err
+	}
+	if cloudlet.PlatformHighAvailability {
+		log.SpanLog(ctx, log.DebugLevelInfra, "creating 2 instances for H/A", "key", cloudlet.Key)
+		// Pause before starting the secondary to let the primary become active first for the sake of
+		// e2e tests that need consistent ordering. Secondary will be started up in a separate thread after
+		// cloudletInfo shows up from the primary
+		go func() {
+			start := time.Now()
+			var err error
+			var cloudletInfo edgeproto.CloudletInfo
+			for {
+				time.Sleep(time.Millisecond * 200)
+				elapsed := time.Since(start)
+				if elapsed >= (maxPrimaryCrmStartupWait) {
+					log.SpanLog(ctx, log.DebugLevelInfra, "timed out waiting for primary CRM to report cloudlet info")
+					err = fmt.Errorf("timed out waiting for primary CRM to report cloudlet info")
+					break
+				}
+				if !caches.CloudletInfoCache.Get(&cloudlet.Key, &cloudletInfo) {
+					log.SpanLog(ctx, log.DebugLevelInfra, "failed to get cloudlet info after starting primary CRM, will retry", "cloudletKey", s.cloudletKey)
+				} else {
+					log.SpanLog(ctx, log.DebugLevelInfra, "got cloudlet info from primary CRM, will start secondary", "cloudletKey", cloudlet.Key, "active", cloudletInfo.ActiveCrmInstance, "ci", cloudletInfo)
+					err = cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARoleSecondary, redisAddr)
+					if err != nil {
+						log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet create failed to start secondary CRM", "err", err)
+					}
+					break
+				}
+			}
+			if err != nil {
+				cloudletInfo.Key = cloudlet.Key
+				cloudletInfo.Errors = append(cloudletInfo.Errors, "fake cloudlet create failed to start secondary CRM: "+err.Error())
+				cloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
+				caches.CloudletInfoCache.Update(ctx, &cloudletInfo, 0)
+			}
+		}()
 	}
 	return true, nil
 }
@@ -570,7 +616,7 @@ func (s *Platform) DeleteCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	log.DebugLog(log.DebugLevelInfra, "delete fake Cloudlet", "key", cloudlet.Key)
 	updateCallback(edgeproto.UpdateTask, "Deleting Cloudlet")
 	updateCallback(edgeproto.UpdateTask, "Stopping CRMServer")
-	err := cloudcommon.StopCRMService(ctx, cloudlet)
+	err := cloudcommon.StopCRMService(ctx, cloudlet, process.HARoleAll)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "fake cloudlet delete failed", "err", err)
 		return err
@@ -628,8 +674,17 @@ func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Cac
 		appInstKeys = append(appInstKeys, *k)
 	})
 	for _, k := range appInstKeys {
-		var app edgeproto.App
-		if caches.AppCache.Get(&k.AppKey, &app) {
+		var appInst edgeproto.AppInst
+		if caches.AppInstCache.Get(&k, &appInst) {
+			var app edgeproto.App
+			if caches.AppCache.Get(&k.AppKey, &app) {
+				if app.Deployment == cloudcommon.DeploymentTypeVM {
+					var clusterInst = edgeproto.ClusterInst{
+						Key: *appInst.ClusterInstKey(),
+					}
+					updateVmAppResCount(ctx, &clusterInst, &app, &appInst)
+				}
+			}
 		}
 	}
 	return nil
@@ -673,4 +728,8 @@ func (s *Platform) GetVersionProperties() map[string]string {
 
 func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
 	return &RootLBFlavor, nil
+}
+
+func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChanged", "platformActive", platformActive)
 }

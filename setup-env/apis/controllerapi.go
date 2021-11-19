@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	uutil "github.com/mobiledgex/edge-cloud/util"
@@ -292,7 +293,9 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		if c.NotifySrvAddr == "" {
 			c.NotifySrvAddr = "127.0.0.1:51001"
 		}
-
+		if c.SecondaryNotifySrvAddr == "" {
+			c.SecondaryNotifySrvAddr = "127.0.0.1:51002"
+		}
 		if c.PhysicalName == "" {
 			c.PhysicalName = c.Key.Name
 		}
@@ -319,16 +322,26 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		for k, v := range ctrl.Common.EnvVars {
 			pfConfig.EnvVar[k] = v
 		}
-
-		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig); err != nil {
+		redisAddr := ""
+		if c.PlatformHighAvailability {
+			redisAddr = process.LocalRedisAddr
+		}
+		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary, redisAddr); err != nil {
 			return err
+		}
+		if c.PlatformHighAvailability {
+			// wait briefly before starting the secondary for unit test consistency
+			time.Sleep(time.Second * 1)
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleSecondary, redisAddr); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
 }
 
 // Walk through all the secified cloudlets and stop CRM procecess for them
-func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string) error {
+func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, apiFileVars map[string]string, HARole process.HARole) error {
 	if apiFile == "" {
 		log.Println("Error: Cannot run RunCommand API without API file")
 		return fmt.Errorf("Error: Cannot run controller APIs without API file")
@@ -336,7 +349,7 @@ func StopCrmsLocal(ctx context.Context, physicalName string, apiFile string, api
 	readAppDataFile(apiFile, apiFileVars)
 
 	for _, c := range appData.Cloudlets {
-		if err := cloudcommon.StopCRMService(ctx, &c); err != nil {
+		if err := cloudcommon.StopCRMService(ctx, &c, HARole); err != nil {
 			return err
 		}
 	}

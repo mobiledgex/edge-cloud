@@ -2,3 +2,4 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
+  platformhighavailability: true

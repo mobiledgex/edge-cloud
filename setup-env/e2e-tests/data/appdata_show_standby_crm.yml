@@ -17,7 +17,6 @@ settings:
   updatecloudlettimeout: 2s
   updatetrustpolicytimeout: 5s
   masternodeflavor: x1.small
-
   maxtrackeddmeclients: 100
   chefclientinterval: 10m
   influxdbmetricsretention: 2h
@@ -76,6 +75,7 @@ clusterinsts:
   numnodes: 2
   networks:
   - net1
+
 - key:
     clusterkey:
       name: SmallCluster
@@ -115,7 +115,7 @@ networks:
       organization: dmuus
       name: dmuus-cloud-2
     name: net2
-  routes: 
+  routes:
   - destinationcidr: 10.55.0.0/16
     nexthopip: 10.55.0.1
   connectiontype: ConnectToLoadBalancer
@@ -198,7 +198,7 @@ cloudletinfos:
     organization: dmuus
     name: dmuus-cloud-1
   state: Ready
-  notifyid: 10
+  notifyid: 7
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
@@ -257,12 +257,12 @@ cloudletinfos:
         clusterkey:
           name: defaultclust
         organization: AcmeAppCo1
-  activecrminstance: primary
+  activecrminstance: secondary
 - key:
     organization: dmuus
     name: dmuus-cloud-2
   state: Ready
-  notifyid: 11
+  notifyid: 8
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
@@ -325,7 +325,7 @@ cloudletinfos:
     organization: dmuus
     name: dmuus-cloud-3
   state: Ready
-  notifyid: 12
+  notifyid: 9
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
@@ -375,7 +375,7 @@ cloudletinfos:
     organization: azure
     name: azure-cloud-4
   state: Ready
-  notifyid: 13
+  notifyid: 10
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
@@ -425,7 +425,7 @@ cloudletinfos:
     organization: gcp
     name: gcp-cloud-5
   state: Ready
-  notifyid: 14
+  notifyid: 11
   controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
@@ -471,7 +471,6 @@ cloudletinfos:
       inframaxvalue: 30
     - name: Instances
       value: 2
-
 apps:
 - key:
     organization: AcmeAppCo
@@ -503,7 +502,7 @@ apps:
     name: helmApplication
     version: "1.0"
   imagepath: mobiledgex/AcmeAppCo/helmApplication
-  imagetype: Helm  
+  imagetype: Helm
   accessports: udp:20002
   defaultflavor:
     name: x1.small
@@ -522,6 +521,28 @@ apps:
   deployment: helm
   androidpackagename: com.acme.helmApplication
   accesstype: LoadBalancer
+- key:
+    organization: MobiledgeX
+    name: NFSAutoProvision
+    version: "1.0"
+  imagepath: https://charts.helm.sh/stable:stable/nfs-client-provisioner
+  imagetype: Helm
+  defaultflavor:
+    name: x1.small
+  annotations: version=1.2.8
+  deployment: helm
+  accesstype: LoadBalancer
+  configs:
+  - kind: helmCustomizationYaml
+    config: |
+      nfs:
+        path: /share
+        server: [[ .Deployment.ClusterIp ]]
+      storageClass:
+        name: standard
+        defaultClass: true
+  internalports: true
+  trusted: true
 - key:
     organization: platos
     name: PlatosEnablingLayer
@@ -548,12 +569,13 @@ apps:
     name: x1.small
   annotations: version=9.4.10
   deployment: helm
+  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
       prometheus:
         prometheusSpec:
-          scrapeInterval: "30s"
+          scrapeInterval: "15s"
         service:
           type: LoadBalancer
       kubelet:
@@ -590,30 +612,6 @@ apps:
       commonLabels:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
-  revision: 1
-  accesstype: LoadBalancer
-- key:
-    organization: MobiledgeX
-    name: NFSAutoProvision
-    version: "1.0"
-  imagepath: https://charts.helm.sh/stable:stable/nfs-client-provisioner
-  imagetype: Helm
-  defaultflavor:
-    name: x1.small
-  annotations: version=1.2.8
-  deployment: helm
-  configs:
-  - kind: helmCustomizationYaml
-    config: |
-      nfs:
-        path: /share
-        server: [[ .Deployment.ClusterIp ]]
-      storageClass:
-        name: standard
-        defaultClass: true
-  internalports: true
-  trusted: true
-  accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo1
     name: vmapp1
@@ -661,9 +659,8 @@ apps:
   deployment: kubernetes
   officialfqdn: noportsapp.acmeappco.com
   accesstype: LoadBalancer
-
 appinstances:
-- key:
+- key: 
     appkey:
       organization: MobiledgeX
       name: MEXPrometheusAppName
@@ -685,8 +682,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  revision: 1
-- key:
+- key: 
     appkey:
       organization: MobiledgeX
       name: NFSAutoProvision
@@ -704,7 +700,8 @@ appinstances:
   liveness: Dynamic
   flavor:
     name: x1.small
-- key:
+
+- key: 
     appkey:
       organization: AcmeAppCo
       name: someapplication1
@@ -767,7 +764,6 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  revision: 1
 - key:
     appkey:
       organization: AcmeAppCo
@@ -809,7 +805,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-- key:
+- key: 
     appkey:
       organization: AcmeAppCo
       name: helmApplication
@@ -890,7 +886,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-- key:
+- key: 
     appkey:
       organization: AcmeAppCo
       name: NoPortsApp
@@ -971,6 +967,7 @@ appinstrefs:
   insts:
     ? '{"app_key":{"organization":"MobiledgeX","name":"NFSAutoProvision","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
+
 clusterrefs:
 - key:
     clusterkey:

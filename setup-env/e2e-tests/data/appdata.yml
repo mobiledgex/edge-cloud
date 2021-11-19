@@ -29,6 +29,8 @@ settings:
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
   resourcesnapshotthreadinterval: 10m
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
 flavors:
 - key:
     name: x1.tiny
@@ -117,6 +119,7 @@ cloudlets:
   ipsupport: Dynamic
   numdynamicips: 254
   platformtype: Fake
+  platformhighavailability: true
 - key:
     organization: dmuus
     name: dmuus-cloud-2
