@@ -171,8 +171,13 @@ func TestNotifyBasic(t *testing.T) {
 	vmpoolCloudlet.GpuConfig = edgeproto.GPUConfig{
 		Driver: testutil.GPUDriverData[0].Key,
 	}
+	// gpu config cloudlet with no restag table
+	gpuConfigNoResTagCloudlet := cloudletData[2]
+	gpuConfigNoResTagCloudlet.GpuConfig = edgeproto.GPUConfig{
+		Driver: testutil.GPUDriverData[2].Key,
+	}
 	serverHandler.CloudletCache.Update(ctx, &vmpoolCloudlet, 6)
-	serverHandler.CloudletCache.Update(ctx, &cloudletData[1], 7)
+	serverHandler.CloudletCache.Update(ctx, &gpuConfigNoResTagCloudlet, 7)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[0], 8)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[1], 9)
 	serverHandler.FlavorCache.Update(ctx, &testutil.FlavorData[2], 10)
@@ -202,6 +207,18 @@ func TestNotifyBasic(t *testing.T) {
 	require.Nil(t, crmHandler.WaitForGPUDrivers(1), "num gpuDrivers")
 	require.Nil(t, crmHandler.WaitForNetworks(1), "num networks")
 
+	// trigger updates with another CloudletInfo update, this also tests that
+	// GPU driver update is received by cloudlet with no restag table configured
+	crmHandler.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[2], 0)
+	require.Nil(t, crmHandler.WaitForCloudlets(2), "num cloudlets")
+	require.Nil(t, crmHandler.WaitForFlavors(3), "num flavors")
+	require.Nil(t, crmHandler.WaitForClusterInsts(3), "num clusterInsts")
+	require.Nil(t, crmHandler.WaitForApps(1), "num apps")
+	require.Nil(t, crmHandler.WaitForAppInsts(2), "num appInsts")
+	require.Nil(t, crmHandler.WaitForVMPools(1), "num vmPools")
+	require.Nil(t, crmHandler.WaitForGPUDrivers(2), "num gpuDrivers")
+	require.Nil(t, crmHandler.WaitForNetworks(1), "num networks")
+
 	// verify modRef values
 	appBuf := edgeproto.App{}
 	flavorBuf := edgeproto.Flavor{}
@@ -229,20 +246,20 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler.ClusterInstCache.Delete(ctx, &testutil.ClusterInstData[0], 0)
 	serverHandler.AppInstCache.Delete(ctx, &testutil.AppInstData[0], 0)
 	crmHandler.WaitForFlavors(2)
-	crmHandler.WaitForClusterInsts(1)
+	crmHandler.WaitForClusterInsts(2)
 	crmHandler.WaitForAppInsts(1)
 	require.Equal(t, 2, len(crmHandler.FlavorCache.Objs), "num flavors")
-	require.Equal(t, 1, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
+	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
 	require.Equal(t, 1, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	clientCRM.GetStats(stats)
-	require.Equal(t, uint64(1), stats.ObjRecv["Cloudlet"], "cloudlet updates")
+	require.Equal(t, uint64(2), stats.ObjRecv["Cloudlet"], "cloudlet updates")
 	require.Equal(t, uint64(4), stats.ObjRecv["Flavor"], "flavor updates")
-	require.Equal(t, uint64(3), stats.ObjRecv["ClusterInst"], "clusterInst updates")
+	require.Equal(t, uint64(4), stats.ObjRecv["ClusterInst"], "clusterInst updates")
 	require.Equal(t, uint64(3), stats.ObjRecv["AppInst"], "appInst updates")
 	stats = serverMgr.GetStats(clientCRM.GetLocalAddr())
-	require.Equal(t, uint64(1), stats.ObjSend["Cloudlet"], "sent cloudlets")
+	require.Equal(t, uint64(2), stats.ObjSend["Cloudlet"], "sent cloudlets")
 	require.Equal(t, uint64(4), stats.ObjSend["Flavor"], "sent flavors")
-	require.Equal(t, uint64(3), stats.ObjSend["ClusterInst"], "sent clusterInsts")
+	require.Equal(t, uint64(4), stats.ObjSend["ClusterInst"], "sent clusterInsts")
 	require.Equal(t, uint64(3), stats.ObjSend["AppInst"], "sent appInsts")
 	checkServerConnections(t, &serverMgr, 2)
 
