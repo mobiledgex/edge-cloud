@@ -867,6 +867,7 @@ var AppInstComments = map[string]string{
 	"realclustername":                "Real ClusterInst name",
 	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
 	"dedicatedip":                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
+	"uniqueid":                       "A unique id for the AppInst within the region to be used by platforms",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",

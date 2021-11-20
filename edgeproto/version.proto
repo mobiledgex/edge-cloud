@@ -41,6 +41,7 @@ enum VersionHash {
   HASH_264850a5c1f7a054b4de1a87e5d28dcc = 33 [(protogen.upgrade_func) = "TrustPolicyExceptionUpgradeFunc"];
   HASH_748b47eaf414b0f2c15e4c6a9298b5f1 = 34 [(protogen.upgrade_func) = "AddClusterRefs"];
   HASH_1480647750f7638ff5494c0e715bb98c = 35;
+  HASH_208a22352e46f6bbe34f3b72aaf99ee5 = 36 [(protogen.upgrade_func) = "AddAppInstUniqueId"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "1";
+  option (protogen.version_hash_salt) = "2";
 }

@@ -213,6 +213,40 @@ func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey,
 	return fmt.Sprintf("%s.%s", appFQN, GetCloudletBaseFQDN(cloudletKey, domain))
 }
 
+// GetAppInstId returns a string for this AppInst that is likely to be
+// unique within the region. It does not guarantee uniqueness.
+// The delimiter '.' is removed from the AppInstId so that it can be used
+// to append further strings to this ID to build derived unique names.
+// Salt can be used by the caller to add an extra field if needed
+// to ensure uniqueness. In all cases, any requirements for uniqueness
+// must be guaranteed by the caller.
+func GetAppInstId(appInst *edgeproto.AppInst, app *edgeproto.App, salt string) string {
+	fields := []string{}
+
+	appName := util.DNSSanitize(appInst.Key.AppKey.Name)
+	dev := util.DNSSanitize(appInst.Key.AppKey.Organization)
+	ver := util.DNSSanitize(appInst.Key.AppKey.Version)
+	appId := fmt.Sprintf("%s%s%s", dev, appName, ver)
+	fields = append(fields, appId)
+
+	if IsClusterInstReqd(app) {
+		cluster := util.DNSSanitize(appInst.Key.ClusterInstKey.ClusterKey.Name)
+		fields = append(fields, cluster)
+	}
+
+	loc := util.DNSSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
+	fields = append(fields, loc)
+
+	oper := util.DNSSanitize(appInst.Key.ClusterInstKey.CloudletKey.Organization)
+	fields = append(fields, oper)
+
+	if salt != "" {
+		salt = util.DNSSanitize(salt)
+		fields = append(fields, salt)
+	}
+	return strings.Join(fields, "-")
+}
+
 // FqdnPrefix is used only for IP-per-service platforms that allocate
 // an IP for each kubernetes service. Because it adds an extra level of
 // DNS label hierarchy and cannot match the wildcard cert, we do not
