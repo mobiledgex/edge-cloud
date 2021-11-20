@@ -156,6 +156,8 @@ message AppInst {
   map <string, string> internal_port_to_lb_ip = 38 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Dedicated IP assigns an IP for this AppInst but requires platform support
   bool dedicated_ip = 39;
+  // A unique id for the AppInst within the region to be used by platforms
+  string unique_id = 40 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -165,7 +167,7 @@ message AppInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,VmFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt,OptRes,SharedVolumeSize,AutoClusterIpAccess,InternalPortToLbIp";
+  option (protogen.noconfig) = "CloudletLoc,Uri,MappedPorts,Liveness,CreatedAt,Status,Revision,Errors,RuntimeInfo,VmFlavor,ExternalVolumeSize,AvailabilityZone,State,UpdatedAt,OptRes,SharedVolumeSize,AutoClusterIpAccess,InternalPortToLbIp,UniqueId";
   option (protogen.alias) = "appname=Key.AppKey.Name,appvers=Key.AppKey.Version,app-org=Key.AppKey.Organization,cluster=Key.ClusterInstKey.ClusterKey.Name,cluster-org=Key.ClusterInstKey.Organization,cloudlet=Key.ClusterInstKey.CloudletKey.Name,cloudlet-org=Key.ClusterInstKey.CloudletKey.Organization,federated-org=Key.ClusterInstKey.CloudletKey.FederatedOrganization,flavor=Flavor.Name";
   option (protogen.not_required) = "Key.ClusterInstKey.Organization,Key.ClusterInstKey.ClusterKey.Name,Key.ClusterInstKey.CloudletKey.FederatedOrganization";
   option (protogen.mc2_target_cloudlet) = "Key.ClusterInstKey.CloudletKey";
