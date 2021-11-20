@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,10 +23,11 @@ import (
 )
 
 type AppInstApi struct {
-	all   *AllApis
-	sync  *Sync
-	store edgeproto.AppInstStore
-	cache edgeproto.AppInstCache
+	all     *AllApis
+	sync    *Sync
+	store   edgeproto.AppInstStore
+	cache   edgeproto.AppInstCache
+	idStore edgeproto.AppInstIdStore
 }
 
 const RootLBSharedPortBegin int32 = 10000
@@ -863,12 +865,32 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			refs.VmAppInsts = append(refs.VmAppInsts, vmAppInstRefKey)
 			s.all.cloudletRefsApi.store.STMPut(stm, &refs)
 		}
+		// Iterate to get a unique id. The number of iterations must
+		// be fairly low because the STM has a limit on the number of
+		// keys it can manage.
+		in.UniqueId = ""
+		for ii := 0; ii < 10; ii++ {
+			salt := ""
+			if ii != 0 {
+				salt = strconv.Itoa(ii)
+			}
+			id := cloudcommon.GetAppInstId(in, &app, salt)
+			if s.idStore.STMHas(stm, id) {
+				continue
+			}
+			in.UniqueId = id
+			break
+		}
+		if in.UniqueId == "" {
+			return fmt.Errorf("Unable to compute unique AppInstId, please change AppInst key values")
+		}
 
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
 		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
+		s.idStore.STMPut(stm, in.UniqueId)
 		s.all.appInstRefsApi.addRef(stm, &in.Key)
 		if cloudcommon.IsClusterInstReqd(&app) {
 			s.all.clusterRefsApi.addRef(stm, in)
@@ -902,6 +924,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// no change done on CRM side
 				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
 					s.store.STMDel(stm, &in.Key)
+					s.idStore.STMDel(stm, in.UniqueId)
 					s.all.appInstRefsApi.removeRef(stm, &in.Key)
 					if cloudcommon.IsClusterInstReqd(&app) {
 						s.all.clusterRefsApi.removeRef(stm, in)
@@ -1719,6 +1742,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			s.idStore.STMDel(stm, in.UniqueId)
 			s.all.appInstRefsApi.removeRef(stm, &in.Key)
 			if cloudcommon.IsClusterInstReqd(&app) {
 				s.all.clusterRefsApi.removeRef(stm, in)
@@ -1909,6 +1933,7 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		s.idStore.STMDel(stm, inst.UniqueId)
 		s.all.appInstRefsApi.removeRef(stm, &in.Key)
 		s.all.clusterRefsApi.removeRef(stm, &inst)
 
@@ -1932,6 +1957,7 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 		}
 		if newState == edgeproto.TrackedState_DELETE_DONE {
 			s.store.STMDel(stm, &in.Key)
+			s.idStore.STMDel(stm, inst.UniqueId)
 			s.all.appInstRefsApi.removeRef(stm, &in.Key)
 			s.all.clusterRefsApi.removeRef(stm, &inst)
 		} else {
