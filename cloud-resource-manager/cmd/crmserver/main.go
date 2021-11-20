@@ -73,7 +73,6 @@ const (
 )
 
 func main() {
-	var highAvailabilityManager redundancy.HighAvailabilityManager
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
 	highAvailabilityManager.InitFlags()
