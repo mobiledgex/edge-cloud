@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil/testservices"
@@ -260,6 +261,7 @@ func TestCRM(t *testing.T) {
 	os.Args = append(os.Args, notifyAddr)
 	os.Args = append(os.Args, "--accessApiAddr", accessKeyGrpcServer.ApiAddr())
 	os.Args = append(os.Args, "--accessKeyFile", accessKeyFile)
+	os.Args = append(os.Args, "--HARole", string(process.HARolePrimary))
 	nodeMgr.AccessKeyClient.TestSkipTlsVerify = true
 	defer nodeMgr.Finish()
 	mainDone, err := startMain(t)
