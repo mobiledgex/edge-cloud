@@ -432,7 +432,7 @@ func AddAppInstUniqueId(ctx context.Context, objStore objstore.KVStore) error {
 		return err
 	}
 
-	// Use an STM to update refs to avoid conflicts with multiple
+	// Use an STM to avoid conflicts with multiple
 	// controllers and to keep it idempotent
 	for aiKey, _ := range appInstKeys {
 		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
