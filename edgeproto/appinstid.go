@@ -24,7 +24,7 @@ func (s *AppInstIdStore) STMHas(stm concurrency.STM, id string) bool {
 
 func (s *AppInstIdStore) STMPut(stm concurrency.STM, id string) {
 	keystr := AppInstIdDbKey(id)
-	stm.Put(keystr, keystr)
+	stm.Put(keystr, id)
 }
 
 func (s *AppInstIdStore) STMDel(stm concurrency.STM, id string) {
