@@ -547,6 +547,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0  
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -573,6 +574,7 @@ appinstances:
   powerstate: PowerOn
   healthcheck: Ok
   vmflavor: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-reservable0-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -599,6 +601,7 @@ appinstances:
   powerstate: PowerOn
   healthcheck: Ok
   vmflavor: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-reservable1-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -633,6 +636,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -670,6 +674,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -696,6 +701,7 @@ appinstances:
   powerstate: PowerOn
   healthcheck: Ok
   vmflavor: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-reservable0-dmuus-cloud-1-dmuus
 
 appinstrefs:
 - key:

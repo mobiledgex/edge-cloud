@@ -10,6 +10,7 @@ import (
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
 )
 
@@ -401,6 +402,65 @@ func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
 				return fmt.Errorf("Marshal ClusterRefs %s failed: %s", refsKey, err)
 			}
 			stm.Put(refsKey, string(refsData))
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// This is the old cloudcommon.GetAppFQN() function which was used by
+// the vmlayer to generate the name for heat stacks, etc.
+func oldGetAppFQN(key *AppKey) string {
+	app := util.DNSSanitize(key.Name)
+	dev := util.DNSSanitize(key.Organization)
+	ver := util.DNSSanitize(key.Version)
+	return fmt.Sprintf("%s%s%s", dev, app, ver)
+}
+
+func AddAppInstUniqueId(ctx context.Context, objStore objstore.KVStore) error {
+	// Get all AppInsts
+	appInstKeys := make(map[string]struct{})
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		appInstKeys[string(key)] = struct{}{}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Use an STM to avoid conflicts with multiple
+	// controllers and to keep it idempotent
+	for aiKey, _ := range appInstKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get AppInst
+			appInstStr := stm.Get(aiKey)
+			if appInstStr == "" {
+				// must have been deleted in the meantime
+				return nil
+			}
+			appInst := AppInst{}
+			err := json.Unmarshal([]byte(appInstStr), &appInst)
+			if err != nil {
+				return fmt.Errorf("Unmarshal AppInst %s failed: %s", aiKey, err)
+			}
+			if appInst.UniqueId != "" {
+				// already set
+				return nil
+			}
+			appInst.UniqueId = oldGetAppFQN(&appInst.Key.AppKey)
+			aiData, err := json.Marshal(appInst)
+			if err != nil {
+				return fmt.Errorf("Marshal AppInst %s failed: %s", appInst.Key.GetKeyString(), err)
+			}
+			stm.Put(aiKey, string(aiData))
+			// store unique id - these may conflict but
+			// there's not much we can do about the old ones.
+			idKey := AppInstIdDbKey(appInst.UniqueId)
+			stm.Put(idKey, appInst.UniqueId)
 			return nil
 		})
 		if err != nil {

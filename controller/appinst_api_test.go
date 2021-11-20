@@ -13,6 +13,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/require"
@@ -321,6 +322,7 @@ func TestAppInstApi(t *testing.T) {
 		require.Nil(t, err, "Delete app inst %d failed", ii)
 	}
 
+	testAppInstId(t, ctx, apis)
 	testAppFlavorRequest(t, ctx, commonApi, responder, apis)
 	testDeprecatedSharedRootLBFQDN(t, ctx, apis)
 	testSingleKubernetesCloudlet(t, ctx, apis)
@@ -996,4 +998,115 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		found = apis.clusterRefsApi.cache.Get(clusterInstKey, &refs)
 		require.False(t, found, test.desc)
 	}
+}
+
+func testAppInstId(t *testing.T, ctx context.Context, apis *AllApis) {
+	var err error
+
+	// Check that unique ids for AppInsts are unique.
+	// In this case, we purposely name the Apps so that the generated
+	// ids will conflict.
+	// Both app Keys should dns sanitize to "app110"
+	app0 := testutil.AppData[0]
+	app0.Key.Name = "app"
+	app0.Key.Version = "1.1.0"
+	app0.AccessPorts = "tcp:81"
+
+	app1 := app0
+	app1.Key.Name = "app1"
+	app1.Key.Version = "1.0"
+	app0.AccessPorts = "tcp:82"
+
+	appInst0 := testutil.AppInstData[0]
+	appInst0.Key.AppKey = app0.Key
+
+	appInst1 := appInst0
+	appInst1.Key.AppKey = app1.Key
+
+	expId0 := "atlanticincapp110-pillimos-sanjosesite-attinc"
+	expId1 := "atlanticincapp110-pillimos-sanjosesite-attinc-1"
+
+	_, err = apis.appApi.CreateApp(ctx, &app0)
+	require.Nil(t, err)
+	_, err = apis.appApi.CreateApp(ctx, &app1)
+	require.Nil(t, err)
+
+	err = apis.appInstApi.CreateAppInst(&appInst0, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err)
+	err = apis.appInstApi.CreateAppInst(&appInst1, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err)
+
+	aiCheck0 := edgeproto.AppInst{}
+	require.True(t, apis.appInstApi.cache.Get(&appInst0.Key, &aiCheck0))
+	require.Equal(t, expId0, aiCheck0.UniqueId)
+
+	aiCheck1 := edgeproto.AppInst{}
+	require.True(t, apis.appInstApi.cache.Get(&appInst1.Key, &aiCheck1))
+	require.Equal(t, expId1, aiCheck1.UniqueId)
+
+	require.NotEqual(t, aiCheck0.UniqueId, aiCheck1.UniqueId)
+	// func to check if ids are present in database
+	hasIds := func(hasId0, hasId1 bool) {
+		found0 := testHasAppInstId(apis.appInstApi.sync.store, expId0)
+		require.Equal(t, hasId0, found0, "has id %s", expId0)
+		found1 := testHasAppInstId(apis.appInstApi.sync.store, expId1)
+		require.Equal(t, hasId1, found1, "has id %s", expId1)
+	}
+
+	// check that expected ids are there
+	hasIds(true, true)
+
+	// make sure deleting AppInsts also removes ids
+	err = apis.appInstApi.DeleteAppInst(&appInst0, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err)
+	hasIds(false, true)
+	err = apis.appInstApi.DeleteAppInst(&appInst1, testutil.NewCudStreamoutAppInst(ctx))
+	require.Nil(t, err)
+	hasIds(false, false)
+
+	// clean up
+	_, err = apis.appApi.DeleteApp(ctx, &app0)
+	require.Nil(t, err)
+	_, err = apis.appApi.DeleteApp(ctx, &app1)
+	require.Nil(t, err)
+}
+
+func testHasAppInstId(kvstore objstore.KVStore, id string) bool {
+	keystr := edgeproto.AppInstIdDbKey(id)
+	val, _, _, err := kvstore.Get(keystr)
+	if err != nil {
+		return false
+	}
+	if val == nil || len(val) == 0 {
+		return false
+	}
+	return true
+}
+
+func TestAppInstIdDelimiter(t *testing.T) {
+	// The generated AppInstId must not have any '.'
+	// in it. That will allow any platform-specific code
+	// to append further strings to it, delimited by '.',
+	// and maintain the uniqueness.
+	for _, ai := range testutil.AppInstData {
+		// need the app definition as well
+		for _, app := range testutil.AppData {
+			if app.Key.Matches(&ai.Key.AppKey) {
+				id := cloudcommon.GetAppInstId(&ai, &app, "")
+				require.NotContains(t, id, ".", "id must not contain '.'")
+			}
+		}
+	}
+	app := testutil.AppData[0]
+	app.Key.Name += "."
+	app.Key.Organization += "."
+	app.Key.Version += "."
+	appInst := testutil.AppInstData[0]
+	appInst.Key.AppKey = app.Key
+	appInst.Key.ClusterInstKey.ClusterKey.Name += "."
+	appInst.Key.ClusterInstKey.Organization += "."
+	appInst.Key.ClusterInstKey.CloudletKey.Name += "."
+	appInst.Key.ClusterInstKey.CloudletKey.Organization += "."
+	id := cloudcommon.GetAppInstId(&appInst, &app, ".")
+	require.NotContains(t, id, ".", "id must not contain '.'")
 }

@@ -705,6 +705,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
+  uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -746,6 +747,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
+  uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -769,6 +771,7 @@ appinstances:
     publicport: 20002
   flavor:
     name: x1.small
+  uniqueid: acmeappcohelmapplication10-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       name: MEXPrometheusAppName
@@ -791,6 +794,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -809,6 +813,7 @@ appinstances:
   liveness: Dynamic
   flavor:
     name: x1.small
+  uniqueid: mobiledgexnfsautoprovision10-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       name: MEXPrometheusAppName
@@ -831,6 +836,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -860,6 +866,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
+  uniqueid: acmeappco1vmapp110-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -889,6 +896,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
+  uniqueid: acmeappco1vmapp210-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -911,6 +919,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
+  uniqueid: acmeappconoportsapp10-smallcluster-dmuus-cloud-1-dmuus
 
 appinstrefs:
 - key:
