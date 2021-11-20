@@ -273,17 +273,24 @@ func getConfigDirName(names *KubeNames) (string, string) {
 	return dir, names.AppName + names.AppOrg + names.AppVersion + ".yaml"
 }
 
-func CreateDeveloperDefinedNamespaces(ctx context.Context, client ssh.Client, names *KubeNames) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "CreateDeveloperDefinedNamespaces")
-	for _, n := range names.DeveloperDefinedNamespaces {
+// CreateAllNamespaces creates all the namespaces the app will use. It does not create a manifest for
+// the namespaces, just allows the basic dependencies can be defined against
+// them. Manifest definition can later be used to update the namespaces.
+func CreateAllNamespaces(ctx context.Context, client ssh.Client, names *KubeNames) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "CreateAllNamespaces", "names", names)
+	namespaces := names.DeveloperDefinedNamespaces
+	if names.MultitenantNamespace != "" {
+		namespaces = append(namespaces, names.MultitenantNamespace)
+	}
+	for _, n := range namespaces {
 		if n == DefaultNamespace {
 			continue
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "Creating Namespace", "name", n)
-		cmd := fmt.Sprintf("kubectl create namespace %s --kubeconfig=%s", n, names.KconfName)
+		cmd := fmt.Sprintf("kubectl create namespace %s --kubeconfig=%s --save-config", n, names.BaseKconfName)
 		out, err := client.Output(cmd)
 		if err != nil {
-			if strings.Contains(out, "AlreadyExists") {
+			if strings.Contains(out, "already exists") {
 				log.SpanLog(ctx, log.DebugLevelInfra, "namespace already exists")
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "kubectl create namespace failed", "out", string(out), "err", err)
@@ -296,7 +303,7 @@ func CreateDeveloperDefinedNamespaces(ctx context.Context, client ssh.Client, na
 
 func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, client ssh.Client, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst, appInstFlavor *edgeproto.Flavor, action string) error {
 	if action == createManifest && names.MultitenantNamespace != "" {
-		err := CreateNamespace(ctx, client, names)
+		err := CreateMultitenantNamespace(ctx, client, names)
 		if err != nil {
 			return err
 		}
@@ -409,6 +416,11 @@ func DeleteAppInst(ctx context.Context, client ssh.Client, names *KubeNames, app
 		// clean up namespace
 		if err = DeleteNamespace(ctx, client, names); err != nil {
 			return err
+		}
+		// delete the config dir
+		err := pc.DeleteDir(ctx, client, configDir, pc.NoSudo)
+		if err != nil {
+			return fmt.Errorf("Unable to delete config dir %s - %v", configDir, err)
 		}
 	}
 	return nil
@@ -568,7 +580,7 @@ metadata:
     name: {{.MultitenantNamespace}}
 `))
 
-func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
+func CreateMultitenantNamespace(ctx context.Context, client ssh.Client, names *KubeNames) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "creating namespace", "name", names.MultitenantNamespace)
 	buf := bytes.Buffer{}
 	err := namespaceTemplate.Execute(&buf, names)
@@ -580,7 +592,7 @@ func CreateNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("kubectl create -f %s --kubeconfig=%s", file, names.BaseKconfName)
+	cmd := fmt.Sprintf("kubectl apply -f %s --kubeconfig=%s", file, names.BaseKconfName)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("Error in creating namespace: %s - %v", out, err)
