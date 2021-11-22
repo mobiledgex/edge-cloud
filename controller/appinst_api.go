@@ -803,9 +803,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 
-		if app.Deployment == cloudcommon.DeploymentTypeVM && in.AutoClusterIpAccess != edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
-			return fmt.Errorf("Cannot specify AutoClusterIpAccess if deployment type is VM")
-		}
+		// Since autoclusteripaccess is deprecated, set it to unknown
+		in.AutoClusterIpAccess = edgeproto.IpAccess_IP_ACCESS_UNKNOWN
+
 		err = validateImageTypeForPlatform(ctx, app.ImageType, cloudlet.PlatformType, cloudletFeatures)
 		if err != nil {
 			return err
