@@ -207,6 +207,8 @@ func FireCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.Cloudle
 }
 
 func ClearCloudletAndAppInstDownAlerts(ctx context.Context, in *edgeproto.CloudletInfo) {
+	// We ignore the controller and notifyId check when cleaning up the alerts here
+	ctx = context.WithValue(ctx, ControllerCreatedAlerts, &ControllerCreatedAlerts)
 	clearCloudletDownAlert(ctx, in)
 	clearCloudletDownAppInstAlerts(ctx, in)
 }
@@ -331,9 +333,9 @@ func (s *CloudletInfoApi) Flush(ctx context.Context, notifyId int64) {
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "err", err)
 		} else {
-			nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 			// Send a cloudlet down alert if a cloudlet was ready
 			if cloudletReady {
+				nodeMgr.Event(ectx, "Cloudlet offline", info.Key.Organization, info.Key.GetTags(), nil, "reason", "notify disconnect")
 				FireCloudletAndAppInstDownAlerts(ctx, &info)
 			}
 		}
