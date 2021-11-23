@@ -857,6 +857,7 @@ var AppInstComments = map[string]string{
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
 	"realclustername":                "Real ClusterInst name",
+	"uniqueid":                       "A unique id for the AppInst within the region to be used by platforms",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
