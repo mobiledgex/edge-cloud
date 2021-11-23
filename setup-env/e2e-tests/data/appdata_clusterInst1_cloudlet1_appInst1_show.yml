@@ -250,6 +250,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  uniqueid: acmeappcosomeapplication110-smallcluster-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -272,6 +273,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-1-tmus
 
 appinstrefs:
 - key:

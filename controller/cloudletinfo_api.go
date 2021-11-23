@@ -144,8 +144,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "CloudletInfo state transition error",
 			"key", in.Key, "err", err)
 	}
-	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
+	if changedToOnline {
 		ClearCloudletAndAppInstDownAlerts(ctx, in)
+	}
+	if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
 		// Validate cloudlet resources and generate appropriate warnings
 		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 			if !cloudletApi.store.STMGet(stm, key, &cloudlet) {
