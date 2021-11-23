@@ -309,7 +309,6 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			if err != nil || findCloudlet.Req.CarrierName != apiRequest.Fcreq.CarrierName ||
 				findCloudlet.Req.GpsLocation.Latitude != apiRequest.Fcreq.GpsLocation.Latitude ||
 				findCloudlet.Req.GpsLocation.Longitude != apiRequest.Fcreq.GpsLocation.Longitude ||
-				findCloudlet.Req.CellId != apiRequest.Fcreq.CellId ||
 				time.Since(findCloudlet.At) > 10*time.Minute {
 				log.Printf("Redoing findcloudlet for api %s - cached findCloudlet %+v, current Fcreq: %+v\n", api, findCloudlet, apiRequest.Fcreq)
 				ctx = context.WithValue(ctx, "edgeevents", true)

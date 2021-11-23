@@ -4,6 +4,5 @@ registerclientrequest:
   appname: someapplication1
   appvers: "1.0"
   authtoken: "GENTOKEN:authtoken_private.pem"
-  cellid: 1234
   uniqueidtype: E2E-test-uuid
   uniqueid: "123"
