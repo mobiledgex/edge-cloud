@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/fake"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -79,6 +80,18 @@ clusterinsts:
     name: x1.small
   nodes: 3
   liveness: LivenessDynamic
+  ipaccess: Dedicated
+- key:
+    clusterkey:
+      name: Untomt_cluster_22
+    cloudletkey:
+      organization: DMUUS
+      name: cloud2
+  flavor:
+    name: x1.small
+  nodes: 3
+  liveness: LivenessDynamic
+  ipaccess: Dedicated
 
 appinstances:
 - key:
@@ -117,6 +130,24 @@ appinstances:
   liveness: LivenessDynamic
   flavor:
     name: x1.small
+- key:
+    appkey:
+      organization: Untomt
+      name: VRmax
+      version: 1.0.0
+    clusterinstkey:
+      clusterkey:
+        name: Untomt_cluster_22
+      cloudletkey:
+        organization: DMUUS
+        name: cloud2
+      developer: Untomt
+  cloudletloc:
+    latitude: 310
+    longitude: -910
+  liveness: LivenessDynamic
+  flavor:
+    name: x1.medium
 
 vmpools:
 - key:
@@ -178,6 +209,36 @@ networks:
   - destinationcidr: 10.140.20.0/24
     nexthopip: 10.140.20.1
   connectiontype: ConnectToClusterNodes
+
+trustpolicyexceptions:
+- key:
+    appkey:
+        organization: Untomt
+        name: VRmax
+        version: 1.0.0
+    cloudletpoolkey:
+        organization: DMUUS
+        name: cloud2-pool
+    name: tpe1
+    requiredoutboundconnections:
+    - protocol: tcp
+      remotecidr: "1.1.1.1/32"
+      portrangemin: 1
+      portrangemax: 111
+- key:
+    appkey:
+        organization: Untomt
+        name: VRmax
+        version: 1.0.0
+    cloudletpoolkey:
+        organization: DMUUS
+        name: cloud2-pool
+    name: tpe2
+    requiredoutboundconnections:
+    - protocol: udp
+      remotecidr: "2.2.2.2/24"
+      portrangemin: 22
+      portrangemax: 222
 `
 
 func startMain(t *testing.T) (chan struct{}, error) {
@@ -291,6 +352,7 @@ func TestCRM(t *testing.T) {
 		ctrlHandler.ClusterInstCache.Update(ctx, &data.ClusterInsts[ii], 0)
 	}
 	for ii := range data.AppInstances {
+		data.AppInstances[ii].State = edgeproto.TrackedState_READY
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	}
 	for ii := range data.CloudletPools {
@@ -300,12 +362,17 @@ func TestCRM(t *testing.T) {
 	for ii := range data.Networks {
 		ctrlHandler.NetworkCache.Update(ctx, &data.Networks[ii], 0)
 	}
+
+	for ii := range data.TrustPolicyExceptions {
+		ctrlHandler.TrustPolicyExceptionCache.Update(ctx, &data.TrustPolicyExceptions[ii], 0)
+	}
+
 	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 3))
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
 	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
-	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 2))
-	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 2))
+	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 3))
+	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 3))
 	// ensure that only vmpool object associated with cloudlet is received
 	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 1))
 
@@ -315,18 +382,26 @@ func TestCRM(t *testing.T) {
 	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 1))
 	require.Nil(t, notify.WaitFor(&controllerData.NetworkCache, 1))
 
+	require.Nil(t, notify.WaitFor(&controllerData.TrustPolicyExceptionCache, 2))
+
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
 	log.SpanLog(ctx, log.DebugLevelApi, "check counts")
 	require.Equal(t, 3, len(controllerData.FlavorCache.Objs))
-	require.Equal(t, 2, len(controllerData.ClusterInstCache.Objs))
-	require.Equal(t, 2, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 3, len(controllerData.ClusterInstCache.Objs))
+	require.Equal(t, 3, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
 	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
 	require.Equal(t, 1, len(controllerData.CloudletPoolCache.Objs))
 	require.Equal(t, 1, len(controllerData.NetworkCache.Objs))
+	require.Equal(t, 2, len(controllerData.TrustPolicyExceptionCache.Objs))
 
 	testVMPoolUpdates(t, ctx, &data.VmPools[0], ctrlHandler)
+
+	fakePlatform, ok := platform.(*fake.Platform)
+	require.True(t, ok)
+
+	testTrustPolicyExceptionUpdates(t, ctx, ctrlHandler, &data, fakePlatform)
 
 	// delete
 	for ii := range data.VmPools {
@@ -351,6 +426,7 @@ func TestCRM(t *testing.T) {
 	for ii := range data.Networks {
 		ctrlHandler.NetworkCache.Delete(ctx, &data.Networks[ii], 0)
 	}
+
 	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 0))
@@ -367,6 +443,8 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
 	require.Equal(t, 0, len(controllerData.CloudletPoolCache.Objs))
 	require.Equal(t, 0, len(controllerData.NetworkCache.Objs))
+	require.Equal(t, 0, len(controllerData.TrustPolicyExceptionCache.Objs))
+
 }
 
 func TestNotifyOrder(t *testing.T) {
@@ -608,4 +686,209 @@ func testVMPoolUpdates(t *testing.T, ctx context.Context, vmPool *edgeproto.VMPo
 	vmPoolUpdate7.State = edgeproto.TrackedState_UPDATE_REQUESTED
 	verifyVMPoolUpdate(t, ctx, vmPoolUpdate7, ctrlHandler, Pass)
 	require.Equal(t, 5, len(controllerData.VMPool.Vms), "matches crm global vmpool")
+}
+
+func WaitForTrustPolicyExceptionCacheState(key *edgeproto.TrustPolicyExceptionKey, state edgeproto.TrustPolicyExceptionState) (*edgeproto.TrustPolicyException, error) {
+	lastState := edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_UNKNOWN
+	tpe := edgeproto.TrustPolicyException{}
+	for i := 0; i < 100; i++ {
+		if controllerData.TrustPolicyExceptionCache.Get(key, &tpe) {
+			if tpe.State == state {
+				return &tpe, nil
+			}
+			lastState = tpe.State
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return &tpe, fmt.Errorf("Unable to get desired tpe state, actual state %s, desired state %s", lastState, state)
+}
+
+// Single TPE tests
+func testTrustPolicyExceptionUpdates1(t *testing.T, ctx context.Context, tpe *edgeproto.TrustPolicyException, clusterInst *edgeproto.ClusterInst, ctrlHandler *notify.DummyHandler, data *edgeproto.AllData, fakePlatform *fake.Platform) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ Begin testTrustPolicyExceptionUpdates1 ##############")
+
+	log.SpanLog(ctx, log.DebugLevelApi, "Input:", "tpe", tpe, "clusterInst", clusterInst)
+
+	// test that adding a TPE with State Approval Requested does not add it to existing AppInst
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.1", "fakePlatform", fakePlatform)
+
+	tpe.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
+	ctrlHandler.TrustPolicyExceptionCache.Update(ctx, tpe, 0)
+	state := tpe.State
+	_, err := WaitForTrustPolicyExceptionCacheState(&tpe.Key, state)
+	require.Nil(t, err)
+
+	found := fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
+	require.False(t, found, "tpe not found")
+
+	// test that Approved TPE is not programmed on any clusters
+	count := fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 0, count)
+
+	// test that a TPE with State ACTIVE, for an existing AppInst, adds that TPEs to that ClusterInst
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.2")
+	tpe.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+	ctrlHandler.TrustPolicyExceptionCache.Update(ctx, tpe, 0)
+	state = tpe.State
+	_, err = WaitForTrustPolicyExceptionCacheState(&tpe.Key, state)
+	require.Nil(t, err)
+
+	found = fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
+	require.True(t, found, "tpe found")
+
+	// test that Active TPE is programmed on both clusters of cloudletpool
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 2, count)
+
+	// test that updating a TPE from ApprovalRequested/Active->Rejected does not add it or removes it from existing AppInsts
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.3")
+
+	tpe.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED
+	ctrlHandler.TrustPolicyExceptionCache.Update(ctx, tpe, 0)
+	state = tpe.State
+	_, err = WaitForTrustPolicyExceptionCacheState(&tpe.Key, state)
+	require.Nil(t, err)
+
+	found = fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
+	require.False(t, found, "tpe not found")
+
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 0, count)
+
+	// test that updating a TPE from ApprovalRequested/Rejected->Active adds it to existing AppInsts
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.4")
+	tpe.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+	ctrlHandler.TrustPolicyExceptionCache.Update(ctx, tpe, 0)
+	state = tpe.State
+	_, err = WaitForTrustPolicyExceptionCacheState(&tpe.Key, state)
+	require.Nil(t, err)
+
+	found = fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
+	require.True(t, found, "tpe found")
+
+	// test that Active TPE is programmed on both clusters of cloudletpool
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 2, count)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates1 #############")
+}
+
+// Mutliple TPE tests
+func testTrustPolicyExceptionUpdates2(t *testing.T, ctx context.Context, tpe *edgeproto.TrustPolicyException, clusterInst *edgeproto.ClusterInst, ctrlHandler *notify.DummyHandler, data *edgeproto.AllData, fakePlatform *fake.Platform) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ Begin testTrustPolicyExceptionUpdates2 ##############")
+
+	log.SpanLog(ctx, log.DebugLevelApi, "Input:", "tpe", tpe, "clusterInst", clusterInst)
+
+	// test that adding a TPE with State Approval Requested does not add it to existing AppInst
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT2.1")
+
+	tpe.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
+	ctrlHandler.TrustPolicyExceptionCache.Update(ctx, tpe, 0)
+	state := tpe.State
+	_, err := WaitForTrustPolicyExceptionCacheState(&tpe.Key, state)
+	require.Nil(t, err)
+
+	found := fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
+	require.False(t, found, "tpe not found")
+
+	// test that the new Approved TPE is not programmed on any clusters, count should still be the old count
+	count := fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 2, count)
+
+	// test that a TPE with State ACTIVE, for an existing AppInst, adds that TPEs to that ClusterInst
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT2.2")
+	tpe.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+	ctrlHandler.TrustPolicyExceptionCache.Update(ctx, tpe, 0)
+	state = tpe.State
+	_, err = WaitForTrustPolicyExceptionCacheState(&tpe.Key, state)
+	require.Nil(t, err)
+
+	found = fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
+	require.True(t, found, "tpe found")
+
+	// test that Multiple TPEs are configured per app, on multiple clusters. Total count increases to 4
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 4, count)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates2 #############")
+}
+
+// CloudletPool related changes and TPE tests
+func testTrustPolicyExceptionUpdates3(t *testing.T, ctx context.Context, ctrlHandler *notify.DummyHandler, data *edgeproto.AllData, fakePlatform *fake.Platform) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ begin CloudletPoolCache.Update")
+	count := fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 4, count)
+
+	var CloudletsSaved [][]string
+
+	for ii := range data.CloudletPools {
+		cloudletPool := &data.CloudletPools[ii]
+		CloudletsSaved = append(CloudletsSaved, cloudletPool.Cloudlets)
+		cloudletPool.Cloudlets = nil
+		ctrlHandler.CloudletPoolCache.Update(ctx, cloudletPool, 0)
+	}
+
+	// We've only removed a cloudlet, but cloudletPool cache count remains the same
+	// hence notify wont sleep, poll for count test
+	for ii := 0; ii < 20; ii++ {
+		count = fakePlatform.TrustPolicyExceptionCount(ctx)
+		if count == 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, 0, count)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ restore CloudletPoolCache.Update")
+
+	for ii := range data.CloudletPools {
+		cloudletPool := &data.CloudletPools[ii]
+		cloudletPool.Cloudlets = CloudletsSaved[ii]
+		ctrlHandler.CloudletPoolCache.Update(ctx, cloudletPool, 0)
+	}
+
+	// We've only removed a cloudlet, but cloudletPool cache count remains the same
+	// hence notify wont sleep, poll for count test
+	for ii := 0; ii < 20; ii++ {
+		count = fakePlatform.TrustPolicyExceptionCount(ctx)
+		if count == 4 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, 4, count)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ end CloudletPoolCache.Update")
+
+	// test that deleting a TPE removes it from existing AppInsts/ClusterInsts
+
+	for ii := range data.TrustPolicyExceptions {
+		ctrlHandler.TrustPolicyExceptionCache.Delete(ctx, &data.TrustPolicyExceptions[ii], 0)
+	}
+
+	require.Nil(t, notify.WaitFor(&controllerData.TrustPolicyExceptionCache, 0))
+
+	found := fakePlatform.HasTrustPolicyException(ctx, &data.TrustPolicyExceptions[0].Key, &data.ClusterInsts[1])
+	require.False(t, found, "tpe not found")
+
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 0, count)
+
+}
+
+func testTrustPolicyExceptionUpdates(t *testing.T, ctx context.Context, ctrlHandler *notify.DummyHandler, data *edgeproto.AllData, fakePlatform *fake.Platform) {
+	tpe := &data.TrustPolicyExceptions[0]
+	clusterInst := data.ClusterInsts[1]
+
+	testTrustPolicyExceptionUpdates1(t, ctx, tpe, &clusterInst, ctrlHandler, data, fakePlatform)
+
+	tpe = &data.TrustPolicyExceptions[1]
+	testTrustPolicyExceptionUpdates2(t, ctx, tpe, &clusterInst, ctrlHandler, data, fakePlatform)
+
+	testTrustPolicyExceptionUpdates3(t, ctx, ctrlHandler, data, fakePlatform)
+
 }

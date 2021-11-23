@@ -80,9 +80,6 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 			in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 			return fmt.Errorf("New state must be either Active or Rejected")
 		}
-		if cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
-			return fmt.Errorf("Not allowed to change TrustPolicyExceptionResponse in state:%s", cur.State.String())
-		}
 		cur.State = in.State
 		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionResponseState", "state:", cur.State)
 		s.store.STMPut(stm, &cur)
