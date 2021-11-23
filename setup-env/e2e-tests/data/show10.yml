@@ -1216,6 +1216,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-4-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1249,6 +1250,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-4-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1282,6 +1284,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-7-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1315,6 +1318,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1348,6 +1352,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1381,6 +1386,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-3-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1414,6 +1420,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-6-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1447,6 +1454,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-8-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1480,6 +1488,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-3-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1513,6 +1522,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-5-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1546,6 +1556,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-6-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1582,6 +1593,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-azure-cloud-9-azure
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1618,6 +1630,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-gcp-cloud-10-gcp
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1654,6 +1667,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-gcp-cloud-10-gcp
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1687,6 +1701,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1720,6 +1735,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1756,6 +1772,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-azure-cloud-9-azure
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1789,6 +1806,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-5-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1822,6 +1840,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-7-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1855,6 +1874,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-8-tmus
 
 appinstrefs:
 - key:

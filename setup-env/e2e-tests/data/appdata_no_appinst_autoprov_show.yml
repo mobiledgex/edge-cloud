@@ -601,6 +601,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-1-tmus
 - key:
     appkey:
       name: MEXPrometheusAppName
@@ -623,6 +624,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -645,6 +647,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-reservablecluster-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -667,6 +670,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-reservablecluster2-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -694,6 +698,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  uniqueid: acmeappcoautoprovapp10-autocluster-autoprov-tmus-cloud-2-tmus
 
 autoprovpolicies:
 - key:
