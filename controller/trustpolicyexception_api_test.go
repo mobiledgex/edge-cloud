@@ -45,10 +45,80 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	// CUD for Trust Policy Exception
 	testutil.InternalTrustPolicyExceptionTest(t, "cud", apis.trustPolicyExceptionApi, testutil.TrustPolicyExceptionData)
 
-	// error cases for Trust Policy Exception
+	// Basic error case - when TPE already exists
+	_, err := apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &testutil.TrustPolicyExceptionData[0])
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), " already exists")
+
+	tpeData := edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: testutil.DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: testutil.OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "someapp-tpe2",
+		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.1.0.0/16",
+				PortRangeMin: 201,
+				PortRangeMax: 210,
+			},
+		},
+	}
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+
+	// test that TPE update state to STATE_ACTIVE, passes
+	tpeData.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+
+	// test that TPE update state to STATE_APPROVAL_REQUESTED, fails
+	tpeData.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "New state must be either Active or Rejected")
+
+	// test that TPE create when specified CloudletPool does not exist, fails
+	tpeData.Key.CloudletPoolKey.Organization = "Mission Mars"
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "TrustPolicyExceptionKey: CloudletPoolKey does not exist")
+	// Restore tpeData Key to original values
+	tpeData.Key.CloudletPoolKey.Organization = testutil.OperatorData[2]
+
+	// test that TPE create when specified App does not exist, fails
+	tpeData.Key.AppKey.Organization = testutil.DevData[2]
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "TrustPolicyExceptionKey: App does not exist")
+	// Restore tpeData Key to original values
+	tpeData.Key.AppKey.Organization = testutil.DevData[0]
+
+	// test that App delete fails if TPE exists that refers to it
+	app0 := testutil.AppData[0]
+	_, err = apis.appApi.DeleteApp(ctx, &app0)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Application in use by Trust Policy Exception")
+
+	// Success : Delete
+	_, err = apis.trustPolicyExceptionApi.DeleteTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+
+	// error cases for Create Trust Policy Exception
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[0], "cannot be higher than max")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[1], "invalid CIDR")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[2], "Invalid min port")
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3], "App does not exist")
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4], "CloudletPoolKey does not exist")
 
 	dummy.Stop()
 }

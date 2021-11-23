@@ -1779,6 +1779,52 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 			},
 		},
 	},
+	// Failure case, App does not exist
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo does not exist!",
+				Version:      "13.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "trust-policyexception13",
+		},
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "47.186.0.0/16",
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+			},
+		},
+	},
+	// Failure case, CloudletPoolKey does not exist
+	edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: OperatorData[2],
+				Name:         "test-and-dev-does-not-exist",
+			},
+			Name: "trust-policyexception13",
+		},
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "47.186.0.0/16",
+				PortRangeMin: 22,
+				PortRangeMax: 22,
+			},
+		},
+	},
 }
 
 var AppInstClientKeyData = []edgeproto.AppInstClientKey{
