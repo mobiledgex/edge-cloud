@@ -80,6 +80,7 @@ clusterinsts:
     name: x1.small
   nodes: 3
   liveness: LivenessDynamic
+  ipaccess: Dedicated
 - key:
     clusterkey:
       name: 1000realities_cluster_22
@@ -90,6 +91,7 @@ clusterinsts:
     name: x1.small
   nodes: 3
   liveness: LivenessDynamic
+  ipaccess: Dedicated
 
 appinstances:
 - key:
@@ -400,39 +402,6 @@ func TestCRM(t *testing.T) {
 	require.True(t, ok)
 
 	testTrustPolicyExceptionUpdates(t, ctx, ctrlHandler, &data, fakePlatform)
-
-	log.SpanLog(ctx, log.DebugLevelApi, "############ begin CloudletPoolCache.Update")
-	count := fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 4, count)
-
-	for ii := range data.CloudletPools {
-		cloudletPool := &data.CloudletPools[ii]
-		save := cloudletPool.Cloudlets[0]
-		cloudletPool.Cloudlets[0] = ""
-		ctrlHandler.CloudletPoolCache.Update(ctx, cloudletPool, 0)
-		cloudletPool.Cloudlets[0] = save
-	}
-	// We've only removed a cloudlet, but cloudletPool cache count remains the same
-	// hence notify wont sleep, force some sleep
-	time.Sleep(15 * time.Second)
-
-	count = fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 0, count)
-	log.SpanLog(ctx, log.DebugLevelApi, "############ end CloudletPoolCache.Update")
-
-	// test that deleting a TPE removes it from existing AppInsts/ClusterInsts
-
-	for ii := range data.TrustPolicyExceptions {
-		ctrlHandler.TrustPolicyExceptionCache.Delete(ctx, &data.TrustPolicyExceptions[ii], 0)
-	}
-
-	require.Nil(t, notify.WaitFor(&controllerData.TrustPolicyExceptionCache, 0))
-
-	found := fakePlatform.HasTrustPolicyException(ctx, &data.TrustPolicyExceptions[0].Key, &data.ClusterInsts[1])
-	require.False(t, found, "tpe not found")
-
-	count = fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 0, count)
 
 	// delete
 	for ii := range data.VmPools {
@@ -847,6 +816,70 @@ func testTrustPolicyExceptionUpdates2(t *testing.T, ctx context.Context, tpe *ed
 	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates2 #############")
 }
 
+// CloudletPool related changes and TPE tests
+func testTrustPolicyExceptionUpdates3(t *testing.T, ctx context.Context, ctrlHandler *notify.DummyHandler, data *edgeproto.AllData, fakePlatform *fake.Platform) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ begin CloudletPoolCache.Update")
+	count := fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 4, count)
+
+	var CloudletsSaved [][]string
+
+	for ii := range data.CloudletPools {
+		cloudletPool := &data.CloudletPools[ii]
+		CloudletsSaved = append(CloudletsSaved, cloudletPool.Cloudlets)
+		cloudletPool.Cloudlets = nil
+		ctrlHandler.CloudletPoolCache.Update(ctx, cloudletPool, 0)
+	}
+
+	// We've only removed a cloudlet, but cloudletPool cache count remains the same
+	// hence notify wont sleep, poll for count test
+	for ii := 0; ii < 20; ii++ {
+		count = fakePlatform.TrustPolicyExceptionCount(ctx)
+		if count == 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, 0, count)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ restore CloudletPoolCache.Update")
+
+	for ii := range data.CloudletPools {
+		cloudletPool := &data.CloudletPools[ii]
+		cloudletPool.Cloudlets = CloudletsSaved[ii]
+		ctrlHandler.CloudletPoolCache.Update(ctx, cloudletPool, 0)
+	}
+
+	// We've only removed a cloudlet, but cloudletPool cache count remains the same
+	// hence notify wont sleep, poll for count test
+	for ii := 0; ii < 20; ii++ {
+		count = fakePlatform.TrustPolicyExceptionCount(ctx)
+		if count == 4 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.Equal(t, 4, count)
+
+	log.SpanLog(ctx, log.DebugLevelApi, "############ end CloudletPoolCache.Update")
+
+	// test that deleting a TPE removes it from existing AppInsts/ClusterInsts
+
+	for ii := range data.TrustPolicyExceptions {
+		ctrlHandler.TrustPolicyExceptionCache.Delete(ctx, &data.TrustPolicyExceptions[ii], 0)
+	}
+
+	require.Nil(t, notify.WaitFor(&controllerData.TrustPolicyExceptionCache, 0))
+
+	found := fakePlatform.HasTrustPolicyException(ctx, &data.TrustPolicyExceptions[0].Key, &data.ClusterInsts[1])
+	require.False(t, found, "tpe not found")
+
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 0, count)
+
+}
+
 func testTrustPolicyExceptionUpdates(t *testing.T, ctx context.Context, ctrlHandler *notify.DummyHandler, data *edgeproto.AllData, fakePlatform *fake.Platform) {
 	tpe := &data.TrustPolicyExceptions[0]
 	clusterInst := data.ClusterInsts[1]
@@ -855,5 +888,7 @@ func testTrustPolicyExceptionUpdates(t *testing.T, ctx context.Context, ctrlHand
 
 	tpe = &data.TrustPolicyExceptions[1]
 	testTrustPolicyExceptionUpdates2(t, ctx, tpe, &clusterInst, ctrlHandler, data, fakePlatform)
+
+	testTrustPolicyExceptionUpdates3(t, ctx, ctrlHandler, data, fakePlatform)
 
 }

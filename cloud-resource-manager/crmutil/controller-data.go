@@ -667,17 +667,17 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 				// Add TrustPolicyException rules for a given appInst and target clusterInst only
 
-				// A better thing to do here is to add TPEState and TPEError fields to AppInst,
+				// TO DO : A better thing to do here is to add TPEState and TPEError fields to AppInst,
 				// which would get updated by the worker handler function after calling the platform create/delete code.
 				// That way at least there's some way to see if the TPE was applied properly, or the state and error if not.
 
 				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key)
-			}
-			if err != nil {
-				errstr := fmt.Sprintf("Create App Inst : Add TrustPolicyException failed: %s", err)
-				log.SpanLog(ctx, log.DebugLevelInfra, "can't add Trust policy exception rules", "error", errstr, "key", new.Key)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback)
-				return
+				if err != nil {
+					errstr := fmt.Sprintf("Create App Inst : Add TrustPolicyException failed: %s", err)
+					log.SpanLog(ctx, log.DebugLevelInfra, "can't add Trust policy exception rules", "error", errstr, "key", new.Key)
+					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback)
+					return
+				}
 			}
 			oldUri := new.Uri
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
@@ -816,12 +816,12 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 				// Remove TrustPolicyException rules for a given appInst and target clusterInst only
 				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key)
-			}
-			if err != nil {
-				errstr := fmt.Sprintf("Delete App Inst : remove TrustPolicyException failed: %s", err)
-				log.SpanLog(ctx, log.DebugLevelInfra, "can't remove Trust policy exception rules", "error", errstr, "key", new.Key)
-				cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr, updateAppCacheCallback)
-				return
+				if err != nil {
+					errstr := fmt.Sprintf("Delete App Inst : remove TrustPolicyException failed: %s", err)
+					log.SpanLog(ctx, log.DebugLevelInfra, "can't remove Trust policy exception rules", "error", errstr, "key", new.Key)
+					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr, updateAppCacheCallback)
+					return
+				}
 			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
 			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateAppCacheCallback)
@@ -1049,6 +1049,7 @@ func (cd *ControllerData) getClusterInstsFromTrustPolicyExceptionKeyHelper(ctx c
 		}
 
 		if clusterInst.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			log.SpanLog(ctx, log.DebugLevelInfra, "clusterInst not dedicated", "IpAccess", clusterInst.IpAccess.String())
 			continue
 		}
 
