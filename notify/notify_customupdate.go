@@ -155,14 +155,10 @@ func (s *GPUDriverSend) UpdateOk(ctx context.Context, key *edgeproto.GPUDriverKe
 func (s *TrustPolicyExceptionSend) UpdateOk(ctx context.Context, key *edgeproto.TrustPolicyExceptionKey) bool {
 	if s.sendrecv.filterCloudletKeys {
 		for cKey, _ := range s.sendrecv.cloudletKeys {
-			cloudlet := edgeproto.Cloudlet{}
-			var modRev int64
-			if s.sendrecv.cloudletSend.handler.GetWithRev(&cKey, &cloudlet, &modRev) {
-				if cKey.Organization != key.CloudletPoolKey.Organization {
-					continue
-				}
-				return true
+			if cKey.Organization != key.CloudletPoolKey.Organization {
+				continue
 			}
+			return true
 		}
 		return false
 	}
