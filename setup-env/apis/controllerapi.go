@@ -108,6 +108,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		filter := &edgeproto.AllData{}
 		output := &edgeproto.AllData{}
 		testutil.RunAllDataShowApis(run, filter, output)
+		output.Sort()
 		util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
 		// Some objects are generated asynchronously in response to
 		// other objects being created. For example, Prometheus metric

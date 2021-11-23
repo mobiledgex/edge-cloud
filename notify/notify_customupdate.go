@@ -71,11 +71,9 @@ func (s *CloudletSend) UpdateOk(ctx context.Context, key *edgeproto.CloudletKey)
 					Organization: key.Organization,
 				}, 0)
 			}
-			if s.sendrecv.gpuDriverSend != nil {
-				if resTagTbl, ok := cloudlet.ResTagMap["gpu"]; ok && resTagTbl != nil {
-					// also trigger send of GPU driver object
-					s.sendrecv.gpuDriverSend.updateInternal(ctx, &cloudlet.GpuConfig.Driver, 0)
-				}
+			if s.sendrecv.gpuDriverSend != nil && cloudlet.GpuConfig.Driver.Name != "" {
+				// also trigger send of GPU driver object
+				s.sendrecv.gpuDriverSend.updateInternal(ctx, &cloudlet.GpuConfig.Driver, 0)
 			}
 		}
 	}
