@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -26,6 +27,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/redisclient"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -52,6 +54,7 @@ var notifyParentAddrs = flag.String("notifyParentAddrs", "", "Comma separated li
 var accessApiAddr = flag.String("accessApiAddr", "127.0.0.1:41001", "listener address for external services with access key")
 var publicAddr = flag.String("publicAddr", "127.0.0.1", "Public facing address/hostname of controller")
 var edgeTurnAddr = flag.String("edgeTurnAddr", "127.0.0.1:6080", "Address to EdgeTurn Server")
+var redisAddr = flag.String("redisAddr", "127.0.0.1:6379", "redis address")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "http://127.0.0.1:8086", "InfluxDB listener address")
@@ -83,6 +86,7 @@ var sigChan chan os.Signal
 var services Services
 var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
+var redisClient *redis.Client
 
 type Services struct {
 	etcdLocal                 *process.Etcd
@@ -210,6 +214,14 @@ func startServices() error {
 	err = objStore.CheckConnected(50, 20*time.Millisecond)
 	if err != nil {
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
+	}
+
+	redisClient, err = redisclient.NewClient(*redisAddr)
+	if err != nil {
+		return err
+	}
+	if err := redisclient.IsServerReady(redisClient); err != nil {
+		return err
 	}
 
 	// We might need to upgrade the stored objects

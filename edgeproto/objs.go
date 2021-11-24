@@ -9,6 +9,7 @@ import (
 	strings "strings"
 	"time"
 
+	"github.com/go-redis/redis"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -43,15 +44,15 @@ var ReservedPlatformPorts = map[string]string{
 }
 
 type WaitStateSpec struct {
-	StreamCache *StreamObjCache
+	RedisClient *redis.Client
 	StreamKey   *AppInstKey
 }
 
 type WaitStateOps func(wSpec *WaitStateSpec) error
 
-func WithStreamObj(streamCache *StreamObjCache, streamKey *AppInstKey) WaitStateOps {
+func WithStreamObj(redisClient *redis.Client, streamKey *AppInstKey) WaitStateOps {
 	return func(wSpec *WaitStateSpec) error {
-		wSpec.StreamCache = streamCache
+		wSpec.RedisClient = redisClient
 		wSpec.StreamKey = streamKey
 		return nil
 	}

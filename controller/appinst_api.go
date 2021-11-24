@@ -1219,7 +1219,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR,
 		s.all.settingsApi.Get().CreateAppInstTimeout.TimeDuration(),
 		"Created AppInst successfully", cb.Send,
-		edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &in.Key),
+		edgeproto.WithStreamObj(redisClient, &in.Key),
 	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
@@ -1399,7 +1399,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateAppInstTimeout.TimeDuration(),
 			"", cb.Send,
-			edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &key),
+			edgeproto.WithStreamObj(redisClient, &key),
 		)
 	}
 	if err != nil {
@@ -1772,7 +1772,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 			s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration(),
 			"Deleted AppInst successfully", cb.Send,
-			edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &in.Key),
+			edgeproto.WithStreamObj(redisClient, &in.Key),
 		)
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})

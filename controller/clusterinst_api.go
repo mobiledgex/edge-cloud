@@ -1005,7 +1005,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	err = s.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions,
 		edgeproto.TrackedState_CREATE_ERROR, s.all.settingsApi.Get().CreateClusterInstTimeout.TimeDuration(),
 		"Created ClusterInst successfully", cb.Send,
-		edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &streamKey))
+		edgeproto.WithStreamObj(redisClient, &streamKey))
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create ClusterInst ignoring CRM failure: %s", err.Error())})
 		s.ReplaceErrorState(ctx, in, edgeproto.TrackedState_READY)
@@ -1171,7 +1171,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 		s.all.settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(),
 		"Updated ClusterInst successfully", cb.Send,
-		edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &streamKey),
+		edgeproto.WithStreamObj(redisClient, &streamKey),
 	)
 	if err == nil {
 		s.updateCloudletResourcesMetric(ctx, in)
@@ -1413,7 +1413,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 		s.all.settingsApi.Get().DeleteClusterInstTimeout.TimeDuration(),
 		"Deleted ClusterInst successfully", cb.Send,
-		edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &streamKey),
+		edgeproto.WithStreamObj(redisClient, &streamKey),
 	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete ClusterInst ignoring CRM failure: %s", err.Error())})

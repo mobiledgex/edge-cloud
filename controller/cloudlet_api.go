@@ -754,7 +754,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			CreateCloudletTransitions, edgeproto.TrackedState_CREATE_ERROR,
 			s.all.settingsApi.Get().CreateCloudletTimeout.TimeDuration(),
 			"Created Cloudlet successfully", cb.Send,
-			edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &streamKey))
+			edgeproto.WithStreamObj(redisClient, &streamKey))
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
 	}
@@ -1192,7 +1192,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			UpdateCloudletTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateCloudletTimeout.TimeDuration(),
 			"Cloudlet updated successfully", cb.Send,
-			edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &streamKey))
+			edgeproto.WithStreamObj(redisClient, &streamKey))
 		return err
 	}
 	if privPolUpdateRequested && !ignoreCRM(cctx) {

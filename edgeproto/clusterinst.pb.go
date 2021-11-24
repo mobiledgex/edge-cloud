@@ -26,6 +26,7 @@ import (
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
+	"strconv"
 	strings "strings"
 	"time"
 )
@@ -3084,8 +3085,8 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan string, 1)
 	failed := make(chan bool, 1)
-	var lastMsgCnt int
 	var err error
+	var lastMsgCnt int64
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -3094,29 +3095,45 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		}
 	}
 
-	var streamCancel context.CancelFunc
-	if wSpec.StreamCache != nil {
-		checkStreamMsg := func() {
-			streamObj := StreamObj{}
-			if !wSpec.StreamCache.Get(wSpec.StreamKey, &streamObj) {
-				return
-			}
-			if len(streamObj.Status.Msgs) > 0 || streamObj.Status.MsgCount > 0 {
-				if lastMsgCnt < int(streamObj.Status.MsgCount) {
-					for ii := 0; ii < len(streamObj.Status.Msgs); ii++ {
-						send(&Result{Message: streamObj.Status.Msgs[ii]})
-						lastMsgCnt++
-					}
-				}
-			}
+	if wSpec.RedisClient != nil {
+		rdb := wSpec.RedisClient
+		rdChKey := wSpec.StreamKey.String()
+		pubsub := rdb.Subscribe(rdChKey)
+		// Close() also closes channels
+		defer pubsub.Close()
+
+		// Wait for confirmation that subscription is created before publishing anything.
+		_, err = pubsub.Receive()
+		if err != nil {
+			return err
 		}
 
-		streamCancel = wSpec.StreamCache.WatchKey(wSpec.StreamKey, func(ctx context.Context) {
-			checkStreamMsg()
-		})
+		// Go channel which receives messages.
+		ch := pubsub.Channel()
 
-		// After setting up watch, check if any status messages were received in the meantime
-		checkStreamMsg()
+		go func() {
+			// Consume messages.
+			for msgObj := range ch {
+				// Fetch message count from the payload, so that we can last message
+				// count to avoid duplicates
+				msgParts := strings.Split(msgObj.Payload, "::")
+				if len(msgParts) != 2 {
+					log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
+					continue
+				}
+				msgCntStr, msg := msgParts[0], msgParts[1]
+				msgCnt, err := strconv.ParseInt(msgCntStr, 10, 32)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelApi, "Failed to parse msg count from redis channel", "key", rdChKey, "msgcnt", msgCntStr, "err", err)
+					continue
+				}
+				if msgCnt <= lastMsgCnt {
+					continue
+				}
+				lastMsgCnt = msgCnt
+				send(&Result{Message: msg})
+			}
+		}()
 	}
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
@@ -3194,9 +3211,6 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		}
 	}
 	cancel()
-	if streamCancel != nil {
-		streamCancel()
-	}
 	// note: do not close done/failed, garbage collector will deal with it.
 	return err
 }

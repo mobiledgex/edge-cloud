@@ -234,20 +234,13 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.S
 	if len(infoStatus.Msgs) <= 0 {
 		return
 	}
-	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		streamObj := edgeproto.StreamObj{}
-		if !s.store.STMGet(stm, key, &streamObj) {
-			return key.NotFoundError()
+	for ii := 0; ii < len(infoStatus.Msgs); ii++ {
+		// publish the stream message received, and also prefix it with the message ID
+		// so that we can track the last message count to avoid duplicates
+		msg := fmt.Sprintf("%d::%s", ii+1, infoStatus.Msgs[ii])
+		err := redisClient.Publish(key.String(), msg).Err()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", key.String(), "err", err)
 		}
-		lastMsgId := int(streamObj.Status.MsgCount)
-		if lastMsgId < len(infoStatus.Msgs) {
-			streamObj.Status.Msgs = []string{}
-			for ii := lastMsgId; ii < len(infoStatus.Msgs); ii++ {
-				streamObj.Status.Msgs = append(streamObj.Status.Msgs, infoStatus.Msgs[ii])
-			}
-			streamObj.Status.MsgCount += uint32(len(streamObj.Status.Msgs))
-			s.store.STMPut(stm, &streamObj)
-		}
-		return nil
-	})
+	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/redisclient"
 
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -17,7 +18,6 @@ import (
 const RedisPingFail string = "Redis Ping Fail"
 const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 
-const MaxRedisWait = time.Second * 30
 const CheckActiveLogInterval = time.Second * 10
 
 type HAWatcher interface {
@@ -57,54 +57,22 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 		return fmt.Errorf("%s Redis Addr for HA not specified", HighAvailabilityManagerDisabled)
 	}
 	s.nodeGroupKey = nodeGroupKey
-	s.HAEnabled = true
-	err := s.connectRedis(ctx)
-	if err != nil {
-		return err
-	}
-	s.PlatformInstanceActive = s.tryActive(ctx)
-	return nil
-}
-
-func (s *HighAvailabilityManager) pingRedis(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis")
-
-	pong, err := s.redisClient.Ping().Result()
-	log.SpanLog(ctx, log.DebugLevelInfra, "redis ping done", "pong", pong, "err", err)
-
-	if err != nil {
-		return fmt.Errorf("%s - %v", RedisPingFail, err)
-	}
-	return nil
-}
-
-func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "connectRedis")
-	if s.redisAddr == "" {
-		return fmt.Errorf("Redis address not specified")
-	}
 	if s.nodeGroupKey == "" {
 		return fmt.Errorf("group key node not specified")
 	}
-	s.redisClient = redis.NewClient(&redis.Options{
-		Addr: s.redisAddr,
-	})
-	start := time.Now()
+	s.HAEnabled = true
+
 	var err error
-	for {
-		err = s.pingRedis(ctx)
-		if err == nil {
-			return nil
-		}
-		elapsed := time.Since(start)
-		if elapsed >= (MaxRedisWait) {
-			log.SpanLog(ctx, log.DebugLevelInfra, "redis wait timed out", "err", err)
-			break
-		}
-		time.Sleep(200 * time.Millisecond)
+	s.redisClient, err = redisclient.NewClient(s.redisAddr)
+	if err != nil {
+		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis failed", "err", err)
-	return fmt.Errorf("pingRedis failed - %v", err)
+	if err := redisclient.IsServerReady(s.redisClient); err != nil {
+		return err
+	}
+
+	s.PlatformInstanceActive = s.tryActive(ctx)
+	return nil
 }
 
 // TryActive is called on startup
