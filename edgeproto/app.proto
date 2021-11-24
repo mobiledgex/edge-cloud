@@ -59,6 +59,34 @@ enum ImageType {
   IMAGE_TYPE_OVF = 4;
 }
 
+// For DT QOS sessions prority POC
+enum QosNetworkPriorityType {
+  DEFAULT = 0;
+  LATENCY = 1;
+  THROUGHPUT = 2;
+}
+
+enum QosLatencyProfile {
+  // Best effort
+  LATENCY_DEFAULT = 0;
+  // Corresponds to a specific set of network parameters for low latency that will be 
+  // negotiated with the network provider in advance
+  LATENCY_LOW = 1;
+}
+
+// These profile names are from DT and the selected value will be included 
+// as the "qos" value in the qos-senf/v1/sessions POST.
+enum QosThroughputProfile {
+  // Best effort
+  THROUGHPUT_DEFAULT = 0;
+  // Downlink up to 20Mbps
+  THROUGHPUT_S = 1;
+  // Downlink up to 50Mbps
+  THROUGHPUT_M = 2;
+  // Downlink up to 100Mbps
+  THROUGHPUT_L = 3;
+}
+
 // VmAppOsType
 //
 // VmAppOsType specifies the Operating System for VM based Apps
@@ -209,6 +237,11 @@ message App {
   VmAppOsType vm_app_os_type = 41;
   // Alert Policies
   repeated string alert_policies = 42 [(protogen.refers_to) = "AlertPolicy"];
+
+  // For DT QOS Priority Sessions API
+  QosNetworkPriorityType qos_network_priority_type = 43;
+  QosLatencyProfile qos_latency_profile = 44;
+  QosThroughputProfile qos_throughput_profile = 45;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
