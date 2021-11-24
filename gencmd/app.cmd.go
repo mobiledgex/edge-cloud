@@ -733,6 +733,9 @@ var AppOptionalArgs = []string{
 	"serverlessconfig.minreplicas",
 	"vmappostype",
 	"alertpolicies",
+	"qosnetworkprioritytype",
+	"qoslatencyprofile",
+	"qosthroughputprofile",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -783,6 +786,9 @@ var AppComments = map[string]string{
 	"serverlessconfig.minreplicas": "Minimum number of replicas when serverless",
 	"vmappostype":                  "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"alertpolicies":                "Alert Policies, specify alertpolicies:empty=true to clear",
+	"qosnetworkprioritytype":       "For DT QOS Priority Sessions API, one of Default, Latency, Throughput",
+	"qoslatencyprofile":            ", one of Default, Low",
+	"qosthroughputprofile":         ", one of Default, S, M, L",
 }
 var AppSpecialArgs = map[string]string{
 	"alertpolicies":    "StringArray",
@@ -880,6 +886,9 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
 	"app.alertpolicies",
+	"app.qosnetworkprioritytype",
+	"app.qoslatencyprofile",
+	"app.qosthroughputprofile",
 	"dryrundeploy",
 	"numnodes",
 }
@@ -928,6 +937,9 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.minreplicas":               "Minimum number of replicas when serverless",
 	"app.vmappostype":                                "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"app.alertpolicies":                              "Alert Policies",
+	"app.qosnetworkprioritytype":                     "For DT QOS Priority Sessions API, one of Default, Latency, Throughput",
+	"app.qoslatencyprofile":                          ", one of Default, Low",
+	"app.qosthroughputprofile":                       ", one of Default, S, M, L",
 	"dryrundeploy":                                   "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                       "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }

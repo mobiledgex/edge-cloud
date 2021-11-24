@@ -695,6 +695,7 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"cellid",
+	"ipuserequipment",
 	"tags",
 }
 var FindCloudletRequestAliasArgs = []string{}
