@@ -1638,10 +1638,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	s.all.cloudletInfoApi.cleanupCloudletInfo(ctx, &in.Key)
 	s.all.autoProvInfoApi.Delete(ctx, &edgeproto.AutoProvInfo{Key: in.Key}, 0)
 	s.all.alertApi.CleanupCloudletAlerts(ctx, &in.Key)
-	streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
-	if cErr := s.all.streamObjApi.CleanupStreamObj(ctx, &edgeproto.StreamObj{Key: streamKey}); cErr != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup streamobj", "key", in.Key, "err", cErr)
-	}
 	return nil
 }
 

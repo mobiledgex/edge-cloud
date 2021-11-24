@@ -508,9 +508,6 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		// delete GPU driver obj
 		s.store.STMDel(stm, &in.Key)
-		// delete associated streamobj as well
-		streamKey := edgeproto.GetStreamKeyFromGPUDriverKey(&in.Key)
-		s.all.streamObjApi.store.STMDel(stm, &streamKey)
 		return nil
 	})
 	if err != nil {

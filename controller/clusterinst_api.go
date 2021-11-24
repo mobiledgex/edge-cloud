@@ -1392,9 +1392,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
 			s.all.clusterRefsApi.deleteRef(stm, &in.Key)
-			// delete associated streamobj as well
-			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
-			s.all.streamObjApi.store.STMDel(stm, &streamKey)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			s.store.STMPut(stm, in)
@@ -1555,9 +1552,6 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 		s.store.STMDel(stm, &in.Key)
 		s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 
-		// delete associated streamobj as well
-		streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
-		s.all.streamObjApi.store.STMDel(stm, &streamKey)
 		return nil
 	})
 }

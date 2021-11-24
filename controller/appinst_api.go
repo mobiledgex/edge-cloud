@@ -1747,8 +1747,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if cloudcommon.IsClusterInstReqd(&app) {
 				s.all.clusterRefsApi.removeRef(stm, in)
 			}
-			// delete associated streamobj as well
-			s.all.streamObjApi.store.STMDel(stm, &in.Key)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
 			in.Status = edgeproto.StatusInfo{}
@@ -1936,9 +1934,6 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		s.idStore.STMDel(stm, inst.UniqueId)
 		s.all.appInstRefsApi.removeRef(stm, &in.Key)
 		s.all.clusterRefsApi.removeRef(stm, &inst)
-
-		// delete associated streamobj as well
-		s.all.streamObjApi.store.STMDel(stm, &in.Key)
 		return nil
 	})
 }

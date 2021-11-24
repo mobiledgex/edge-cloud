@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -33,10 +32,7 @@ type streamSend struct {
 }
 
 type StreamObjApi struct {
-	all   *AllApis
-	sync  *Sync
-	store edgeproto.StreamObjStore
-	cache edgeproto.StreamObjCache
+	all *AllApis
 }
 
 type GenericCb interface {
@@ -52,10 +48,6 @@ type CbWrapper struct {
 func NewStreamObjApi(sync *Sync, all *AllApis) *StreamObjApi {
 	streamObjApi := StreamObjApi{}
 	streamObjApi.all = all
-	streamObjApi.sync = sync
-	streamObjApi.store = edgeproto.NewStreamObjStore(sync.store)
-	edgeproto.InitStreamObjCache(&streamObjApi.cache)
-	sync.RegisterCache(&streamObjApi.cache)
 	return &streamObjApi
 }
 
@@ -160,21 +152,6 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 		}
 	}
 
-	streamOk, ok := ctx.Value(streamOkKey).(bool)
-	if !ok || streamOk {
-		err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			streamObj := edgeproto.StreamObj{}
-			streamObj.Key = *key
-			streamObj.Status = edgeproto.StatusInfo{}
-			// Init stream obj regardless of it being present or not
-			s.store.STMPut(stm, &streamObj)
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	streamer = cloudcommon.NewStreamer()
 	streamSendObj := streamSend{}
 	streamSendObj.cb = inCb
@@ -196,35 +173,7 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 			streamSendObj.streamer.Stop()
 		}
 	}
-
-	streamOk, ok := ctx.Value(streamOkKey).(bool)
-	if !ok || streamOk {
-		s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-			streamObj := edgeproto.StreamObj{}
-			if !s.store.STMGet(stm, key, &streamObj) {
-				// if stream obj is deleted, then ignore emptying
-				// the status obj
-				return nil
-			}
-			streamObj.Status = edgeproto.StatusInfo{}
-			s.store.STMPut(stm, &streamObj)
-			return nil
-		})
-	}
-
 	return nil
-}
-
-func (s *StreamObjApi) CleanupStreamObj(ctx context.Context, in *edgeproto.StreamObj) error {
-	return s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		streamObj := edgeproto.StreamObj{}
-		if !s.store.STMGet(stm, &in.Key, &streamObj) {
-			// already removed
-			return nil
-		}
-		s.store.STMDel(stm, &in.Key)
-		return nil
-	})
 }
 
 // Status from info will always contain the full status update list,
