@@ -7987,6 +7987,10 @@ func CmpSortGPUDriver(a GPUDriver, b GPUDriver) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
+func (m *GPUDriverKey) StreamKey() string {
+	return fmt.Sprintf("GPUDriverStreamKey: %s", m.String())
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *GPUDriver) ValidateEnums() error {
@@ -10760,7 +10764,6 @@ func (c *CloudletCache) WaitForState(ctx context.Context, key *CloudletKey, targ
 	done := make(chan string, 1)
 	failed := make(chan bool, 1)
 	var err error
-	var lastMsgCnt int64
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -10768,10 +10771,9 @@ func (c *CloudletCache) WaitForState(ctx context.Context, key *CloudletKey, targ
 			return err
 		}
 	}
-
 	if wSpec.RedisClient != nil {
 		rdb := wSpec.RedisClient
-		rdChKey := wSpec.StreamKey.String()
+		rdChKey := key.StreamKey()
 		pubsub := rdb.Subscribe(rdChKey)
 		// Close() also closes channels
 		defer pubsub.Close()
@@ -10786,11 +10788,12 @@ func (c *CloudletCache) WaitForState(ctx context.Context, key *CloudletKey, targ
 		ch := pubsub.Channel()
 
 		go func() {
+			var lastMsgCnt int64
 			// Consume messages.
 			for msgObj := range ch {
-				// Fetch message count from the payload, so that we can last message
-				// count to avoid duplicates
-				msgParts := strings.Split(msgObj.Payload, "::")
+				// Fetch message count from the payload, so that we can fetch
+				// last message count to avoid duplicates
+				msgParts := strings.SplitN(msgObj.Payload, "::", 2)
 				if len(msgParts) != 2 {
 					log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
 					continue
@@ -10918,6 +10921,10 @@ func (m *Cloudlet) SetKey(key *CloudletKey) {
 
 func CmpSortCloudlet(a Cloudlet, b Cloudlet) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+func (m *CloudletKey) StreamKey() string {
+	return fmt.Sprintf("CloudletStreamKey: %s", m.String())
 }
 
 // Helper method to check that enums have valid values

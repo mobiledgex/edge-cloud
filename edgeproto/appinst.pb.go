@@ -4104,7 +4104,6 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 	done := make(chan string, 1)
 	failed := make(chan bool, 1)
 	var err error
-	var lastMsgCnt int64
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -4112,10 +4111,9 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			return err
 		}
 	}
-
 	if wSpec.RedisClient != nil {
 		rdb := wSpec.RedisClient
-		rdChKey := wSpec.StreamKey.String()
+		rdChKey := key.StreamKey()
 		pubsub := rdb.Subscribe(rdChKey)
 		// Close() also closes channels
 		defer pubsub.Close()
@@ -4130,11 +4128,12 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		ch := pubsub.Channel()
 
 		go func() {
+			var lastMsgCnt int64
 			// Consume messages.
 			for msgObj := range ch {
-				// Fetch message count from the payload, so that we can last message
-				// count to avoid duplicates
-				msgParts := strings.Split(msgObj.Payload, "::")
+				// Fetch message count from the payload, so that we can fetch
+				// last message count to avoid duplicates
+				msgParts := strings.SplitN(msgObj.Payload, "::", 2)
 				if len(msgParts) != 2 {
 					log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
 					continue
@@ -4268,6 +4267,10 @@ func (m *AppInst) SetKey(key *AppInstKey) {
 
 func CmpSortAppInst(a AppInst, b AppInst) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
+func (m *AppInstKey) StreamKey() string {
+	return fmt.Sprintf("AppInstStreamKey: %s", m.String())
 }
 
 // Helper method to check that enums have valid values

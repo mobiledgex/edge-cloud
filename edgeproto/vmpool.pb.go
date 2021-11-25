@@ -2625,54 +2625,12 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 	done := make(chan string, 1)
 	failed := make(chan bool, 1)
 	var err error
-	var lastMsgCnt int64
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
 		if err := op(&wSpec); err != nil {
 			return err
 		}
-	}
-
-	if wSpec.RedisClient != nil {
-		rdb := wSpec.RedisClient
-		rdChKey := wSpec.StreamKey.String()
-		pubsub := rdb.Subscribe(rdChKey)
-		// Close() also closes channels
-		defer pubsub.Close()
-
-		// Wait for confirmation that subscription is created before publishing anything.
-		_, err = pubsub.Receive()
-		if err != nil {
-			return err
-		}
-
-		// Go channel which receives messages.
-		ch := pubsub.Channel()
-
-		go func() {
-			// Consume messages.
-			for msgObj := range ch {
-				// Fetch message count from the payload, so that we can last message
-				// count to avoid duplicates
-				msgParts := strings.Split(msgObj.Payload, "::")
-				if len(msgParts) != 2 {
-					log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
-					continue
-				}
-				msgCntStr, msg := msgParts[0], msgParts[1]
-				msgCnt, err := strconv.ParseInt(msgCntStr, 10, 32)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelApi, "Failed to parse msg count from redis channel", "key", rdChKey, "msgcnt", msgCntStr, "err", err)
-					continue
-				}
-				if msgCnt <= lastMsgCnt {
-					continue
-				}
-				lastMsgCnt = msgCnt
-				send(&Result{Message: msg})
-			}
-		}()
 	}
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {

@@ -1667,6 +1667,10 @@ func CmpSortNetwork(a Network, b Network) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
+func (m *NetworkKey) StreamKey() string {
+	return fmt.Sprintf("NetworkStreamKey: %s", m.String())
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Network) ValidateEnums() error {

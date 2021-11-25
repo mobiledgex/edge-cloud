@@ -1400,6 +1400,10 @@ func CmpSortTrustPolicy(a TrustPolicy, b TrustPolicy) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
+func (m *PolicyKey) StreamKey() string {
+	return fmt.Sprintf("TrustPolicyStreamKey: %s", m.String())
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *TrustPolicy) ValidateEnums() error {

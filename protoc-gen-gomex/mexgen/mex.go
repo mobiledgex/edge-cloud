@@ -1299,6 +1299,7 @@ type cacheTemplateArgs struct {
 	WaitForState  string
 	ObjAndKey     bool
 	CustomKeyType string
+	StreamOut     bool
 }
 
 var cacheTemplateIn = `
@@ -1710,7 +1711,6 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	done := make(chan string, 1)
 	failed := make(chan bool, 1)
 	var err error
-	var lastMsgCnt int64
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -1719,9 +1719,10 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	}
 
+{{- if .StreamOut}}
         if wSpec.RedisClient != nil {
                 rdb := wSpec.RedisClient
-                rdChKey := wSpec.StreamKey.String()
+                rdChKey := key.StreamKey()
                 pubsub := rdb.Subscribe(rdChKey)
 		// Close() also closes channels
                 defer pubsub.Close()
@@ -1736,11 +1737,12 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
                 ch := pubsub.Channel()
 
                 go func() {
+			var lastMsgCnt int64
                         // Consume messages.
                         for msgObj := range ch {
-				// Fetch message count from the payload, so that we can last message
-				// count to avoid duplicates
-				msgParts := strings.Split(msgObj.Payload, "::")
+				// Fetch message count from the payload, so that we can fetch
+				// last message count to avoid duplicates
+				msgParts := strings.SplitN(msgObj.Payload, "::", 2)
 				if len(msgParts) != 2 {
                                         log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
 					continue
@@ -1759,6 +1761,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
                         }
                 }()
         }
+{{- end}}
 
 	cancel := c.WatchKey(key, func(ctx context.Context) {
 		info := {{.Name}}{}
@@ -2023,6 +2026,7 @@ type keysTemplateArgs struct {
 	Name      string
 	KeyType   string
 	ObjAndKey bool
+	StreamOut bool
 }
 
 var keysTemplateIn = `
@@ -2061,6 +2065,13 @@ func CmpSort{{.Name}}(a {{.Name}}, b {{.Name}}) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 {{- end}}
 }
+
+{{ if .StreamOut}}
+func (m *{{.KeyType}}) StreamKey() string {
+	return fmt.Sprintf("{{.Name}}StreamKey: %s", m.String())
+}
+{{ end}}
+
 
 
 `
@@ -2219,6 +2230,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			ObjAndKey:     gensupport.GetObjAndKey(message),
 			CustomKeyType: gensupport.GetCustomKeyType(message),
 			KeyType:       keyType,
+			StreamOut:     gensupport.GetGenerateCudStreamout(message),
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
@@ -2341,6 +2353,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.importJson = true
 		m.importLog = true
 	}
+
 	if gensupport.GetMessageKey(message) != nil || gensupport.GetObjAndKey(message) {
 		// this is an object that has a key field
 		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
@@ -2351,6 +2364,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			Name:      *message.Name,
 			KeyType:   keyType,
 			ObjAndKey: gensupport.GetObjAndKey(message),
+			StreamOut: gensupport.GetGenerateCudStreamout(message),
 		}
 		m.keysTemplate.Execute(m.gen.Buffer, args)
 	}

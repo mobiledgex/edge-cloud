@@ -306,7 +306,7 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 }
 
 func (s *AppInstApi) startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
-	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key, inCb)
+	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
 		return nil, inCb, err
@@ -318,7 +318,7 @@ func (s *AppInstApi) startAppInstStream(ctx context.Context, key *edgeproto.AppI
 }
 
 func (s *AppInstApi) stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, key, streamSendObj, objErr); err != nil {
+	if err := s.all.streamObjApi.stopStream(ctx, key.StreamKey(), streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
 }
@@ -326,7 +326,7 @@ func (s *AppInstApi) stopAppInstStream(ctx context.Context, key *edgeproto.AppIn
 func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	// populate the clusterinst developer from the app developer if not already present
 	cloudcommon.SetAppInstKeyDefaults(key)
-	return s.StreamMsgs(key, cb)
+	return s.StreamMsgs(key.StreamKey(), cb)
 }
 
 func (s *AppInstApi) checkForAppinstCollisions(ctx context.Context, key *edgeproto.AppInstKey) error {
@@ -1219,7 +1219,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR,
 		s.all.settingsApi.Get().CreateAppInstTimeout.TimeDuration(),
 		"Created AppInst successfully", cb.Send,
-		edgeproto.WithStreamObj(redisClient, &in.Key),
+		edgeproto.WithStreamObj(redisClient),
 	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
@@ -1399,7 +1399,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateAppInstTimeout.TimeDuration(),
 			"", cb.Send,
-			edgeproto.WithStreamObj(redisClient, &key),
+			edgeproto.WithStreamObj(redisClient),
 		)
 	}
 	if err != nil {
@@ -1770,7 +1770,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 			s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration(),
 			"Deleted AppInst successfully", cb.Send,
-			edgeproto.WithStreamObj(redisClient, &in.Key),
+			edgeproto.WithStreamObj(redisClient),
 		)
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
@@ -1849,7 +1849,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
 	// update only diff of status msgs
-	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, &in.Key)
+	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, in.Key.StreamKey())
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		applyUpdate := false

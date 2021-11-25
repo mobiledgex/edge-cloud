@@ -115,8 +115,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	}
 
 	// update only diff of status msgs
-	streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
-	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
+	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, in.Key.StreamKey())
 
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key

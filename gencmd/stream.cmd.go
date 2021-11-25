@@ -353,12 +353,12 @@ func StreamGPUDrivers(c *cli.Command, data []edgeproto.GPUDriverKey, err *error)
 
 var StreamLocalMsgsCmd = &cli.Command{
 	Use:          "StreamLocalMsgs",
-	RequiredArgs: strings.Join(AppInstKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(AppInstKeyOptionalArgs, " "),
-	AliasArgs:    strings.Join(AppInstKeyAliasArgs, " "),
-	SpecialArgs:  &AppInstKeySpecialArgs,
-	Comments:     AppInstKeyComments,
-	ReqData:      &edgeproto.AppInstKey{},
+	RequiredArgs: strings.Join(StreamKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(StreamKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(StreamKeyAliasArgs, " "),
+	SpecialArgs:  &StreamKeySpecialArgs,
+	Comments:     StreamKeyComments,
+	ReqData:      &edgeproto.StreamKey{},
 	ReplyData:    &edgeproto.Result{},
 	Run:          runStreamLocalMsgs,
 }
@@ -367,7 +367,7 @@ func runStreamLocalMsgs(c *cli.Command, args []string) error {
 	if cli.SilenceUsage {
 		c.CobraCmd.SilenceUsage = true
 	}
-	obj := c.ReqData.(*edgeproto.AppInstKey)
+	obj := c.ReqData.(*edgeproto.StreamKey)
 	_, err := c.ParseInput(args)
 	if err != nil {
 		return err
@@ -375,7 +375,7 @@ func runStreamLocalMsgs(c *cli.Command, args []string) error {
 	return StreamLocalMsgs(c, obj)
 }
 
-func StreamLocalMsgs(c *cli.Command, in *edgeproto.AppInstKey) error {
+func StreamLocalMsgs(c *cli.Command, in *edgeproto.StreamKey) error {
 	if StreamObjApiCmd == nil {
 		return fmt.Errorf("StreamObjApi client not initialized")
 	}
@@ -414,7 +414,7 @@ func StreamLocalMsgs(c *cli.Command, in *edgeproto.AppInstKey) error {
 }
 
 // this supports "Create" and "Delete" commands on ApplicationData
-func StreamLocalMsgss(c *cli.Command, data []edgeproto.AppInstKey, err *error) {
+func StreamLocalMsgss(c *cli.Command, data []edgeproto.StreamKey, err *error) {
 	if *err != nil {
 		return
 	}
@@ -436,35 +436,10 @@ var StreamObjApiCmds = []*cobra.Command{
 	StreamLocalMsgsCmd.GenCmd(),
 }
 
-var StreamObjRequiredArgs = []string{
-	"key.appkey.organization",
-	"key.appkey.name",
-	"key.appkey.version",
-	"key.clusterinstkey.clusterkey.name",
-	"key.clusterinstkey.cloudletkey.organization",
-	"key.clusterinstkey.cloudletkey.name",
-	"key.clusterinstkey.cloudletkey.federatedorganization",
-	"key.clusterinstkey.organization",
+var StreamKeyRequiredArgs = []string{}
+var StreamKeyOptionalArgs = []string{
+	"name",
 }
-var StreamObjOptionalArgs = []string{
-	"status.tasknumber",
-	"status.maxtasks",
-	"status.taskname",
-	"status.stepname",
-	"status.msgcount",
-	"status.msgs",
-}
-var StreamObjAliasArgs = []string{}
-var StreamObjComments = map[string]string{
-	"key.appkey.organization":                              "App developer organization",
-	"key.appkey.name":                                      "App name",
-	"key.appkey.version":                                   "App version",
-	"key.clusterinstkey.clusterkey.name":                   "Cluster name",
-	"key.clusterinstkey.cloudletkey.organization":          "Organization of the cloudlet site",
-	"key.clusterinstkey.cloudletkey.name":                  "Name of the cloudlet",
-	"key.clusterinstkey.cloudletkey.federatedorganization": "Federated operator organization who shared this cloudlet",
-	"key.clusterinstkey.organization":                      "Name of Developer organization that this cluster belongs to",
-}
-var StreamObjSpecialArgs = map[string]string{
-	"status.msgs": "StringArray",
-}
+var StreamKeyAliasArgs = []string{}
+var StreamKeyComments = map[string]string{}
+var StreamKeySpecialArgs = map[string]string{}

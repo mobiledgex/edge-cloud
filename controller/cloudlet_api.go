@@ -189,8 +189,7 @@ func (s *CloudletApi) getPlatformConfig(ctx context.Context, cloudlet *edgeproto
 }
 
 func (s *CloudletApi) startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (*streamSend, edgeproto.CloudletApi_CreateCloudletServer, error) {
-	streamKey := edgeproto.GetStreamKeyFromCloudletKey(key)
-	streamSendObj, err := s.all.streamObjApi.startStream(ctx, &streamKey, inCb)
+	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
 		return nil, inCb, err
@@ -202,8 +201,7 @@ func (s *CloudletApi) startCloudletStream(ctx context.Context, key *edgeproto.Cl
 }
 
 func (s *CloudletApi) stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error) {
-	streamKey := edgeproto.GetStreamKeyFromCloudletKey(key)
-	if err := s.all.streamObjApi.stopStream(ctx, &streamKey, streamSendObj, objErr); err != nil {
+	if err := s.all.streamObjApi.stopStream(ctx, key.StreamKey(), streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop Cloudlet stream", "err", err)
 	}
 }
@@ -216,7 +214,7 @@ func (s *StreamObjApi) StreamCloudlet(key *edgeproto.CloudletKey, cb edgeproto.S
 		cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_DIRECT_ACCESS ||
 		(cloudlet.InfraApiAccess == edgeproto.InfraApiAccess_RESTRICTED_ACCESS && cloudlet.State != edgeproto.TrackedState_READY) {
 		// If restricted scenario, then stream msgs only if either cloudlet obj was not created successfully or it is updating
-		return s.StreamMsgs(&edgeproto.AppInstKey{ClusterInstKey: edgeproto.VirtualClusterInstKey{CloudletKey: *key}}, cb)
+		return s.StreamMsgs(key.StreamKey(), cb)
 	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	if s.all.cloudletInfoApi.cache.Get(key, &cloudletInfo) {
@@ -741,7 +739,6 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return nil
 		}
 		// Wait for CRM to connect to controller
-		streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
 		go func() {
 			err := cloudcommon.CrmServiceWait(in.Key)
 			if err != nil {
@@ -754,7 +751,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			CreateCloudletTransitions, edgeproto.TrackedState_CREATE_ERROR,
 			s.all.settingsApi.Get().CreateCloudletTimeout.TimeDuration(),
 			"Created Cloudlet successfully", cb.Send,
-			edgeproto.WithStreamObj(redisClient, &streamKey))
+			edgeproto.WithStreamObj(redisClient))
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
 	}
@@ -1185,14 +1182,13 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	if crmUpdateReqd && !ignoreCRM(cctx) {
 		// Wait for cloudlet to finish upgrading
-		streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
 		err = s.cache.WaitForState(
 			ctx, &in.Key,
 			edgeproto.TrackedState_READY,
 			UpdateCloudletTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateCloudletTimeout.TimeDuration(),
 			"Cloudlet updated successfully", cb.Send,
-			edgeproto.WithStreamObj(redisClient, &streamKey))
+			edgeproto.WithStreamObj(redisClient))
 		return err
 	}
 	if privPolUpdateRequested && !ignoreCRM(cctx) {

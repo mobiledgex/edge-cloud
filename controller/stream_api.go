@@ -61,13 +61,14 @@ func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	return nil
 }
 
-func (s *StreamObjApi) StreamLocalMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamLocalMsgsServer) error {
+func (s *StreamObjApi) StreamLocalMsgs(streamKeyObj *edgeproto.StreamKey, cb edgeproto.StreamObjApi_StreamLocalMsgsServer) error {
 	ctx := cb.Context()
-	log.SpanLog(ctx, log.DebugLevelApi, "Stream obj messages", "key", key)
-	streamer := streamObjs.Get(*key)
+	streamKey := streamKeyObj.Name
+	log.SpanLog(ctx, log.DebugLevelApi, "Stream obj messages", "key", streamKey)
+	streamer := streamObjs.Get(streamKey)
 	if streamer == nil {
 		// stream not found, nothing to show
-		log.SpanLog(ctx, log.DebugLevelApi, "Stream obj not found", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Stream obj not found", "key", streamKey)
 		return nil
 	}
 	streamCh := streamer.Subscribe()
@@ -87,12 +88,13 @@ func (s *StreamObjApi) StreamLocalMsgs(key *edgeproto.AppInstKey, cb edgeproto.S
 	return nil
 }
 
-func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
+func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	ctx := cb.Context()
 
+	streamKeyObj := edgeproto.StreamKey{Name: streamKey}
 	if *externalApiAddr == "" {
 		// unit test
-		return s.StreamLocalMsgs(key, cb)
+		return s.StreamLocalMsgs(&streamKeyObj, cb)
 	}
 
 	// Currently we don't know which controller has the streamer Obj for this key
@@ -106,7 +108,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	err := s.all.controllerApi.RunJobs(func(arg interface{}, addr string) error {
 		if addr == *externalApiAddr {
 			// local node
-			return s.StreamLocalMsgs(key, cb)
+			return s.StreamLocalMsgs(&streamKeyObj, cb)
 		}
 		// connect to remote node
 		conn, cErr := ControllerConnect(ctx, addr)
@@ -118,7 +120,7 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 		cmd := edgeproto.NewStreamObjApiClient(conn)
 		ctx, cancel := context.WithTimeout(context.Background(), StreamTimeout)
 		defer cancel()
-		stream, sErr := cmd.StreamLocalMsgs(ctx, key)
+		stream, sErr := cmd.StreamLocalMsgs(ctx, &streamKeyObj)
 		if sErr != nil {
 			return sErr
 		}
@@ -142,13 +144,13 @@ func (s *StreamObjApi) StreamMsgs(key *edgeproto.AppInstKey, cb edgeproto.Stream
 	return err
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKey, inCb GenericCb) (*streamSend, error) {
-	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", key)
-	streamer := streamObjs.Get(*key)
+func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb GenericCb) (*streamSend, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
+	streamer := streamObjs.Get(streamKey)
 	if streamer != nil {
 		// stream is already in progress for this key
 		if streamer.State == edgeproto.StreamState_STREAM_START {
-			return nil, key.ExistsError()
+			return nil, fmt.Errorf("Stream already in progress for %s", streamKey)
 		}
 	}
 
@@ -156,13 +158,13 @@ func (s *StreamObjApi) startStream(ctx context.Context, key *edgeproto.AppInstKe
 	streamSendObj := streamSend{}
 	streamSendObj.cb = inCb
 	streamSendObj.streamer = streamer
-	streamObjs.Add(*key, streamer)
+	streamObjs.Add(streamKey, streamer)
 
 	return &streamSendObj, nil
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", key, "err", objErr)
+func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamSendObj *streamSend, objErr error) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", streamKey, "err", objErr)
 	if streamSendObj != nil {
 		streamSendObj.mux.Lock()
 		defer streamSendObj.mux.Unlock()
@@ -179,7 +181,7 @@ func (s *StreamObjApi) stopStream(ctx context.Context, key *edgeproto.AppInstKey
 // Status from info will always contain the full status update list,
 // changes we copy to status that is saved to etcd is only the diff
 // from the last update.
-func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.StatusInfo, key *edgeproto.AppInstKey) {
+func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.StatusInfo, streamKey string) {
 	if len(infoStatus.Msgs) <= 0 {
 		return
 	}
@@ -187,9 +189,9 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.S
 		// publish the stream message received, and also prefix it with the message ID
 		// so that we can track the last message count to avoid duplicates
 		msg := fmt.Sprintf("%d::%s", ii+1, infoStatus.Msgs[ii])
-		err := redisClient.Publish(key.String(), msg).Err()
+		err := redisClient.Publish(streamKey, msg).Err()
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", key.String(), "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", streamKey, "err", err)
 		}
 	}
 }

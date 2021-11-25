@@ -45,15 +45,13 @@ var ReservedPlatformPorts = map[string]string{
 
 type WaitStateSpec struct {
 	RedisClient *redis.Client
-	StreamKey   *AppInstKey
 }
 
 type WaitStateOps func(wSpec *WaitStateSpec) error
 
-func WithStreamObj(redisClient *redis.Client, streamKey *AppInstKey) WaitStateOps {
+func WithStreamObj(redisClient *redis.Client) WaitStateOps {
 	return func(wSpec *WaitStateSpec) error {
 		wSpec.RedisClient = redisClient
-		wSpec.StreamKey = streamKey
 		return nil
 	}
 }
@@ -1229,37 +1227,11 @@ func (s *AppInstKey) FromClusterRefsAppInstKey(key *ClusterRefsAppInstKey, cKey 
 	s.ClusterInstKey.CloudletKey = cKey.CloudletKey
 }
 
-func (s *StreamObj) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().ValidateKey(); err != nil {
-		return err
+func (s *StreamKey) Validate(fields map[string]struct{}) error {
+	if !util.ValidName(s.Name) {
+		return errors.New("Invalid stream name")
 	}
 	return nil
-}
-
-func GetStreamKeyFromClusterInstKey(key *VirtualClusterInstKey) AppInstKey {
-	return AppInstKey{
-		ClusterInstKey: *key,
-	}
-}
-
-func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
-	return AppInstKey{
-		ClusterInstKey: VirtualClusterInstKey{
-			CloudletKey: *key,
-		},
-	}
-}
-
-// Temporary way to get unique stream key for GPU driver object
-// This will be fixed as part of 3rd-party in-memory DB changes
-func GetStreamKeyFromGPUDriverKey(key *GPUDriverKey) AppInstKey {
-	return AppInstKey{
-		ClusterInstKey: VirtualClusterInstKey{
-			CloudletKey: CloudletKey{
-				Name: key.Name + "_" + key.Organization,
-			},
-		},
-	}
 }
 
 func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
