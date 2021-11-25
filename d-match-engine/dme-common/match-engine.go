@@ -1498,6 +1498,10 @@ loop:
 				newCloudletEdgeEvent.NewCloudlet = fcreply
 				EEHandler.SendEdgeEventToClient(ctx, newCloudletEdgeEvent, *appInstKey, *sessionCookieKey)
 			}
+		case dme.ClientEdgeEvent_EVENT_ECN_STATUS:
+			// TODO: Log only.
+			ecnStatus := cupdate.EcnStatus
+			log.SpanLog(ctx, log.DebugLevelDmereq, fmt.Sprintf("Client ECN Status update: Bandwidth: %f, Strategy: %s, Last ECN Bit: %s", ecnStatus.Bandwidth, ecnStatus.Strategy, ecnStatus.EcnBit))
 		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
 			customStatKey := GetCustomStatKey(*appInstKey, cupdate.CustomEvent)
 			customStatInfo := &CustomStatInfo{

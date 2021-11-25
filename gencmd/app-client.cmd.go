@@ -1617,6 +1617,18 @@ var QosPositionKpiReplyComments = map[string]string{
 var QosPositionKpiReplySpecialArgs = map[string]string{
 	"tags": "StringToString",
 }
+var ECNStatusRequiredArgs = []string{}
+var ECNStatusOptionalArgs = []string{
+	"ecnbit",
+	"strategy",
+	"bandwidth",
+}
+var ECNStatusAliasArgs = []string{}
+var ECNStatusComments = map[string]string{
+	"ecnbit":   ", one of NonEct, Ect0, Ect1, Ce",
+	"strategy": ", one of 1, 2, 3",
+}
+var ECNStatusSpecialArgs = map[string]string{}
 var ClientEdgeEventRequiredArgs = []string{}
 var ClientEdgeEventOptionalArgs = []string{
 	"sessioncookie",
@@ -1639,13 +1651,16 @@ var ClientEdgeEventOptionalArgs = []string{
 	"deviceinfodynamic.signalstrength",
 	"deviceinfodynamic.carriername",
 	"customevent",
+	"ecnstatus.ecnbit",
+	"ecnstatus.strategy",
+	"ecnstatus.bandwidth",
 	"tags",
 }
 var ClientEdgeEventAliasArgs = []string{}
 var ClientEdgeEventComments = map[string]string{
 	"sessioncookie":                     "Session Cookie from RegisterClientReply",
 	"edgeeventscookie":                  "Session Cookie from FindCloudletReply",
-	"eventtype":                         ", one of Unknown, InitConnection, TerminateConnection, LatencySamples, LocationUpdate, CustomEvent",
+	"eventtype":                         ", one of Unknown, InitConnection, TerminateConnection, LatencySamples, LocationUpdate, CustomEvent, EcnStatus",
 	"gpslocation.latitude":              "Latitude in WGS 84 coordinates",
 	"gpslocation.longitude":             "Longitude in WGS 84 coordinates",
 	"gpslocation.horizontalaccuracy":    "Horizontal accuracy (radius in meters)",
@@ -1663,6 +1678,8 @@ var ClientEdgeEventComments = map[string]string{
 	"deviceinfodynamic.signalstrength":  "Device signal strength",
 	"deviceinfodynamic.carriername":     "Carrier name (can be different from cloudlet org if using )",
 	"customevent":                       "Custom event specified by the application",
+	"ecnstatus.ecnbit":                  ", one of NonEct, Ect0, Ect1, Ce",
+	"ecnstatus.strategy":                ", one of 1, 2, 3",
 	"tags":                              "_(optional)_ Vendor specific data",
 }
 var ClientEdgeEventSpecialArgs = map[string]string{
@@ -1706,6 +1723,9 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.qoserrormsg",
 	"newcloudlet.tags",
 	"errormsg",
+	"ecnstatus.ecnbit",
+	"ecnstatus.strategy",
+	"ecnstatus.bandwidth",
 	"tags",
 }
 var ServerEdgeEventAliasArgs = []string{}
@@ -1745,6 +1765,8 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.qoserrormsg":                         "Error message in case of QOS_SESSION_FAILED",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
 	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
+	"ecnstatus.ecnbit":                                ", one of NonEct, Ect0, Ect1, Ce",
+	"ecnstatus.strategy":                              ", one of 1, 2, 3",
 	"tags":                                            "_(optional)_ Vendor specific data",
 }
 var ServerEdgeEventSpecialArgs = map[string]string{
