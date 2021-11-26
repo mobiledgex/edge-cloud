@@ -50,7 +50,7 @@ build-docker:
 		--build-arg EDGE_CLOUD_BASE_IMAGE=$(EDGE_CLOUD_BASE_IMAGE) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		-t $(REGISTRY)/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
-	for COMP in alertmgr-sidecar autoprov cluster-svc controller crm dme edgeturn mc notifyroot; do \
+	for COMP in alertmgr-sidecar autoprov cluster-svc controller crm dme edgeturn frm mc notifyroot; do \
 		docker buildx build --push -t $(REGISTRY)/edge-cloud-$$COMP:$(TAG) \
 			--build-arg ALLINONE=$(REGISTRY)/edge-cloud:$(TAG) \
 			--build-arg EDGE_CLOUD_BASE_IMAGE=$(EDGE_CLOUD_BASE_IMAGE) \
