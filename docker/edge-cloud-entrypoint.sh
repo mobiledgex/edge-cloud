@@ -15,6 +15,7 @@ case "$1" in
     dme-server|\
     edgectl|\
     edgeturn|\
+    frm|\
     loc-api-sim|\
     mc|\
     mcctl|\
