@@ -91,7 +91,7 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	tpeData.Key.CloudletPoolKey.Organization = "Mission Mars"
 	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "TrustPolicyExceptionKey: CloudletPoolKey does not exist")
+	require.Contains(t, err.Error(), tpeData.Key.CloudletPoolKey.NotFoundError().Error())
 	// Restore tpeData Key to original values
 	tpeData.Key.CloudletPoolKey.Organization = testutil.OperatorData[2]
 
@@ -99,9 +99,11 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	tpeData.Key.AppKey.Organization = testutil.DevData[2]
 	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "TrustPolicyExceptionKey: App does not exist")
+	require.Contains(t, err.Error(), tpeData.Key.AppKey.NotFoundError().Error())
 	// Restore tpeData Key to original values
 	tpeData.Key.AppKey.Organization = testutil.DevData[0]
+
+	testutil.InternalAppInstDelete(t, apis.appInstApi, testutil.AppInstData)
 
 	// test that App delete fails if TPE exists that refers to it
 	app0 := testutil.AppData[0]
@@ -117,8 +119,8 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[0], "cannot be higher than max")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[1], "invalid CIDR")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[2], "Invalid min port")
-	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3], "App does not exist")
-	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4], "CloudletPoolKey does not exist")
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3], testutil.TrustPolicyExceptionErrorData[3].Key.AppKey.NotFoundError().Error())
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4], testutil.TrustPolicyExceptionErrorData[4].Key.CloudletPoolKey.NotFoundError().Error())
 
 	dummy.Stop()
 }

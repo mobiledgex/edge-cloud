@@ -231,15 +231,10 @@ func (e *DebugLevel) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid DebugLevel value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e DebugLevel) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DebugLevel_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
 
 type MatchOptions struct {
 	// Filter will ignore 0 or nil fields on the passed in object
