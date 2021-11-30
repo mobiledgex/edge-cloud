@@ -44,14 +44,14 @@ var ReservedPlatformPorts = map[string]string{
 }
 
 type WaitStateSpec struct {
-	RedisClient *redis.Client
+	CrmMsgCh <-chan *redis.Message
 }
 
 type WaitStateOps func(wSpec *WaitStateSpec) error
 
-func WithStreamObj(redisClient *redis.Client) WaitStateOps {
+func WithCrmMsgCh(crmCh <-chan *redis.Message) WaitStateOps {
 	return func(wSpec *WaitStateSpec) error {
-		wSpec.RedisClient = redisClient
+		wSpec.CrmMsgCh = crmCh
 		return nil
 	}
 }

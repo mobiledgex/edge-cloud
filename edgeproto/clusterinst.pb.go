@@ -26,7 +26,6 @@ import (
 	math "math"
 	math_bits "math/bits"
 	reflect "reflect"
-	"strconv"
 	strings "strings"
 	"time"
 )
@@ -3082,10 +3081,10 @@ func (c *ClusterInstCache) SyncListEnd(ctx context.Context) {
 }
 
 func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
-	curState := TrackedState_TRACKED_STATE_UNKNOWN
-	done := make(chan string, 1)
-	failed := make(chan bool, 1)
+	var lastMsgCnt int
 	var err error
+
+	curState := TrackedState_TRACKED_STATE_UNKNOWN
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -3093,125 +3092,64 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 			return err
 		}
 	}
-	if wSpec.RedisClient != nil {
-		rdb := wSpec.RedisClient
-		rdChKey := key.StreamKey()
-		pubsub := rdb.Subscribe(rdChKey)
-		// Close() also closes channels
-		defer pubsub.Close()
 
-		// Wait for confirmation that subscription is created before publishing anything.
-		_, err = pubsub.Receive()
-		if err != nil {
+	if wSpec.CrmMsgCh == nil {
+		return nil
+	}
+
+	for {
+		select {
+		case chObj := <-wSpec.CrmMsgCh:
+			info := ClusterInstInfo{}
+			err = json.Unmarshal([]byte(chObj.Payload), &info)
+			if err != nil {
+				return err
+			}
+			curState = info.State
+			log.SpanLog(ctx, log.DebugLevelApi, "Received crm update for ClusterInst", "key", key, "obj", info)
+			if send != nil {
+				for ii := lastMsgCnt; ii < len(info.Status.Msgs); ii++ {
+					send(&Result{Message: info.Status.Msgs[ii]})
+				}
+				lastMsgCnt = len(info.Status.Msgs)
+			}
+
+			switch info.State {
+			case errorState:
+				errs := strings.Join(info.Errors, ", ")
+				err = fmt.Errorf("Encountered failures: %s", errs)
+				return err
+			case targetState:
+
+				if targetState == TrackedState_NOT_PRESENT {
+					send(&Result{Message: TrackedState_CamelName[int32(targetState)]})
+				}
+				if successMsg != "" && send != nil {
+					send(&Result{Message: successMsg})
+				}
+				return nil
+			}
+		case <-time.After(timeout):
+			if _, found := transitionStates[curState]; found {
+				// no success response, but state is a valid transition
+				// state. That means work is still in progress.
+				// Notify user that this is not an error.
+				// Do not undo since CRM is still busy.
+				if send != nil {
+
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowClusterInst to check current status", TrackedState_CamelName[int32(curState)])
+					send(&Result{Message: msg})
+				}
+				err = nil
+			} else {
+				err = fmt.Errorf("Timed out; expected state %s but is %s",
+
+					TrackedState_CamelName[int32(targetState)],
+					TrackedState_CamelName[int32(curState)])
+			}
 			return err
 		}
-
-		// Go channel which receives messages.
-		ch := pubsub.Channel()
-
-		go func() {
-			var lastMsgCnt int64
-			// Consume messages.
-			for msgObj := range ch {
-				// Fetch message count from the payload, so that we can fetch
-				// last message count to avoid duplicates
-				msgParts := strings.SplitN(msgObj.Payload, "::", 2)
-				if len(msgParts) != 2 {
-					log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
-					continue
-				}
-				msgCntStr, msg := msgParts[0], msgParts[1]
-				msgCnt, err := strconv.ParseInt(msgCntStr, 10, 32)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelApi, "Failed to parse msg count from redis channel", "key", rdChKey, "msgcnt", msgCntStr, "err", err)
-					continue
-				}
-				if msgCnt <= lastMsgCnt {
-					continue
-				}
-				lastMsgCnt = msgCnt
-				send(&Result{Message: msg})
-			}
-		}()
 	}
-
-	cancel := c.WatchKey(key, func(ctx context.Context) {
-		info := ClusterInst{}
-		if c.Get(key, &info) {
-			curState = info.State
-		} else {
-			curState = TrackedState_NOT_PRESENT
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "Watch event for ClusterInst", "key", key, "state", TrackedState_CamelName[int32(curState)])
-		if curState == errorState {
-			failed <- true
-		} else if curState == targetState {
-			msg := ""
-			if curState == TrackedState_NOT_PRESENT {
-				msg = TrackedState_CamelName[int32(curState)]
-			}
-			done <- msg
-		}
-	})
-	// After setting up watch, check current state,
-	// as it may have already changed to target state
-	info := ClusterInst{}
-	if c.Get(key, &info) {
-		curState = info.State
-	} else {
-		curState = TrackedState_NOT_PRESENT
-	}
-	if curState == targetState {
-		msg := ""
-		if curState == TrackedState_NOT_PRESENT {
-			msg = TrackedState_CamelName[int32(curState)]
-		}
-		done <- msg
-	}
-
-	select {
-	case doneMsg := <-done:
-		if doneMsg != "" {
-			send(&Result{Message: doneMsg})
-		}
-		err = nil
-		if successMsg != "" && send != nil {
-			send(&Result{Message: successMsg})
-		}
-	case <-failed:
-		if c.Get(key, &info) {
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else {
-			// this shouldn't happen, since only way to get here
-			// is if info state is set to Error
-			err = errors.New("Unknown failure")
-		}
-	case <-time.After(timeout):
-		hasInfo := c.Get(key, &info)
-		if hasInfo && info.State == errorState {
-			// error may have been sent back before watch started
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else if _, found := transitionStates[info.State]; hasInfo && found {
-			// no success response, but state is a valid transition
-			// state. That means work is still in progress.
-			// Notify user that this is not an error.
-			// Do not undo since CRM is still busy.
-			if send != nil {
-				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowClusterInst to check current status", TrackedState_CamelName[int32(info.State)])
-				send(&Result{Message: msg})
-			}
-			err = nil
-		} else {
-			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				TrackedState_CamelName[int32(targetState)],
-				TrackedState_CamelName[int32(curState)])
-		}
-	}
-	cancel()
-	// note: do not close done/failed, garbage collector will deal with it.
-	return err
 }
 
 func (m *ClusterInst) GetObjKey() objstore.ObjKey {
@@ -3233,7 +3171,6 @@ func (m *ClusterInst) SetKey(key *ClusterInstKey) {
 func CmpSortClusterInst(a ClusterInst, b ClusterInst) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
-
 func (m *ClusterInstKey) StreamKey() string {
 	return fmt.Sprintf("ClusterInstStreamKey: %s", m.String())
 }

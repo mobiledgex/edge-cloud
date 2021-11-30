@@ -1399,7 +1399,6 @@ func (m *TrustPolicy) SetKey(key *PolicyKey) {
 func CmpSortTrustPolicy(a TrustPolicy, b TrustPolicy) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
-
 func (m *PolicyKey) StreamKey() string {
 	return fmt.Sprintf("TrustPolicyStreamKey: %s", m.String())
 }

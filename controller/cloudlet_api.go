@@ -57,11 +57,9 @@ var (
 )
 
 // Transition states indicate states in which the CRM is still busy.
-var CreateCloudletTransitions = map[edgeproto.TrackedState]struct{}{
-	edgeproto.TrackedState_CREATING: struct{}{},
-}
-var UpdateCloudletTransitions = map[edgeproto.TrackedState]struct{}{
-	edgeproto.TrackedState_UPDATING: struct{}{},
+var CreateCloudletTransitions = map[dme.CloudletState]struct{}{}
+var UpdateCloudletTransitions = map[dme.CloudletState]struct{}{
+	dme.CloudletState_CLOUDLET_STATE_UPGRADE: struct{}{},
 }
 
 const (
@@ -747,11 +745,11 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}()
 		err = s.cache.WaitForState(
 			ctx, &in.Key,
-			edgeproto.TrackedState_READY,
-			CreateCloudletTransitions, edgeproto.TrackedState_CREATE_ERROR,
+			dme.CloudletState_CLOUDLET_STATE_READY,
+			CreateCloudletTransitions, dme.CloudletState_CLOUDLET_STATE_ERRORS,
 			s.all.settingsApi.Get().CreateCloudletTimeout.TimeDuration(),
 			"Created Cloudlet successfully", cb.Send,
-			edgeproto.WithStreamObj(redisClient))
+			edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
 	} else {
 		cb.Send(&edgeproto.Result{Message: err.Error()})
 	}
@@ -1184,11 +1182,11 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		// Wait for cloudlet to finish upgrading
 		err = s.cache.WaitForState(
 			ctx, &in.Key,
-			edgeproto.TrackedState_READY,
-			UpdateCloudletTransitions, edgeproto.TrackedState_UPDATE_ERROR,
+			dme.CloudletState_CLOUDLET_STATE_READY,
+			UpdateCloudletTransitions, dme.CloudletState_CLOUDLET_STATE_ERRORS,
 			s.all.settingsApi.Get().UpdateCloudletTimeout.TimeDuration(),
 			"Cloudlet updated successfully", cb.Send,
-			edgeproto.WithStreamObj(redisClient))
+			edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
 		return err
 	}
 	if privPolUpdateRequested && !ignoreCRM(cctx) {

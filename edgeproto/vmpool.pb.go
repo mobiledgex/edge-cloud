@@ -2621,10 +2621,10 @@ func (c *VMPoolCache) SyncListEnd(ctx context.Context) {
 }
 
 func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
-	curState := TrackedState_TRACKED_STATE_UNKNOWN
-	done := make(chan string, 1)
-	failed := make(chan bool, 1)
+	var lastMsgCnt int
 	var err error
+
+	curState := TrackedState_TRACKED_STATE_UNKNOWN
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -2633,83 +2633,63 @@ func (c *VMPoolCache) WaitForState(ctx context.Context, key *VMPoolKey, targetSt
 		}
 	}
 
-	cancel := c.WatchKey(key, func(ctx context.Context) {
-		info := VMPool{}
-		if c.Get(key, &info) {
-			curState = info.State
-		} else {
-			curState = TrackedState_NOT_PRESENT
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "Watch event for VMPool", "key", key, "state", TrackedState_CamelName[int32(curState)])
-		if curState == errorState {
-			failed <- true
-		} else if curState == targetState {
-			msg := ""
-			if curState == TrackedState_NOT_PRESENT {
-				msg = TrackedState_CamelName[int32(curState)]
-			}
-			done <- msg
-		}
-	})
-	// After setting up watch, check current state,
-	// as it may have already changed to target state
-	info := VMPool{}
-	if c.Get(key, &info) {
-		curState = info.State
-	} else {
-		curState = TrackedState_NOT_PRESENT
-	}
-	if curState == targetState {
-		msg := ""
-		if curState == TrackedState_NOT_PRESENT {
-			msg = TrackedState_CamelName[int32(curState)]
-		}
-		done <- msg
+	if wSpec.CrmMsgCh == nil {
+		return nil
 	}
 
-	select {
-	case doneMsg := <-done:
-		if doneMsg != "" {
-			send(&Result{Message: doneMsg})
-		}
-		err = nil
-		if successMsg != "" && send != nil {
-			send(&Result{Message: successMsg})
-		}
-	case <-failed:
-		if c.Get(key, &info) {
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else {
-			// this shouldn't happen, since only way to get here
-			// is if info state is set to Error
-			err = errors.New("Unknown failure")
-		}
-	case <-time.After(timeout):
-		hasInfo := c.Get(key, &info)
-		if hasInfo && info.State == errorState {
-			// error may have been sent back before watch started
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else if _, found := transitionStates[info.State]; hasInfo && found {
-			// no success response, but state is a valid transition
-			// state. That means work is still in progress.
-			// Notify user that this is not an error.
-			// Do not undo since CRM is still busy.
-			if send != nil {
-				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowVMPool to check current status", TrackedState_CamelName[int32(info.State)])
-				send(&Result{Message: msg})
+	for {
+		select {
+		case chObj := <-wSpec.CrmMsgCh:
+			info := VMPoolInfo{}
+			err = json.Unmarshal([]byte(chObj.Payload), &info)
+			if err != nil {
+				return err
 			}
-			err = nil
-		} else {
-			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				TrackedState_CamelName[int32(targetState)],
-				TrackedState_CamelName[int32(curState)])
+			curState = info.State
+			log.SpanLog(ctx, log.DebugLevelApi, "Received crm update for VMPool", "key", key, "obj", info)
+			if send != nil {
+				for ii := lastMsgCnt; ii < len(info.Status.Msgs); ii++ {
+					send(&Result{Message: info.Status.Msgs[ii]})
+				}
+				lastMsgCnt = len(info.Status.Msgs)
+			}
+
+			switch info.State {
+			case errorState:
+				errs := strings.Join(info.Errors, ", ")
+				err = fmt.Errorf("Encountered failures: %s", errs)
+				return err
+			case targetState:
+
+				if targetState == TrackedState_NOT_PRESENT {
+					send(&Result{Message: TrackedState_CamelName[int32(targetState)]})
+				}
+				if successMsg != "" && send != nil {
+					send(&Result{Message: successMsg})
+				}
+				return nil
+			}
+		case <-time.After(timeout):
+			if _, found := transitionStates[curState]; found {
+				// no success response, but state is a valid transition
+				// state. That means work is still in progress.
+				// Notify user that this is not an error.
+				// Do not undo since CRM is still busy.
+				if send != nil {
+
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowVMPool to check current status", TrackedState_CamelName[int32(curState)])
+					send(&Result{Message: msg})
+				}
+				err = nil
+			} else {
+				err = fmt.Errorf("Timed out; expected state %s but is %s",
+
+					TrackedState_CamelName[int32(targetState)],
+					TrackedState_CamelName[int32(curState)])
+			}
+			return err
 		}
 	}
-	cancel()
-	// note: do not close done/failed, garbage collector will deal with it.
-	return err
 }
 
 func (c *VMPoolCache) UsesOrg(org string) bool {
@@ -2741,6 +2721,9 @@ func (m *VMPool) SetKey(key *VMPoolKey) {
 
 func CmpSortVMPool(a VMPool, b VMPool) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+func (m *VMPoolKey) StreamKey() string {
+	return fmt.Sprintf("VMPoolStreamKey: %s", m.String())
 }
 
 // Helper method to check that enums have valid values

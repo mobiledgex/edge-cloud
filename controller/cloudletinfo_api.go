@@ -61,6 +61,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "skipping due to info from standby CRM")
 		return
 	}
+
+	// publish the received info object on redis
+	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
@@ -72,6 +76,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				changedToOnline = true
 			}
 		}
+		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -113,9 +118,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
 		return
 	}
-
-	// update only diff of status msgs
-	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, in.Key.StreamKey())
 
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key

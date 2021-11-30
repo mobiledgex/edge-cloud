@@ -1706,11 +1706,19 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 {{- end}}
 
 {{if ne (.WaitForState) ("")}}
+{{if eq (.WaitForState) ("TrackedState")}}
 func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
-	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
-	done := make(chan string, 1)
-	failed := make(chan bool, 1)
+{{- else}}
+func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState dme_proto.{{.WaitForState}}, transitionStates map[dme_proto.{{.WaitForState}}]struct{}, errorState dme_proto.{{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+{{- end}}
+	var lastMsgCnt int
 	var err error
+
+	{{if eq (.WaitForState) ("TrackedState")}}
+	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
+	{{- else}}
+	curState := dme_proto.{{.WaitForState}}_CLOUDLET_STATE_UNKNOWN
+	{{- end}}
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -1719,127 +1727,71 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	}
 
-{{- if .StreamOut}}
-        if wSpec.RedisClient != nil {
-                rdb := wSpec.RedisClient
-                rdChKey := key.StreamKey()
-                pubsub := rdb.Subscribe(rdChKey)
-		// Close() also closes channels
-                defer pubsub.Close()
+        if wSpec.CrmMsgCh == nil {
+		return nil
+	}
 
-                // Wait for confirmation that subscription is created before publishing anything.
-                _, err = pubsub.Receive()
-                if err != nil {
-                        return err
-                }
-
-                // Go channel which receives messages.
-                ch := pubsub.Channel()
-
-                go func() {
-			var lastMsgCnt int64
-                        // Consume messages.
-                        for msgObj := range ch {
-				// Fetch message count from the payload, so that we can fetch
-				// last message count to avoid duplicates
-				msgParts := strings.SplitN(msgObj.Payload, "::", 2)
-				if len(msgParts) != 2 {
-                                        log.SpanLog(ctx, log.DebugLevelApi, "Invalid msg from redis channel", "key", rdChKey, "msg", msgObj.Payload)
-					continue
-				}
-				msgCntStr, msg := msgParts[0], msgParts[1]
-				msgCnt, err := strconv.ParseInt(msgCntStr, 10, 32)
-				if err != nil {
-                                        log.SpanLog(ctx, log.DebugLevelApi, "Failed to parse msg count from redis channel", "key", rdChKey, "msgcnt", msgCntStr, "err", err)
-					continue
-				}
-				if msgCnt <= lastMsgCnt {
-					continue
-				}
-				lastMsgCnt = msgCnt
-                                send(&Result{Message: msg})
-                        }
-                }()
-        }
-{{- end}}
-
-	cancel := c.WatchKey(key, func(ctx context.Context) {
-		info := {{.Name}}{}
-		if c.Get(key, &info) {
+	for {
+		select {
+		case chObj := <-wSpec.CrmMsgCh:
+			info := {{.Name}}Info{}
+			err = json.Unmarshal([]byte(chObj.Payload), &info)
+			if err != nil {
+				return err
+			}
 			curState = info.State
-		} else {
-			curState = {{.WaitForState}}_NOT_PRESENT
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)])
-		if curState == errorState {
-			failed <- true
-		} else if curState == targetState {
-			msg := ""
-			if curState == {{.WaitForState}}_NOT_PRESENT {
-				msg = {{.WaitForState}}_CamelName[int32(curState)]
-			}
-			done <- msg
-		}
-	})
-	// After setting up watch, check current state,
-	// as it may have already changed to target state
-	info := {{.Name}}{}
-	if c.Get(key, &info) {
-		curState = info.State
-	} else {
-		curState = {{.WaitForState}}_NOT_PRESENT
-	}
-	if curState == targetState {
-		msg := ""
-		if curState == {{.WaitForState}}_NOT_PRESENT {
-			msg = {{.WaitForState}}_CamelName[int32(curState)]
-		}
-		done <- msg
-	}
-
-	select {
-	case doneMsg := <-done:
-		if doneMsg != "" {
-			send(&Result{Message: doneMsg})
-		}
-		err = nil
-		if successMsg != "" && send != nil {
-			send(&Result{Message: successMsg})
-		}
-	case <-failed:
-		if c.Get(key, &info) {
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else {
-			// this shouldn't happen, since only way to get here
-			// is if info state is set to Error
-			err = errors.New("Unknown failure")
-		}
-	case <-time.After(timeout):
-		hasInfo := c.Get(key, &info)
-		if hasInfo && info.State == errorState {
-			// error may have been sent back before watch started
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else if _, found := transitionStates[info.State]; hasInfo && found {
-			// no success response, but state is a valid transition
-			// state. That means work is still in progress.
-			// Notify user that this is not an error.
-			// Do not undo since CRM is still busy.
+			log.SpanLog(ctx, log.DebugLevelApi, "Received crm update for {{.Name}}", "key", key, "obj", info)
 			if send != nil {
-				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(info.State)])
-				send(&Result{Message: msg})
+				for ii := lastMsgCnt; ii < len(info.Status.Msgs); ii++ {
+					send(&Result{Message: info.Status.Msgs[ii]})
+				}
+				lastMsgCnt = len(info.Status.Msgs)
 			}
-			err = nil
-		} else {
-			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				{{.WaitForState}}_CamelName[int32(targetState)],
-				{{.WaitForState}}_CamelName[int32(curState)])
+
+			switch info.State {
+			case errorState:
+				errs := strings.Join(info.Errors, ", ")
+				err = fmt.Errorf("Encountered failures: %s", errs)
+				return err
+			case targetState:
+				{{if eq (.WaitForState) ("TrackedState")}}
+				if targetState == TrackedState_NOT_PRESENT {
+					send(&Result{Message: {{.WaitForState}}_CamelName[int32(targetState)]})
+				}
+				{{- end}}
+				if successMsg != "" && send != nil {
+					send(&Result{Message: successMsg})
+				}
+				return nil
+			}
+		case <-time.After(timeout):
+			if _, found := transitionStates[curState]; found {
+				// no success response, but state is a valid transition
+				// state. That means work is still in progress.
+				// Notify user that this is not an error.
+				// Do not undo since CRM is still busy.
+				if send != nil {
+					{{if eq (.WaitForState) ("TrackedState")}}
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(curState)])
+					{{- else}}
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", dme_proto.{{.WaitForState}}_CamelName[int32(curState)])
+					{{- end}}
+					send(&Result{Message: msg})
+				}
+				err = nil
+			} else {
+				err = fmt.Errorf("Timed out; expected state %s but is %s",
+					{{if eq (.WaitForState) ("TrackedState")}}
+					{{.WaitForState}}_CamelName[int32(targetState)],
+					{{.WaitForState}}_CamelName[int32(curState)])
+					{{- else}}
+					dme_proto.{{.WaitForState}}_CamelName[int32(targetState)],
+					dme_proto.{{.WaitForState}}_CamelName[int32(curState)])
+					{{- end}}
+			}
+			return err
 		}
 	}
-	cancel()
-	// note: do not close done/failed, garbage collector will deal with it.
-	return err
 }
 {{- end}}
 
@@ -2023,10 +1975,11 @@ func (s *{{.Name}}By{{.LookupName}}) Find(lookup {{.LookupType}}) []{{.KeyType}}
 `
 
 type keysTemplateArgs struct {
-	Name      string
-	KeyType   string
-	ObjAndKey bool
-	StreamOut bool
+	Name         string
+	KeyType      string
+	ObjAndKey    bool
+	StreamOut    bool
+	WaitForState string
 }
 
 var keysTemplateIn = `
@@ -2066,12 +2019,11 @@ func CmpSort{{.Name}}(a {{.Name}}, b {{.Name}}) bool {
 {{- end}}
 }
 
-{{ if .StreamOut}}
+{{- if or .StreamOut (ne .WaitForState (""))}}
 func (m *{{.KeyType}}) StreamKey() string {
 	return fmt.Sprintf("{{.Name}}StreamKey: %s", m.String())
 }
-{{ end}}
-
+{{- end}}
 
 
 `
@@ -2239,7 +2191,6 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			m.importErrors = true
 			m.importTime = true
 			m.importStrings = true
-			m.importStrconv = true
 		}
 		m.generateUsesOrg(message)
 	}
@@ -2361,10 +2312,11 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			m.gen.Fail(err.Error())
 		}
 		args := keysTemplateArgs{
-			Name:      *message.Name,
-			KeyType:   keyType,
-			ObjAndKey: gensupport.GetObjAndKey(message),
-			StreamOut: gensupport.GetGenerateCudStreamout(message),
+			Name:         *message.Name,
+			KeyType:      keyType,
+			ObjAndKey:    gensupport.GetObjAndKey(message),
+			WaitForState: GetGenerateWaitForState(message),
+			StreamOut:    gensupport.GetGenerateCudStreamout(message),
 		}
 		m.keysTemplate.Execute(m.gen.Buffer, args)
 	}

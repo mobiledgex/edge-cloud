@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -19,16 +21,12 @@ var (
 	StreamTimeout = 30 * time.Minute
 )
 
-type StreamCtxKey string
-
-const (
-	streamOkKey = StreamCtxKey("streamok")
-)
-
 type streamSend struct {
-	cb       GenericCb
-	mux      sync.Mutex
-	streamer *cloudcommon.Streamer
+	cb        GenericCb
+	mux       sync.Mutex
+	streamer  *cloudcommon.Streamer
+	crmPubSub *redis.PubSub
+	crmMsgCh  <-chan *redis.Message
 }
 
 type StreamObjApi struct {
@@ -154,11 +152,27 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		}
 	}
 
-	streamer = cloudcommon.NewStreamer()
+	pubsub := redisClient.Subscribe(streamKey)
+
+	// Wait for confirmation that subscription is created before publishing anything.
+	_, err := pubsub.Receive()
+	if err != nil {
+		return nil, err
+	}
+
+	// Go channel which receives messages.
+	ch := pubsub.Channel()
+
 	streamSendObj := streamSend{}
-	streamSendObj.cb = inCb
-	streamSendObj.streamer = streamer
-	streamObjs.Add(streamKey, streamer)
+	streamSendObj.crmPubSub = pubsub
+	streamSendObj.crmMsgCh = ch
+
+	if inCb != nil {
+		streamer = cloudcommon.NewStreamer()
+		streamSendObj.streamer = streamer
+		streamSendObj.cb = inCb
+		streamObjs.Add(streamKey, streamer)
+	}
 
 	return &streamSendObj, nil
 }
@@ -174,24 +188,24 @@ func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamS
 			}
 			streamSendObj.streamer.Stop()
 		}
+		if streamSendObj.crmPubSub != nil {
+			// Close() also closes channels
+			streamSendObj.crmPubSub.Close()
+		}
 	}
 	return nil
 }
 
-// Status from info will always contain the full status update list,
-// changes we copy to status that is saved to etcd is only the diff
-// from the last update.
-func (s *StreamObjApi) UpdateStatus(ctx context.Context, infoStatus *edgeproto.StatusInfo, streamKey string) {
-	if len(infoStatus.Msgs) <= 0 {
+// Publish info object received from CRM to redis so that controller
+// can act on status messages & info state accordingly
+func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, streamKey string) {
+	inObj, err := json.Marshal(obj)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to marshal json object", "obj", obj, "err", err)
 		return
 	}
-	for ii := 0; ii < len(infoStatus.Msgs); ii++ {
-		// publish the stream message received, and also prefix it with the message ID
-		// so that we can track the last message count to avoid duplicates
-		msg := fmt.Sprintf("%d::%s", ii+1, infoStatus.Msgs[ii])
-		err := redisClient.Publish(streamKey, msg).Err()
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", streamKey, "err", err)
-		}
+	err = redisClient.Publish(streamKey, string(inObj)).Err()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", streamKey, "err", err)
 	}
 }

@@ -1219,7 +1219,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR,
 		s.all.settingsApi.Get().CreateAppInstTimeout.TimeDuration(),
 		"Created AppInst successfully", cb.Send,
-		edgeproto.WithStreamObj(redisClient),
+		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
@@ -1399,7 +1399,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateAppInstTimeout.TimeDuration(),
 			"", cb.Send,
-			edgeproto.WithStreamObj(redisClient),
+			edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 		)
 	}
 	if err != nil {
@@ -1770,7 +1770,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 			s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration(),
 			"Deleted AppInst successfully", cb.Send,
-			edgeproto.WithStreamObj(redisClient),
+			edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 		)
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
@@ -1848,8 +1848,8 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
-	// update only diff of status msgs
-	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, in.Key.StreamKey())
+	// publish the received info object on redis
+	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		applyUpdate := false
@@ -1911,6 +1911,9 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {
 		s.DeleteFromInfo(ctx, in)
+		// update stream message about deletion of main object
+		in.State = edgeproto.TrackedState_NOT_PRESENT
+		s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
 	}
 }
 

@@ -1666,7 +1666,6 @@ func (m *Network) SetKey(key *NetworkKey) {
 func CmpSortNetwork(a Network, b Network) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
-
 func (m *NetworkKey) StreamKey() string {
 	return fmt.Sprintf("NetworkStreamKey: %s", m.String())
 }
