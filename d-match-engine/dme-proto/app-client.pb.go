@@ -7498,15 +7498,11 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid IDTypes value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e IDTypes) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(IDTypes_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
+
 var ReplyStatusStrings = []string{
 	"RS_UNDEFINED",
 	"RS_SUCCESS",
@@ -7602,16 +7598,12 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid ReplyStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e ReplyStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Rs")
 	return json.Marshal(str)
 }
-*/
+
 var ReplyStatusCommonPrefix = "Rs"
 
 var FindStatusStrings = []string{
@@ -7709,16 +7701,12 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Find")
 	return json.Marshal(str)
 }
-*/
+
 var FindStatusCommonPrefix = "Find"
 
 var TowerStatusStrings = []string{
@@ -7807,15 +7795,11 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e VerifyLocationReply_TowerStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VerifyLocationReply_TowerStatus_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
+
 var GPSLocationStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_VERIFIED",
@@ -7936,16 +7920,12 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e VerifyLocationReply_GPSLocationStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Loc")
 	return json.Marshal(str)
 }
-*/
+
 var GPSLocationStatusCommonPrefix = "Loc"
 
 var LocStatusStrings = []string{
@@ -8043,16 +8023,12 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid GetLocationReply_LocStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e GetLocationReply_LocStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Loc")
 	return json.Marshal(str)
 }
-*/
+
 var LocStatusCommonPrefix = "Loc"
 
 var AIStatusStrings = []string{
@@ -8150,16 +8126,12 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid AppInstListReply_AIStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e AppInstListReply_AIStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Ai")
 	return json.Marshal(str)
 }
-*/
+
 var AIStatusCommonPrefix = "Ai"
 
 var FLStatusStrings = []string{
@@ -8257,16 +8229,12 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid FqdnListReply_FLStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e FqdnListReply_FLStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Fl")
 	return json.Marshal(str)
 }
-*/
+
 var FLStatusCommonPrefix = "Fl"
 
 var AOFStatusStrings = []string{
@@ -8364,16 +8332,12 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e AppOfficialFqdnReply_AOFStatus) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Aof")
 	return json.Marshal(str)
 }
-*/
+
 var AOFStatusCommonPrefix = "Aof"
 
 var DlgCommTypeStrings = []string{
@@ -8471,16 +8435,12 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e DynamicLocGroupRequest_DlgCommType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Dlg")
 	return json.Marshal(str)
 }
-*/
+
 var DlgCommTypeCommonPrefix = "Dlg"
 
 var ClientEventTypeStrings = []string{
@@ -8593,16 +8553,12 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e ClientEdgeEvent_ClientEventType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Event")
 	return json.Marshal(str)
 }
-*/
+
 var ClientEventTypeCommonPrefix = "Event"
 
 var ServerEventTypeStrings = []string{
@@ -8730,16 +8686,12 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e ServerEdgeEvent_ServerEventType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Event")
 	return json.Marshal(str)
 }
-*/
+
 var ServerEventTypeCommonPrefix = "Event"
 
 func (m *RegisterClientRequest) IsValidArgsForRegisterClient() error {
