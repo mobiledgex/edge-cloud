@@ -63,7 +63,7 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	}
 
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
-	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
+	cmdArgs := []string{"run", "-d", "-l edge-cloud", "-l", cloudcommon.MexMetricIpLabel + "=" + metricIP, "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
 		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(appInst.MappedPorts, dockermgmt.UsePublicPortInContainer, dockermgmt.EnvoyProxy, listenIP)...)
 	}

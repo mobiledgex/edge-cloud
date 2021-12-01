@@ -73,6 +73,7 @@ var AutoProvMeasurement = "auto-prov-counts"
 // AppLabels for the application containers
 var MexAppNameLabel = "mexAppName"
 var MexAppVersionLabel = "mexAppVersion"
+var MexMetricIpLabel = "mexMetricsIp"
 
 // Instance Lifecycle variables
 var EventsDbName = "events"
