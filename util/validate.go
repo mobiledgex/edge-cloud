@@ -23,6 +23,7 @@ var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
 var dockerNameMatch = regexp.MustCompile(`^[0-9a-zA-Z][a-zA-Z0-9_.-]+$`)
 
 const maxHostnameLength = 63
+const maxK8sNamespaceLength = 63
 
 // region names are used in Vault approle names, which are very
 // restrictive in what characters they allow.
@@ -114,6 +115,15 @@ func K8SSanitize(name string) string {
 		",", "",
 		"!", "")
 	return strings.ToLower(r.Replace(name))
+}
+
+// Namespaces are limited to 63 characters and cannot end in "-"
+func NamespaceSanitize(name string) string {
+	r := DNSSanitize(name)
+	if len(r) > maxK8sNamespaceLength {
+		r = r[:maxK8sNamespaceLength]
+	}
+	return strings.TrimRight(r, "-")
 }
 
 // alphanumeric plus -_. first char must be alpha, <= 255 chars.
