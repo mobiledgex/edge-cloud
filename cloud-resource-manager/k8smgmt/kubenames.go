@@ -61,7 +61,7 @@ func GetCloudletClusterName(clusterKey *edgeproto.ClusterInstKey) string {
 
 func GetNamespace(appInstKey *edgeproto.AppInstKey) string {
 	// Note that we use the virtual cluster name, not the real cluster name
-	return util.DNSSanitize(fmt.Sprintf("%s-%s-%s-%s", appInstKey.AppKey.Organization, appInstKey.AppKey.Name, appInstKey.AppKey.Version, appInstKey.ClusterInstKey.ClusterKey.Name))
+	return util.NamespaceSanitize(fmt.Sprintf("%s-%s-%s-%s", appInstKey.AppKey.Organization, appInstKey.AppKey.Name, appInstKey.AppKey.Version, appInstKey.ClusterInstKey.ClusterKey.Name))
 }
 
 func NormalizeName(name string) string {
