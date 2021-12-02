@@ -468,7 +468,6 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 	}
 
 	err = yaml.UnmarshalStrict(yamlFile, iface)
-	//err = yaml.Unmarshal(yamlFile, iface)
 	if err != nil {
 		return err
 	}
