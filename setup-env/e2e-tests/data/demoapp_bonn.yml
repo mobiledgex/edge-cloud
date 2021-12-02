@@ -2,7 +2,6 @@ cloudlets:
 - key:
     organization: TDG
     name: bonn3cloudlet
-  accessuri:
   location:
     latitude: 50.737
     longitude: 7.0982
@@ -18,8 +17,6 @@ apps:
   imagetype: Docker
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   config: "http://35.199.188.102/apps/simapp.yaml"
   accessports: "tcp:80,tcp:443,udp:10002"
 

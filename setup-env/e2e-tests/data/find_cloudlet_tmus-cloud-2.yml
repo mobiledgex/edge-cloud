@@ -2,7 +2,6 @@ cloudlets:
 - key:
     organization: tmus
     name: tmus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95

@@ -2,7 +2,6 @@ cloudlets:
 - key:
     organization: mexdev
     name: localtest
-  accessuri: localtest.tmo
   location:
     latitude: 31
     longitude: -91
@@ -48,8 +47,6 @@ apps:
   accessports: tcp:7777
   defaultflavor:
     name: x1.small
-  cluster:
-    name: AppCluster
   deployment: docker
   androidpackagename: com.mobiledgex.sdkdemo
 - key:
@@ -61,8 +58,6 @@ apps:
   accessports: tcp:8008
   defaultflavor:
     name: x1.small
-  cluster:
-    name: AppCluster
   deployment: docker
   androidpackagename: com.mobiledgex.facedemo
   configs:

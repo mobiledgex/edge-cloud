@@ -140,6 +140,18 @@ func (a *NodeData) Sort() {
 	})
 }
 
+func (s *DeviceData) Sort() {
+	sort.Slice(s.Devices, func(i, j int) bool {
+		return s.Devices[i].GetKey().GetKeyString() < s.Devices[j].GetKey().GetKeyString()
+	})
+}
+
+func (s *RateLimitSettingsData) Sort() {
+	sort.Slice(s.Settings, func(i, j int) bool {
+		return s.Settings[i].GetKey().GetKeyString() < s.Settings[j].GetKey().GetKeyString()
+	})
+}
+
 // Validate functions to validate user input
 
 func (key *OperatorCodeKey) ValidateKey() error {
