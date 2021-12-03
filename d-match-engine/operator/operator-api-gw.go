@@ -9,6 +9,10 @@ type OperatorApiGwServers struct {
 	QosPosUrl string
 	LocVerUrl string
 	TokSrvUrl string
+	QosSesUrl string
+}
+
+type QosSessionEndpoints struct {
 }
 
 // OperatorApiGw implements operator specific APIs.
@@ -25,4 +29,10 @@ type OperatorApiGw interface {
 	GetLocation(mreq *dme.GetLocationRequest, mreply *dme.GetLocationReply) error
 	// GetQOSPositionKPI gets QOS KPIs for GPS positions
 	GetQOSPositionKPI(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error
+	// CreatePrioritySession requests either stable latency or throughput for a client session
+	CreatePrioritySession(priorityType string, ueAddr string, asAddr string, asPort string, protocol string, qos string, duration int64) (string, error)
+	// DeletePrioritySession removes a previously created priority session
+	DeletePrioritySession(priorityType string, sessionId string) error
+	// LookupQosParm looks up the QOS API parameter values for each QosSessionProfile enum value.
+	LookupQosParm(qos string) string
 }

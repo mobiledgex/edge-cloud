@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,6 +49,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
+var qosSesUrl = flag.String("qossesurl", "", "QOS for stable bandwidth URL to connect to")
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
@@ -77,6 +79,7 @@ var sigChan chan os.Signal
 func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest) (*dme.FindCloudletReply, error) {
 	reply := new(dme.FindCloudletReply)
 	var appkey edgeproto.AppKey
+	var app *dmecommon.DmeApp
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
 		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
@@ -90,7 +93,61 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid FindCloudlet request, invalid location", "loc", req.GpsLocation, "err", err)
 		return reply, err
 	}
-	err = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
+
+	log.SpanLog(ctx, log.DebugLevelDmereq, "req tags", "req.Tags", req.Tags, "ip_user_equipment", req.Tags["ip_user_equipment"])
+	err, app = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
+
+	// Only attempt to create a QOS priority session if qosSesUrl is populated.
+	if *qosSesUrl != "" && err == nil && reply.Status == dme.FindCloudletReply_FIND_FOUND {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration, "DefaultFlavor", app.DefaultFlavor)
+		qos := operatorApiGw.LookupQosParm(app.QosSessionProfile)
+		duration, parseErr := strconv.ParseInt(app.QosSessionDuration, 10, 32)
+		if parseErr != nil {
+			duration = 86400 // 24 hours - default value
+		}
+		var priorityType string
+
+		if strings.HasPrefix(qos, "LATENCY") {
+			priorityType = "latency"
+		} else if strings.HasPrefix(qos, "THROUGHPUT") {
+			priorityType = "throughput"
+		} else {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Received invalid value", "QosSessionProfile", app.QosSessionProfile)
+			priorityType = ""
+		}
+
+		if qos != "DEFAULT" && priorityType != "" {
+			var protocol string
+			// Currently, I only have 2 IP addresses for testing.
+			ueAddr := "172.24.8.2" // TODO: Will be reply.Fqdn decoded to an IP address
+			asAddr := req.Tags["ip_user_equipment"]
+			// Use the first port
+			port := app.Ports[0]
+			log.SpanLog(ctx, log.DebugLevelDmereq, "Port", "port.PublicPort", port.PublicPort, "port.Proto", port.Proto, "port.InternalPort", port.InternalPort)
+			if port.Proto == dme.LProto_L_PROTO_TCP {
+				protocol = "TCP"
+			} else if port.Proto == dme.LProto_L_PROTO_UDP {
+				protocol = "UDP"
+			} else {
+				protocol = ""
+			}
+			asPort := fmt.Sprintf("%d", port.InternalPort)
+
+			if asAddr == "" {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "ip_user_equipment value not found in tags. Aborting.", "req.Tags", req.Tags)
+			} else if protocol == "" {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
+			} else {
+				id, sesErr := operatorApiGw.CreatePrioritySession(priorityType, ueAddr, asAddr, asPort, protocol, qos, duration)
+				if sesErr != nil {
+					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+				}
+				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id", id, "sesErr", sesErr)
+				// TODO: Store id for when this same connection calls DeletePrioritySession()
+			}
+		}
+	}
+
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -136,7 +193,7 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Invalid PlatformFindCloudletRequest request, invalid location", "loc", tokdata.Location, "err", err)
 		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid ClientToken")
 	}
-	err = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, *edgeEventsCookieExpiration)
+	err, _ = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
 }
@@ -486,7 +543,7 @@ func main() {
 		span.Finish()
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
-	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl}
+	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl, QosSesUrl: *qosSesUrl}
 	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
 		span.Finish()
