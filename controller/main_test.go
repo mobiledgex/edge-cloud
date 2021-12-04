@@ -39,6 +39,7 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
+	*dummyRedis = true
 	testinit()
 	defer testfinish()
 	// avoid dummy influxQs created by testinit() since we're calling startServices
@@ -213,6 +214,7 @@ func TestEdgeCloudBug26(t *testing.T) {
 
 	*localEtcd = true
 	*initLocalEtcd = true
+	*dummyRedis = true
 
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()

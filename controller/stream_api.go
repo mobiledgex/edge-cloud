@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	grpc "google.golang.org/grpc"
 )
 
@@ -25,7 +26,7 @@ type streamSend struct {
 	cb        GenericCb
 	mux       sync.Mutex
 	streamer  *cloudcommon.Streamer
-	crmPubSub *redis.PubSub
+	crmPubSub rediscache.RedisPubSub
 	crmMsgCh  <-chan *redis.Message
 }
 
@@ -152,10 +153,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		}
 	}
 
-	pubsub := redisClient.Subscribe(streamKey)
-
-	// Wait for confirmation that subscription is created before publishing anything.
-	_, err := pubsub.Receive()
+	pubsub, err := redisClient.Subscribe(ctx, streamKey)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +202,7 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, stream
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to marshal json object", "obj", obj, "err", err)
 		return
 	}
-	err = redisClient.Publish(streamKey, string(inObj)).Err()
+	err = redisClient.Publish(ctx, streamKey, string(inObj))
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", streamKey, "err", err)
 	}

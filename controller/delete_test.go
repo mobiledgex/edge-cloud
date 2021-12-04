@@ -8,6 +8,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 )
 
@@ -21,6 +22,8 @@ func TestDeleteChecks(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+
+	redisClient = rediscache.NewDummyRedisClient()
 
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)

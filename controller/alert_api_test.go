@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/stretchr/testify/require"
@@ -28,6 +29,8 @@ func TestAlertApi(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+
+	redisClient = rediscache.NewDummyRedisClient()
 
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)
@@ -92,6 +95,8 @@ func TestAppInstDownAlert(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+
+	redisClient = rediscache.NewDummyRedisClient()
 
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)

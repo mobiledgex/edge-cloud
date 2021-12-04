@@ -1647,7 +1647,7 @@ func (s *ClusterInstApi) cleanupClusterInst(ctx context.Context, k interface{}) 
 		Key: key,
 	}
 	startTime := time.Now()
-	cb := &DummyStreamout{}
+	cb := &DummyStreamout{ctx: ctx}
 	err := s.DeleteClusterInst(&clusterInst, cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst cleanup", "ClusterInst", key, "err", err)
 	if err != nil && err.Error() == key.NotFoundError().Error() {

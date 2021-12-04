@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/redisclient"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -27,7 +26,7 @@ type HAWatcher interface {
 type HighAvailabilityManager struct {
 	redisAddr              string
 	nodeGroupKey           string
-	redisClient            *redis.Client
+	redisClient            *rediscache.RedisClient
 	HARole                 string
 	HAEnabled              bool
 	activeDuration         time.Duration
@@ -63,11 +62,11 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	s.HAEnabled = true
 
 	var err error
-	s.redisClient, err = redisclient.NewClient(s.redisAddr)
+	s.redisClient, err = rediscache.NewClient(s.redisAddr)
 	if err != nil {
 		return err
 	}
-	if err := redisclient.IsServerReady(s.redisClient); err != nil {
+	if err := s.redisClient.IsServerReady(); err != nil {
 		return err
 	}
 
@@ -92,20 +91,18 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) bool {
 		s.BumpActiveExpire(ctx)
 		return true
 	}
-	cmd := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration)
-	v, err := cmd.Result()
+	v, err := s.redisClient.SetNX(ctx, s.nodeGroupKey, s.HARole, s.activeDuration)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "tryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "tryActive setNX error", "key", s.nodeGroupKey, "v", v, "err", err)
 	}
 	return v
 }
 
 func (s *HighAvailabilityManager) CheckActive(ctx context.Context) bool {
 
-	cmd := s.redisClient.Get(s.nodeGroupKey)
-	v, err := cmd.Result()
+	v, err := s.redisClient.Get(ctx, s.nodeGroupKey)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "v", v, "err", err)
 		return false
 	}
 	isActive := v == s.HARole
@@ -113,10 +110,9 @@ func (s *HighAvailabilityManager) CheckActive(ctx context.Context) bool {
 }
 
 func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
-	cmd := s.redisClient.Set(s.nodeGroupKey, s.HARole, s.activeDuration)
-	v, err := cmd.Result()
+	v, err := s.redisClient.Set(ctx, s.nodeGroupKey, s.HARole, s.activeDuration)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire error", "key", s.nodeGroupKey, "v", v, "err", err)
 		return err
 	}
 	if v != "OK" {

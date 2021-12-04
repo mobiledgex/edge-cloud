@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-redis/redis"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -27,7 +26,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/redisclient"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -43,6 +42,7 @@ var initLocalEtcd = flag.Bool("initLocalEtcd", false, "set to init local etcd da
 var region = flag.String("region", "local", "region name")
 var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
 var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
+var dummyRedis = flag.Bool("dummyRedis", false, "set to start dummy redis for testing")
 
 // external API Addr is registered with etcd so other controllers can connect
 // directly to this controller.
@@ -86,7 +86,7 @@ var sigChan chan os.Signal
 var services Services
 var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
-var redisClient *redis.Client
+var redisClient rediscache.RedisCache
 
 type Services struct {
 	etcdLocal                 *process.Etcd
@@ -216,12 +216,16 @@ func startServices() error {
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
 	}
 
-	redisClient, err = redisclient.NewClient(*redisAddr)
-	if err != nil {
-		return err
-	}
-	if err := redisclient.IsServerReady(redisClient); err != nil {
-		return err
+	if *dummyRedis {
+		redisClient = rediscache.NewDummyRedisClient()
+	} else {
+		redisClient, err = rediscache.NewClient(*redisAddr)
+		if err != nil {
+			return err
+		}
+		if err := redisClient.IsServerReady(); err != nil {
+			return err
+		}
 	}
 
 	// We might need to upgrade the stored objects

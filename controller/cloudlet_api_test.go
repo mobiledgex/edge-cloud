@@ -20,6 +20,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -132,6 +133,8 @@ func TestCloudletApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 	defer dummy.Stop()
+
+	redisClient = rediscache.NewDummyRedisClient()
 
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)
@@ -933,6 +936,8 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
+
+	redisClient = rediscache.NewDummyRedisClient()
 
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)
