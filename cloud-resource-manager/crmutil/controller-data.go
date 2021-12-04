@@ -116,8 +116,8 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	cd.CloudletCache.SetDeletedCb(cd.cloudletDeleted)
 	cd.VMPoolCache.SetUpdatedCb(cd.VMPoolChanged)
 	cd.SettingsCache.SetUpdatedCb(cd.settingsChanged)
-	cd.CloudletPoolCache.SetUpdatedCb(cd.cloudletPoolChanged)
-	cd.CloudletPoolCache.SetDeletedCb(cd.cloudletPoolDeleted)
+	cd.CloudletPoolCache.AddUpdatedCb(cd.cloudletPoolChanged)
+	cd.CloudletPoolCache.AddDeletedCb(cd.cloudletPoolDeleted)
 
 	cd.TrustPolicyExceptionCache.SetUpdatedCb(cd.trustPolicyExceptionChanged)
 	cd.TrustPolicyExceptionCache.SetDeletedCb(cd.trustPolicyExceptionDeleted)

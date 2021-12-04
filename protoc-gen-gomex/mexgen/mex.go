@@ -334,10 +334,6 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid {{.Name}} value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e {{.Name}}) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName({{.Name}}_CamelName, int32(e))
 {{- if .CommonPrefix}}
@@ -345,7 +341,6 @@ func (e {{.Name}}) MarshalJSON() ([]byte, error) {
 {{- end}}
 	return json.Marshal(str)
 }
-*/
 `
 
 type MatchType int

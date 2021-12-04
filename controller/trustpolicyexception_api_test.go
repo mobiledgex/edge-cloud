@@ -106,11 +106,13 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	// Restore tpeData Key to original values
 	tpeData.Key.AppKey.Organization = testutil.DevData[0]
 
+	testutil.InternalAppInstDelete(t, apis.appInstApi, testutil.AppInstData)
+
 	// test that App delete fails if TPE exists that refers to it
 	app0 := testutil.AppData[0]
 	_, err = apis.appApi.DeleteApp(ctx, &app0)
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "Application in use by static AppInst")
+	require.Contains(t, err.Error(), "Application in use by Trust Policy Exception")
 
 	// Success : Delete
 	_, err = apis.trustPolicyExceptionApi.DeleteTrustPolicyException(ctx, &tpeData)
