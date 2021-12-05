@@ -622,7 +622,7 @@ func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 		}
 	}
 	// delete namespaced kconf
-	err = pc.DeleteFile(client, names.KconfName)
+	err = pc.DeleteFile(client, names.KconfName, pc.NoSudo)
 	if err != nil {
 		// just log the error
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespaced kconf", "err", err)
