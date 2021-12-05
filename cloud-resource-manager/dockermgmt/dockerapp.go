@@ -385,7 +385,7 @@ func DeleteAppInst(ctx context.Context, authApi cloudcommon.RegistryAuthApi, cli
 		if err != nil {
 			return fmt.Errorf("error running docker-compose down, %s, %v", out, err)
 		}
-		err = pc.DeleteFile(client, filename)
+		err = pc.DeleteFile(client, filename, pc.NoSudo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "unable to delete file", "filename", filename, "err", err)
 		}
