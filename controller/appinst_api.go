@@ -371,6 +371,9 @@ func (s *AppInstApi) checkPortOverlapDedicatedLB(appPorts []dme.AppPort, cluster
 			// ignore apps that are in failed, or transient state
 			return nil
 		}
+		if obj.DedicatedIp {
+			return nil
+		}
 		for ii := range appPorts {
 			for jj := range obj.MappedPorts {
 				if edgeproto.DoPortsOverlap(appPorts[ii], obj.MappedPorts[jj]) {
