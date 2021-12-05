@@ -154,7 +154,7 @@ func DeleteFile(client ssh.Client, file string, sudo Sudo) error {
 	log.DebugLog(log.DebugLevelInfra, "delete file")
 	cmd := fmt.Sprintf("rm -f %s", file)
 	if sudo == SudoOn {
-		cmd = fmt.Sprintf("sudo rm -rf %s", file)
+		cmd = fmt.Sprintf("sudo rm -f %s", file)
 	}
 	out, err := client.Output(cmd)
 	if err != nil {
