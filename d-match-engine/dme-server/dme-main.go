@@ -118,9 +118,19 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 
 		if qos != "DEFAULT" && priorityType != "" {
 			var protocol string
+			var asAddr string
+			reply.Fqdn = "mobiledgex.com"
+			ips, _ := net.LookupIP(reply.Fqdn)
+			for _, ip := range ips {
+				if ipv4 := ip.To4(); ipv4 != nil {
+					log.SpanLog(ctx, log.DebugLevelDmereq, "Looked up IPv4 address", "reply.Fqdn", reply.Fqdn, "ipv4", ipv4)
+					asAddr = ipv4.String()
+					break
+				}
+			}
 			// Currently, I only have 2 IP addresses for testing.
-			ueAddr := "172.24.8.2" // TODO: Will be reply.Fqdn decoded to an IP address
-			asAddr := req.Tags["ip_user_equipment"]
+			asAddr = "172.24.8.2" // TODO: Will be reply.Fqdn decoded as above. This line will be removed before merging.
+			ueAddr := req.Tags["ip_user_equipment"]
 			// Use the first port
 			port := app.Ports[0]
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Port", "port.PublicPort", port.PublicPort, "port.Proto", port.Proto, "port.InternalPort", port.InternalPort)
@@ -133,8 +143,10 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			}
 			asPort := fmt.Sprintf("%d", port.InternalPort)
 
-			if asAddr == "" {
+			if ueAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ip_user_equipment value not found in tags. Aborting.", "req.Tags", req.Tags)
+			} else if asAddr == "" {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Could not decode app inst FQDN. Aborting.", "reply.Fqdn", reply.Fqdn)
 			} else if protocol == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
 			} else {
