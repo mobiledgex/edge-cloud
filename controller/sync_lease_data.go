@@ -120,11 +120,12 @@ func (s *SyncLeaseData) syncData() error {
 	if err != nil {
 		return err
 	}
-	err = s.allApis.alertApi.syncSourceData(ctx, leaseID)
-	log.SpanLog(ctx, log.DebugLevelInfo, "synced alerts", "err", err)
-	if err != nil {
-		return err
-	}
+	go func() {
+		// Sync alerts inside goroutine because if there are lots of alerts then it
+		// might hold up keepalive and the controller lease might expire
+		err = s.allApis.alertApi.syncSourceData(ctx)
+		log.SpanLog(ctx, log.DebugLevelInfo, "synced alerts", "err", err)
+	}()
 	return nil
 }
 
