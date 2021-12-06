@@ -1644,16 +1644,12 @@ func (e *TrustPolicyExceptionState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid TrustPolicyExceptionState value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e TrustPolicyExceptionState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(TrustPolicyExceptionState_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "TrustPolicyExceptionState")
 	return json.Marshal(str)
 }
-*/
+
 var TrustPolicyExceptionStateCommonPrefix = "TrustPolicyExceptionState"
 
 func (m *TrustPolicyException) IsValidArgsForCreateTrustPolicyException() error {

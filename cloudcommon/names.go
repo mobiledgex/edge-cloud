@@ -68,11 +68,14 @@ var PrometheusPort = int32(9090)
 var NFSAutoProvisionAppName = "NFSAutoProvision"
 var ProxyMetricsPort = int32(65121)
 var ProxyMetricsDefaultListenIP = "127.0.0.1"
+var ProxyMetricsListenUDS = "MetricsUDS" // Unix Domain Socket
+
 var AutoProvMeasurement = "auto-prov-counts"
 
 // AppLabels for the application containers
 var MexAppNameLabel = "mexAppName"
 var MexAppVersionLabel = "mexAppVersion"
+var MexMetricEndpoint = "mexMetricsEndpoint"
 
 // Instance Lifecycle variables
 var EventsDbName = "events"

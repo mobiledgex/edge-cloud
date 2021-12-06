@@ -90,6 +90,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterRecvAlertCache(&s.AlertCache)
 	mgr.RegisterRecvNodeCache(&s.NodeCache)
 	mgr.RegisterRecvDeviceCache(&s.DeviceCache)
+	mgr.RegisterRecvTrustPolicyExceptionCache(&s.TrustPolicyExceptionCache)
 }
 
 func (s *DummyHandler) RegisterCRMClient(cl *Client) {
@@ -100,6 +101,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterSendVMPoolInfoCache(&s.VMPoolInfoCache)
 	cl.RegisterSendAlertCache(&s.AlertCache)
 	cl.RegisterSendNodeCache(&s.NodeCache)
+	cl.RegisterSendTrustPolicyExceptionCache(&s.TrustPolicyExceptionCache)
 
 	cl.RegisterRecvSettingsCache(&s.SettingsCache)
 	cl.RegisterRecvAppCache(&s.AppCache)
@@ -111,6 +113,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 	cl.RegisterRecvAutoProvPolicyCache(&s.AutoProvPolicyCache)
 	cl.RegisterRecvNetworkCache(&s.NetworkCache)
+	cl.RegisterRecvTrustPolicyExceptionCache(&s.TrustPolicyExceptionCache)
 }
 
 func (s *DummyHandler) RegisterDMEClient(cl *Client) {
@@ -138,6 +141,7 @@ const (
 	VMPoolInfoType
 	GPUDriverType
 	NetworkType
+	TrustPolicyExceptionType
 )
 
 type WaitForCache interface {
@@ -184,6 +188,8 @@ func (s *DummyHandler) GetCache(typ CacheType) WaitForCache {
 		cache = &s.frClusterInsts
 	case NetworkType:
 		cache = &s.NetworkCache
+	case TrustPolicyExceptionType:
+		cache = &s.TrustPolicyExceptionCache
 	}
 
 	return cache
@@ -221,6 +227,8 @@ func (c CacheType) String() string {
 		return "FreeReservableClusterInstCache"
 	case NetworkType:
 		return "NetworkCache"
+	case TrustPolicyExceptionType:
+		return "TrustPolicyExceptionType"
 	}
 	return "unknown cache type"
 }
@@ -289,6 +297,10 @@ func (s *DummyHandler) WaitForAlerts(count int) error {
 
 func (s *DummyHandler) WaitForNetworks(count int) error {
 	return s.WaitFor(NetworkType, count)
+}
+
+func (s *DummyHandler) WaitForTrustPolicyException(count int) error {
+	return s.WaitFor(TrustPolicyExceptionType, count)
 }
 
 func (s *DummyHandler) WaitForCloudletState(key *edgeproto.CloudletKey, state dmeproto.CloudletState) error {

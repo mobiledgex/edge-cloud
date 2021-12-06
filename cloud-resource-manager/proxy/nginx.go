@@ -276,6 +276,7 @@ type ProxySpec struct {
 	UsesTLS     bool // To be removed
 	MetricIP    string
 	MetricPort  int32
+	MetricUDS   bool
 	CertName    string
 	WorkerConns int
 }
@@ -358,6 +359,7 @@ type Options struct {
 	Cert               *access.TLSCert
 	DockerUser         string
 	MetricIP           string
+	MetricUDS          bool // Unix Domain Socket
 }
 
 type Op func(opts *Options)
@@ -387,9 +389,13 @@ func WithDockerUser(user string) Op {
 	}
 }
 
-func WithMetricIP(addr string) Op {
+func WithMetricEndpoint(endpoint string) Op {
 	return func(opts *Options) {
-		opts.MetricIP = addr
+		if endpoint == cloudcommon.ProxyMetricsListenUDS {
+			opts.MetricUDS = true
+		} else {
+			opts.MetricIP = endpoint
+		}
 	}
 }
 

@@ -580,15 +580,10 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid NoticeAction value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e NoticeAction) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(NoticeAction_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
 func (m *Notice) IsValidArgsForStreamNotice() error {
 	return nil
 }

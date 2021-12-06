@@ -3213,16 +3213,12 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid OuterEnum value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e OuterEnum) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(OuterEnum_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Outer")
 	return json.Marshal(str)
 }
-*/
+
 var OuterEnumCommonPrefix = "Outer"
 
 var InnerEnumStrings = []string{
@@ -3325,16 +3321,12 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid TestGen_InnerEnum value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e TestGen_InnerEnum) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Inner")
 	return json.Marshal(str)
 }
-*/
+
 var InnerEnumCommonPrefix = "Inner"
 
 func (m *TestGen) IsValidArgsForRequest() error {

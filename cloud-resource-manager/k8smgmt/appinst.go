@@ -293,8 +293,8 @@ func CreateAllNamespaces(ctx context.Context, client ssh.Client, names *KubeName
 			if strings.Contains(out, "already exists") {
 				log.SpanLog(ctx, log.DebugLevelInfra, "namespace already exists")
 			} else {
-				log.SpanLog(ctx, log.DebugLevelInfra, "kubectl create namespace failed", "out", string(out), "err", err)
-				return fmt.Errorf("kubectl create namespace failed - %v", err)
+				log.SpanLog(ctx, log.DebugLevelInfra, "kubectl create namespace failed", "namespace", n, "out", string(out), "err", err)
+				return fmt.Errorf("kubectl create namespace %s failed - %s,%v", n, string(out), err)
 			}
 		}
 	}
@@ -622,7 +622,7 @@ func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 		}
 	}
 	// delete namespaced kconf
-	err = pc.DeleteFile(client, names.KconfName)
+	err = pc.DeleteFile(client, names.KconfName, pc.NoSudo)
 	if err != nil {
 		// just log the error
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespaced kconf", "err", err)

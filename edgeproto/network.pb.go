@@ -1787,15 +1787,10 @@ func (e *NetworkConnectionType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid NetworkConnectionType value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e NetworkConnectionType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(NetworkConnectionType_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
 func (m *Network) IsValidArgsForCreateNetwork() error {
 	if m.DeletePrepare != false {
 		return fmt.Errorf("Invalid field specified: DeletePrepare, this field is only for internal use")
