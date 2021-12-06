@@ -636,7 +636,6 @@ var RegisterClientRequestOptionalArgs = []string{
 	"appvers",
 	"carriername",
 	"authtoken",
-	"cellid",
 	"uniqueidtype",
 	"uniqueid",
 	"tags",
@@ -649,7 +648,6 @@ var RegisterClientRequestComments = map[string]string{
 	"appvers":      "App Version Application version.",
 	"carriername":  "Carrier Name _(hidden)_ Reserved for future use",
 	"authtoken":    "Authentication Token _(optional)_ An authentication token supplied by the application.",
-	"cellid":       "Cell ID _(optional)_ Cellular ID of where the client is connected.",
 	"uniqueidtype": "Unique ID Type _(optional)_ Type of unique ID provided by the client. If left blank, a new Unique ID type will be assigned in the RegisterClient Reply.",
 	"uniqueid":     "Unique ID _(optional)_ Unique identification of the client device or user. May be overridden by the server. If left blank, a new Unique ID will be assigned in the RegisterClient Reply.",
 	"tags":         "Tags _(optional)_ Vendor specific data",
@@ -694,7 +692,6 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"cellid",
 	"tags",
 }
 var FindCloudletRequestAliasArgs = []string{}
@@ -709,7 +706,6 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
-	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
 	"tags":                           "Tags _(optional)_ Vendor specific data",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{
@@ -800,7 +796,6 @@ var VerifyLocationRequestOptionalArgs = []string{
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
 	"verifyloctoken",
-	"cellid",
 	"tags",
 }
 var VerifyLocationRequestAliasArgs = []string{}
@@ -816,7 +811,6 @@ var VerifyLocationRequestComments = map[string]string{
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"verifyloctoken":                 "Verify Location Token Must be retrieved from TokenServerURI",
-	"cellid":                         "Cell ID _(optional)_ Cell ID where the client is",
 	"tags":                           "Tags _(optional)_ Vendor specific data",
 }
 var VerifyLocationRequestSpecialArgs = map[string]string{
@@ -846,7 +840,6 @@ var GetLocationRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
 	"carriername",
-	"cellid",
 	"tags",
 }
 var GetLocationRequestAliasArgs = []string{}
@@ -854,7 +847,6 @@ var GetLocationRequestComments = map[string]string{
 	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
 	"carriername":   "Unique carrier identification (typically MCC + MNC)",
-	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags":          "_(optional)_ Vendor specific data",
 }
 var GetLocationRequestSpecialArgs = map[string]string{
@@ -909,7 +901,6 @@ var AppInstListRequestOptionalArgs = []string{
 	"gpslocation.speed",
 	"gpslocation.timestamp.seconds",
 	"gpslocation.timestamp.nanos",
-	"cellid",
 	"limit",
 	"tags",
 }
@@ -925,7 +916,6 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
-	"cellid":                         "_(optional)_ Cell id where the client is",
 	"limit":                          "_(optional)_ Limit the number of results, defaults to 3",
 	"tags":                           "_(optional)_ Vendor specific data",
 }
@@ -1087,14 +1077,12 @@ var FqdnListRequestRequiredArgs = []string{}
 var FqdnListRequestOptionalArgs = []string{
 	"ver",
 	"sessioncookie",
-	"cellid",
 	"tags",
 }
 var FqdnListRequestAliasArgs = []string{}
 var FqdnListRequestComments = map[string]string{
 	"ver":           "API version _(hidden)_ Reserved for future use",
 	"sessioncookie": "Session Cookie from RegisterClientRequest",
-	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags":          "_(optional)_ Vendor specific data",
 }
 var FqdnListRequestSpecialArgs = map[string]string{
@@ -1218,7 +1206,6 @@ var DynamicLocGroupRequestOptionalArgs = []string{
 	"lgid",
 	"commtype",
 	"userdata",
-	"cellid",
 	"tags",
 }
 var DynamicLocGroupRequestAliasArgs = []string{}
@@ -1228,7 +1215,6 @@ var DynamicLocGroupRequestComments = map[string]string{
 	"lgid":          "Dynamic Location Group Id",
 	"commtype":      ", one of Undefined, Secure, Open",
 	"userdata":      "Unused",
-	"cellid":        "_(optional)_ Cell id where the client is",
 	"tags":          "_(optional)_ Vendor specific data",
 }
 var DynamicLocGroupRequestSpecialArgs = map[string]string{
@@ -1314,7 +1300,6 @@ var QosPositionRequestOptionalArgs = []string{
 	"bandselection.rat_3g",
 	"bandselection.rat_4g",
 	"bandselection.rat_5g",
-	"cellid",
 	"tags",
 }
 var QosPositionRequestAliasArgs = []string{}
@@ -1331,7 +1316,6 @@ var QosPositionRequestComments = map[string]string{
 	"positions:#.gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"ltecategory":                                "_(optional)_ Clients device LTE category number.",
 	"bandselection.rat_2g":                       "Radio Access Technologies",
-	"cellid":                                     "_(optional)_ Cell id where the client is",
 	"tags":                                       "_(optional)_ Vendor specific data",
 }
 var QosPositionRequestSpecialArgs = map[string]string{

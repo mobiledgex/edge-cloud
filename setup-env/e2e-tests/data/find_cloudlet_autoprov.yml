@@ -2,10 +2,8 @@ registerclientrequest:
   orgname: AcmeAppCo
   appname: autoprovapp
   appvers: "1.0"
-  cellid: 1234
 findcloudletrequest:
   carriername: dmuus
   gpslocation:
     latitude: 36.00
     longitude: -96.00
-  cellid: 1234

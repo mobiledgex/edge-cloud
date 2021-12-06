@@ -114,7 +114,6 @@ var Settings edgeproto.Settings
 type StatKey struct {
 	AppKey        edgeproto.AppKey
 	CloudletFound edgeproto.CloudletKey
-	CellId        uint32
 	Method        string
 }
 

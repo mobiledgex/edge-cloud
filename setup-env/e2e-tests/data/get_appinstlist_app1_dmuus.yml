@@ -3,10 +3,8 @@ registerclientrequest:
   appname: someapplication1
   appvers: "1.0"
   authtoken: "GENTOKEN:authtoken_private.pem"
-  cellid: 1000
 appinstlistrequest:
   carriername: dmuus
   gpslocation:
     latitude: 31.1
     longitude: -95.1
-  cellid: 1001
