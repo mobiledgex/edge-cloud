@@ -3,10 +3,8 @@ registerclientrequest:
   appname: someapplication1
   appvers: "1.0"
   authtoken: "GENTOKEN:authtoken_private.pem"
-  cellid: 1000
 appinstlistrequest:
   carriername: wifi
   gpslocation:
     latitude: 36.00
     longitude: -96.00
-  cellid: 1001
