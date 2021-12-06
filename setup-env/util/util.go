@@ -16,7 +16,6 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -434,7 +433,6 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 type ReadYamlOptions struct {
 	vars                 map[string]string
 	validateReplacedVars bool
-	strict               bool
 }
 
 type ReadYamlOp func(opts *ReadYamlOptions)
@@ -468,11 +466,7 @@ func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
 		}
 	}
 
-	if opts.strict {
-		err = yaml.UnmarshalStrict(yamlFile, iface)
-	} else {
-		err = yaml.Unmarshal(yamlFile, iface)
-	}
+	err = yaml.UnmarshalStrict(yamlFile, iface)
 	if err != nil {
 		return err
 	}
@@ -523,12 +517,6 @@ func ValidateReplacedVars() ReadYamlOp {
 	}
 }
 
-func WithStrict() ReadYamlOp {
-	return func(opts *ReadYamlOptions) {
-		opts.strict = true
-	}
-}
-
 func (c *CompareYaml) GetReadYamlOps() ([]ReadYamlOp, []ReadYamlOp) {
 	yaml1Ops := []ReadYamlOp{}
 	yaml2Ops := []ReadYamlOp{}
@@ -544,14 +532,19 @@ func (c *CompareYaml) GetReadYamlOps() ([]ReadYamlOp, []ReadYamlOp) {
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
-func CompareYamlFiles(compare *CompareYaml) bool {
+func CompareYamlFiles(name string, compare *CompareYaml) bool {
 	firstYamlFile := compare.Yaml1
 	secondYamlFile := compare.Yaml2
 	fileType := compare.FileType
 
 	PrintStepBanner("running compareYamlFiles")
 
-	log.Printf("Comparing yamls: %s %s fileType %s\n", firstYamlFile, secondYamlFile, fileType)
+	compareInfo, err := yaml.Marshal(compare)
+	if err != nil {
+		log.Printf("Failed to marshal compare info, %v\n", err)
+		return false
+	}
+	log.Printf("Comparing for %s:\n%s", name, string(compareInfo))
 
 	var err1 error
 	var err2 error
@@ -567,8 +560,6 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 
 		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
 		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
-		a1.Sort()
-		a2.Sort()
 
 		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
 		if fileType == "appdata" {
@@ -693,9 +684,6 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
 		copts = []cmp.Option{
 			edgeproto.IgnoreDeviceFields("nocmp"),
-			cmpopts.SortSlices(func(a edgeproto.Device, b edgeproto.Device) bool {
-				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
-			}),
 		}
 		y1 = r1
 		y2 = r2
@@ -706,7 +694,6 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
 		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
 		copts = append(copts, edgeproto.IgnoreDebugReplyFields("nocmp"))
-		copts = append(copts, cmpopts.SortSlices(edgeproto.CmpSortDebugReply))
 		y1 = r1
 		y2 = r2
 	} else if fileType == "nodedata" {
@@ -725,16 +712,6 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 		}
 		copts = []cmp.Option{
 			edgeproto.IgnoreNodeFields("nocmp"),
-			cmpopts.SortSlices(func(a edgeproto.Node, b edgeproto.Node) bool {
-				// ignore nocmp fields, include internalPki
-				// because one controller has a different
-				// one and the keys end up being the same.
-				// Include if props are present because one
-				// controller will have fakeinfra version props.
-				ca := a.Key.Type + a.Key.Region + a.Key.CloudletKey.GetKeyString() + a.InternalPki + strconv.Itoa(len(a.Properties))
-				cb := b.Key.Type + b.Key.Region + b.Key.CloudletKey.GetKeyString() + b.InternalPki + strconv.Itoa(len(b.Properties))
-				return ca < cb
-			}),
 		}
 		y1 = r1
 		y2 = r2
@@ -782,11 +759,6 @@ func CompareYamlFiles(compare *CompareYaml) bool {
 		var r2 edgeproto.RateLimitSettingsData
 		err1 = ReadYamlFile(firstYamlFile, &r1)
 		err2 = ReadYamlFile(secondYamlFile, &r2)
-		copts = []cmp.Option{
-			cmpopts.SortSlices(func(a edgeproto.RateLimitSettings, b edgeproto.RateLimitSettings) bool {
-				return a.GetKey().GetKeyString() < b.GetKey().GetKeyString()
-			}),
-		}
 		y1 = r1
 		y2 = r2
 	} else if fileType == "alerts" {

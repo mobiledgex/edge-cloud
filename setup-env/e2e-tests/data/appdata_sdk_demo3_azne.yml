@@ -3,7 +3,6 @@ cloudlets:
 - key:
     organization: azure
     name: aznortheuropecloudlet
-  accessuri:
   location:
     latitude: 53.1424
     longitude: -7.6921
