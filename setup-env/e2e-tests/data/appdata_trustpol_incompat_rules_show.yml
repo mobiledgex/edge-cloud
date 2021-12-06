@@ -1,19 +1,19 @@
 flavors:
 - key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
 - key:
     name: x1.small
   ram: 2048
   vcpus: 2
   disk: 2
 - key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 settings:
   shepherdmetricscollectioninterval: 1s
   shepherdalertevaluationinterval: 15s
@@ -30,7 +30,6 @@ settings:
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
   masternodeflavor: x1.small
-
   maxtrackeddmeclients: 100
   chefclientinterval: 10m0s
   influxdbmetricsretention: 2h0m0s
@@ -50,11 +49,11 @@ settings:
   influxdbedgeeventsmetricsretention: 672h0m0s
   appinstclientcleanupinterval: 24h0m0s
   clusterautoscaleaveragingdurationsec: 60
-  clusterautoscaleretrydelay: 1m
+  clusterautoscaleretrydelay: 1m0s
   alertpolicymintriggertime: 30s
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
-  resourcesnapshotthreadinterval: 10m
+  resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
 trustpolicies:
@@ -268,6 +267,68 @@ clusterinsts:
     nanos: 580549000
 apps:
 - key:
+    organization: AcmeAppCo
+    name: trustedapp
+    version: "1.0"
+  imagepath: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
+  imagetype: Docker
+  accessports: tcp:80
+  defaultflavor:
+    name: x1.small
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: trustedapp10-tcp
+      labels:
+        run: trustedapp1.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      selector:
+        run: trustedapp1.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: trustedapp10-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: trustedapp1.0
+      template:
+        metadata:
+          labels:
+            run: trustedapp1.0
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: docker.mobiledgex.net
+          containers:
+          - name: trustedapp10
+            image: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 80
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
+  accesstype: LoadBalancer
+  createdat:
+    seconds: 1616188343
+    nanos: 142769000
+  trusted: true
+  requiredoutboundconnections:
+  - protocol: tcp
+    portrangemin: 2222
+    portrangemax: 2222
+    remotecidr: 35.247.68.151/24
+- key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
@@ -327,68 +388,6 @@ apps:
     seconds: 1616188341
     nanos: 993788000
   trusted: true
-- key:
-    organization: AcmeAppCo
-    name: trustedapp
-    version: "1.0"
-  imagepath: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
-  imagetype: Docker
-  accessports: tcp:80
-  defaultflavor:
-    name: x1.small
-  deployment: kubernetes
-  deploymentmanifest: |
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: trustedapp10-tcp
-      labels:
-        run: trustedapp1.0
-    spec:
-      type: LoadBalancer
-      ports:
-      - name: tcp80
-        protocol: TCP
-        port: 80
-        targetPort: 80
-      selector:
-        run: trustedapp1.0
-    ---
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: trustedapp10-deployment
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          run: trustedapp1.0
-      template:
-        metadata:
-          labels:
-            run: trustedapp1.0
-        spec:
-          volumes:
-          imagePullSecrets:
-          - name: docker.mobiledgex.net
-          containers:
-          - name: trustedapp10
-            image: docker.mobiledgex.net/AcmeAppCo/images/trustedapp:1.0
-            imagePullPolicy: Always
-            ports:
-            - containerPort: 80
-              protocol: TCP
-  deploymentgenerator: kubernetes-basic
-  accesstype: LoadBalancer
-  createdat:
-    seconds: 1616188343
-    nanos: 142769000
-  trusted: true
-  requiredoutboundconnections:
-  - protocol: tcp
-    remotecidr: "35.247.68.151/24"
-    portrangemin: 2222
-    portrangemax: 2222
 appinstances:
 - key:
     appkey:
@@ -422,16 +421,16 @@ appinstances:
   uniqueid: mobiledgexmexprometheusappname10-cluster1-cloudlet1-dmuus
 appinstrefs:
 - key:
+    organization: AcmeAppCo
+    name: trustedapp
+    version: "1.0"
+- key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   insts:
     ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster1"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet1"},"organization":"AcmeAppCo"}}'
     : 1
-- key:
-    organization: AcmeAppCo
-    name: trustedapp
-    version: "1.0"
 clusterrefs:
 - key:
     clusterkey:

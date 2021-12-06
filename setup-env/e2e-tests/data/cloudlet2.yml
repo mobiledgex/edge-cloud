@@ -2,7 +2,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 35
     longitude: -95

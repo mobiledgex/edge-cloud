@@ -15,13 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  flavor:
-    name: x1.small
-  nodes: 3
-
 clusterinsts:
 - key:
     clusterkey:
@@ -48,14 +41,12 @@ cloudlets:
 - key:
     organization: GDDT
     name: gddtcloud1
-  accessuri: cloud1.gddt
   location:
     latitude: 31
     longitude: -91
 - key:
     organization: GDDT
     name: gddtcloud2
-  accessuri: cloud2.gddt
   location:
     latitude: 35
     longitude: -95
@@ -70,8 +61,6 @@ apps:
   accesslayer: AccessLayerL7
   flavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
 
 appinstances:
 - key:

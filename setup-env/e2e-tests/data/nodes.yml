@@ -1,33 +1,32 @@
 nodes:
 - key:
-    type: notifyroot
+    type: cluster-svc
+    region: local
+  internalpki: from-file,UseVaultPki
+  properties:
+    InfraClusterSvcBuildAuthor: Jon Gainsley
+    InfraClusterSvcBuildDate: Tue Nov 30 09:56:43 PST 2021
+    InfraClusterSvcBuildHead: v1.2.4.1-hf3-391-g7a96d1c8
+    InfraClusterSvcBuildMaster: v1.2.4.1-hf3-391-g7a96d1c8
+- key:
+    type: cluster-svc
+    region: local
+  internalpki: from-file,UseVaultPki
+  properties:
+    InfraClusterSvcBuildAuthor: Jon Gainsley
+    InfraClusterSvcBuildDate: Tue Nov 30 09:56:43 PST 2021
+    InfraClusterSvcBuildHead: v1.2.4.1-hf3-391-g7a96d1c8
+    InfraClusterSvcBuildMaster: v1.2.4.1-hf3-391-g7a96d1c8
 - key:
     type: controller
     region: local
   containerversion: 2019-10-24
+  internalpki: from-file,UseVaultPki
 - key:
     type: controller
     region: local
   containerversion: 2019-10-24
-- key:
-    type: dme
-    region: local
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-1
-- key:
-    type: dme
-    region: local
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-2
-- key:
-    type: crm
-    region: local
-    cloudletkey:
-      organization: gcp
-      name: gcp-cloud-5
-  containerversion: 2019-10-24
+  internalpki: from-file,UseVaultPki
 - key:
     type: crm
     region: local
@@ -35,20 +34,15 @@ nodes:
       organization: azure
       name: azure-cloud-4
   containerversion: 2019-10-24
+  internalpki: from-file,useAccessKey,UseVaultPki
 - key:
     type: crm
     region: local
     cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-2
+      organization: gcp
+      name: gcp-cloud-5
   containerversion: 2019-10-24
-- key:
-    type: crm
-    region: local
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-3
-  containerversion: 2019-10-24
+  internalpki: from-file,useAccessKey,UseVaultPki
 - key:
     type: crm
     region: local
@@ -56,9 +50,37 @@ nodes:
       organization: dmuus
       name: dmuus-cloud-1
   containerversion: 2019-10-24
+  internalpki: from-file,useAccessKey,UseVaultPki
 - key:
-    type: cluster-svc
+    type: crm
     region: local
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+  containerversion: 2019-10-24
+  internalpki: from-file,useAccessKey,UseVaultPki
 - key:
-    type: cluster-svc
+    type: crm
     region: local
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-3
+  containerversion: 2019-10-24
+  internalpki: from-file,useAccessKey,UseVaultPki
+- key:
+    type: dme
+    region: local
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+  internalpki: from-file,UseVaultPki
+- key:
+    type: dme
+    region: local
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+  internalpki: from-file,UseVaultPki
+- key:
+    type: notifyroot
+  internalpki: from-file,UseVaultPki

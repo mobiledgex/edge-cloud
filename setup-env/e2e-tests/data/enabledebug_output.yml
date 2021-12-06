@@ -1,29 +1,34 @@
-replies:
+requests:
 - - node:
-      type: notifyroot
-    output: api,notify
+      type: cluster-svc
+      region: local
+    output: etcd,api,notify,infra,metrics,events
+  - node:
+      type: cluster-svc
+      region: local
+    output: etcd,api,notify,infra,metrics,events
   - node:
       type: controller
       region: local
-    output: etcd,api,notify,metrics,infra,upgrade
+    output: etcd,api,notify,infra,metrics,upgrade,events
   - node:
       type: controller
       region: local
-    output: etcd,api,notify,metrics,infra,upgrade
+    output: etcd,api,notify,infra,metrics,upgrade,events
   - node:
-      type: dme
+      type: crm
       region: local
       cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-1
-    output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled
+        organization: azure
+        name: azure-cloud-4
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
-      type: dme
+      type: crm
       region: local
       cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-2
-    output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled
+        organization: gcp
+        name: gcp-cloud-5
+    output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
       region: local
@@ -46,24 +51,19 @@ replies:
         name: dmuus-cloud-3
     output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
-      type: crm
+      type: dme
       region: local
       cloudletkey:
-        organization: azure
-        name: azure-cloud-4
-    output: api,notify,infra,metrics,upgrade,info,sampled
+        organization: dmuus
+        name: dmuus-cloud-1
+    output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled,events
   - node:
-      type: crm
+      type: dme
       region: local
       cloudletkey:
-        organization: gcp
-        name: gcp-cloud-5
-    output: api,notify,infra,metrics,upgrade,info,sampled
+        organization: dmuus
+        name: dmuus-cloud-2
+    output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled,events
   - node:
-      type: cluster-svc
-      region: local
-    output: etcd,api,notify,infra,metrics
-  - node:
-      type: cluster-svc
-      region: local
-    output: etcd,api,notify,infra,metrics
+      type: notifyroot
+    output: api,notify,events

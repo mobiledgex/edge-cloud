@@ -21,7 +21,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: dmuus-cloud.1
   location:
     latitude: 1
     longitude: 1
@@ -36,7 +35,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  accessuri: dmuus-cloud.2
   location:
     latitude: 1
     longitude: 2
@@ -51,7 +49,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-3
-  accessuri: dmuus-cloud.3
   location:
     latitude: 1
     longitude: 3
@@ -66,7 +63,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-4
-  accessuri: dmuus-cloud.4
   location:
     latitude: 1
     longitude: 4
@@ -81,7 +77,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-5
-  accessuri: dmuus-cloud.5
   location:
     latitude: 1
     longitude: 5
@@ -96,7 +91,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-6
-  accessuri: dmuus-cloud.6
   location:
     latitude: 1
     longitude: 6
@@ -111,7 +105,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-7
-  accessuri: dmuus-cloud.7
   location:
     latitude: 1
     longitude: 7
@@ -126,7 +119,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-8
-  accessuri: dmuus-cloud.8
   location:
     latitude: 1
     longitude: 8
@@ -141,7 +133,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-9
-  accessuri: dmuus-cloud.9
   location:
     latitude: 1
     longitude: 9
@@ -156,7 +147,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-10
-  accessuri: dmuus-cloud.10
   location:
     latitude: 1
     longitude: 10
@@ -171,7 +161,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-11
-  accessuri: dmuus-cloud.11
   location:
     latitude: 1
     longitude: 11
@@ -186,7 +175,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-12
-  accessuri: dmuus-cloud.12
   location:
     latitude: 1
     longitude: 12
@@ -201,7 +189,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-13
-  accessuri: dmuus-cloud.13
   location:
     latitude: 1
     longitude: 13
@@ -216,7 +203,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-14
-  accessuri: dmuus-cloud.14
   location:
     latitude: 1
     longitude: 14
@@ -231,7 +217,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-15
-  accessuri: dmuus-cloud.15
   location:
     latitude: 1
     longitude: 15
@@ -246,7 +231,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-16
-  accessuri: dmuus-cloud.16
   location:
     latitude: 1
     longitude: 16
@@ -261,7 +245,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-17
-  accessuri: dmuus-cloud.17
   location:
     latitude: 1
     longitude: 17
@@ -276,7 +259,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-18
-  accessuri: dmuus-cloud.18
   location:
     latitude: 1
     longitude: 18
@@ -291,7 +273,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-19
-  accessuri: dmuus-cloud.19
   location:
     latitude: 1
     longitude: 19
@@ -306,7 +287,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-20
-  accessuri: dmuus-cloud.20
   location:
     latitude: 1
     longitude: 20
@@ -321,7 +301,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-21
-  accessuri: dmuus-cloud.21
   location:
     latitude: 1
     longitude: 21
@@ -336,7 +315,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-22
-  accessuri: dmuus-cloud.22
   location:
     latitude: 1
     longitude: 22
@@ -351,7 +329,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-23
-  accessuri: dmuus-cloud.23
   location:
     latitude: 1
     longitude: 23
@@ -366,7 +343,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-24
-  accessuri: dmuus-cloud.24
   location:
     latitude: 1
     longitude: 24
@@ -381,7 +357,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-25
-  accessuri: dmuus-cloud.25
   location:
     latitude: 1
     longitude: 25
@@ -396,7 +371,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-26
-  accessuri: dmuus-cloud.26
   location:
     latitude: 1
     longitude: 26
@@ -411,7 +385,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-27
-  accessuri: dmuus-cloud.27
   location:
     latitude: 1
     longitude: 27
@@ -426,7 +399,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-28
-  accessuri: dmuus-cloud.28
   location:
     latitude: 1
     longitude: 28
@@ -441,7 +413,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-29
-  accessuri: dmuus-cloud.29
   location:
     latitude: 1
     longitude: 29
@@ -456,7 +427,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-30
-  accessuri: dmuus-cloud.30
   location:
     latitude: 1
     longitude: 30
@@ -471,7 +441,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-31
-  accessuri: dmuus-cloud.31
   location:
     latitude: 1
     longitude: 31
@@ -486,7 +455,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-32
-  accessuri: dmuus-cloud.32
   location:
     latitude: 1
     longitude: 32
@@ -501,7 +469,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-33
-  accessuri: dmuus-cloud.33
   location:
     latitude: 1
     longitude: 33
@@ -516,7 +483,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-34
-  accessuri: dmuus-cloud.34
   location:
     latitude: 1
     longitude: 34
@@ -531,7 +497,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-35
-  accessuri: dmuus-cloud.35
   location:
     latitude: 1
     longitude: 35
@@ -546,7 +511,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-36
-  accessuri: dmuus-cloud.36
   location:
     latitude: 1
     longitude: 36
@@ -561,7 +525,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-37
-  accessuri: dmuus-cloud.37
   location:
     latitude: 1
     longitude: 37
@@ -576,7 +539,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-38
-  accessuri: dmuus-cloud.38
   location:
     latitude: 1
     longitude: 38
@@ -591,7 +553,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-39
-  accessuri: dmuus-cloud.39
   location:
     latitude: 1
     longitude: 39
@@ -606,7 +567,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-40
-  accessuri: dmuus-cloud.40
   location:
     latitude: 1
     longitude: 40
@@ -621,7 +581,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-41
-  accessuri: dmuus-cloud.41
   location:
     latitude: 1
     longitude: 41
@@ -636,7 +595,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-42
-  accessuri: dmuus-cloud.42
   location:
     latitude: 1
     longitude: 42
@@ -651,7 +609,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-43
-  accessuri: dmuus-cloud.43
   location:
     latitude: 1
     longitude: 43
@@ -666,7 +623,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-44
-  accessuri: dmuus-cloud.44
   location:
     latitude: 1
     longitude: 44
@@ -681,7 +637,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-45
-  accessuri: dmuus-cloud.45
   location:
     latitude: 1
     longitude: 45
@@ -696,7 +651,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-46
-  accessuri: dmuus-cloud.46
   location:
     latitude: 1
     longitude: 46
@@ -711,7 +665,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-47
-  accessuri: dmuus-cloud.47
   location:
     latitude: 1
     longitude: 47
@@ -726,7 +679,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-48
-  accessuri: dmuus-cloud.48
   location:
     latitude: 1
     longitude: 48
@@ -741,7 +693,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-49
-  accessuri: dmuus-cloud.49
   location:
     latitude: 1
     longitude: 49
@@ -756,7 +707,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-50
-  accessuri: dmuus-cloud.50
   location:
     latitude: 1
     longitude: 50
@@ -771,7 +721,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-51
-  accessuri: dmuus-cloud.51
   location:
     latitude: 1
     longitude: 51
@@ -786,7 +735,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-52
-  accessuri: dmuus-cloud.52
   location:
     latitude: 1
     longitude: 52
@@ -801,7 +749,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-53
-  accessuri: dmuus-cloud.53
   location:
     latitude: 1
     longitude: 53
@@ -816,7 +763,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-54
-  accessuri: dmuus-cloud.54
   location:
     latitude: 1
     longitude: 54
@@ -831,7 +777,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-55
-  accessuri: dmuus-cloud.55
   location:
     latitude: 1
     longitude: 55
@@ -846,7 +791,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-56
-  accessuri: dmuus-cloud.56
   location:
     latitude: 1
     longitude: 56
@@ -861,7 +805,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-57
-  accessuri: dmuus-cloud.57
   location:
     latitude: 1
     longitude: 57
@@ -876,7 +819,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-58
-  accessuri: dmuus-cloud.58
   location:
     latitude: 1
     longitude: 58
@@ -891,7 +833,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-59
-  accessuri: dmuus-cloud.59
   location:
     latitude: 1
     longitude: 59
@@ -906,7 +847,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-60
-  accessuri: dmuus-cloud.60
   location:
     latitude: 1
     longitude: 60
@@ -921,7 +861,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-61
-  accessuri: dmuus-cloud.61
   location:
     latitude: 1
     longitude: 61
@@ -936,7 +875,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-62
-  accessuri: dmuus-cloud.62
   location:
     latitude: 1
     longitude: 62
@@ -951,7 +889,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-63
-  accessuri: dmuus-cloud.63
   location:
     latitude: 1
     longitude: 63
@@ -966,7 +903,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-64
-  accessuri: dmuus-cloud.64
   location:
     latitude: 1
     longitude: 64
@@ -981,7 +917,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-65
-  accessuri: dmuus-cloud.65
   location:
     latitude: 1
     longitude: 65
@@ -996,7 +931,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-66
-  accessuri: dmuus-cloud.66
   location:
     latitude: 1
     longitude: 66
@@ -1011,7 +945,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-67
-  accessuri: dmuus-cloud.67
   location:
     latitude: 1
     longitude: 67
@@ -1026,7 +959,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-68
-  accessuri: dmuus-cloud.68
   location:
     latitude: 1
     longitude: 68
@@ -1041,7 +973,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-69
-  accessuri: dmuus-cloud.69
   location:
     latitude: 1
     longitude: 69
@@ -1056,7 +987,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-70
-  accessuri: dmuus-cloud.70
   location:
     latitude: 1
     longitude: 70
@@ -1071,7 +1001,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-71
-  accessuri: dmuus-cloud.71
   location:
     latitude: 1
     longitude: 71
@@ -1086,7 +1015,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-72
-  accessuri: dmuus-cloud.72
   location:
     latitude: 1
     longitude: 72
@@ -1101,7 +1029,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-73
-  accessuri: dmuus-cloud.73
   location:
     latitude: 1
     longitude: 73
@@ -1116,7 +1043,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-74
-  accessuri: dmuus-cloud.74
   location:
     latitude: 1
     longitude: 74
@@ -1131,7 +1057,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-75
-  accessuri: dmuus-cloud.75
   location:
     latitude: 1
     longitude: 75
@@ -1146,7 +1071,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-76
-  accessuri: dmuus-cloud.76
   location:
     latitude: 1
     longitude: 76
@@ -1161,7 +1085,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-77
-  accessuri: dmuus-cloud.77
   location:
     latitude: 1
     longitude: 77
@@ -1176,7 +1099,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-78
-  accessuri: dmuus-cloud.78
   location:
     latitude: 1
     longitude: 78
@@ -1191,7 +1113,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-79
-  accessuri: dmuus-cloud.79
   location:
     latitude: 1
     longitude: 79
@@ -1206,7 +1127,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-80
-  accessuri: dmuus-cloud.80
   location:
     latitude: 1
     longitude: 80
@@ -1221,7 +1141,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-81
-  accessuri: dmuus-cloud.81
   location:
     latitude: 1
     longitude: 81
@@ -1236,7 +1155,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-82
-  accessuri: dmuus-cloud.82
   location:
     latitude: 1
     longitude: 82
@@ -1251,7 +1169,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-83
-  accessuri: dmuus-cloud.83
   location:
     latitude: 1
     longitude: 83
@@ -1266,7 +1183,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-84
-  accessuri: dmuus-cloud.84
   location:
     latitude: 1
     longitude: 84
@@ -1281,7 +1197,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-85
-  accessuri: dmuus-cloud.85
   location:
     latitude: 1
     longitude: 85
@@ -1296,7 +1211,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-86
-  accessuri: dmuus-cloud.86
   location:
     latitude: 1
     longitude: 86
@@ -1311,7 +1225,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-87
-  accessuri: dmuus-cloud.87
   location:
     latitude: 1
     longitude: 87
@@ -1326,7 +1239,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-88
-  accessuri: dmuus-cloud.88
   location:
     latitude: 1
     longitude: 88
@@ -1341,7 +1253,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-89
-  accessuri: dmuus-cloud.89
   location:
     latitude: 1
     longitude: 89
@@ -1356,7 +1267,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-90
-  accessuri: dmuus-cloud.90
   location:
     latitude: 1
     longitude: 90
@@ -1371,7 +1281,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-91
-  accessuri: dmuus-cloud.91
   location:
     latitude: 1
     longitude: 91
@@ -1386,7 +1295,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-92
-  accessuri: dmuus-cloud.92
   location:
     latitude: 1
     longitude: 92
@@ -1401,7 +1309,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-93
-  accessuri: dmuus-cloud.93
   location:
     latitude: 1
     longitude: 93
@@ -1416,7 +1323,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-94
-  accessuri: dmuus-cloud.94
   location:
     latitude: 1
     longitude: 94
@@ -1431,7 +1337,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-95
-  accessuri: dmuus-cloud.95
   location:
     latitude: 1
     longitude: 95
@@ -1446,7 +1351,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-96
-  accessuri: dmuus-cloud.96
   location:
     latitude: 1
     longitude: 96
@@ -1461,7 +1365,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-97
-  accessuri: dmuus-cloud.97
   location:
     latitude: 1
     longitude: 97
@@ -1476,7 +1379,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-98
-  accessuri: dmuus-cloud.98
   location:
     latitude: 1
     longitude: 98
@@ -1491,7 +1393,6 @@ cloudlets:
 - key:
     organization: azure
     name: azure-cloud-99
-  accessuri: azure-cloud.99
   location:
     latitude: 1
     longitude: 99
@@ -1506,7 +1407,6 @@ cloudlets:
 - key:
     organization: gcp
     name: gcp-cloud-100
-  accessuri: gcp-cloud.100
   location:
     latitude: 1
     longitude: 100

@@ -54,19 +54,6 @@ flavors:
   vcpus: 2
   disk: 2
 
-
-clusters:
-- key:
-    name: AutoClusterapp1
-  defaultflavor:
-    name: x1.small
-  auto: true
-- key:
-    name: AutoClusterapp2
-  defaultflavor:
-    name: x1.small
-  auto: true
-
 clusterinsts:
 - key:
     clusterkey:
@@ -2073,7 +2060,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-32
-  accessuri: OP1.cloudlet-32
   location:
     longitude: -144
   ipsupport: Dynamic
@@ -2081,7 +2067,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-60
-  accessuri: OP1.cloudlet-60
   location:
     longitude: -116
   ipsupport: Dynamic
@@ -2089,7 +2074,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-65
-  accessuri: OP1.cloudlet-65
   location:
     longitude: -111
   ipsupport: Dynamic
@@ -2097,7 +2081,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-66
-  accessuri: OP1.cloudlet-66
   location:
     longitude: -110
   ipsupport: Dynamic
@@ -2105,7 +2088,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-73
-  accessuri: OP1.cloudlet-73
   location:
     longitude: -103
   ipsupport: Dynamic
@@ -2113,7 +2095,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-4
-  accessuri: OP1.cloudlet-4
   location:
     longitude: -172
   ipsupport: Dynamic
@@ -2121,7 +2102,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-18
-  accessuri: OP1.cloudlet-18
   location:
     longitude: -158
   ipsupport: Dynamic
@@ -2129,7 +2109,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-29
-  accessuri: OP1.cloudlet-29
   location:
     longitude: -147
   ipsupport: Dynamic
@@ -2137,7 +2116,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-81
-  accessuri: OP1.cloudlet-81
   location:
     longitude: -95
   ipsupport: Dynamic
@@ -2145,7 +2123,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-55
-  accessuri: OP1.cloudlet-55
   location:
     longitude: -121
   ipsupport: Dynamic
@@ -2153,7 +2130,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-58
-  accessuri: OP1.cloudlet-58
   location:
     longitude: -118
   ipsupport: Dynamic
@@ -2161,7 +2137,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-9
-  accessuri: OP1.cloudlet-9
   location:
     longitude: -167
   ipsupport: Dynamic
@@ -2169,7 +2144,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-13
-  accessuri: OP1.cloudlet-13
   location:
     longitude: -163
   ipsupport: Dynamic
@@ -2177,7 +2151,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-37
-  accessuri: OP1.cloudlet-37
   location:
     longitude: -139
   ipsupport: Dynamic
@@ -2185,7 +2158,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-25
-  accessuri: OP1.cloudlet-25
   location:
     longitude: -151
   ipsupport: Dynamic
@@ -2193,7 +2165,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-28
-  accessuri: OP1.cloudlet-28
   location:
     longitude: -148
   ipsupport: Dynamic
@@ -2201,7 +2172,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-72
-  accessuri: OP1.cloudlet-72
   location:
     longitude: -104
   ipsupport: Dynamic
@@ -2209,7 +2179,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-1
-  accessuri: OP1.cloudlet-1
   location:
     longitude: -175
   ipsupport: Dynamic
@@ -2217,7 +2186,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-11
-  accessuri: OP1.cloudlet-11
   location:
     longitude: -165
   ipsupport: Dynamic
@@ -2225,7 +2193,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-20
-  accessuri: OP1.cloudlet-20
   location:
     longitude: -156
   ipsupport: Dynamic
@@ -2233,7 +2200,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-50
-  accessuri: OP1.cloudlet-50
   location:
     longitude: -126
   ipsupport: Dynamic
@@ -2241,7 +2207,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-52
-  accessuri: OP1.cloudlet-52
   location:
     longitude: -124
   ipsupport: Dynamic
@@ -2249,7 +2214,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-71
-  accessuri: OP1.cloudlet-71
   location:
     longitude: -105
   ipsupport: Dynamic
@@ -2257,7 +2221,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-76
-  accessuri: OP1.cloudlet-76
   location:
     longitude: -100
   ipsupport: Dynamic
@@ -2265,7 +2228,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-83
-  accessuri: OP1.cloudlet-83
   location:
     longitude: -93
   ipsupport: Dynamic
@@ -2273,7 +2235,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-26
-  accessuri: OP1.cloudlet-26
   location:
     longitude: -150
   ipsupport: Dynamic
@@ -2281,7 +2242,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-27
-  accessuri: OP1.cloudlet-27
   location:
     longitude: -149
   ipsupport: Dynamic
@@ -2289,7 +2249,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-36
-  accessuri: OP1.cloudlet-36
   location:
     longitude: -140
   ipsupport: Dynamic
@@ -2297,7 +2256,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-90
-  accessuri: OP1.cloudlet-90
   location:
     longitude: -86
   ipsupport: Dynamic
@@ -2305,7 +2263,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-95
-  accessuri: OP1.cloudlet-95
   location:
     longitude: -81
   ipsupport: Dynamic
@@ -2313,7 +2270,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-84
-  accessuri: OP1.cloudlet-84
   location:
     longitude: -92
   ipsupport: Dynamic
@@ -2321,7 +2277,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-85
-  accessuri: OP1.cloudlet-85
   location:
     longitude: -91
   ipsupport: Dynamic
@@ -2329,7 +2284,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-100
-  accessuri: OP1.cloudlet-100
   location:
     longitude: -76
   ipsupport: Dynamic
@@ -2337,7 +2291,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-10
-  accessuri: OP1.cloudlet-10
   location:
     longitude: -166
   ipsupport: Dynamic
@@ -2345,7 +2298,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-34
-  accessuri: OP1.cloudlet-34
   location:
     longitude: -142
   ipsupport: Dynamic
@@ -2353,7 +2305,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-44
-  accessuri: OP1.cloudlet-44
   location:
     longitude: -132
   ipsupport: Dynamic
@@ -2361,7 +2312,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-70
-  accessuri: OP1.cloudlet-70
   location:
     longitude: -106
   ipsupport: Dynamic
@@ -2369,7 +2319,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-80
-  accessuri: OP1.cloudlet-80
   location:
     longitude: -96
   ipsupport: Dynamic
@@ -2377,7 +2326,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-82
-  accessuri: OP1.cloudlet-82
   location:
     longitude: -94
   ipsupport: Dynamic
@@ -2385,7 +2333,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-89
-  accessuri: OP1.cloudlet-89
   location:
     longitude: -87
   ipsupport: Dynamic
@@ -2393,7 +2340,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-6
-  accessuri: OP1.cloudlet-6
   location:
     longitude: -170
   ipsupport: Dynamic
@@ -2401,7 +2347,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-24
-  accessuri: OP1.cloudlet-24
   location:
     longitude: -152
   ipsupport: Dynamic
@@ -2409,7 +2354,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-67
-  accessuri: OP1.cloudlet-67
   location:
     longitude: -109
   ipsupport: Dynamic
@@ -2417,7 +2361,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-38
-  accessuri: OP1.cloudlet-38
   location:
     longitude: -138
   ipsupport: Dynamic
@@ -2425,7 +2368,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-98
-  accessuri: OP1.cloudlet-98
   location:
     longitude: -78
   ipsupport: Dynamic
@@ -2433,7 +2375,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-5
-  accessuri: OP1.cloudlet-5
   location:
     longitude: -171
   ipsupport: Dynamic
@@ -2441,7 +2382,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-22
-  accessuri: OP1.cloudlet-22
   location:
     longitude: -154
   ipsupport: Dynamic
@@ -2449,7 +2389,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-33
-  accessuri: OP1.cloudlet-33
   location:
     longitude: -143
   ipsupport: Dynamic
@@ -2457,7 +2396,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-39
-  accessuri: OP1.cloudlet-39
   location:
     longitude: -137
   ipsupport: Dynamic
@@ -2465,7 +2403,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-40
-  accessuri: OP1.cloudlet-40
   location:
     longitude: -136
   ipsupport: Dynamic
@@ -2473,7 +2410,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-42
-  accessuri: OP1.cloudlet-42
   location:
     longitude: -134
   ipsupport: Dynamic
@@ -2481,7 +2417,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-54
-  accessuri: OP1.cloudlet-54
   location:
     longitude: -122
   ipsupport: Dynamic
@@ -2489,7 +2424,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-59
-  accessuri: OP1.cloudlet-59
   location:
     longitude: -117
   ipsupport: Dynamic
@@ -2497,7 +2431,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-3
-  accessuri: OP1.cloudlet-3
   location:
     longitude: -173
   ipsupport: Dynamic
@@ -2505,7 +2438,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-30
-  accessuri: OP1.cloudlet-30
   location:
     longitude: -146
   ipsupport: Dynamic
@@ -2513,7 +2445,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-35
-  accessuri: OP1.cloudlet-35
   location:
     longitude: -141
   ipsupport: Dynamic
@@ -2521,7 +2452,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-51
-  accessuri: OP1.cloudlet-51
   location:
     longitude: -125
   ipsupport: Dynamic
@@ -2529,7 +2459,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-69
-  accessuri: OP1.cloudlet-69
   location:
     longitude: -107
   ipsupport: Dynamic
@@ -2537,7 +2466,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-99
-  accessuri: OP1.cloudlet-99
   location:
     longitude: -77
   ipsupport: Dynamic
@@ -2545,7 +2473,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-8
-  accessuri: OP1.cloudlet-8
   location:
     longitude: -168
   ipsupport: Dynamic
@@ -2553,7 +2480,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-45
-  accessuri: OP1.cloudlet-45
   location:
     longitude: -131
   ipsupport: Dynamic
@@ -2561,7 +2487,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-46
-  accessuri: OP1.cloudlet-46
   location:
     longitude: -130
   ipsupport: Dynamic
@@ -2569,7 +2494,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-2
-  accessuri: OP1.cloudlet-2
   location:
     longitude: -174
   ipsupport: Dynamic
@@ -2577,7 +2501,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-79
-  accessuri: OP1.cloudlet-79
   location:
     longitude: -97
   ipsupport: Dynamic
@@ -2585,7 +2508,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-92
-  accessuri: OP1.cloudlet-92
   location:
     longitude: -84
   ipsupport: Dynamic
@@ -2593,7 +2515,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-68
-  accessuri: OP1.cloudlet-68
   location:
     longitude: -108
   ipsupport: Dynamic
@@ -2601,7 +2522,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-74
-  accessuri: OP1.cloudlet-74
   location:
     longitude: -102
   ipsupport: Dynamic
@@ -2609,7 +2529,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-77
-  accessuri: OP1.cloudlet-77
   location:
     longitude: -99
   ipsupport: Dynamic
@@ -2617,7 +2536,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-14
-  accessuri: OP1.cloudlet-14
   location:
     longitude: -162
   ipsupport: Dynamic
@@ -2625,7 +2543,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-43
-  accessuri: OP1.cloudlet-43
   location:
     longitude: -133
   ipsupport: Dynamic
@@ -2633,7 +2550,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-56
-  accessuri: OP1.cloudlet-56
   location:
     longitude: -120
   ipsupport: Dynamic
@@ -2641,7 +2557,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-31
-  accessuri: OP1.cloudlet-31
   location:
     longitude: -145
   ipsupport: Dynamic
@@ -2649,7 +2564,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-47
-  accessuri: OP1.cloudlet-47
   location:
     longitude: -129
   ipsupport: Dynamic
@@ -2657,7 +2571,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-48
-  accessuri: OP1.cloudlet-48
   location:
     longitude: -128
   ipsupport: Dynamic
@@ -2665,7 +2578,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-63
-  accessuri: OP1.cloudlet-63
   location:
     longitude: -113
   ipsupport: Dynamic
@@ -2673,7 +2585,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-78
-  accessuri: OP1.cloudlet-78
   location:
     longitude: -98
   ipsupport: Dynamic
@@ -2681,7 +2592,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-7
-  accessuri: OP1.cloudlet-7
   location:
     longitude: -169
   ipsupport: Dynamic
@@ -2689,7 +2599,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-15
-  accessuri: OP1.cloudlet-15
   location:
     longitude: -161
   ipsupport: Dynamic
@@ -2697,7 +2606,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-17
-  accessuri: OP1.cloudlet-17
   location:
     longitude: -159
   ipsupport: Dynamic
@@ -2705,7 +2613,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-93
-  accessuri: OP1.cloudlet-93
   location:
     longitude: -83
   ipsupport: Dynamic
@@ -2713,7 +2620,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-97
-  accessuri: OP1.cloudlet-97
   location:
     longitude: -79
   ipsupport: Dynamic
@@ -2721,7 +2627,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-62
-  accessuri: OP1.cloudlet-62
   location:
     longitude: -114
   ipsupport: Dynamic
@@ -2729,7 +2634,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-64
-  accessuri: OP1.cloudlet-64
   location:
     longitude: -112
   ipsupport: Dynamic
@@ -2737,7 +2641,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-16
-  accessuri: OP1.cloudlet-16
   location:
     longitude: -160
   ipsupport: Dynamic
@@ -2745,7 +2648,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-19
-  accessuri: OP1.cloudlet-19
   location:
     longitude: -157
   ipsupport: Dynamic
@@ -2753,7 +2655,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-23
-  accessuri: OP1.cloudlet-23
   location:
     longitude: -153
   ipsupport: Dynamic
@@ -2761,7 +2662,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-87
-  accessuri: OP1.cloudlet-87
   location:
     longitude: -89
   ipsupport: Dynamic
@@ -2769,7 +2669,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-94
-  accessuri: OP1.cloudlet-94
   location:
     longitude: -82
   ipsupport: Dynamic
@@ -2777,7 +2676,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-96
-  accessuri: OP1.cloudlet-96
   location:
     longitude: -80
   ipsupport: Dynamic
@@ -2785,7 +2683,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-12
-  accessuri: OP1.cloudlet-12
   location:
     longitude: -164
   ipsupport: Dynamic
@@ -2793,7 +2690,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-75
-  accessuri: OP1.cloudlet-75
   location:
     longitude: -101
   ipsupport: Dynamic
@@ -2801,7 +2697,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-86
-  accessuri: OP1.cloudlet-86
   location:
     longitude: -90
   ipsupport: Dynamic
@@ -2809,7 +2704,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-88
-  accessuri: OP1.cloudlet-88
   location:
     longitude: -88
   ipsupport: Dynamic
@@ -2817,7 +2711,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-91
-  accessuri: OP1.cloudlet-91
   location:
     longitude: -85
   ipsupport: Dynamic
@@ -2825,7 +2718,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-21
-  accessuri: OP1.cloudlet-21
   location:
     longitude: -155
   ipsupport: Dynamic
@@ -2833,7 +2725,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-41
-  accessuri: OP1.cloudlet-41
   location:
     longitude: -135
   ipsupport: Dynamic
@@ -2841,7 +2732,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-53
-  accessuri: OP1.cloudlet-53
   location:
     longitude: -123
   ipsupport: Dynamic
@@ -2849,7 +2739,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-49
-  accessuri: OP1.cloudlet-49
   location:
     longitude: -127
   ipsupport: Dynamic
@@ -2857,7 +2746,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-57
-  accessuri: OP1.cloudlet-57
   location:
     longitude: -119
   ipsupport: Dynamic
@@ -2865,7 +2753,6 @@ cloudlets:
 - key:
     organization: OP1
     name: cloudlet-61
-  accessuri: OP1.cloudlet-61
   location:
     longitude: -115
   ipsupport: Dynamic
@@ -2882,8 +2769,6 @@ apps:
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
-  cluster:
-    name: AutoClusterapp1
 - key:
     organization: Dev1
     name: app2
@@ -2894,8 +2779,6 @@ apps:
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
-  cluster:
-    name: AutoClusterapp2
 
 appinstances:
 - key:

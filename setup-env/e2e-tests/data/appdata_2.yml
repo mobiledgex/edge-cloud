@@ -29,7 +29,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: dmuus-cloud.1
   location:
     latitude: 1
     longitude: 1
@@ -44,7 +43,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  accessuri: dmuus-cloud.2
   location:
     latitude: 1
     longitude: 2
