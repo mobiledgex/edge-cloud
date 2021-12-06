@@ -21,9 +21,6 @@ tests:
   - includefile: get_fqdnlist.yml
   - includefile: get_fqdnlist.yml
     api: rest
-  - includefile: app_official_fqdn_app1.yml
-  - includefile: app_official_fqdn_app1.yml
-    api: rest
   - includefile: find_cloudlet.yml
   - includefile: find_cloudlet.yml
     api: rest

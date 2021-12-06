@@ -44,20 +44,6 @@ clusterflavors:
   maxnodes: 4
   nummasters: 1
 
-clusters:
-- key:
-    name: centraluscluster
-  defaultflavor:
-    name: c1.small
-- key:
-    name: westuscluster
-  defaultflavor:
-    name: c1.small
-- key:
-    name: bonncluster
-  defaultflavor:
-    name: c1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -93,7 +79,6 @@ cloudlets:
 - key:
     organization: TDG
     name: centraluscloudlet
-  accessuri:
   location:
     latitude: 42.379
     longitude: -87.858
@@ -102,7 +87,6 @@ cloudlets:
 - key:
     organization: TDG
     name: westuscloudlet
-  accessuri:
   location:
     latitude: 37.338
     longitude: -121.886
@@ -111,7 +95,6 @@ cloudlets:
 - key:
     organization: TDG
     name: bonncloudlet
-  accessuri:
   location:
     latitude: 50.737
     longitude: 7.098
