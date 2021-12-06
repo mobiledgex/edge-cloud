@@ -433,7 +433,6 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 type ReadYamlOptions struct {
 	vars                 map[string]string
 	validateReplacedVars bool
-	strict               bool
 }
 
 type ReadYamlOp func(opts *ReadYamlOptions)
@@ -515,12 +514,6 @@ func WithVars(vars map[string]string) ReadYamlOp {
 func ValidateReplacedVars() ReadYamlOp {
 	return func(opts *ReadYamlOptions) {
 		opts.validateReplacedVars = true
-	}
-}
-
-func WithStrict() ReadYamlOp {
-	return func(opts *ReadYamlOptions) {
-		opts.strict = true
 	}
 }
 
