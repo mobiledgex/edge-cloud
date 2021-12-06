@@ -3,22 +3,18 @@
     appname: someapplication1
     appvers: "1.0"
     authtoken: "GENTOKEN:authtoken_private.pem"
-    cellid: 1234
   findcloudletrequest:
     carriername:
     gpslocation:
       latitude: 32.00
       longitude: -92.00
-    cellid: 1234
 - findcloudletrequest:
     carriername:
     gpslocation:
       latitude: 35.10
       longitude: -96.00
-    cellid: 1234
 - findcloudletrequest:
     carriername:
     gpslocation:
       latitude: 37.10
       longitude: -98.9
-    cellid: 1234
