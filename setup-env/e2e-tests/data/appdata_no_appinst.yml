@@ -49,12 +49,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -119,7 +113,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
@@ -132,7 +125,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-2
-  accessuri: cloud2.tmo
   location:
     latitude: 35
     longitude: -95
@@ -145,7 +137,6 @@ cloudlets:
 - key:
     organization: att
     name: att-cloud-1
-  accessuri: cloud1.att
   location:
     latitude: 37
     longitude: -99
@@ -158,7 +149,6 @@ cloudlets:
 - key:
     organization: azure
     name: azure-cloud-4
-  accessuri: cloud4.azure
   location:
     latitude: 32
     longitude: -91
@@ -171,7 +161,6 @@ cloudlets:
 - key:
     organization: gcp
     name: gcp-cloud-5
-  accessuri: cloud5.gcp
   location:
     latitude: 36
     longitude: -95
@@ -223,8 +212,6 @@ apps:
   deployment: kubernetes
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:80,tcp:443,udp:10002"
   androidpackagename: com.acme.someapplication1
   officialfqdn: someapplication1.acmeappco.com
@@ -238,8 +225,6 @@ apps:
   deployment: kubernetes
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:81"
   autoprovpolicy: autoprov1
   officialfqdn: autoprovapp.acmeappco.com
@@ -252,8 +237,6 @@ apps:
   deployment: kubernetes
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:82"
   autoprovpolicy: autoprov2
   officialfqdn: autoprovapp2.acmeappco.com
@@ -266,6 +249,4 @@ apps:
   deployment: kubernetes
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:64000"

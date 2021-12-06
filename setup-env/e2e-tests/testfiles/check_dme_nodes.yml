@@ -9,4 +9,4 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/dme_nodes.yml"
-    filetype: appdata
+    filetype: nodedata

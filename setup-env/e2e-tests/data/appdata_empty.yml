@@ -7,29 +7,25 @@ settings:
   autodeployintervalsec: 300
   autodeployoffsetsec: 20
   autodeploymaxintervals: 10
-  createappinsttimeout: 30m
-  updateappinsttimeout: 30m
-  deleteappinsttimeout: 20m
-  createclusterinsttimeout: 30m
-  updateclusterinsttimeout: 20m
-  deleteclusterinsttimeout: 20m
-  createcloudlettimeout: 30m
-  updatecloudlettimeout: 20m
-  updatetrustpolicytimeout: 10m
-
+  createappinsttimeout: 30m0s
+  updateappinsttimeout: 30m0s
+  deleteappinsttimeout: 20m0s
+  createclusterinsttimeout: 30m0s
+  updateclusterinsttimeout: 20m0s
+  deleteclusterinsttimeout: 20m0s
   maxtrackeddmeclients: 100
-  chefclientinterval: 10m
-  cloudletmaintenancetimeout: 5m
-  updatevmpooltimeout: 20m0s
-  dmeapimetricscollectioninterval: 30s
+  chefclientinterval: 10m0s
   influxdbmetricsretention: 672h0m0s
+  cloudletmaintenancetimeout: 5m0s
+  updatevmpooltimeout: 20m0s
+  updatetrustpolicytimeout: 10m0s
+  dmeapimetricscollectioninterval: 30s
+  edgeeventsmetricscollectioninterval: 1h0m0s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
-  appinstclientcleanupinterval: 24h
+  createcloudlettimeout: 30m0s
+  updatecloudlettimeout: 20m0s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1h0m0s
-  influxdbedgeeventsmetricsretention: 672h0m0s
-  influxdbdownsampledmetricsretention: 8760h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 24h0m0s
     retention: 168h0m0s
@@ -37,12 +33,14 @@ settings:
     retention: 672h0m0s
   - interval: 672h0m0s
     retention: 8064h0m0s
+  influxdbdownsampledmetricsretention: 8760h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  appinstclientcleanupinterval: 24h0m0s
   clusterautoscaleaveragingdurationsec: 60
-  clusterautoscaleretrydelay: 1m
+  clusterautoscaleretrydelay: 1m0s
   alertpolicymintriggertime: 30s
-  disableratelimit: false
   ratelimitmaxtrackedips: 10000
-  resourcesnapshotthreadinterval: 10m
+  resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
 flowratelimitsettings:
@@ -56,6 +54,16 @@ flowratelimitsettings:
     flowalgorithm: TokenBucketAlgorithm
     reqspersecond: 25000
     burstsize: 250
+- key:
+    flowsettingsname: dmeglobalperip1
+    ratelimitkey:
+      apiname: Global
+      apiendpointtype: Dme
+      ratelimittarget: PerIp
+  settings:
+    flowalgorithm: TokenBucketAlgorithm
+    reqspersecond: 10000
+    burstsize: 100
 - key:
     flowsettingsname: persistentconnectionallreqs1
     ratelimitkey:
@@ -77,16 +85,6 @@ flowratelimitsettings:
     reqspersecond: 5000
     burstsize: 50
 - key:
-    flowsettingsname: dmeglobalperip1
-    ratelimitkey:
-      apiname: Global
-      apiendpointtype: Dme
-      ratelimittarget: PerIp
-  settings:
-    flowalgorithm: TokenBucketAlgorithm
-    reqspersecond: 10000
-    burstsize: 100
-- key:
     flowsettingsname: verifylocperip1
     ratelimitkey:
       apiname: VerifyLocation
@@ -96,15 +94,3 @@ flowratelimitsettings:
     flowalgorithm: TokenBucketAlgorithm
     reqspersecond: 1000
     burstsize: 25
-    
-flavors:
-
-cloudlets:
-
-apps:
-
-appinstances:
-
-clusters: 
-
-clusterinsts:

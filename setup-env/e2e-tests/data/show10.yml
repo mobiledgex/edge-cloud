@@ -1,3 +1,14 @@
+flavors:
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 settings:
   shepherdmetricscollectioninterval: 5s
   shepherdalertevaluationinterval: 15s
@@ -7,29 +18,25 @@ settings:
   autodeployintervalsec: 300
   autodeployoffsetsec: 20
   autodeploymaxintervals: 10
-  createappinsttimeout: 30m
-  updateappinsttimeout: 30m
-  deleteappinsttimeout: 20m
-  createclusterinsttimeout: 30m
-  updateclusterinsttimeout: 20m
-  deleteclusterinsttimeout: 20m
-  createcloudlettimeout: 30m
-  updatecloudlettimeout: 20m
-  updatetrustpolicytimeout: 10m
-
+  createappinsttimeout: 30m0s
+  updateappinsttimeout: 30m0s
+  deleteappinsttimeout: 20m0s
+  createclusterinsttimeout: 30m0s
+  updateclusterinsttimeout: 20m0s
+  deleteclusterinsttimeout: 20m0s
   maxtrackeddmeclients: 100
-  chefclientinterval: 10m
-  cloudletmaintenancetimeout: 5m
-  updatevmpooltimeout: 20m0s
-  dmeapimetricscollectioninterval: 30s
+  chefclientinterval: 10m0s
   influxdbmetricsretention: 672h0m0s
+  cloudletmaintenancetimeout: 5m0s
+  updatevmpooltimeout: 20m0s
+  updatetrustpolicytimeout: 10m0s
+  dmeapimetricscollectioninterval: 30s
+  edgeeventsmetricscollectioninterval: 1h0m0s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
-  appinstclientcleanupinterval: 24h
+  createcloudlettimeout: 30m0s
+  updatecloudlettimeout: 20m0s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1h0m0s
-  influxdbedgeeventsmetricsretention: 672h0m0s
-  influxdbdownsampledmetricsretention: 8760h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 24h0m0s
     retention: 168h0m0s
@@ -37,526 +44,209 @@ settings:
     retention: 672h0m0s
   - interval: 672h0m0s
     retention: 8064h0m0s
+  influxdbdownsampledmetricsretention: 8760h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  appinstclientcleanupinterval: 24h0m0s
   clusterautoscaleaveragingdurationsec: 60
-  clusterautoscaleretrydelay: 1m
+  clusterautoscaleretrydelay: 1m0s
   alertpolicymintriggertime: 30s
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
-  resourcesnapshotthreadinterval: 10m
+  resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
-flavors:
-- key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
-- key:
-    name: x1.small
-  ram: 2048
-  vcpus: 2
-  disk: 2
-
-
-clusterinsts:
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-8
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: gcp
-      name: gcp-cloud-10
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Dedicated
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-4
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-5
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-1
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-2
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-2
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-7
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: azure
-      name: azure-cloud-9
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Dedicated
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-4
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-5
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-6
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-6
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-7
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-1
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-3
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-3
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-8
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: azure
-      name: azure-cloud-9
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Dedicated
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: gcp
-      name: gcp-cloud-10
-    organization: MobiledgeX
-  flavor:
-    name: x1.small
-  liveness: Dynamic
-  auto: true
-  reservable: true
-  reservedby: AcmeAppCo
-  ipaccess: Dedicated
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-
 operatorcodes:
-  - code: wifi
-    organization: dmuus
-
+- code: wifi
+  organization: dmuus
 cloudlets:
-- key:
-    organization: dmuus
-    name: dmuus-cloud-2
-  accessuri: dmuus-cloud.2
-  location:
-    latitude: 1
-    longitude: 2
-  ipsupport: Dynamic
-  numdynamicips: 254
-  platformtype: Fake
-  flavor:
-    name: x1.tiny
-  physicalname: dmuus-cloud-2
-  containerversion: 2019-10-24
-  defaultresourcealertthreshold: 80
-- key:
-    organization: dmuus
-    name: dmuus-cloud-5
-  accessuri: dmuus-cloud.5
-  location:
-    latitude: 1
-    longitude: 5
-  ipsupport: Dynamic
-  numdynamicips: 254
-  platformtype: Fake
-  flavor:
-    name: x1.tiny
-  physicalname: dmuus-cloud-5
-  containerversion: 2019-10-24
-  defaultresourcealertthreshold: 80
-- key:
-    organization: dmuus
-    name: dmuus-cloud-6
-  accessuri: dmuus-cloud.6
-  location:
-    latitude: 1
-    longitude: 6
-  ipsupport: Dynamic
-  numdynamicips: 254
-  platformtype: Fake
-  flavor:
-    name: x1.tiny
-  physicalname: dmuus-cloud-6
-  containerversion: 2019-10-24
-  defaultresourcealertthreshold: 80
 - key:
     organization: azure
     name: azure-cloud-9
-  accessuri: azure-cloud.9
   location:
     latitude: 1
     longitude: 9
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: azure-cloud-9
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
 - key:
     organization: gcp
     name: gcp-cloud-10
-  accessuri: gcp-cloud.10
   location:
     latitude: 1
     longitude: 10
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: gcp-cloud-10
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: dmuus-cloud.1
   location:
     latitude: 1
     longitude: 1
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-1
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
+  defaultresourcealertthreshold: 80
+- key:
+    organization: dmuus
+    name: dmuus-cloud-2
+  location:
+    latitude: 1
+    longitude: 2
+  ipsupport: Dynamic
+  numdynamicips: 254
+  flavor:
+    name: x1.tiny
+  physicalname: dmuus-cloud-2
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-3
-  accessuri: dmuus-cloud.3
   location:
     latitude: 1
     longitude: 3
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-3
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-4
-  accessuri: dmuus-cloud.4
   location:
     latitude: 1
     longitude: 4
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-4
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
+  defaultresourcealertthreshold: 80
+- key:
+    organization: dmuus
+    name: dmuus-cloud-5
+  location:
+    latitude: 1
+    longitude: 5
+  ipsupport: Dynamic
+  numdynamicips: 254
+  flavor:
+    name: x1.tiny
+  physicalname: dmuus-cloud-5
+  containerversion: "2019-10-24"
+  defaultresourcealertthreshold: 80
+- key:
+    organization: dmuus
+    name: dmuus-cloud-6
+  location:
+    latitude: 1
+    longitude: 6
+  ipsupport: Dynamic
+  numdynamicips: 254
+  flavor:
+    name: x1.tiny
+  physicalname: dmuus-cloud-6
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-7
-  accessuri: dmuus-cloud.7
   location:
     latitude: 1
     longitude: 7
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-7
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
     name: dmuus-cloud-8
-  accessuri: dmuus-cloud.8
   location:
     latitude: 1
     longitude: 8
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: x1.tiny
   physicalname: dmuus-cloud-8
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
-
 cloudletinfos:
+- key:
+    organization: azure
+    name: azure-cloud-9
+  state: Ready
+  notifyid: 48
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 40960
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
+  - name: x1.small
+    vcpus: 2
+    ram: 4096
+    disk: 40
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+  resourcessnapshot:
+    platformvms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 32768
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 16
+      inframaxvalue: 50
+    - name: External IPs
+      value: 3
+      inframaxvalue: 30
+    - name: Instances
+      value: 8
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
 - key:
     organization: gcp
     name: gcp-cloud-10
@@ -607,6 +297,63 @@ cloudletinfos:
       inframaxvalue: 30
     - name: Instances
       value: 8
+    clusterinsts:
+    - clusterkey:
+        name: reservable0
+      organization: MobiledgeX
+    - clusterkey:
+        name: reservable1
+      organization: MobiledgeX
+- key:
+    organization: dmuus
+    name: dmuus-cloud-1
+  state: Ready
+  notifyid: 40
+  controller: Jon-Mex@127.0.0.1:55001
+  osmaxram: 40960
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
+  - name: x1.small
+    vcpus: 2
+    ram: 4096
+    disk: 40
+  status:
+    tasknumber: 3
+    taskname: Gathering Cloudlet Info
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+  resourcessnapshot:
+    platformvms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 24576
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 12
+      inframaxvalue: 50
+    - name: External IPs
+      value: 1
+      inframaxvalue: 30
+    - name: Instances
+      value: 6
     clusterinsts:
     - clusterkey:
         name: reservable0
@@ -728,7 +475,6 @@ cloudletinfos:
     - clusterkey:
         name: reservable1
       organization: MobiledgeX
-
 - key:
     organization: dmuus
     name: dmuus-cloud-4
@@ -958,120 +704,6 @@ cloudletinfos:
         name: reservable1
       organization: MobiledgeX
 - key:
-    organization: azure
-    name: azure-cloud-9
-  state: Ready
-  notifyid: 48
-  controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 40960
-  osmaxvcores: 50
-  osmaxvolgb: 5000
-  flavors:
-  - name: x1.tiny
-    vcpus: 1
-    ram: 1024
-    disk: 20
-  - name: x1.small
-    vcpus: 2
-    ram: 4096
-    disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
-  containerversion: "2019-10-24"
-  controllercachereceived: true
-  resourcessnapshot:
-    platformvms:
-    - name: fake-platform-vm
-      type: platform
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.101.100.10
-    - name: fake-rootlb-vm
-      type: rootlb
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.101.100.11
-    info:
-    - name: RAM
-      value: 32768
-      inframaxvalue: 40960
-      units: MB
-    - name: vCPUs
-      value: 16
-      inframaxvalue: 50
-    - name: External IPs
-      value: 3
-      inframaxvalue: 30
-    - name: Instances
-      value: 8
-    clusterinsts:
-    - clusterkey:
-        name: reservable0
-      organization: MobiledgeX
-    - clusterkey:
-        name: reservable1
-      organization: MobiledgeX
-- key:
-    organization: dmuus
-    name: dmuus-cloud-1
-  state: Ready
-  notifyid: 40
-  controller: Jon-Mex@127.0.0.1:55001
-  osmaxram: 40960
-  osmaxvcores: 50
-  osmaxvolgb: 5000
-  flavors:
-  - name: x1.tiny
-    vcpus: 1
-    ram: 1024
-    disk: 20
-  - name: x1.small
-    vcpus: 2
-    ram: 4096
-    disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
-  containerversion: "2019-10-24"
-  controllercachereceived: true
-  resourcessnapshot:
-    platformvms:
-    - name: fake-platform-vm
-      type: platform
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.101.100.10
-    - name: fake-rootlb-vm
-      type: rootlb
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.101.100.11
-    info:
-    - name: RAM
-      value: 24576
-      inframaxvalue: 40960
-      units: MB
-    - name: vCPUs
-      value: 12
-      inframaxvalue: 50
-    - name: External IPs
-      value: 1
-      inframaxvalue: 30
-    - name: Instances
-      value: 6
-    clusterinsts:
-    - clusterkey:
-        name: reservable0
-      organization: MobiledgeX
-    - clusterkey:
-        name: reservable1
-      organization: MobiledgeX
-- key:
     organization: dmuus
     name: dmuus-cloud-8
   state: Ready
@@ -1128,18 +760,348 @@ cloudletinfos:
     - clusterkey:
         name: reservable1
       organization: MobiledgeX
-apps:
+clusterinsts:
 - key:
-    organization: platos
-    name: PlatosEnablingLayer
-    version: "1.0"
-  imagepath: registry.mobiledgex.net/dummyvalue
-  imagetype: Docker
-  accessports: tcp:64000
-  defaultflavor:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: azure
+      name: azure-cloud-9
+    organization: MobiledgeX
+  flavor:
     name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Dedicated
   deployment: kubernetes
-  accesstype: LoadBalancer
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: gcp
+      name: gcp-cloud-10
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Dedicated
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-3
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-4
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-5
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-6
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-7
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-8
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: azure
+      name: azure-cloud-9
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Dedicated
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: gcp
+      name: gcp-cloud-10
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Dedicated
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-3
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-4
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-5
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-6
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-7
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-8
+    organization: MobiledgeX
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  auto: true
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  reservable: true
+  reservedby: AcmeAppCo
+apps:
 - key:
     organization: AcmeAppCo
     name: someapplication1
@@ -1147,7 +1109,6 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
   imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
-  officialfqdn: someapplication1.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -1162,6 +1123,7 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication1
+  officialfqdn: someapplication1.acmeappco.com
   accesstype: LoadBalancer
 - key:
     organization: AcmeAppCo
@@ -1170,7 +1132,6 @@ apps:
   imagepath: docker.mobiledgex.net/AcmeAppCo/images/someapplication2:1.0
   imagetype: Docker
   accessports: tcp:80,tcp:443,udp:10002
-  officialfqdn: someapplication2.acmeappco.com
   defaultflavor:
     name: x1.small
   authpublickey: |
@@ -1185,9 +1146,196 @@ apps:
     -----END PUBLIC KEY-----
   deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication2
+  officialfqdn: someapplication2.acmeappco.com
   accesstype: LoadBalancer
-
+- key:
+    organization: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+  imagepath: registry.mobiledgex.net/dummyvalue
+  imagetype: Docker
+  accessports: tcp:64000
+  defaultflavor:
+    name: x1.small
+  deployment: kubernetes
+  accesstype: LoadBalancer
 appinstances:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: azure
+        name: azure-cloud-9
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 9
+  uri: acmeappcosomeapplication110.reservable0.azure-cloud-9.azure.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication110-tcp.
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+    fqdnprefix: someapplication110-tcp.
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication110-udp.
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-azure-cloud-9-azure
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: gcp
+        name: gcp-cloud-10
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 10
+  uri: acmeappcosomeapplication110.reservable0.gcp-cloud-10.gcp.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication110-tcp.
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+    fqdnprefix: someapplication110-tcp.
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication110-udp.
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-gcp-cloud-10-gcp
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-1
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 1
+  uri: shared.dmuus-cloud-1.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-1-dmuus
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-2
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 2
+  uri: shared.dmuus-cloud-2.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-2-dmuus
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-3
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 3
+  uri: shared.dmuus-cloud-3.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-3-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1225,37 +1373,71 @@ appinstances:
 - key:
     appkey:
       organization: AcmeAppCo
-      name: someapplication2
+      name: someapplication1
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication2
+        name: autoclustersomeapplication1
       cloudletkey:
         organization: dmuus
-        name: dmuus-cloud-4
+        name: dmuus-cloud-5
       organization: MobiledgeX
   cloudletloc:
     latitude: 1
-    longitude: 4
-  uri: shared.dmuus-cloud-4.dmuus.localtest.net
+    longitude: 5
+  uri: shared.dmuus-cloud-5.dmuus.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
     internalport: 80
-    publicport: 10000
+    publicport: 80
   - proto: Tcp
     internalport: 443
-    publicport: 10001
+    publicport: 443
   - proto: Udp
     internalport: 10002
-    publicport: 10000
+    publicport: 10002
   flavor:
     name: x1.small
   runtimeinfo:
     containerids:
     - appOnClusterNode0
-  realclustername: reservable1
-  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-4-dmuus
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-5-dmuus
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-6
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 6
+  uri: shared.dmuus-cloud-6.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-6-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1290,6 +1472,114 @@ appinstances:
     - appOnClusterNode0
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-7-dmuus
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        organization: dmuus
+        name: dmuus-cloud-8
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 8
+  uri: shared.dmuus-cloud-8.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable0
+  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-8-dmuus
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        organization: azure
+        name: azure-cloud-9
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 9
+  uri: acmeappcosomeapplication210.reservable1.azure-cloud-9.azure.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication210-tcp.
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+    fqdnprefix: someapplication210-tcp.
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication210-udp.
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-azure-cloud-9-azure
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        organization: gcp
+        name: gcp-cloud-10
+      organization: MobiledgeX
+  cloudletloc:
+    latitude: 1
+    longitude: 10
+  uri: acmeappcosomeapplication210.reservable1.gcp-cloud-10.gcp.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication210-tcp.
+  - proto: Tcp
+    internalport: 443
+    publicport: 443
+    fqdnprefix: someapplication210-tcp.
+  - proto: Udp
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication210-udp.
+  flavor:
+    name: x1.small
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  realclustername: reservable1
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-gcp-cloud-10-gcp
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1402,12 +1692,12 @@ appinstances:
         name: autoclustersomeapplication2
       cloudletkey:
         organization: dmuus
-        name: dmuus-cloud-6
+        name: dmuus-cloud-4
       organization: MobiledgeX
   cloudletloc:
     latitude: 1
-    longitude: 6
-  uri: shared.dmuus-cloud-6.dmuus.localtest.net
+    longitude: 4
+  uri: shared.dmuus-cloud-4.dmuus.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1425,75 +1715,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
-  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-6-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-8
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 8
-  uri: shared.dmuus-cloud-8.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-8-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-3
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 3
-  uri: shared.dmuus-cloud-3.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-3-dmuus
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-4-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1531,11 +1753,11 @@ appinstances:
 - key:
     appkey:
       organization: AcmeAppCo
-      name: someapplication1
+      name: someapplication2
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autoclustersomeapplication1
+        name: autoclustersomeapplication2
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-6
@@ -1548,270 +1770,20 @@ appinstances:
   mappedports:
   - proto: Tcp
     internalport: 80
-    publicport: 80
+    publicport: 10000
   - proto: Tcp
     internalport: 443
-    publicport: 443
+    publicport: 10001
   - proto: Udp
     internalport: 10002
-    publicport: 10002
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-6-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication2
-      cloudletkey:
-        organization: azure
-        name: azure-cloud-9
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 9
-  uri: acmeappcosomeapplication210.reservable1.azure-cloud-9.azure.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication210-tcp.
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-    fqdnprefix: someapplication210-tcp.
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication210-udp.
+    publicport: 10000
   flavor:
     name: x1.small
   runtimeinfo:
     containerids:
     - appOnClusterNode0
   realclustername: reservable1
-  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-azure-cloud-9-azure
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: gcp
-        name: gcp-cloud-10
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 10
-  uri: acmeappcosomeapplication110.reservable0.gcp-cloud-10.gcp.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication110-tcp.
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-    fqdnprefix: someapplication110-tcp.
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication110-udp.
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-gcp-cloud-10-gcp
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication2
-      cloudletkey:
-        organization: gcp
-        name: gcp-cloud-10
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 10
-  uri: acmeappcosomeapplication210.reservable1.gcp-cloud-10.gcp.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication210-tcp.
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-    fqdnprefix: someapplication210-tcp.
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication210-udp.
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable1
-  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-gcp-cloud-10-gcp
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-1
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 1
-  uri: shared.dmuus-cloud-1.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-1-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-2
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 2
-  uri: shared.dmuus-cloud-2.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-2-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: azure
-        name: azure-cloud-9
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 9
-  uri: acmeappcosomeapplication110.reservable0.azure-cloud-9.azure.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication110-tcp.
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-    fqdnprefix: someapplication110-tcp.
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication110-udp.
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-azure-cloud-9-azure
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: autoclustersomeapplication1
-      cloudletkey:
-        organization: dmuus
-        name: dmuus-cloud-5
-      organization: MobiledgeX
-  cloudletloc:
-    latitude: 1
-    longitude: 5
-  uri: shared.dmuus-cloud-5.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-  - proto: Tcp
-    internalport: 443
-    publicport: 443
-  - proto: Udp
-    internalport: 10002
-    publicport: 10002
-  flavor:
-    name: x1.small
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-  realclustername: reservable0
-  uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-5-dmuus
+  uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-6-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1880,12 +1852,7 @@ appinstances:
     - appOnClusterNode0
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-8-dmuus
-
 appinstrefs:
-- key:
-    organization: platos
-    name: PlatosEnablingLayer
-    version: "1.0"
 - key:
     organization: AcmeAppCo
     name: someapplication1
@@ -1936,20 +1903,37 @@ appinstrefs:
     : 1
     ? '{"app_key":{"organization":"AcmeAppCo","name":"someapplication2","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"autoclustersomeapplication2"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-8"},"organization":"MobiledgeX"}}'
     : 1
+- key:
+    organization: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
 clusterrefs:
 - key:
     clusterkey:
-      name: reservable1
+      name: reservable0
     cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-7
+      organization: azure
+      name: azure-cloud-9
     organization: MobiledgeX
   apps:
   - appkey:
       organization: AcmeAppCo
-      name: someapplication2
+      name: someapplication1
       version: "1.0"
-    vclustername: autoclustersomeapplication2
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: gcp
+      name: gcp-cloud-10
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
 - key:
     clusterkey:
       name: reservable0
@@ -1965,7 +1949,7 @@ clusterrefs:
     vclustername: autoclustersomeapplication1
 - key:
     clusterkey:
-      name: reservable1
+      name: reservable0
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-2
@@ -1973,9 +1957,9 @@ clusterrefs:
   apps:
   - appkey:
       organization: AcmeAppCo
-      name: someapplication2
+      name: someapplication1
       version: "1.0"
-    vclustername: autoclustersomeapplication2
+    vclustername: autoclustersomeapplication1
 - key:
     clusterkey:
       name: reservable0
@@ -2006,8 +1990,47 @@ clusterrefs:
     clusterkey:
       name: reservable0
     cloudletkey:
-      organization: azure
-      name: azure-cloud-9
+      organization: dmuus
+      name: dmuus-cloud-5
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-6
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-7
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    vclustername: autoclustersomeapplication1
+- key:
+    clusterkey:
+      name: reservable0
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-8
     organization: MobiledgeX
   apps:
   - appkey:
@@ -2028,19 +2051,6 @@ clusterrefs:
       name: someapplication2
       version: "1.0"
     vclustername: autoclustersomeapplication2
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: gcp
-      name: gcp-cloud-10
-    organization: MobiledgeX
-  apps:
-  - appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    vclustername: autoclustersomeapplication1
 - key:
     clusterkey:
       name: reservable1
@@ -2060,6 +2070,32 @@ clusterrefs:
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-1
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-2
+    organization: MobiledgeX
+  apps:
+  - appkey:
+      organization: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    vclustername: autoclustersomeapplication2
+- key:
+    clusterkey:
+      name: reservable1
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-3
     organization: MobiledgeX
   apps:
   - appkey:
@@ -2095,58 +2131,6 @@ clusterrefs:
     vclustername: autoclustersomeapplication2
 - key:
     clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-8
-    organization: MobiledgeX
-  apps:
-  - appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    vclustername: autoclustersomeapplication1
-- key:
-    clusterkey:
-      name: reservable1
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-8
-    organization: MobiledgeX
-  apps:
-  - appkey:
-      organization: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    vclustername: autoclustersomeapplication2
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-5
-    organization: MobiledgeX
-  apps:
-  - appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    vclustername: autoclustersomeapplication1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-6
-    organization: MobiledgeX
-  apps:
-  - appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    vclustername: autoclustersomeapplication1
-- key:
-    clusterkey:
       name: reservable1
     cloudletkey:
       organization: dmuus
@@ -2160,7 +2144,7 @@ clusterrefs:
     vclustername: autoclustersomeapplication2
 - key:
     clusterkey:
-      name: reservable0
+      name: reservable1
     cloudletkey:
       organization: dmuus
       name: dmuus-cloud-7
@@ -2168,28 +2152,15 @@ clusterrefs:
   apps:
   - appkey:
       organization: AcmeAppCo
-      name: someapplication1
+      name: someapplication2
       version: "1.0"
-    vclustername: autoclustersomeapplication1
-- key:
-    clusterkey:
-      name: reservable0
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-2
-    organization: MobiledgeX
-  apps:
-  - appkey:
-      organization: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    vclustername: autoclustersomeapplication1
+    vclustername: autoclustersomeapplication2
 - key:
     clusterkey:
       name: reservable1
     cloudletkey:
       organization: dmuus
-      name: dmuus-cloud-3
+      name: dmuus-cloud-8
     organization: MobiledgeX
   apps:
   - appkey:

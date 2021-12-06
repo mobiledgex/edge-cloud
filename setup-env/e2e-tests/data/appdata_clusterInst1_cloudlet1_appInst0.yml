@@ -1,3 +1,19 @@
+flavors:
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 settings:
   shepherdmetricscollectioninterval: 5s
   shepherdalertevaluationinterval: 15s
@@ -7,29 +23,25 @@ settings:
   autodeployintervalsec: 300
   autodeployoffsetsec: 20
   autodeploymaxintervals: 10
-  createappinsttimeout: 30m
-  updateappinsttimeout: 30m
-  deleteappinsttimeout: 20m
-  createclusterinsttimeout: 30m
-  updateclusterinsttimeout: 20m
-  deleteclusterinsttimeout: 20m
-  createcloudlettimeout: 30m
-  updatecloudlettimeout: 20m
-  updatetrustpolicytimeout: 10m
-
+  createappinsttimeout: 30m0s
+  updateappinsttimeout: 30m0s
+  deleteappinsttimeout: 20m0s
+  createclusterinsttimeout: 30m0s
+  updateclusterinsttimeout: 20m0s
+  deleteclusterinsttimeout: 20m0s
   maxtrackeddmeclients: 100
-  chefclientinterval: 10m
-  cloudletmaintenancetimeout: 5m
+  chefclientinterval: 10m0s
+  influxdbmetricsretention: 672h0m0s
+  cloudletmaintenancetimeout: 5m0s
   updatevmpooltimeout: 20m0s
+  updatetrustpolicytimeout: 10m0s
   dmeapimetricscollectioninterval: 30s
-  influxdbmetricsretention: 672h0m0s 
+  edgeeventsmetricscollectioninterval: 1h0m0s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
-  appinstclientcleanupinterval: 24h
+  createcloudlettimeout: 30m0s
+  updatecloudlettimeout: 20m0s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1h0m0s
-  influxdbedgeeventsmetricsretention: 672h0m0s
-  influxdbdownsampledmetricsretention: 8760h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 24h0m0s
     retention: 168h0m0s
@@ -37,70 +49,31 @@ settings:
     retention: 672h0m0s
   - interval: 672h0m0s
     retention: 8064h0m0s
+  influxdbdownsampledmetricsretention: 8760h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  appinstclientcleanupinterval: 24h0m0s
   clusterautoscaleaveragingdurationsec: 60
-  clusterautoscaleretrydelay: 1m
+  clusterautoscaleretrydelay: 1m0s
   alertpolicymintriggertime: 30s
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
-  resourcesnapshotthreadinterval: 10m  
+  resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
-flavors:
-- key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
-- key:
-    name: x1.small
-  ram: 2048
-  vcpus: 2
-  disk: 2
-- key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
-
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
-clusterinsts:
-- key:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      organization: dmuus
-      name: dmuus-cloud-1
-    organization: AcmeAppCo
-  flavor:
-    name: x1.small
-  liveness: Static
-  ipaccess: Shared
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 1
-
 cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
   ipsupport: Dynamic
   numdynamicips: 254
-  platformtype: Fake
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
-  containerversion: 2019-10-24
+  containerversion: "2019-10-24"
   defaultresourcealertthreshold: 80
-
 cloudletinfos:
 - key:
     organization: dmuus
@@ -156,6 +129,21 @@ cloudletinfos:
     - clusterkey:
         name: SmallCluster
       organization: AcmeAppCo
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      organization: dmuus
+      name: dmuus-cloud-1
+    organization: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: Static
+  ipaccess: Shared
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
 apps:
 - key:
     organization: AcmeAppCo
@@ -163,12 +151,10 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: Docker
-  deployment: kubernetes
+  accessports: tcp:80,tcp:443,udp:10002
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
-  accessports: "tcp:80,tcp:443,udp:10002"
+  deployment: kubernetes
   accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
@@ -177,13 +163,10 @@ apps:
   imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
   imagetype: Helm
   accessports: tcp:9090
-  internalports: true
-  trusted: true
   defaultflavor:
     name: x1.small
   annotations: version=9.4.10
   deployment: helm
-  accesstype: LoadBalancer
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -226,13 +209,15 @@ apps:
       commonLabels:
         mexAppName: "mexprometheusappname"
         mexAppVersion: "10"
-
+  internalports: true
+  accesstype: LoadBalancer
+  trusted: true
 appinstances:
 - key:
     appkey:
+      organization: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
-      organization: MobiledgeX
     clusterinstkey:
       clusterkey:
         name: SmallCluster
@@ -251,8 +236,11 @@ appinstances:
   flavor:
     name: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
-
 appinstrefs:
+- key:
+    organization: AcmeAppCo
+    name: someapplication1
+    version: "1.0"
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
@@ -260,10 +248,6 @@ appinstrefs:
   insts:
     ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"SmallCluster"},"cloudlet_key":{"organization":"dmuus","name":"dmuus-cloud-1"},"organization":"AcmeAppCo"}}'
     : 1
-- key:
-    organization: AcmeAppCo
-    name: someapplication1
-    version: "1.0"
 clusterrefs:
 - key:
     clusterkey:

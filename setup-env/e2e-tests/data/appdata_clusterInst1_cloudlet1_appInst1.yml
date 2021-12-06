@@ -17,12 +17,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -42,7 +36,6 @@ cloudlets:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
-  accessuri: cloud1.tmo
   location:
     latitude: 31
     longitude: -91
@@ -61,8 +54,6 @@ apps:
   deployment: kubernetes
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:80,tcp:443,udp:10002"
 
 appinstances:

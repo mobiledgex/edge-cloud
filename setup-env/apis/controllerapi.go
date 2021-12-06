@@ -53,6 +53,9 @@ func readAppDataFileGeneric(file string, vars map[string]string) {
 }
 
 func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars map[string]string, outputDir string, mods []string, retry *bool) bool {
+	appData = edgeproto.AllData{}
+	appDataMap = map[string]interface{}{}
+
 	runCLI := false
 	for _, mod := range mods {
 		if mod == "cli" {
@@ -122,6 +125,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		output := &edgeproto.NodeData{}
 		run.Mode = "show"
 		testutil.RunNodeDataShowApis(run, filter, output)
+		output.Sort()
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "debug") {
 		runDebug(run, api, apiFile, apiFileVars, outputDir)
@@ -129,11 +133,13 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		output := &edgeproto.DeviceData{}
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
+		output.Sort()
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if api == "ratelimitshow" {
 		output := &edgeproto.RateLimitSettingsData{}
 		run.Mode = "show"
 		run.RateLimitSettingsApi(nil, nil, &output.Settings)
+		output.Sort()
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, apiFileVars, outputDir)
@@ -378,7 +384,7 @@ func runDebug(run *testutil.Run, api, apiFile string, apiFileVars map[string]str
 	case "debugdisable":
 		run.Mode = "disabledebuglevels"
 	case "debugshow":
-		run.Mode = "show"
+		run.Mode = "showdebuglevels"
 	case "debugrun":
 		run.Mode = "rundebug"
 	default:
@@ -387,6 +393,7 @@ func runDebug(run *testutil.Run, api, apiFile string, apiFileVars map[string]str
 		return
 	}
 	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output, testutil.NoApiCallback)
+	output.Sort()
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
 

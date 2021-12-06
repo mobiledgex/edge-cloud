@@ -1,19 +1,19 @@
 flavors:
 - key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
 - key:
     name: x1.small
   ram: 2048
   vcpus: 2
   disk: 2
 - key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 settings:
   shepherdmetricscollectioninterval: 1s
   shepherdalertevaluationinterval: 15s
@@ -29,10 +29,7 @@ settings:
   createclusterinsttimeout: 3s
   updateclusterinsttimeout: 2s
   deleteclusterinsttimeout: 2s
-  createcloudlettimeout: 10s
-  updatecloudlettimeout: 2s
   masternodeflavor: x1.small
-
   maxtrackeddmeclients: 100
   chefclientinterval: 10m0s
   influxdbmetricsretention: 2h0m0s
@@ -40,21 +37,23 @@ settings:
   updatevmpooltimeout: 20m0s
   updatetrustpolicytimeout: 5s
   dmeapimetricscollectioninterval: 1s
+  edgeeventsmetricscollectioninterval: 1s
   cleanupreservableautoclusteridletime: 30m0s
   influxdbcloudletusagemetricsretention: 8760h0m0s
-  appinstclientcleanupinterval: 24h
+  createcloudlettimeout: 10s
+  updatecloudlettimeout: 2s
   locationtilesidelengthkm: 2
-  edgeeventsmetricscollectioninterval: 1s
-  influxdbedgeeventsmetricsretention: 672h0m0s
-  influxdbdownsampledmetricsretention: 672h0m0s
   edgeeventsmetricscontinuousqueriescollectionintervals:
   - interval: 2s
+  influxdbdownsampledmetricsretention: 672h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  appinstclientcleanupinterval: 24h0m0s
   clusterautoscaleaveragingdurationsec: 60
-  clusterautoscaleretrydelay: 1m
+  clusterautoscaleretrydelay: 1m0s
   alertpolicymintriggertime: 30s
   disableratelimit: true
   ratelimitmaxtrackedips: 10000
-  resourcesnapshotthreadinterval: 10m
+  resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
 trustpolicies:
@@ -147,7 +146,6 @@ cloudletinfos:
     disk: 40
   containerversion: "2019-10-24"
   controllercachereceived: true
-  trustpolicystate: Ready
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
@@ -179,6 +177,7 @@ cloudletinfos:
     - clusterkey:
         name: cluster1
       organization: AcmeAppCo
+  trustpolicystate: Ready
 - key:
     organization: dmuus
     name: cloudlet2
@@ -199,7 +198,6 @@ cloudletinfos:
     disk: 40
   containerversion: "2019-10-24"
   controllercachereceived: true
-  trustpolicystate: NotPresent
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
@@ -231,7 +229,48 @@ cloudletinfos:
     - clusterkey:
         name: cluster2
       organization: AcmeAppCo
+  trustpolicystate: NotPresent
 clusterinsts:
+- key:
+    clusterkey:
+      name: cluster1
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet1
+    organization: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: Static
+  state: Ready
+  ipaccess: Shared
+  nodeflavor: x1.small
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 2
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-cluster-vm-0
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.100.100.10
+    - name: fake-cluster-vm-1
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.100.100.11
+    - name: fake-cluster-vm-2
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.100.100.12
+  createdat:
+    seconds: 1607989352
+    nanos: 592794000
 - key:
     clusterkey:
       name: cluster2
@@ -273,107 +312,63 @@ clusterinsts:
   createdat:
     seconds: 1607989352
     nanos: 717665000
-- key:
-    clusterkey:
-      name: cluster1
-    cloudletkey:
-      organization: dmuus
-      name: cloudlet1
-    organization: AcmeAppCo
-  flavor:
-    name: x1.small
-  liveness: Static
-  state: Ready
-  ipaccess: Shared
-  nodeflavor: x1.small
-  deployment: kubernetes
-  nummasters: 1
-  numnodes: 2
-  masternodeflavor: x1.small
-  resources:
-    vms:
-    - name: fake-cluster-vm-0
-      type: cluster-master
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.100.100.10
-    - name: fake-cluster-vm-1
-      type: cluster-master
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.100.100.11
-    - name: fake-cluster-vm-2
-      type: cluster-k8s-node
-      status: ACTIVE
-      infraflavor: x1.small
-      ipaddresses:
-      - externalip: 10.100.100.12
-  createdat:
-    seconds: 1607989352
-    nanos: 592794000
 apps:
 - key:
-    organization: MobiledgeX
-    name: MEXPrometheusAppName
+    organization: AcmeAppCo
+    name: nontrustedapp
     version: "1.0"
-  imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
-  imagetype: Helm
-  accessports: tcp:9090
+  imagepath: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
+  imagetype: Docker
+  accessports: tcp:90
   defaultflavor:
     name: x1.small
-  annotations: version=9.4.10
-  deployment: helm
-  delopt: AutoDelete
-  configs:
-  - kind: helmCustomizationYaml
-    config: |
-      prometheus:
-        prometheusSpec:
-          scrapeInterval: "15s"
-        service:
-          type: LoadBalancer
-      kubelet:
-        serviceMonitor:
-          ## Enable scraping the kubelet over https. For requirements to enable this see
-          ## https://github.com/coreos/prometheus-operator/issues/926
-          ##
-          https: true
-      defaultRules:
-        create: true
-        rules:
-          alertmanager: false
-          etcd: false
-          general: false
-          k8s: true
-          kubeApiserver: false
-          kubePrometheusNodeAlerting: false
-          kubePrometheusNodeRecording: true
-          kubernetesAbsent: true
-          kubernetesApps: true
-          kubernetesResources: true
-          kubernetesStorage: true
-          kubernetesSystem: true
-          kubeScheduler: true
-          network: true
-          node: true
-          prometheus: true
-          prometheusOperator: true
-          time: true
-      grafana:
-        enabled: false
-      alertmanager:
-        enabled: false
-      commonLabels:
-        mexAppName: "mexprometheusappname"
-        mexAppVersion: "10"
-  internalports: true
-  trusted: true
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: nontrustedapp10-tcp
+      labels:
+        run: nontrustedapp1.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp90
+        protocol: TCP
+        port: 90
+        targetPort: 90
+      selector:
+        run: nontrustedapp1.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nontrustedapp10-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: nontrustedapp1.0
+      template:
+        metadata:
+          labels:
+            run: nontrustedapp1.0
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: docker.mobiledgex.net
+          containers:
+          - name: nontrustedapp10
+            image: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 90
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
   createdat:
-    seconds: 1607989352
-    nanos: 739348000
+    seconds: 1607989354
+    nanos: 221124000
 - key:
     organization: AcmeAppCo
     name: trustedapp
@@ -433,72 +428,146 @@ apps:
   trusted: true
   requiredoutboundconnections:
   - protocol: tcp
-    remotecidr: "35.247.68.151/32"
     portrangemin: 443
     portrangemax: 443
+    remotecidr: 35.247.68.151/32
   - protocol: udp
-    remotecidr: "1.1.1.1/24"
     portrangemin: 53
     portrangemax: 53
+    remotecidr: 1.1.1.1/24
   - protocol: icmp
-    remotecidr: "8.8.8.8/24"
+    remotecidr: 8.8.8.8/24
 - key:
-    organization: AcmeAppCo
-    name: nontrustedapp
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
     version: "1.0"
-  imagepath: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
-  imagetype: Docker
-  accessports: tcp:90
+  imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
+  imagetype: Helm
+  accessports: tcp:9090
   defaultflavor:
     name: x1.small
-  deployment: kubernetes
-  deploymentmanifest: |
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: nontrustedapp10-tcp
-      labels:
-        run: nontrustedapp1.0
-    spec:
-      type: LoadBalancer
-      ports:
-      - name: tcp90
-        protocol: TCP
-        port: 90
-        targetPort: 90
-      selector:
-        run: nontrustedapp1.0
-    ---
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: nontrustedapp10-deployment
-    spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          run: nontrustedapp1.0
-      template:
-        metadata:
-          labels:
-            run: nontrustedapp1.0
-        spec:
-          volumes:
-          imagePullSecrets:
-          - name: docker.mobiledgex.net
-          containers:
-          - name: nontrustedapp10
-            image: docker.mobiledgex.net/AcmeAppCo/images/nontrustedapp:1.0
-            imagePullPolicy: Always
-            ports:
-            - containerPort: 90
-              protocol: TCP
-  deploymentgenerator: kubernetes-basic
+  annotations: version=9.4.10
+  deployment: helm
+  delopt: AutoDelete
+  configs:
+  - kind: helmCustomizationYaml
+    config: |
+      prometheus:
+        prometheusSpec:
+          scrapeInterval: "15s"
+        service:
+          type: LoadBalancer
+      kubelet:
+        serviceMonitor:
+          ## Enable scraping the kubelet over https. For requirements to enable this see
+          ## https://github.com/coreos/prometheus-operator/issues/926
+          ##
+          https: true
+      defaultRules:
+        create: true
+        rules:
+          alertmanager: false
+          etcd: false
+          general: false
+          k8s: true
+          kubeApiserver: false
+          kubePrometheusNodeAlerting: false
+          kubePrometheusNodeRecording: true
+          kubernetesAbsent: true
+          kubernetesApps: true
+          kubernetesResources: true
+          kubernetesStorage: true
+          kubernetesSystem: true
+          kubeScheduler: true
+          network: true
+          node: true
+          prometheus: true
+          prometheusOperator: true
+          time: true
+      grafana:
+        enabled: false
+      alertmanager:
+        enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
+  internalports: true
   accesstype: LoadBalancer
   createdat:
-    seconds: 1607989354
-    nanos: 221124000
+    seconds: 1607989352
+    nanos: 739348000
+  trusted: true
 appinstances:
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: nontrustedapp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: cluster2
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet2
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: cluster2.cloudlet2.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 90
+    publicport: 90
+  flavor:
+    name: x1.small
+  state: Ready
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
+  createdat:
+    seconds: 1607989354
+    nanos: 373759000
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
+  uniqueid: acmeappconontrustedapp10-cluster2-cloudlet2-dmuus
+- key:
+    appkey:
+      organization: AcmeAppCo
+      name: trustedapp
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: cluster1
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet1
+      organization: AcmeAppCo
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  uri: shared.cloudlet1.dmuus.localtest.net
+  liveness: Static
+  mappedports:
+  - proto: Tcp
+    internalport: 80
+    publicport: 80
+  flavor:
+    name: x1.small
+  state: Ready
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+    - appOnClusterNode1
+  createdat:
+    seconds: 1607989354
+    nanos: 253915000
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
+  uniqueid: acmeappcotrustedapp10-cluster1-cloudlet1-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -559,85 +628,13 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-cluster2-cloudlet2-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: trustedapp
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: cluster1
-      cloudletkey:
-        organization: dmuus
-        name: cloudlet1
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 31
-    longitude: -91
-  uri: shared.cloudlet1.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 80
-    publicport: 80
-  flavor:
-    name: x1.small
-  state: Ready
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-    - appOnClusterNode1
-  createdat:
-    seconds: 1607989354
-    nanos: 253915000
-  healthcheck: Ok
-  powerstate: PowerOn
-  vmflavor: x1.small
-  uniqueid: acmeappcotrustedapp10-cluster1-cloudlet1-dmuus
-- key:
-    appkey:
-      organization: AcmeAppCo
-      name: nontrustedapp
-      version: "1.0"
-    clusterinstkey:
-      clusterkey:
-        name: cluster2
-      cloudletkey:
-        organization: dmuus
-        name: cloudlet2
-      organization: AcmeAppCo
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  uri: cluster2.cloudlet2.dmuus.localtest.net
-  liveness: Static
-  mappedports:
-  - proto: Tcp
-    internalport: 90
-    publicport: 90
-  flavor:
-    name: x1.small
-  state: Ready
-  runtimeinfo:
-    containerids:
-    - appOnClusterNode0
-    - appOnClusterNode1
-  createdat:
-    seconds: 1607989354
-    nanos: 373759000
-  healthcheck: Ok
-  powerstate: PowerOn
-  vmflavor: x1.small
-  uniqueid: acmeappconontrustedapp10-cluster2-cloudlet2-dmuus
 appinstrefs:
 - key:
-    organization: MobiledgeX
-    name: MEXPrometheusAppName
+    organization: AcmeAppCo
+    name: nontrustedapp
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster1"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet1"},"organization":"AcmeAppCo"}}'
-    : 1
-    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"AcmeAppCo","name":"nontrustedapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
     : 1
 - key:
     organization: AcmeAppCo
@@ -647,11 +644,13 @@ appinstrefs:
     ? '{"app_key":{"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster1"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet1"},"organization":"AcmeAppCo"}}'
     : 1
 - key:
-    organization: AcmeAppCo
-    name: nontrustedapp
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
     version: "1.0"
   insts:
-    ? '{"app_key":{"organization":"AcmeAppCo","name":"nontrustedapp","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster1"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet1"},"organization":"AcmeAppCo"}}'
+    : 1
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"cluster2"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"AcmeAppCo"}}'
     : 1
 clusterrefs:
 - key:

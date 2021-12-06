@@ -1,5 +1,14 @@
 settings:
 - key:
+    apiname: FindCloudlet
+    apiendpointtype: Dme
+    ratelimittarget: AllRequests
+  flowsettings:
+    fcallreqs1:
+      flowalgorithm: TokenBucketAlgorithm
+      reqspersecond: 1
+      burstsize: 1
+- key:
     apiname: Global
     apiendpointtype: Dme
     ratelimittarget: AllRequests
@@ -8,6 +17,15 @@ settings:
       flowalgorithm: TokenBucketAlgorithm
       reqspersecond: 25000
       burstsize: 250
+- key:
+    apiname: Global
+    apiendpointtype: Dme
+    ratelimittarget: PerIp
+  flowsettings:
+    dmeglobalperip1:
+      flowalgorithm: TokenBucketAlgorithm
+      reqspersecond: 10000
+      burstsize: 100
 - key:
     apiname: PersistentConnection
     apiendpointtype: Dme
@@ -27,15 +45,6 @@ settings:
       reqspersecond: 5000
       burstsize: 50
 - key:
-    apiname: Global
-    apiendpointtype: Dme
-    ratelimittarget: PerIp
-  flowsettings:
-    dmeglobalperip1:
-      flowalgorithm: TokenBucketAlgorithm
-      reqspersecond: 10000
-      burstsize: 100
-- key:
     apiname: VerifyLocation
     apiendpointtype: Dme
     ratelimittarget: PerIp
@@ -44,12 +53,3 @@ settings:
       flowalgorithm: TokenBucketAlgorithm
       reqspersecond: 1000
       burstsize: 25
-- key:
-    apiname: FindCloudlet
-    apiendpointtype: Dme
-    ratelimittarget: AllRequests
-  flowsettings:
-    fcallreqs1:
-      flowalgorithm: TokenBucketAlgorithm
-      reqspersecond: 1
-      burstsize: 1
