@@ -733,6 +733,8 @@ var AppOptionalArgs = []string{
 	"serverlessconfig.minreplicas",
 	"vmappostype",
 	"alertpolicies",
+	"firewallpolicy.concurrentconns",
+	"firewallpolicy.connsperip",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -777,12 +779,14 @@ var AppComments = map[string]string{
 	"requiredoutboundconnections:#.portrangemin": "TCP or UDP port range start",
 	"requiredoutboundconnections:#.portrangemax": "TCP or UDP port range end",
 	"requiredoutboundconnections:#.remotecidr":   "remote CIDR X.X.X.X/X",
-	"allowserverless":              "App is allowed to deploy as serverless containers",
-	"serverlessconfig.vcpus":       "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
-	"serverlessconfig.ram":         "RAM allocation in megabytes per container when serverless",
-	"serverlessconfig.minreplicas": "Minimum number of replicas when serverless",
-	"vmappostype":                  "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
-	"alertpolicies":                "Alert Policies, specify alertpolicies:empty=true to clear",
+	"allowserverless":                "App is allowed to deploy as serverless containers",
+	"serverlessconfig.vcpus":         "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
+	"serverlessconfig.ram":           "RAM allocation in megabytes per container when serverless",
+	"serverlessconfig.minreplicas":   "Minimum number of replicas when serverless",
+	"vmappostype":                    "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
+	"alertpolicies":                  "Alert Policies, specify alertpolicies:empty=true to clear",
+	"firewallpolicy.concurrentconns": "Max total number of concurrent connections",
+	"firewallpolicy.connsperip":      "Max number of concurrent connections per IP",
 }
 var AppSpecialArgs = map[string]string{
 	"alertpolicies":    "StringArray",
@@ -802,6 +806,17 @@ var ServerlessConfigComments = map[string]string{
 	"minreplicas": "Minimum number of replicas when serverless",
 }
 var ServerlessConfigSpecialArgs = map[string]string{}
+var ApplicationFirewallPolicyRequiredArgs = []string{}
+var ApplicationFirewallPolicyOptionalArgs = []string{
+	"concurrentconns",
+	"connsperip",
+}
+var ApplicationFirewallPolicyAliasArgs = []string{}
+var ApplicationFirewallPolicyComments = map[string]string{
+	"concurrentconns": "Max total number of concurrent connections",
+	"connsperip":      "Max number of concurrent connections per IP",
+}
+var ApplicationFirewallPolicySpecialArgs = map[string]string{}
 var AppAutoProvPolicyRequiredArgs = []string{
 	"app-org",
 	"appname",
@@ -880,6 +895,8 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
 	"app.alertpolicies",
+	"app.firewallpolicy.concurrentconns",
+	"app.firewallpolicy.connsperip",
 	"dryrundeploy",
 	"numnodes",
 }
@@ -928,6 +945,8 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.minreplicas":               "Minimum number of replicas when serverless",
 	"app.vmappostype":                                "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"app.alertpolicies":                              "Alert Policies",
+	"app.firewallpolicy.concurrentconns":             "Max total number of concurrent connections",
+	"app.firewallpolicy.connsperip":                  "Max number of concurrent connections per IP",
 	"dryrundeploy":                                   "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                       "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }

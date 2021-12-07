@@ -209,6 +209,8 @@ message App {
   VmAppOsType vm_app_os_type = 41;
   // Alert Policies
   repeated string alert_policies = 42 [(protogen.refers_to) = "AlertPolicy"];
+  // Firewall policy
+  ApplicationFirewallPolicy firewall_policy = 43;
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -229,6 +231,15 @@ message ServerlessConfig {
   uint64 ram = 2;
   // Minimum number of replicas when serverless
   uint32 min_replicas = 3;
+}
+
+// Firewall policy that includes all the envoy/nginx tunable params,
+// as well as Curiefence config in the future
+message ApplicationFirewallPolicy {
+  // Max total number of concurrent connections
+  uint64 concurrent_conns = 1;
+  // Max number of concurrent connections per IP
+  uint64 conns_per_ip = 2;
 }
 
 message AppAutoProvPolicy {
