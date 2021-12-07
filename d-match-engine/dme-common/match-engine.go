@@ -72,7 +72,7 @@ type DmeApp struct {
 	Deployment         string
 	DefaultFlavor      string
 	QosSessionProfile  string
-	QosSessionDuration string
+	QosSessionDuration time.Duration
 	// Non mapped AppPorts from App definition (used for AppOfficialFqdnReply)
 	Ports []dme.AppPort
 }
@@ -196,7 +196,7 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 	ports, _ := edgeproto.ParseAppPorts(in.AccessPorts)
 	app.Ports = ports
 	app.QosSessionProfile = in.QosSessionProfile.String()
-	app.QosSessionDuration = in.QosSessionDuration
+	app.QosSessionDuration = in.QosSessionDuration.TimeDuration()
 	clearAutoProvStats := []string{}
 	inAP := make(map[string]struct{})
 	if in.AutoProvPolicy != "" {

@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
-	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +48,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var qosPosUrl = flag.String("qosposurl", "", "QOS Position KPI URL to connect to")
-var qosSesUrl = flag.String("qossesurl", "", "QOS for stable bandwidth URL to connect to")
+var qosSesAddr = flag.String("qossesaddr", "", "QOS for stable bandwidth address to connect to")
 var tlsApiCertFile = flag.String("tlsApiCertFile", "", "Public-CA signed TLS cert file for serving DME APIs")
 var tlsApiKeyFile = flag.String("tlsApiKeyFile", "", "Public-CA signed TLS key file for serving DME APIs")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
@@ -97,13 +96,15 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "req tags", "req.Tags", req.Tags, "ip_user_equipment", req.Tags["ip_user_equipment"])
 	err, app = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
 
-	// Only attempt to create a QOS priority session if qosSesUrl is populated.
-	if *qosSesUrl != "" && err == nil && reply.Status == dme.FindCloudletReply_FIND_FOUND {
+	// Only attempt to create a QOS priority session if qosSesAddr is populated.
+	if *qosSesAddr != "" && err == nil && reply.Status == dme.FindCloudletReply_FIND_FOUND {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration, "DefaultFlavor", app.DefaultFlavor)
+		app.Lock()
+		defer app.Unlock()
 		qos := operatorApiGw.LookupQosParm(app.QosSessionProfile)
-		duration, parseErr := strconv.ParseInt(app.QosSessionDuration, 10, 32)
-		if parseErr != nil {
-			duration = 86400 // 24 hours - default value
+		duration := app.QosSessionDuration
+		if duration == 0 {
+			duration = 86400 * time.Hour // 24 hours - default value
 		}
 		var priorityType string
 
@@ -119,7 +120,6 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		if qos != "DEFAULT" && priorityType != "" {
 			var protocol string
 			var asAddr string
-			reply.Fqdn = "mobiledgex.com"
 			ips, _ := net.LookupIP(reply.Fqdn)
 			for _, ip := range ips {
 				if ipv4 := ip.To4(); ipv4 != nil {
@@ -128,8 +128,6 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 					break
 				}
 			}
-			// Currently, I only have 2 IP addresses for testing.
-			asAddr = "172.24.8.2" // TODO: Will be reply.Fqdn decoded as above. This line will be removed before merging.
 			ueAddr := req.Tags["ip_user_equipment"]
 			// Use the first port
 			port := app.Ports[0]
@@ -150,7 +148,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			} else if protocol == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
 			} else {
-				id, sesErr := operatorApiGw.CreatePrioritySession(priorityType, ueAddr, asAddr, asPort, protocol, qos, duration)
+				id, sesErr := operatorApiGw.CreatePrioritySession(ctx, priorityType, ueAddr, asAddr, asPort, protocol, qos, int64(duration.Seconds()))
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
 				}
@@ -555,7 +553,7 @@ func main() {
 		span.Finish()
 		log.FatalLog("Failed init plugin", "operator", *carrier, "err", err)
 	}
-	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl, QosSesUrl: *qosSesUrl}
+	var servers = operator.OperatorApiGwServers{VaultAddr: nodeMgr.VaultAddr, QosPosUrl: *qosPosUrl, LocVerUrl: *locVerUrl, TokSrvUrl: *tokSrvUrl, QosSesAddr: *qosSesAddr}
 	err = operatorApiGw.Init(*carrier, &servers)
 	if err != nil {
 		span.Finish()

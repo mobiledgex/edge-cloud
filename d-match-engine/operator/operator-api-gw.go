@@ -1,15 +1,17 @@
 package operator
 
 import (
+	"context"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
 type OperatorApiGwServers struct {
-	VaultAddr string
-	QosPosUrl string
-	LocVerUrl string
-	TokSrvUrl string
-	QosSesUrl string
+	VaultAddr  string
+	QosPosUrl  string
+	LocVerUrl  string
+	TokSrvUrl  string
+	QosSesAddr string
 }
 
 type QosSessionEndpoints struct {
@@ -30,9 +32,9 @@ type OperatorApiGw interface {
 	// GetQOSPositionKPI gets QOS KPIs for GPS positions
 	GetQOSPositionKPI(req *dme.QosPositionRequest, getQosSvr dme.MatchEngineApi_GetQosPositionKpiServer) error
 	// CreatePrioritySession requests either stable latency or throughput for a client session
-	CreatePrioritySession(priorityType string, ueAddr string, asAddr string, asPort string, protocol string, qos string, duration int64) (string, error)
+	CreatePrioritySession(ctx context.Context, priorityType string, ueAddr string, asAddr string, asPort string, protocol string, qos string, duration int64) (string, error)
 	// DeletePrioritySession removes a previously created priority session
-	DeletePrioritySession(priorityType string, sessionId string) error
+	DeletePrioritySession(ctx context.Context, priorityType string, sessionId string) error
 	// LookupQosParm looks up the QOS API parameter values for each QosSessionProfile enum value.
 	LookupQosParm(qos string) string
 }

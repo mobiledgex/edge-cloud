@@ -60,7 +60,7 @@ type Dme struct {
 	LocVerUrl   string
 	TokSrvUrl   string
 	QosPosUrl   string
-	QosSesUrl   string
+	QosSesAddr  string
 	Carrier     string
 	CloudletKey string
 	CookieExpr  string
