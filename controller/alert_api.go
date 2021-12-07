@@ -127,7 +127,11 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 }
 
 func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
-	s.store.Put(ctx, new, nil, objstore.WithLease(s.all.syncLeaseData.ControllerAliveLease()))
+	_, err := s.store.Put(ctx, new, nil, objstore.WithLease(s.all.syncLeaseData.ControllerAliveLease()))
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to store alert in objstore", "key", new.GetKeyVal(), "err", err)
+		return
+	}
 	name, ok := new.Labels["alertname"]
 	if !ok {
 		return
@@ -293,7 +297,7 @@ func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.
 	}
 }
 
-func (s *AlertApi) syncSourceData(ctx context.Context, lease int64) error {
+func (s *AlertApi) syncSourceData(ctx context.Context) error {
 	// Note that we don't need to delete "stale" data, because
 	// if the lease expired, it will be deleted automatically.
 	alerts := make([]*edgeproto.Alert, 0)
