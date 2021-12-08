@@ -26,9 +26,7 @@ func NewTrustPolicyExceptionApi(sync *Sync, all *AllApis) *TrustPolicyExceptionA
 	return &trustPolicyExceptionApi
 }
 
-func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
-
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
+func (s *TrustPolicyExceptionApi) fixupPortRangeMax(ctx context.Context, in *edgeproto.TrustPolicyException) {
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
@@ -36,6 +34,12 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
 		}
 	}
+}
+
+func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
+	s.fixupPortRangeMax(ctx, in)
 	if err := in.Validate(nil); err != nil {
 		return nil, err
 	}
@@ -74,7 +78,31 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 			return in.Key.NotFoundError()
 		}
 		if in.State == cur.State {
-			return fmt.Errorf("Current state is already %s", in.State.String())
+			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
+				return fmt.Errorf("Current state is already %s", in.State.String())
+			}
+			// Modification of existing policy
+			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state:", in.State)
+			s.fixupPortRangeMax(ctx, in)
+			if err := in.Validate(nil); err != nil {
+				return err
+			}
+			app := edgeproto.App{}
+			if !s.all.appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return in.Key.AppKey.NotFoundError()
+			}
+			if app.DeletePrepare {
+				return in.Key.AppKey.BeingDeletedError()
+			}
+			cloudletPool := edgeproto.CloudletPool{}
+			if !s.all.cloudletPoolApi.store.STMGet(stm, &in.Key.CloudletPoolKey, &cloudletPool) {
+				return in.Key.CloudletPoolKey.NotFoundError()
+			}
+			if cloudletPool.DeletePrepare {
+				return in.Key.CloudletPoolKey.BeingDeletedError()
+			}
+			s.store.STMPut(stm, in)
+			return nil
 		}
 		if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 			in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
