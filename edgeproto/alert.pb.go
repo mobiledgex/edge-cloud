@@ -1160,6 +1160,13 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		if en, ok := ImageType_CamelValue["ImageType"+util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
+	case reflect.TypeOf(QosSessionProfile(0)):
+		if en, ok := QosSessionProfile_CamelValue[util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
+		if en, ok := QosSessionProfile_CamelValue["Qos"+util.CamelCase(data.(string))]; ok {
+			return en, nil
+		}
 	case reflect.TypeOf(VmAppOsType(0)):
 		if en, ok := VmAppOsType_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
