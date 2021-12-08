@@ -1378,6 +1378,9 @@ func (key *TrustPolicyExceptionKey) ValidateKey() error {
 		errstring := err.Error()
 		return fmt.Errorf("Invalid CloudletKey in TrustPolicyExceptionKey, " + errstring)
 	}
+	if key.Name == "" {
+		return fmt.Errorf("Empty Name in TrustPolicyExceptionKey")
+	}
 	return nil
 }
 
