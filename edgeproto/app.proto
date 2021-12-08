@@ -59,6 +59,24 @@ enum ImageType {
   IMAGE_TYPE_OVF = 4;
 }
 
+// The selected profile name will be included 
+// as the "qos" value in the qos-senf/v1/sessions POST.
+enum QosSessionProfile {
+  // Best effort. Will be sent as LATENCY_DEFAULT
+  QOS_LATENCY_NO_PRIORITY = 0;
+  // Corresponds to a specific set of network parameters for low latency that will be 
+  // negotiated with the network provider in advance
+  QOS_LATENCY_LOW = 1;
+  // Best effort. Will be sent as LATENCY_THROUGHPUT
+  QOS_THROUGHPUT_DOWN_NO_PRIORITY = 2;
+  // Downlink traffic from AppInst to client is prioritized up to 20Mbps
+  QOS_THROUGHPUT_DOWN_S = 3;
+  // Downlink traffic from AppInst to client is prioritized up to 50Mbps
+  QOS_THROUGHPUT_DOWN_M = 4;
+  // Downlink traffic from AppInst to client is prioritized up to 100Mbps
+  QOS_THROUGHPUT_DOWN_L = 5;
+}
+
 // VmAppOsType
 //
 // VmAppOsType specifies the Operating System for VM based Apps
@@ -209,6 +227,11 @@ message App {
   VmAppOsType vm_app_os_type = 41;
   // Alert Policies
   repeated string alert_policies = 42 [(protogen.refers_to) = "AlertPolicy"];
+
+  // Qualifier for the requested latency profile
+  QosSessionProfile qos_session_profile = 43;
+  // Session duration in seconds. Maximal value of 24 hours is used if not set
+  int64 qos_session_duration = 44 [(gogoproto.casttype) = "Duration"];
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

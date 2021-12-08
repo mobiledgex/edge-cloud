@@ -119,6 +119,10 @@ path "pki-regional/issue/$REGION" {
 path "pki-regional-cloudlet/issue/$REGION" {
   capabilities = [ "read", "update" ]
 }
+
+path "/secret/data/accounts/gddt/*" {
+    capabilities = [ "read" ]
+}
 EOF
 vault policy write $REGION.dme /tmp/dme-pol.hcl
 rm /tmp/dme-pol.hcl
