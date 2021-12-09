@@ -155,9 +155,9 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id", id, "sesErr", sesErr)
 				// Let the client know the session ID.
 				reply.Tags = make(map[string]string)
-				reply.Tags["priority_session_id"] = id
 				if id != "" {
-					reply.Tags["qos_profile"] = qos
+					reply.Tags["priority_session_id"] = id
+					reply.Tags["qos_profile_name"] = qos
 				}
 				// TODO: Store id for when this same connection calls DeletePrioritySession()
 			}
