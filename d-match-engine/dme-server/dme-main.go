@@ -102,10 +102,12 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		app.Lock()
 		defer app.Unlock()
 		qos := operatorApiGw.LookupQosParm(app.QosSessionProfile)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "QOS profile defined for app", "app.QosSessionProfile", app.QosSessionProfile)
 		duration := app.QosSessionDuration
 		if duration == 0 {
-			duration = 86400 * time.Hour // 24 hours - default value
+			duration = 24 * time.Hour // 24 hours - default value
 		}
+		log.SpanLog(ctx, log.DebugLevelDmereq, "Session duration", "app.QosSessionDuration", app.QosSessionDuration, " derived duration", duration)
 		var priorityType string
 
 		if strings.HasPrefix(qos, "LATENCY") {
