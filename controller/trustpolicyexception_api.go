@@ -73,43 +73,29 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 	cur := edgeproto.TrustPolicyException{}
 
+	fields := edgeproto.MakeFieldMap(in.Fields)
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if in.State == cur.State {
-			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
-				return fmt.Errorf("Current state is already %s", in.State.String())
+		if _, found := fields[edgeproto.TrustPolicyExceptionFieldState]; found {
+			// caller specified state change
+			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
+				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
+				return fmt.Errorf("New state must be either Active or Rejected")
 			}
-			// Modification of existing policy
-			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state:", in.State)
-			s.fixupPortRangeMax(ctx, in)
-			if err := in.Validate(nil); err != nil {
-				return err
-			}
-			app := edgeproto.App{}
-			if !s.all.appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-				return in.Key.AppKey.NotFoundError()
-			}
-			if app.DeletePrepare {
-				return in.Key.AppKey.BeingDeletedError()
-			}
-			cloudletPool := edgeproto.CloudletPool{}
-			if !s.all.cloudletPoolApi.store.STMGet(stm, &in.Key.CloudletPoolKey, &cloudletPool) {
-				return in.Key.CloudletPoolKey.NotFoundError()
-			}
-			if cloudletPool.DeletePrepare {
-				return in.Key.CloudletPoolKey.BeingDeletedError()
-			}
-			s.store.STMPut(stm, in)
-			return nil
 		}
-		if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
-			in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-			return fmt.Errorf("New state must be either Active or Rejected")
+
+		// Copy in user specified fields only
+		changed := cur.CopyInFields(in)
+		if changed == 0 {
+			return nil // no changes
 		}
-		cur.State = in.State
-		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionResponseState", "state:", cur.State)
+		s.fixupPortRangeMax(ctx, &cur)
+		if err := cur.Validate(nil); err != nil {
+			return err
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "state:", cur.State.String())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
