@@ -196,6 +196,7 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 	app.Ports = ports
 	app.QosSessionProfile = in.QosSessionProfile.String()
 	app.QosSessionDuration = in.QosSessionDuration.TimeDuration()
+	log.SpanLog(ctx, log.DebugLevelDmedb, "QOS Priority Session values", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration)
 	clearAutoProvStats := []string{}
 	inAP := make(map[string]struct{})
 	if in.AutoProvPolicy != "" {
