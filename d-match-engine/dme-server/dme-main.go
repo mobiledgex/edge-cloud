@@ -105,7 +105,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.SpanLog(ctx, log.DebugLevelDmereq, "QOS profile defined for app", "app.QosSessionProfile", app.QosSessionProfile)
 		duration := app.QosSessionDuration
 		if duration == 0 {
-			duration = 86400 // 24 hours - default value
+			duration = 24 * time.Hour // 24 hours - default value
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Session duration", "app.QosSessionDuration", app.QosSessionDuration, " derived duration", duration)
 		var priorityType string
