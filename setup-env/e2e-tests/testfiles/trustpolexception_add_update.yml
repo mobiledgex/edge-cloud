@@ -45,7 +45,7 @@ tests:
     filetype: appdata
 
 - name: delete trust policy exception, verify it is empty
-  apifile: "{{datadir}}/appdata_trustpolicyexception.yml"
+  apifile: "{{datadir}}/appdata_trustpolicyexception_delete.yml"
   actions: [ctrlapi-delete,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
