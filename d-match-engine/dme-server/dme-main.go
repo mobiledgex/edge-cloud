@@ -131,6 +131,8 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 				}
 			}
 			ueAddr := req.Tags["ip_user_equipment"]
+			// Currently, I only have 2 IP addresses for testing.
+			ueAddr = "172.24.8.2" // TODO: req.Tags["ip_user_equipment"]. This line will be removed before merging.
 			// Use the first port
 			port := app.Ports[0]
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Port", "port.PublicPort", port.PublicPort, "port.Proto", port.Proto, "port.InternalPort", port.InternalPort)
