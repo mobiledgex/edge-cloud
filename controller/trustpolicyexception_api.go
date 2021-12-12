@@ -84,8 +84,19 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 				return fmt.Errorf("New state must be either Active or Rejected")
 			}
+			if in.State != cur.State {
+				cur.State = in.State
+				log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "state:", cur.State.String())
+				s.store.STMPut(stm, &cur)
+			}
+			return nil
 		}
 
+		if cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE ||
+			cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
+			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException not allowed", "state:", cur.State.String())
+			return fmt.Errorf("Update not allowed in state: %s", cur.State.String())
+		}
 		// Copy in user specified fields only
 		changed := cur.CopyInFields(in)
 		if changed == 0 {
@@ -95,7 +106,7 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "state:", cur.State.String())
+		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException fields", "state:", cur.State.String())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
