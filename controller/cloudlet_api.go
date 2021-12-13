@@ -613,7 +613,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			policy.Key.Name = in.TrustPolicy
 			policy.Key.Organization = in.Key.Organization
 			if !s.all.trustPolicyApi.store.STMGet(stm, &policy.Key, &policy) {
-				return policy.Key.NotFoundError()
+				err := policy.Key.NotFoundError()
+				return fmt.Errorf("TrustPolicy %s", err.Error())
 			}
 			if policy.DeletePrepare {
 				return policy.Key.BeingDeletedError()

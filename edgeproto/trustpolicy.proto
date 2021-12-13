@@ -14,13 +14,13 @@ option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
 message SecurityRule {
-  // tcp, udp, icmp
+  // TCP, UDP, ICMP
   string protocol = 1;
   // TCP or UDP port range start
   uint32 port_range_min = 2;  
-    // TCP or UDP port range end
+  // TCP or UDP port range end
   uint32 port_range_max = 3;
-  // remote CIDR X.X.X.X/X
+  // Remote CIDR X.X.X.X/X
   string remote_cidr = 4;
 }
 
@@ -32,7 +32,7 @@ message TrustPolicy {
   repeated string fields = 1;
   // Unique identifier key
   PolicyKey key = 2 [(gogoproto.nullable) = false];
-  // list of outbound security rules for whitelisting traffic
+  // List of outbound security rules for whitelisting traffic
   repeated SecurityRule outbound_security_rules = 3 [(gogoproto.nullable) = false];
   // Preparing to be deleted
   bool delete_prepare = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 

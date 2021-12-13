@@ -1,0 +1,53 @@
+##
+##
+description: test trust policy exception
+
+tests:
+
+- name: create a trust policy exception
+  apifile: "{{datadir}}/appdata_trustpolicyexception_create.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/trustpolicyexception_create_show.yml"
+    filetype: appdata
+
+- name: update a trust policy exception portrange
+  apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_portrange.yml"
+  actions: [ctrlapi-update,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_portrange_show.yml'
+    filetype: appdata
+
+- name: approve a trust policy exception
+  apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_active.yml"
+  actions: [ctrlapi-update,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'
+    filetype: appdata
+
+- name: update an active trust policy exception, should fail
+  apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_remotecidr.yml"
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'
+    filetype: appdata
+
+- name: reject a trust policy exception
+  apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_rejected.yml"
+  actions: [ctrlapi-update,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_rejected_show.yml'
+    filetype: appdata
+
+- name: delete trust policy exception, verify it is empty
+  apifile: "{{datadir}}/appdata_trustpolicyexception_delete.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
