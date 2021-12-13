@@ -962,6 +962,9 @@ func (m *IssueCertRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *IssueCertRequest) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *IssueCertReply) CopyInFields(src *IssueCertReply) int {
 	changed := 0
 	if m.PublicCertPem != src.PublicCertPem {
@@ -985,6 +988,9 @@ func (m *IssueCertReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *IssueCertReply) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *GetCasRequest) CopyInFields(src *GetCasRequest) int {
 	changed := 0
 	if m.Issuer != src.Issuer {
@@ -1003,6 +1009,9 @@ func (m *GetCasRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *GetCasRequest) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *GetCasReply) CopyInFields(src *GetCasReply) int {
 	changed := 0
 	if m.CaChainPem != src.CaChainPem {
@@ -1019,6 +1028,9 @@ func (m *GetCasReply) DeepCopyIn(src *GetCasReply) {
 // Helper method to check that enums have valid values
 func (m *GetCasReply) ValidateEnums() error {
 	return nil
+}
+
+func (s *GetCasReply) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *UpgradeAccessKeyClientMsg) CopyInFields(src *UpgradeAccessKeyClientMsg) int {
@@ -1049,6 +1061,9 @@ func (m *UpgradeAccessKeyClientMsg) ValidateEnums() error {
 	return nil
 }
 
+func (s *UpgradeAccessKeyClientMsg) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *UpgradeAccessKeyServerMsg) CopyInFields(src *UpgradeAccessKeyServerMsg) int {
 	changed := 0
 	if m.Msg != src.Msg {
@@ -1070,6 +1085,9 @@ func (m *UpgradeAccessKeyServerMsg) DeepCopyIn(src *UpgradeAccessKeyServerMsg) {
 // Helper method to check that enums have valid values
 func (m *UpgradeAccessKeyServerMsg) ValidateEnums() error {
 	return nil
+}
+
+func (s *UpgradeAccessKeyServerMsg) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *AccessDataRequest) CopyInFields(src *AccessDataRequest) int {
@@ -1095,6 +1113,9 @@ func (m *AccessDataRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *AccessDataRequest) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *AccessDataReply) CopyInFields(src *AccessDataReply) int {
 	changed := 0
 	if src.Data != nil {
@@ -1111,6 +1132,9 @@ func (m *AccessDataReply) DeepCopyIn(src *AccessDataReply) {
 // Helper method to check that enums have valid values
 func (m *AccessDataReply) ValidateEnums() error {
 	return nil
+}
+
+func (s *AccessDataReply) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *IssueCertRequest) IsValidArgsForIssueCert() error {

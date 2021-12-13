@@ -27,7 +27,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func GPUDriverHideTags(in *edgeproto.GPUDriver) {
+func PlatformConfigHideTags(in *edgeproto.PlatformConfig) {
 	if cli.HideTags == "" {
 		return
 	}
@@ -35,10 +35,23 @@ func GPUDriverHideTags(in *edgeproto.GPUDriver) {
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
-	for i0 := 0; i0 < len(in.Builds); i0++ {
+	if _, found := tags["nocmp"]; found {
+		in.NotifyCtrlAddrs = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
+		in.PlatformTag = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Span = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmAccessPrivateKey = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AccessApiAddr = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.SecondaryCrmAccessPrivateKey = ""
 	}
 }
 
@@ -57,22 +70,25 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.Status = edgeproto.StatusInfo{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeploymentLocal = false
-	}
-	if _, found := tags["nocmp"]; found {
 		in.NotifySrvAddr = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Config = edgeproto.PlatformConfig{}
+		in.Config.NotifyCtrlAddrs = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Deployment = ""
+		in.Config.PlatformTag = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Config.Span = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Config.CrmAccessPrivateKey = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Config.AccessApiAddr = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Config.SecondaryCrmAccessPrivateKey = ""
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmAccessPublicKey = ""
@@ -83,25 +99,13 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.TrustPolicyState = 0
-	}
 	for i0 := 0; i0 < len(in.ResourceQuotas); i0++ {
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DefaultResourceAlertThreshold = 0
 	}
 	if _, found := tags["nocmp"]; found {
 		in.HostController = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
-	}
-	if _, found := tags["nocmp"]; found {
 		in.SecondaryCrmAccessPublicKey = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.SecondaryCrmAccessKeyUpgradeRequired = false
 	}
 	if _, found := tags["nocmp"]; found {
 		in.SecondaryNotifySrvAddr = ""
@@ -142,9 +146,6 @@ func CloudletInfoHideTags(in *edgeproto.CloudletInfo) {
 	for i1 := 0; i1 < len(in.ResourcesSnapshot.ClusterInsts); i1++ {
 	}
 	for i1 := 0; i1 < len(in.ResourcesSnapshot.VmAppInsts); i1++ {
-	}
-	if _, found := tags["nocmp"]; found {
-		in.TrustPolicyState = 0
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CompatibilityVersion = 0
@@ -451,7 +452,6 @@ func ShowGPUDriver(c *cli.Command, in *edgeproto.GPUDriver) error {
 			}
 			return fmt.Errorf("ShowGPUDriver recv failed: %s", errstr)
 		}
-		GPUDriverHideTags(obj)
 		if cli.OutputStream {
 			c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
 			continue

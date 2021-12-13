@@ -41,9 +41,6 @@ func CloudletPoolHideTags(in *edgeproto.CloudletPool) {
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
-	}
 }
 
 var CloudletPoolApiCmd edgeproto.CloudletPoolApiClient

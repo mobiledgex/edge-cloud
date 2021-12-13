@@ -136,6 +136,13 @@ func (a *NodeData) Sort() {
 		ikey.Name = ""
 		jkey := a.Nodes[j].Key
 		jkey.Name = ""
+		if ikey.GetKeyString() == jkey.GetKeyString() {
+			// In e2e-tests, one controller creates the fake
+			// cloudlet, so it loads the plugin, which adds in
+			// the properties. Otherwise, they keys are the same.
+			// For determinism, sort by the number of properties.
+			return len(a.Nodes[i].Properties) < len(a.Nodes[j].Properties)
+		}
 		return ikey.GetKeyString() < jkey.GetKeyString()
 	})
 }

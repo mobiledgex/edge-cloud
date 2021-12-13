@@ -25,19 +25,6 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func AutoScalePolicyHideTags(in *edgeproto.AutoScalePolicy) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
-	}
-}
-
 var AutoScalePolicyApiCmd edgeproto.AutoScalePolicyApiClient
 
 var CreateAutoScalePolicyCmd = &cli.Command{
@@ -264,7 +251,6 @@ func ShowAutoScalePolicy(c *cli.Command, in *edgeproto.AutoScalePolicy) error {
 			}
 			return fmt.Errorf("ShowAutoScalePolicy recv failed: %s", errstr)
 		}
-		AutoScalePolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {

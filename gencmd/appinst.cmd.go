@@ -37,15 +37,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	for i0 := 0; i0 < len(in.MappedPorts); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Errors = nil
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
-	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -63,24 +54,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.HealthCheck = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.PowerState = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.ExternalVolumeSize = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.AvailabilityZone = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.VmFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.OptRes = ""
-	}
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -96,9 +69,6 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Uri = ""
 	}
 }
 
@@ -866,6 +836,7 @@ var AppInstComments = map[string]string{
 	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
 	"dedicatedip":                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
 	"uniqueid":                       "A unique id for the AppInst within the region to be used by platforms",
+	"dnslabel":                       "DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",

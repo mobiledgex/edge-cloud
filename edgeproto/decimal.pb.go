@@ -157,6 +157,9 @@ func (m *Udec64) ValidateEnums() error {
 	return nil
 }
 
+func (s *Udec64) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *Udec64) Size() (n int) {
 	if m == nil {
 		return 0

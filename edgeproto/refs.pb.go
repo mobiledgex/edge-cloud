@@ -1104,6 +1104,13 @@ func (m *VMResource) ValidateEnums() error {
 	return nil
 }
 
+func (s *VMResource) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if s.VmFlavor != nil {
+		s.VmFlavor.ClearTagged(tags)
+	}
+}
+
 func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1872,6 +1879,20 @@ func (m *CloudletRefs) ValidateEnums() error {
 	return nil
 }
 
+func (s *CloudletRefs) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if s.ClusterInsts != nil {
+		for ii := 0; ii < len(s.ClusterInsts); ii++ {
+			s.ClusterInsts[ii].ClearTagged(tags)
+		}
+	}
+	if s.VmAppInsts != nil {
+		for ii := 0; ii < len(s.VmAppInsts); ii++ {
+			s.VmAppInsts[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func (m *ClusterRefsAppInstKey) Matches(o *ClusterRefsAppInstKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1962,6 +1983,10 @@ func (m *ClusterRefsAppInstKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *ClusterRefsAppInstKey) ClearTagged(tags map[string]struct{}) {
+	s.AppKey.ClearTagged(tags)
 }
 
 func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
@@ -2611,6 +2636,15 @@ func (m *ClusterRefs) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *ClusterRefs) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if s.Apps != nil {
+		for ii := 0; ii < len(s.Apps); ii++ {
+			s.Apps[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
@@ -3275,6 +3309,10 @@ func (m *AppInstRefs) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *AppInstRefs) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
 }
 
 func (m *VMResource) Size() (n int) {

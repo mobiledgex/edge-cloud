@@ -1160,6 +1160,9 @@ func (m *NestedMessage) ValidateEnums() error {
 	return nil
 }
 
+func (s *NestedMessage) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *IncludeMessage) CopyInFields(src *IncludeMessage) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1205,6 +1208,12 @@ func (m *IncludeMessage) ValidateEnums() error {
 	return nil
 }
 
+func (s *IncludeMessage) ClearTagged(tags map[string]struct{}) {
+	if s.NestedMsg != nil {
+		s.NestedMsg.ClearTagged(tags)
+	}
+}
+
 func (m *IncludeFields) CopyInFields(src *IncludeFields) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1221,6 +1230,9 @@ func (m *IncludeFields) DeepCopyIn(src *IncludeFields) {
 // Helper method to check that enums have valid values
 func (m *IncludeFields) ValidateEnums() error {
 	return nil
+}
+
+func (s *IncludeFields) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
@@ -3078,6 +3090,54 @@ func (m *TestGen) ValidateEnums() error {
 	return nil
 }
 
+func (s *TestGen) ClearTagged(tags map[string]struct{}) {
+	if s.InnerMsg != nil {
+		s.InnerMsg.ClearTagged(tags)
+	}
+	s.InnerMsgNonnull.ClearTagged(tags)
+	if s.IncludeMsg != nil {
+		s.IncludeMsg.ClearTagged(tags)
+	}
+	s.IncludeMsgNonnull.ClearTagged(tags)
+	if s.IncludeFields != nil {
+		s.IncludeFields.ClearTagged(tags)
+	}
+	s.IncludeFieldsNonnull.ClearTagged(tags)
+	if s.RepeatedMsg != nil {
+		for ii := 0; ii < len(s.RepeatedMsg); ii++ {
+			s.RepeatedMsg[ii].ClearTagged(tags)
+		}
+	}
+	if s.RepeatedMsgNonnull != nil {
+		for ii := 0; ii < len(s.RepeatedMsgNonnull); ii++ {
+			s.RepeatedMsgNonnull[ii].ClearTagged(tags)
+		}
+	}
+	if s.RepeatedFields != nil {
+		for ii := 0; ii < len(s.RepeatedFields); ii++ {
+			s.RepeatedFields[ii].ClearTagged(tags)
+		}
+	}
+	if s.RepeatedFieldsNonnull != nil {
+		for ii := 0; ii < len(s.RepeatedFieldsNonnull); ii++ {
+			s.RepeatedFieldsNonnull[ii].ClearTagged(tags)
+		}
+	}
+	if s.RepeatedInnerMsg != nil {
+		for ii := 0; ii < len(s.RepeatedInnerMsg); ii++ {
+			s.RepeatedInnerMsg[ii].ClearTagged(tags)
+		}
+	}
+	if s.RepeatedInnerMsgNonnull != nil {
+		for ii := 0; ii < len(s.RepeatedInnerMsgNonnull); ii++ {
+			s.RepeatedInnerMsgNonnull[ii].ClearTagged(tags)
+		}
+	}
+	if _, found := tags["nocmp"]; found {
+		s.Unused = ""
+	}
+}
+
 func IgnoreTestGenFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -3111,6 +3171,9 @@ func (m *TestGen_InnerMessage) DeepCopyIn(src *TestGen_InnerMessage) {
 // Helper method to check that enums have valid values
 func (m *TestGen_InnerMessage) ValidateEnums() error {
 	return nil
+}
+
+func (s *TestGen_InnerMessage) ClearTagged(tags map[string]struct{}) {
 }
 
 var OuterEnumStrings = []string{
