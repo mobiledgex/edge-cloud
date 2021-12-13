@@ -1,0 +1,16 @@
+
+trustpolicyexceptions:
+- key:
+    appkey:
+        organization: Untomt
+        name: VRmax
+        version: 1.0.0
+    cloudletpoolkey:
+        organization: dmuus
+        name: cloudlet2-pool
+    name: tpe1
+  outboundsecurityrules:
+    - protocol: tcp
+      remotecidr: "3.3.3.3/16"
+      portrangemin: 2
+      portrangemax: 222
