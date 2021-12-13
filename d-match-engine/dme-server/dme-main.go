@@ -131,8 +131,6 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 				}
 			}
 			ueAddr := req.Tags["ip_user_equipment"]
-			// Currently, I only have 2 IP addresses for testing.
-			ueAddr = "172.24.8.2" // TODO: req.Tags["ip_user_equipment"]. This line will be removed before merging.
 			// Use the first port
 			port := app.Ports[0]
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Port", "port.PublicPort", port.PublicPort, "port.Proto", port.Proto, "port.InternalPort", port.InternalPort)
@@ -145,7 +143,9 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			}
 			asPort := fmt.Sprintf("%d", port.InternalPort)
 
-			if ueAddr == "" {
+			if qos == "QOS_NO_PRIORITY" {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "QOS_NO_PRIORITY specified. Will not create priority session")
+			} else if ueAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ip_user_equipment value not found in tags. Aborting.", "req.Tags", req.Tags)
 			} else if asAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Could not decode app inst FQDN. Aborting.", "reply.Fqdn", reply.Fqdn)
