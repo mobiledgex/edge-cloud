@@ -801,7 +801,6 @@ var AppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
-	"privacypolicy",
 	"powerstate",
 	"realclustername",
 	"dedicatedip",
@@ -858,7 +857,6 @@ var AppInstComments = map[string]string{
 	"configs:#.kind":                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":               "Config file contents or URI reference",
 	"healthcheck":                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
-	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
@@ -1052,7 +1050,6 @@ var CreateAppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
-	"privacypolicy",
 	"realclustername",
 	"dedicatedip",
 }
@@ -1074,7 +1071,6 @@ var DeleteAppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
-	"privacypolicy",
 	"realclustername",
 	"dedicatedip",
 }
@@ -1092,7 +1088,6 @@ var RefreshAppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
-	"privacypolicy",
 	"realclustername",
 	"dedicatedip",
 }
@@ -1111,7 +1106,6 @@ var UpdateAppInstOptionalArgs = []string{
 	"configs:empty",
 	"configs:#.kind",
 	"configs:#.config",
-	"privacypolicy",
 	"powerstate",
 	"realclustername",
 	"dedicatedip",
