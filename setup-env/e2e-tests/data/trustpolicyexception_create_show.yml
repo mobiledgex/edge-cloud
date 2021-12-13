@@ -1,0 +1,417 @@
+flavors:
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+settings:
+  shepherdmetricscollectioninterval: 1s
+  shepherdalertevaluationinterval: 15s
+  shepherdmetricsscrapeinterval: 15s
+  shepherdhealthcheckretries: 3
+  shepherdhealthcheckinterval: 5s
+  autodeployintervalsec: 1
+  autodeployoffsetsec: 0.3
+  autodeploymaxintervals: 10
+  createappinsttimeout: 3s
+  updateappinsttimeout: 2s
+  deleteappinsttimeout: 2s
+  createclusterinsttimeout: 3s
+  updateclusterinsttimeout: 2s
+  deleteclusterinsttimeout: 2s
+  masternodeflavor: x1.small
+  maxtrackeddmeclients: 100
+  chefclientinterval: 10m0s
+  influxdbmetricsretention: 2h0m0s
+  cloudletmaintenancetimeout: 2s
+  updatevmpooltimeout: 20m0s
+  updatetrustpolicytimeout: 5s
+  dmeapimetricscollectioninterval: 1s
+  edgeeventsmetricscollectioninterval: 1s
+  cleanupreservableautoclusteridletime: 30m0s
+  influxdbcloudletusagemetricsretention: 8760h0m0s
+  createcloudlettimeout: 10s
+  updatecloudlettimeout: 2s
+  locationtilesidelengthkm: 2
+  edgeeventsmetricscontinuousqueriescollectionintervals:
+  - interval: 2s
+  influxdbdownsampledmetricsretention: 672h0m0s
+  influxdbedgeeventsmetricsretention: 672h0m0s
+  appinstclientcleanupinterval: 24h0m0s
+  clusterautoscaleaveragingdurationsec: 60
+  clusterautoscaleretrydelay: 1m0s
+  alertpolicymintriggertime: 30s
+  disableratelimit: true
+  ratelimitmaxtrackedips: 10000
+  resourcesnapshotthreadinterval: 10m0s
+  platformhainstancepollinterval: 300ms
+  platformhainstanceactiveexpiretime: 1s
+cloudlets:
+- key:
+    organization: dmuus
+    name: cloudlet2
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: Dynamic
+  numdynamicips: 254
+  state: Ready
+  notifysrvaddr: 127.0.0.1:0
+  flavor:
+    name: DefaultPlatformFlavor
+  physicalname: cloudlet2
+  containerversion: "2019-10-24"
+  deployment: docker
+  crmaccesspublickey: |
+    -----BEGIN PUBLIC KEY-----
+    MCowBQYDK2VwAyEAGiSMudDxnDqaKgAiGbQHNZlheoGQ7bzigbSF9MlkWkM=
+    -----END PUBLIC KEY-----
+  createdat:
+    seconds: 1639198970
+    nanos: 437349000
+  trustpolicystate: NotPresent
+  defaultresourcealertthreshold: 80
+  hostcontroller: 127.0.0.1:55001
+  secondarynotifysrvaddr: 127.0.0.1:0
+cloudletinfos:
+- key:
+    organization: dmuus
+    name: cloudlet2
+  state: Ready
+  notifyid: 2
+  controller: Dajgaonkar-MAC.local@127.0.0.1:55001
+  osmaxram: 40960
+  osmaxvcores: 50
+  osmaxvolgb: 5000
+  flavors:
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
+  - name: x1.small
+    vcpus: 2
+    ram: 4096
+    disk: 40
+  containerversion: "2019-10-24"
+  controllercachereceived: true
+  resourcessnapshot:
+    platformvms:
+    - name: fake-platform-vm
+      type: platform
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.101.100.10
+    - name: fake-rootlb-vm
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
+      ipaddresses:
+      - externalip: 10.101.100.11
+    info:
+    - name: RAM
+      value: 20480
+      inframaxvalue: 40960
+      units: MB
+    - name: vCPUs
+      value: 10
+      inframaxvalue: 50
+    - name: External IPs
+      value: 2
+      inframaxvalue: 30
+    - name: Instances
+      value: 5
+    clusterinsts:
+    - clusterkey:
+        name: Untomt-cluster-22
+      organization: Untomt
+  trustpolicystate: NotPresent
+  compatibilityversion: 2
+cloudletpools:
+- key:
+    organization: dmuus
+    name: cloudlet2-pool
+  cloudlets:
+  - cloudlet2
+  createdat:
+    seconds: 1639198971
+    nanos: 17977000
+clusterinsts:
+- key:
+    clusterkey:
+      name: Untomt-cluster-22
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet2
+    organization: Untomt
+  flavor:
+    name: x1.small
+  liveness: Dynamic
+  state: Ready
+  ipaccess: Dedicated
+  allocatedip: dynamic
+  nodeflavor: x1.small
+  deployment: kubernetes
+  nummasters: 1
+  numnodes: 1
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-cloudlet2-Untomt-cluster-22-Untomt
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-cloudlet2-Untomt-cluster-22-Untomt
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: Untomt-cluster-22.cloudlet2.dmuus.fake.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
+  createdat:
+    seconds: 1639198971
+    nanos: 39976000
+apps:
+- key:
+    organization: Untomt
+    name: VRmax
+    version: 1.0.0
+  imagepath: docker.mobiledgex.net/Untomt/images/VRmax:1.0.0
+  imagetype: Docker
+  accessports: tcp:90
+  defaultflavor:
+    name: x1.small
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: vrmax100-tcp
+      labels:
+        run: vrmax1.0.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp90
+        protocol: TCP
+        port: 90
+        targetPort: 90
+      selector:
+        run: vrmax1.0.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: vrmax100-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: vrmax1.0.0
+      template:
+        metadata:
+          labels:
+            run: vrmax1.0.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: docker.mobiledgex.net
+          containers:
+          - name: vrmax100
+            image: docker.mobiledgex.net/Untomt/images/VRmax:1.0.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 90
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
+  accesstype: LoadBalancer
+  createdat:
+    seconds: 1639198972
+    nanos: 988871000
+- key:
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  imagepath: https://prometheus-community.github.io/helm-charts:prometheus-community/kube-prometheus-stack
+  imagetype: Helm
+  accessports: tcp:9090
+  defaultflavor:
+    name: x1.small
+  annotations: version=9.4.10
+  deployment: helm
+  delopt: AutoDelete
+  configs:
+  - kind: helmCustomizationYaml
+    config: |
+      prometheus:
+        prometheusSpec:
+          scrapeInterval: "15s"
+        service:
+          type: LoadBalancer
+      kubelet:
+        serviceMonitor:
+          ## Enable scraping the kubelet over https. For requirements to enable this see
+          ## https://github.com/coreos/prometheus-operator/issues/926
+          ##
+          https: true
+      defaultRules:
+        create: true
+        rules:
+          alertmanager: false
+          etcd: false
+          general: false
+          k8s: true
+          kubeApiserver: false
+          kubePrometheusNodeAlerting: false
+          kubePrometheusNodeRecording: true
+          kubernetesAbsent: true
+          kubernetesApps: true
+          kubernetesResources: true
+          kubernetesStorage: true
+          kubernetesSystem: true
+          kubeScheduler: true
+          network: true
+          node: true
+          prometheus: true
+          prometheusOperator: true
+          time: true
+      grafana:
+        enabled: false
+      alertmanager:
+        enabled: false
+      commonLabels:
+        mexAppName: "mexprometheusappname"
+        mexAppVersion: "10"
+  internalports: true
+  accesstype: LoadBalancer
+  createdat:
+    seconds: 1639198971
+    nanos: 153735000
+  trusted: true
+appinstances:
+- key:
+    appkey:
+      organization: Untomt
+      name: VRmax
+      version: 1.0.0
+    clusterinstkey:
+      clusterkey:
+        name: Untomt-cluster-22
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet2
+      organization: Untomt
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  uri: Untomt-cluster-22.cloudlet2.dmuus.localtest.net
+  liveness: Dynamic
+  mappedports:
+  - proto: Tcp
+    internalport: 90
+    publicport: 90
+  flavor:
+    name: x1.small
+  state: Ready
+  runtimeinfo:
+    containerids:
+    - appOnClusterNode0
+  createdat:
+    seconds: 1639198973
+    nanos: 10098000
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
+  uniqueid: Untomtvrmax100-Untomt-cluster-22-cloudlet2-dmuus
+- key:
+    appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: Untomt-cluster-22
+      cloudletkey:
+        organization: dmuus
+        name: cloudlet2
+      organization: Untomt
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: Dynamic
+  mappedports:
+  - proto: Tcp
+    internalport: 9090
+    publicport: 9090
+  flavor:
+    name: x1.small
+  state: Ready
+  createdat:
+    seconds: 1639198971
+    nanos: 179320000
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
+  uniqueid: mobiledgexmexprometheusappname10-Untomt-cluster-22-cloudlet2-dmuus
+appinstrefs:
+- key:
+    organization: Untomt
+    name: VRmax
+    version: 1.0.0
+  insts:
+    ? '{"app_key":{"organization":"Untomt","name":"VRmax","version":"1.0.0"},"cluster_inst_key":{"cluster_key":{"name":"Untomt-cluster-22"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"Untomt"}}'
+    : 1
+- key:
+    organization: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  insts:
+    ? '{"app_key":{"organization":"MobiledgeX","name":"MEXPrometheusAppName","version":"1.0"},"cluster_inst_key":{"cluster_key":{"name":"Untomt-cluster-22"},"cloudlet_key":{"organization":"dmuus","name":"cloudlet2"},"organization":"Untomt"}}'
+    : 1
+clusterrefs:
+- key:
+    clusterkey:
+      name: Untomt-cluster-22
+    cloudletkey:
+      organization: dmuus
+      name: cloudlet2
+    organization: Untomt
+  apps:
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: Untomt-cluster-22
+  - appkey:
+      organization: Untomt
+      name: VRmax
+      version: 1.0.0
+    vclustername: Untomt-cluster-22
+trustpolicyexceptions:
+- key:
+    appkey:
+      organization: Untomt
+      name: VRmax
+      version: 1.0.0
+    cloudletpoolkey:
+      organization: dmuus
+      name: cloudlet2-pool
+    name: tpe1
+  state: ApprovalRequested
+  outboundsecurityrules:
+  - protocol: tcp
+    portrangemin: 1
+    portrangemax: 111
+    remotecidr: 1.1.1.1/32

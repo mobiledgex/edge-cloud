@@ -38,13 +38,13 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type SecurityRule struct {
-	// tcp, udp, icmp
+	// TCP, UDP, ICMP
 	Protocol string `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
 	// TCP or UDP port range start
 	PortRangeMin uint32 `protobuf:"varint,2,opt,name=port_range_min,json=portRangeMin,proto3" json:"port_range_min,omitempty"`
 	// TCP or UDP port range end
 	PortRangeMax uint32 `protobuf:"varint,3,opt,name=port_range_max,json=portRangeMax,proto3" json:"port_range_max,omitempty"`
-	// remote CIDR X.X.X.X/X
+	// Remote CIDR X.X.X.X/X
 	RemoteCidr string `protobuf:"bytes,4,opt,name=remote_cidr,json=remoteCidr,proto3" json:"remote_cidr,omitempty"`
 }
 
@@ -88,7 +88,7 @@ type TrustPolicy struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
 	// Unique identifier key
 	Key PolicyKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// list of outbound security rules for whitelisting traffic
+	// List of outbound security rules for whitelisting traffic
 	OutboundSecurityRules []SecurityRule `protobuf:"bytes,3,rep,name=outbound_security_rules,json=outboundSecurityRules,proto3" json:"outbound_security_rules"`
 	// Preparing to be deleted
 	DeletePrepare bool `protobuf:"varint,4,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`

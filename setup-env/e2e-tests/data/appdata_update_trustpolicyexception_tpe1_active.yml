@@ -1,0 +1,12 @@
+
+trustpolicyexceptions:
+- key:
+    appkey:
+        organization: Untomt
+        name: VRmax
+        version: 1.0.0
+    cloudletpoolkey:
+        organization: dmuus
+        name: cloudlet2-pool
+    name: tpe1
+  state: Active

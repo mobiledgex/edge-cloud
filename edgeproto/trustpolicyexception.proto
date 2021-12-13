@@ -32,7 +32,7 @@ message TrustPolicyExceptionKey {
   // CloudletPool Key
   CloudletPoolKey cloudlet_pool_key = 2  [(gogoproto.nullable) = false, (protogen.keytag) = "cloudletpoolkey", (protogen.refers_to) = "CloudletPool"];
   // TrustPolicyExceptionKey name
-  string Name = 3 [(protogen.keytag) = "name"]; 
+  string name = 3 [(protogen.keytag) = "name"]; 
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -67,6 +67,7 @@ service TrustPolicyExceptionApi {
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
     option (protogen.mc2_api_requires_org) = "Key.AppKey.Organization";
+    option (protogen.method_noconfig) = "State";
   }
   // Update a Trust Policy Exception, by Operator Organization
   rpc UpdateTrustPolicyException(TrustPolicyException) returns (Result) {
@@ -75,7 +76,7 @@ service TrustPolicyExceptionApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.CloudletPoolKey.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization,State";
     option (protogen.mc2_custom_authz) = true;
     option (protogen.method_also_required) = "State";
   }
@@ -87,6 +88,7 @@ service TrustPolicyExceptionApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.AppKey.Organization";
+    option (protogen.method_noconfig) = "State";
   }
   // Show Trust Policy Exceptions. Any fields specified will be used to filter results.
   rpc ShowTrustPolicyException(TrustPolicyException) returns (stream TrustPolicyException) {

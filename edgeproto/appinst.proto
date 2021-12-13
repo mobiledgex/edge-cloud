@@ -136,8 +136,8 @@ message AppInst {
   reserved 28;
   // Health Check status
   distributed_match_engine.HealthCheck health_check = 29 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];  
-  // Optional privacy policy name
-  string privacy_policy = 30;
+  reserved "privacy_policy";
+  reserved 30;
   // Power State of the AppInst
   PowerState power_state = 31 [(protogen.hidetag) = "nocmp"];
   // Size of external volume to be attached to nodes.  This is for the root partition
