@@ -1246,7 +1246,7 @@ var AllDataComments = map[string]string{
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"apps:#.vmappostype":                                                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"apps:#.alertpolicies":                                                          "Alert Policies",
-	"apps:#.qossessionprofile":                                                      "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"apps:#.qossessionprofile":                                                      "Qualifier for the requested latency profile, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
 	"apps:#.qossessionduration":                                                     "Session duration in seconds. Maximal value of 24 hours is used if not set",
 	"appinstances:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                                        "App developer organization",

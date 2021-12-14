@@ -143,7 +143,9 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			}
 			asPort := fmt.Sprintf("%d", port.InternalPort)
 
-			if ueAddr == "" {
+			if qos == "QOS_NO_PRIORITY" {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "QOS_NO_PRIORITY specified. Will not create priority session")
+			} else if ueAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ip_user_equipment value not found in tags. Aborting.", "req.Tags", req.Tags)
 			} else if asAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Could not decode app inst FQDN. Aborting.", "reply.Fqdn", reply.Fqdn)

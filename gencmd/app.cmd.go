@@ -785,7 +785,7 @@ var AppComments = map[string]string{
 	"serverlessconfig.minreplicas": "Minimum number of replicas when serverless",
 	"vmappostype":                  "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"alertpolicies":                "Alert Policies, specify alertpolicies:empty=true to clear",
-	"qossessionprofile":            "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"qossessionprofile":            "Qualifier for the requested latency profile, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
 	"qossessionduration":           "Session duration in seconds. Maximal value of 24 hours is used if not set",
 }
 var AppSpecialArgs = map[string]string{
@@ -934,7 +934,7 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.minreplicas":               "Minimum number of replicas when serverless",
 	"app.vmappostype":                                "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"app.alertpolicies":                              "Alert Policies",
-	"app.qossessionprofile":                          "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"app.qossessionprofile":                          "Qualifier for the requested latency profile, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
 	"app.qossessionduration":                         "Session duration in seconds. Maximal value of 24 hours is used if not set",
 	"dryrundeploy":                                   "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                       "Optional number of worker VMs in dry run K8s Cluster, default = 2",
