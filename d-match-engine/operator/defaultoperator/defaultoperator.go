@@ -1,6 +1,8 @@
 package defaultoperator
 
 import (
+	"context"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/version"
 
@@ -11,7 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-//OperatorApiGw respresent an Operator API Gateway
+//OperatorApiGw represents an Operator API Gateway
 type OperatorApiGw struct {
 	Servers *operator.OperatorApiGwServers
 }
@@ -42,4 +44,19 @@ func (*OperatorApiGw) GetQOSPositionKPI(mreq *dme.QosPositionRequest, getQosSvr 
 
 func (*OperatorApiGw) GetVersionProperties() map[string]string {
 	return version.BuildProps("DefaultOperator")
+}
+
+func (*OperatorApiGw) CreatePrioritySession(ctx context.Context, priorityType string, ueAddr string, asAddr string, asPort string, protocol string, qos string, duration int64) (string, error) {
+	log.DebugLog(log.DebugLevelDmereq, "No default implementation for CreatePrioritySession()")
+	return "", nil
+}
+
+func (*OperatorApiGw) DeletePrioritySession(ctx context.Context, priorityType string, sessionId string) error {
+	log.DebugLog(log.DebugLevelDmereq, "No default implementation for DeletePrioritySession()")
+	return nil
+}
+
+func (*OperatorApiGw) LookupQosParm(qos string) string {
+	log.DebugLog(log.DebugLevelDmereq, "No default implementation for LookupQosParm()")
+	return ""
 }

@@ -733,6 +733,8 @@ var AppOptionalArgs = []string{
 	"serverlessconfig.minreplicas",
 	"vmappostype",
 	"alertpolicies",
+	"qossessionprofile",
+	"qossessionduration",
 }
 var AppAliasArgs = []string{
 	"app-org=key.organization",
@@ -783,6 +785,8 @@ var AppComments = map[string]string{
 	"serverlessconfig.minreplicas": "Minimum number of replicas when serverless",
 	"vmappostype":                  "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"alertpolicies":                "Alert Policies, specify alertpolicies:empty=true to clear",
+	"qossessionprofile":            "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"qossessionduration":           "Session duration in seconds. Maximal value of 24 hours is used if not set",
 }
 var AppSpecialArgs = map[string]string{
 	"alertpolicies":    "StringArray",
@@ -880,6 +884,8 @@ var DeploymentCloudletRequestOptionalArgs = []string{
 	"app.serverlessconfig.minreplicas",
 	"app.vmappostype",
 	"app.alertpolicies",
+	"app.qossessionprofile",
+	"app.qossessionduration",
 	"dryrundeploy",
 	"numnodes",
 }
@@ -928,6 +934,8 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.serverlessconfig.minreplicas":               "Minimum number of replicas when serverless",
 	"app.vmappostype":                                "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"app.alertpolicies":                              "Alert Policies",
+	"app.qossessionprofile":                          "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"app.qossessionduration":                         "Session duration in seconds. Maximal value of 24 hours is used if not set",
 	"dryrundeploy":                                   "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                       "Optional number of worker VMs in dry run K8s Cluster, default = 2",
 }
