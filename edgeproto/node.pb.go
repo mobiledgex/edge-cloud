@@ -706,6 +706,13 @@ func (m *NodeKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *NodeKey) ClearTagged(tags map[string]struct{}) {
+	if _, found := tags["nocmp"]; found {
+		s.Name = ""
+	}
+	s.CloudletKey.ClearTagged(tags)
+}
+
 func IgnoreNodeKeyFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1688,6 +1695,28 @@ func (m *Node) ValidateEnums() error {
 	return nil
 }
 
+func (s *Node) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if _, found := tags["nocmp"]; found {
+		s.NotifyId = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		s.BuildMaster = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.BuildHead = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.BuildAuthor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.Hostname = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.BuildDate = ""
+	}
+}
+
 func IgnoreNodeFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1737,6 +1766,14 @@ func (m *NodeData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *NodeData) ClearTagged(tags map[string]struct{}) {
+	if s.Nodes != nil {
+		for ii := 0; ii < len(s.Nodes); ii++ {
+			s.Nodes[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func IgnoreNodeDataFields(taglist string) cmp.Option {

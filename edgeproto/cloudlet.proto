@@ -61,7 +61,7 @@ message PlatformConfig {
   // Path to platform base image
   string cloudlet_vm_image_path = 2;
   // Address of controller notify port (can be multiple of these)
-  string notify_ctrl_addrs = 3;
+  string notify_ctrl_addrs = 3 [(protogen.hidetag) = "nocmp"];
   // Vault address (4) deprecated, platform no longer has direct access to vault.
 
   // TLS cert file
@@ -73,11 +73,11 @@ message PlatformConfig {
   // Environment variables
   map<string, string> env_var = 6;
   // Tag of edge-cloud image
-  string platform_tag = 8;
+  string platform_tag = 8 [(protogen.hidetag) = "nocmp"];
   // Internal Test flag
   bool test_mode = 9;
   // Span string
-  string span = 10;
+  string span = 10 [(protogen.hidetag) = "nocmp"];
   // Internal cleanup flag
   bool cleanup_mode = 11;
   // Region
@@ -91,17 +91,17 @@ message PlatformConfig {
   // Path to Chef Server
   string chef_server_path = 17;
   // Chef client interval
-  int32 chef_client_interval = 18  [(gogoproto.casttype) = "Duration"];
+  int32 chef_client_interval = 18 [(gogoproto.casttype) = "Duration"];
   // Deployment Tag
   string deployment_tag = 19;
   // crm access private key
-  string crm_access_private_key = 22;
+  string crm_access_private_key = 22 [(protogen.hidetag) = "nocmp"];
   // controller access API address
-  string access_api_addr = 23;
+  string access_api_addr = 23 [(protogen.hidetag) = "nocmp"];
   // cache dir
   string cache_dir = 24;
   // secondary crm access private key
-  string secondary_crm_access_private_key = 25;
+  string secondary_crm_access_private_key = 25 [(protogen.hidetag) = "nocmp"];
 }
 
 // Platform Type
@@ -291,7 +291,7 @@ message GPUDriver {
   // Ignore state will ignore any action in-progress on the GPU driver
   bool ignore_state = 8;
   // Preparing to be deleted
-  bool delete_prepare = 9 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 9 [(protogen.backend) = true]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -420,11 +420,11 @@ message Cloudlet {
   // status is used to reflect progress of creation or other events
   StatusInfo status = 11 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Current state of the cloudlet
-  TrackedState state = 12 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState state = 12 [(protogen.backend) = true];
   // Override actions to CRM
-  CRMOverride crm_override = 13 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  CRMOverride crm_override = 13 [(protogen.backend) = true];
   // Deploy cloudlet services locally
-  bool deployment_local = 14 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  bool deployment_local = 14 [(protogen.backend) = true];
   // Platform type
   PlatformType platform_type = 15;
   // Address for the CRM notify listener to run on
@@ -438,7 +438,7 @@ message Cloudlet {
   // Cloudlet container version 
   string container_version = 20;
   // Platform Config Info
-  PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  PlatformConfig config = 21 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Optional resource to restagtbl key map key values = [gpu, nas, nic]
   map<string, edgeproto.ResTagTableKey> res_tag_map = 22 [(protogen.backend) = true, (protogen.refers_to) = "ResTagTable"];
   // Variables required to access cloudlet
@@ -446,7 +446,7 @@ message Cloudlet {
   // MobiledgeX baseimage version where CRM services reside
   string vm_image_version = 24;
   // Deployment type to bring up CRM services (docker, kubernetes)
-  string deployment = 26 [(protogen.hidetag) = "nocmp"];
+  string deployment = 26;
   // Infra Access Type is the type of access available to Infra API Endpoint
   InfraApiAccess infra_api_access = 27;
   // Infra specific config
@@ -470,11 +470,11 @@ message Cloudlet {
   // Optional Trust Policy
   string trust_policy = 37 [(protogen.refers_to) = "TrustPolicy"];
   // State of trust policy
-  TrackedState trust_policy_state = 38 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState trust_policy_state = 38 [(protogen.backend) = true];
   // Resource quotas
   repeated ResourceQuota resource_quotas = 39 [(gogoproto.nullable) = false];
   // Default resource alert threshold percentage
-  int32 default_resource_alert_threshold = 40 [(protogen.hidetag) = "nocmp"];
+  int32 default_resource_alert_threshold = 40;
   // Address of the controller hosting the cloudlet services if it is running locally
   string HostController = 41 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Operator provided kafka cluster endpoint to push events to
@@ -492,13 +492,13 @@ message Cloudlet {
   // For single kubernetes cluster cloudlet platforms, cluster is owned by this organization instead of multi-tenant
   string single_kubernetes_cluster_owner = 48;
   // Preparing to be deleted
-  bool delete_prepare = 49 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 49 [(protogen.backend) = true]; 
   // Enable platform H/A
   bool platform_high_availability = 50;
   // CRM secondary access public key for H/A
   string secondary_crm_access_public_key = 51 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // CRM secondary access key upgrade required for H/A
-  bool secondary_crm_access_key_upgrade_required = 52 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  bool secondary_crm_access_key_upgrade_required = 52 [(protogen.backend) = true];
   // Address for the secondary CRM notify listener to run on
   string secondary_notify_srv_addr = 53 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
@@ -826,7 +826,7 @@ message CloudletInfo {
   // Snapshot of resources used by cloudlet
   InfraResourcesSnapshot resources_snapshot = 17 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Trust Policy State
-  TrackedState trust_policy_state = 18 [(protogen.hidetag) = "nocmp"];
+  TrackedState trust_policy_state = 18;
   // Version for compatibility tracking
   uint32 compatibility_version = 19 [(protogen.hidetag) = "nocmp"];
   // Cloudlet properties

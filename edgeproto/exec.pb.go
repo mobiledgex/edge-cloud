@@ -882,6 +882,9 @@ func (m *CloudletMgmtNode) ValidateEnums() error {
 	return nil
 }
 
+func (s *CloudletMgmtNode) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *RunCmd) CopyInFields(src *RunCmd) int {
 	changed := 0
 	if m.Command != src.Command {
@@ -926,6 +929,12 @@ func (m *RunCmd) ValidateEnums() error {
 	return nil
 }
 
+func (s *RunCmd) ClearTagged(tags map[string]struct{}) {
+	if s.CloudletMgmtNode != nil {
+		s.CloudletMgmtNode.ClearTagged(tags)
+	}
+}
+
 func (m *RunVMConsole) CopyInFields(src *RunVMConsole) int {
 	changed := 0
 	if m.Url != src.Url {
@@ -942,6 +951,12 @@ func (m *RunVMConsole) DeepCopyIn(src *RunVMConsole) {
 // Helper method to check that enums have valid values
 func (m *RunVMConsole) ValidateEnums() error {
 	return nil
+}
+
+func (s *RunVMConsole) ClearTagged(tags map[string]struct{}) {
+	if _, found := tags["nocmp"]; found {
+		s.Url = ""
+	}
 }
 
 func IgnoreRunVMConsoleFields(taglist string) cmp.Option {
@@ -987,6 +1002,9 @@ func (m *ShowLog) DeepCopyIn(src *ShowLog) {
 // Helper method to check that enums have valid values
 func (m *ShowLog) ValidateEnums() error {
 	return nil
+}
+
+func (s *ShowLog) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
@@ -1163,6 +1181,25 @@ func (m *ExecRequest) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *ExecRequest) ClearTagged(tags map[string]struct{}) {
+	s.AppInstKey.ClearTagged(tags)
+	if _, found := tags["nocmp"]; found {
+		s.Offer = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.Answer = ""
+	}
+	if s.Cmd != nil {
+		s.Cmd.ClearTagged(tags)
+	}
+	if s.Log != nil {
+		s.Log.ClearTagged(tags)
+	}
+	if s.Console != nil {
+		s.Console.ClearTagged(tags)
+	}
 }
 
 func IgnoreExecRequestFields(taglist string) cmp.Option {

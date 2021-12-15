@@ -4956,6 +4956,9 @@ func (m *RegisterClientRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *RegisterClientRequest) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5018,6 +5021,9 @@ func (m *RegisterClientReply) ValidateEnums() error {
 		return errors.New("invalid Status")
 	}
 	return nil
+}
+
+func (s *RegisterClientReply) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
@@ -5126,6 +5132,12 @@ func (m *FindCloudletRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *FindCloudletRequest) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+}
+
 func (m *PlatformFindCloudletRequest) CopyInFields(src *PlatformFindCloudletRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5175,6 +5187,9 @@ func (m *PlatformFindCloudletRequest) DeepCopyIn(src *PlatformFindCloudletReques
 // Helper method to check that enums have valid values
 func (m *PlatformFindCloudletRequest) ValidateEnums() error {
 	return nil
+}
+
+func (s *PlatformFindCloudletRequest) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
@@ -5313,6 +5328,17 @@ func (m *FindCloudletReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *FindCloudletReply) ClearTagged(tags map[string]struct{}) {
+	if s.Ports != nil {
+		for ii := 0; ii < len(s.Ports); ii++ {
+			s.Ports[ii].ClearTagged(tags)
+		}
+	}
+	if s.CloudletLocation != nil {
+		s.CloudletLocation.ClearTagged(tags)
+	}
+}
+
 func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5424,6 +5450,12 @@ func (m *VerifyLocationRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *VerifyLocationRequest) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+}
+
 func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5481,6 +5513,9 @@ func (m *VerifyLocationReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *VerifyLocationReply) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5525,6 +5560,9 @@ func (m *GetLocationRequest) DeepCopyIn(src *GetLocationRequest) {
 // Helper method to check that enums have valid values
 func (m *GetLocationRequest) ValidateEnums() error {
 	return nil
+}
+
+func (s *GetLocationRequest) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
@@ -5641,6 +5679,12 @@ func (m *GetLocationReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *GetLocationReply) ClearTagged(tags map[string]struct{}) {
+	if s.NetworkLocation != nil {
+		s.NetworkLocation.ClearTagged(tags)
+	}
+}
+
 func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5752,6 +5796,12 @@ func (m *AppInstListRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppInstListRequest) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+}
+
 func (m *Appinstance) CopyInFields(src *Appinstance) int {
 	changed := 0
 	if m.AppName != src.AppName {
@@ -5810,6 +5860,14 @@ func (m *Appinstance) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *Appinstance) ClearTagged(tags map[string]struct{}) {
+	if s.Ports != nil {
+		for ii := 0; ii < len(s.Ports); ii++ {
+			s.Ports[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
@@ -5922,6 +5980,17 @@ func (m *CloudletLocation) ValidateEnums() error {
 	return nil
 }
 
+func (s *CloudletLocation) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+	if s.Appinstances != nil {
+		for ii := 0; ii < len(s.Appinstances); ii++ {
+			s.Appinstances[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5988,6 +6057,14 @@ func (m *AppInstListReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppInstListReply) ClearTagged(tags map[string]struct{}) {
+	if s.Cloudlets != nil {
+		for ii := 0; ii < len(s.Cloudlets); ii++ {
+			s.Cloudlets[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6027,6 +6104,9 @@ func (m *FqdnListRequest) DeepCopyIn(src *FqdnListRequest) {
 // Helper method to check that enums have valid values
 func (m *FqdnListRequest) ValidateEnums() error {
 	return nil
+}
+
+func (s *FqdnListRequest) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
@@ -6075,6 +6155,9 @@ func (m *AppFqdn) DeepCopyIn(src *AppFqdn) {
 // Helper method to check that enums have valid values
 func (m *AppFqdn) ValidateEnums() error {
 	return nil
+}
+
+func (s *AppFqdn) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
@@ -6141,6 +6224,14 @@ func (m *FqdnListReply) ValidateEnums() error {
 		return errors.New("invalid Status")
 	}
 	return nil
+}
+
+func (s *FqdnListReply) ClearTagged(tags map[string]struct{}) {
+	if s.AppFqdns != nil {
+		for ii := 0; ii < len(s.AppFqdns); ii++ {
+			s.AppFqdns[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
@@ -6244,6 +6335,12 @@ func (m *AppOfficialFqdnRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppOfficialFqdnRequest) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+}
+
 func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6320,6 +6417,14 @@ func (m *AppOfficialFqdnReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppOfficialFqdnReply) ClearTagged(tags map[string]struct{}) {
+	if s.Ports != nil {
+		for ii := 0; ii < len(s.Ports); ii++ {
+			s.Ports[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6379,6 +6484,9 @@ func (m *DynamicLocGroupRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *DynamicLocGroupRequest) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6431,6 +6539,9 @@ func (m *DynamicLocGroupReply) ValidateEnums() error {
 		return errors.New("invalid Status")
 	}
 	return nil
+}
+
+func (s *DynamicLocGroupReply) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *QosPosition) CopyInFields(src *QosPosition) int {
@@ -6511,6 +6622,12 @@ func (m *QosPosition) ValidateEnums() error {
 	return nil
 }
 
+func (s *QosPosition) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+}
+
 func (m *BandSelection) CopyInFields(src *BandSelection) int {
 	changed := 0
 	if src.Rat_2G != nil {
@@ -6582,6 +6699,9 @@ func (m *BandSelection) DeepCopyIn(src *BandSelection) {
 // Helper method to check that enums have valid values
 func (m *BandSelection) ValidateEnums() error {
 	return nil
+}
+
+func (s *BandSelection) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
@@ -6696,6 +6816,17 @@ func (m *QosPositionRequest) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *QosPositionRequest) ClearTagged(tags map[string]struct{}) {
+	if s.Positions != nil {
+		for ii := 0; ii < len(s.Positions); ii++ {
+			s.Positions[ii].ClearTagged(tags)
+		}
+	}
+	if s.BandSelection != nil {
+		s.BandSelection.ClearTagged(tags)
+	}
 }
 
 func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
@@ -6821,6 +6952,12 @@ func (m *QosPositionKpiResult) ValidateEnums() error {
 	return nil
 }
 
+func (s *QosPositionKpiResult) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+}
+
 func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6885,6 +7022,14 @@ func (m *QosPositionKpiReply) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *QosPositionKpiReply) ClearTagged(tags map[string]struct{}) {
+	if s.PositionResults != nil {
+		for ii := 0; ii < len(s.PositionResults); ii++ {
+			s.PositionResults[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
@@ -7077,6 +7222,23 @@ func (m *ClientEdgeEvent) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *ClientEdgeEvent) ClearTagged(tags map[string]struct{}) {
+	if s.GpsLocation != nil {
+		s.GpsLocation.ClearTagged(tags)
+	}
+	if s.Samples != nil {
+		for ii := 0; ii < len(s.Samples); ii++ {
+			s.Samples[ii].ClearTagged(tags)
+		}
+	}
+	if s.DeviceInfoStatic != nil {
+		s.DeviceInfoStatic.ClearTagged(tags)
+	}
+	if s.DeviceInfoDynamic != nil {
+		s.DeviceInfoDynamic.ClearTagged(tags)
+	}
 }
 
 func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
@@ -7300,6 +7462,15 @@ func (m *ServerEdgeEvent) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *ServerEdgeEvent) ClearTagged(tags map[string]struct{}) {
+	if s.Statistics != nil {
+		s.Statistics.ClearTagged(tags)
+	}
+	if s.NewCloudlet != nil {
+		s.NewCloudlet.ClearTagged(tags)
+	}
 }
 
 var IDTypesStrings = []string{

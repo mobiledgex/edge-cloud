@@ -1,4 +1,4 @@
-status: AiSuccess
+status: Success
 cloudlets:
 - carriername: dmuus
   cloudletname: dmuus-cloud-1

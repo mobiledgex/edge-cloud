@@ -681,6 +681,9 @@ func (m *AppPort) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppPort) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *DeviceInfoStatic) CopyInFields(src *DeviceInfoStatic) int {
 	changed := 0
 	if m.DeviceOs != src.DeviceOs {
@@ -702,6 +705,9 @@ func (m *DeviceInfoStatic) DeepCopyIn(src *DeviceInfoStatic) {
 // Helper method to check that enums have valid values
 func (m *DeviceInfoStatic) ValidateEnums() error {
 	return nil
+}
+
+func (s *DeviceInfoStatic) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *DeviceInfoDynamic) CopyInFields(src *DeviceInfoDynamic) int {
@@ -730,6 +736,9 @@ func (m *DeviceInfoDynamic) DeepCopyIn(src *DeviceInfoDynamic) {
 // Helper method to check that enums have valid values
 func (m *DeviceInfoDynamic) ValidateEnums() error {
 	return nil
+}
+
+func (s *DeviceInfoDynamic) ClearTagged(tags map[string]struct{}) {
 }
 
 var LProtoStrings = []string{

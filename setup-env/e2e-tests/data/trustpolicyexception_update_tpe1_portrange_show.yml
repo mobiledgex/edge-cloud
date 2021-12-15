@@ -66,30 +66,18 @@ cloudlets:
   ipsupport: Dynamic
   numdynamicips: 254
   state: Ready
-  notifysrvaddr: 127.0.0.1:0
   flavor:
     name: DefaultPlatformFlavor
   physicalname: cloudlet2
   containerversion: "2019-10-24"
   deployment: docker
-  crmaccesspublickey: |
-    -----BEGIN PUBLIC KEY-----
-    MCowBQYDK2VwAyEA/7ob8TX7vklyCM1RH7ookQ0xdG/h0DOZJfjz6FMLMRc=
-    -----END PUBLIC KEY-----
-  createdat:
-    seconds: 1639206024
-    nanos: 982490000
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
-  hostcontroller: 127.0.0.1:55001
-  secondarynotifysrvaddr: 127.0.0.1:0
 cloudletinfos:
 - key:
     organization: dmuus
     name: cloudlet2
   state: Ready
-  notifyid: 2
-  controller: Dajgaonkar-MAC.local@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -136,16 +124,12 @@ cloudletinfos:
         name: Untomt-cluster-22
       organization: Untomt
   trustpolicystate: NotPresent
-  compatibilityversion: 2
 cloudletpools:
 - key:
     organization: dmuus
     name: cloudlet2-pool
   cloudlets:
   - cloudlet2
-  createdat:
-    seconds: 1639206025
-    nanos: 645802000
 clusterinsts:
 - key:
     clusterkey:
@@ -159,7 +143,6 @@ clusterinsts:
   liveness: Dynamic
   state: Ready
   ipaccess: Dedicated
-  allocatedip: dynamic
   nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
@@ -179,9 +162,6 @@ clusterinsts:
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
-  createdat:
-    seconds: 1639206025
-    nanos: 660993000
 apps:
 - key:
     organization: Untomt
@@ -237,9 +217,6 @@ apps:
               protocol: TCP
   deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
-  createdat:
-    seconds: 1639206027
-    nanos: 580086000
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
@@ -296,9 +273,6 @@ apps:
         mexAppVersion: "10"
   internalports: true
   accesstype: LoadBalancer
-  createdat:
-    seconds: 1639206025
-    nanos: 749249000
   trusted: true
 appinstances:
 - key:
@@ -328,9 +302,6 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
-  createdat:
-    seconds: 1639206027
-    nanos: 603046000
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
@@ -358,9 +329,6 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
-  createdat:
-    seconds: 1639206025
-    nanos: 771199000
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small

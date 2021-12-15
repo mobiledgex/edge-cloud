@@ -35,22 +35,10 @@ func AppHideTags(in *edgeproto.App) {
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.DeploymentManifest = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeploymentGenerator = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DelOpt = 0
-	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Revision = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
@@ -70,22 +58,10 @@ func DeploymentCloudletRequestHideTags(in *edgeproto.DeploymentCloudletRequest) 
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DeploymentManifest = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DeploymentGenerator = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DelOpt = 0
-	}
 	for i1 := 0; i1 < len(in.App.Configs); i1++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.App.Revision = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DeletePrepare = false
 	}
 	if _, found := tags["timestamp"]; found {
 		in.App.CreatedAt = distributed_match_engine.Timestamp{}

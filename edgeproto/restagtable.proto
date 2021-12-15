@@ -42,7 +42,7 @@ message ResTagTable {
   // availability zone(s) of resource if required
   string azone = 4;
   // Preparing to be deleted
-  bool delete_prepare = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 5 [(protogen.backend) = true]; 
   option (gogoproto.gostring) = true;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

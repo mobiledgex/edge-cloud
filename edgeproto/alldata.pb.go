@@ -867,17 +867,130 @@ func (m *AllData) ValidateEnums() error {
 	return nil
 }
 
+func (s *AllData) ClearTagged(tags map[string]struct{}) {
+	if s.Settings != nil {
+		s.Settings.ClearTagged(tags)
+	}
+	if s.Flavors != nil {
+		for ii := 0; ii < len(s.Flavors); ii++ {
+			s.Flavors[ii].ClearTagged(tags)
+		}
+	}
+	if s.OperatorCodes != nil {
+		for ii := 0; ii < len(s.OperatorCodes); ii++ {
+			s.OperatorCodes[ii].ClearTagged(tags)
+		}
+	}
+	if s.ResTagTables != nil {
+		for ii := 0; ii < len(s.ResTagTables); ii++ {
+			s.ResTagTables[ii].ClearTagged(tags)
+		}
+	}
+	if s.Cloudlets != nil {
+		for ii := 0; ii < len(s.Cloudlets); ii++ {
+			s.Cloudlets[ii].ClearTagged(tags)
+		}
+	}
+	if s.CloudletInfos != nil {
+		for ii := 0; ii < len(s.CloudletInfos); ii++ {
+			s.CloudletInfos[ii].ClearTagged(tags)
+		}
+	}
+	if s.CloudletPools != nil {
+		for ii := 0; ii < len(s.CloudletPools); ii++ {
+			s.CloudletPools[ii].ClearTagged(tags)
+		}
+	}
+	if s.AutoProvPolicies != nil {
+		for ii := 0; ii < len(s.AutoProvPolicies); ii++ {
+			s.AutoProvPolicies[ii].ClearTagged(tags)
+		}
+	}
+	if s.AutoProvPolicyCloudlets != nil {
+		for ii := 0; ii < len(s.AutoProvPolicyCloudlets); ii++ {
+			s.AutoProvPolicyCloudlets[ii].ClearTagged(tags)
+		}
+	}
+	if s.AutoScalePolicies != nil {
+		for ii := 0; ii < len(s.AutoScalePolicies); ii++ {
+			s.AutoScalePolicies[ii].ClearTagged(tags)
+		}
+	}
+	if s.TrustPolicies != nil {
+		for ii := 0; ii < len(s.TrustPolicies); ii++ {
+			s.TrustPolicies[ii].ClearTagged(tags)
+		}
+	}
+	if s.ClusterInsts != nil {
+		for ii := 0; ii < len(s.ClusterInsts); ii++ {
+			s.ClusterInsts[ii].ClearTagged(tags)
+		}
+	}
+	if s.Apps != nil {
+		for ii := 0; ii < len(s.Apps); ii++ {
+			s.Apps[ii].ClearTagged(tags)
+		}
+	}
+	if s.AppInstances != nil {
+		for ii := 0; ii < len(s.AppInstances); ii++ {
+			s.AppInstances[ii].ClearTagged(tags)
+		}
+	}
+	if s.AppInstRefs != nil {
+		for ii := 0; ii < len(s.AppInstRefs); ii++ {
+			s.AppInstRefs[ii].ClearTagged(tags)
+		}
+	}
+	if s.VmPools != nil {
+		for ii := 0; ii < len(s.VmPools); ii++ {
+			s.VmPools[ii].ClearTagged(tags)
+		}
+	}
+	if s.IdleReservableClusterInsts != nil {
+		s.IdleReservableClusterInsts.ClearTagged(tags)
+	}
+	if s.GpuDrivers != nil {
+		for ii := 0; ii < len(s.GpuDrivers); ii++ {
+			s.GpuDrivers[ii].ClearTagged(tags)
+		}
+	}
+	if s.AlertPolicies != nil {
+		for ii := 0; ii < len(s.AlertPolicies); ii++ {
+			s.AlertPolicies[ii].ClearTagged(tags)
+		}
+	}
+	if s.FlowRateLimitSettings != nil {
+		for ii := 0; ii < len(s.FlowRateLimitSettings); ii++ {
+			s.FlowRateLimitSettings[ii].ClearTagged(tags)
+		}
+	}
+	if s.MaxReqsRateLimitSettings != nil {
+		for ii := 0; ii < len(s.MaxReqsRateLimitSettings); ii++ {
+			s.MaxReqsRateLimitSettings[ii].ClearTagged(tags)
+		}
+	}
+	if s.Networks != nil {
+		for ii := 0; ii < len(s.Networks); ii++ {
+			s.Networks[ii].ClearTagged(tags)
+		}
+	}
+	if s.TrustPolicyExceptions != nil {
+		for ii := 0; ii < len(s.TrustPolicyExceptions); ii++ {
+			s.TrustPolicyExceptions[ii].ClearTagged(tags)
+		}
+	}
+	if s.ClusterRefs != nil {
+		for ii := 0; ii < len(s.ClusterRefs); ii++ {
+			s.ClusterRefs[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func IgnoreAllDataFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
 	for _, tag := range strings.Split(taglist, ",") {
 		tags[tag] = struct{}{}
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Flavors.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ResTagTables.DeletePrepare")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.Errors")
@@ -886,22 +999,25 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.Status")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.State")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.CrmOverride")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.DeploymentLocal")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.NotifySrvAddr")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.Config")
+		names = append(names, "Cloudlets.Config.NotifyCtrlAddrs")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.Deployment")
+		names = append(names, "Cloudlets.Config.PlatformTag")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.Config.Span")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.Config.CrmAccessPrivateKey")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.Config.AccessApiAddr")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Cloudlets.Config.SecondaryCrmAccessPrivateKey")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.CrmAccessPublicKey")
@@ -913,22 +1029,10 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.TrustPolicyState")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.DefaultResourceAlertThreshold")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.HostController")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.SecondaryCrmAccessPublicKey")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.SecondaryCrmAccessKeyUpgradeRequired")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.SecondaryNotifySrvAddr")
@@ -943,9 +1047,6 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "CloudletInfos.Status")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "CloudletInfos.TrustPolicyState")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "CloudletInfos.CompatibilityVersion")
 	}
 	if _, found := tags["timestamp"]; found {
@@ -955,52 +1056,13 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "CloudletPools.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "CloudletPools.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AutoProvPolicies.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AutoScalePolicies.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "TrustPolicies.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.State")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.Errors")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.CrmOverride")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.AllocatedIp")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.NodeFlavor")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.Status")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.ExternalVolumeSize")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.ImageName")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.MasterNodeFlavor")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.SkipCrmCleanupOnFailure")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.OptRes")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.Resources")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "ClusterInsts.CreatedAt")
@@ -1012,37 +1074,13 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "ClusterInsts.ReservationEndedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Apps.DeploymentManifest")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Apps.DeploymentGenerator")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Apps.DelOpt")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "Apps.Revision")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Apps.DeletePrepare")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "Apps.CreatedAt")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "Apps.UpdatedAt")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.State")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.Errors")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.CrmOverride")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.CreatedAt")
@@ -1059,53 +1097,17 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.UpdateMultiple")
 	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.HealthCheck")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.PowerState")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.ExternalVolumeSize")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.AvailabilityZone")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.VmFlavor")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.OptRes")
-	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.UpdatedAt")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.InternalPortToLbIp")
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "VmPools.Vms.UpdatedAt")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "VmPools.State")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "VmPools.Errors")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "VmPools.CrmOverride")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "VmPools.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "GpuDrivers.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "AlertPolicies.DeletePrepare")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "Networks.DeletePrepare")
 	}
 	return cmpopts.IgnoreFields(AllData{}, names...)
 }

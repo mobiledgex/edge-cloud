@@ -1,4 +1,4 @@
-status: FindFound
+status: Found
 fqdn: smallcluster.dmuus-cloud-1.dmuus.localtest.net
 ports:
 - proto: Tcp

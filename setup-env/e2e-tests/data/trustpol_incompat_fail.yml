@@ -1,5 +1,5 @@
 errors:
 - desc: AppInstApi[0]
   msg: 'read Result stream failed, rpc error: code = Unknown desc = App is not compatible
-    with cloudlet trust policy: No outbound rule in policy or exception to match required connection
-    tcp:35.247.68.151/24:2222-2222 for App {"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"}'
+    with cloudlet trust policy: No outbound rule in policy or exception to match required
+    connection tcp:35.247.68.151/24:2222-2222 for App {"organization":"AcmeAppCo","name":"trustedapp","version":"1.0"}'

@@ -759,6 +759,10 @@ func (m *DebugRequest) ValidateEnums() error {
 	return nil
 }
 
+func (s *DebugRequest) ClearTagged(tags map[string]struct{}) {
+	s.Node.ClearTagged(tags)
+}
+
 func IgnoreDebugRequestFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -822,6 +826,10 @@ func (m *DebugReply) ValidateEnums() error {
 	return nil
 }
 
+func (s *DebugReply) ClearTagged(tags map[string]struct{}) {
+	s.Node.ClearTagged(tags)
+}
+
 func IgnoreDebugReplyFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -853,6 +861,14 @@ func (m *DebugData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *DebugData) ClearTagged(tags map[string]struct{}) {
+	if s.Requests != nil {
+		for ii := 0; ii < len(s.Requests); ii++ {
+			s.Requests[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func IgnoreDebugDataFields(taglist string) cmp.Option {

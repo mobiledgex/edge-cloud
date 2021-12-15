@@ -544,6 +544,10 @@ func main() {
 		close(done)
 	}()
 
+	if os.Getenv("E2ETEST_NORANDOM") == "true" {
+		dmecommon.OptionFindCloudletRandomizeVeryClose = false
+	}
+
 	var myCertIssuer string
 	if *cloudletDme {
 		// DME running on Cloudlet infra, requires access key

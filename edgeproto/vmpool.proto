@@ -91,15 +91,15 @@ message VMPool {
   // list of VMs to be part of VM pool
   repeated VM vms = 3 [(gogoproto.nullable) = false];
   // Current state of the VM pool
-  TrackedState state = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState state = 4 [(protogen.backend) = true];
   // Any errors trying to add/remove VM to/from VM Pool
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events
   StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Override actions to CRM
-  CRMOverride crm_override = 7 [(protogen.hidetag) = "nocmp"];
+  CRMOverride crm_override = 7;
   // Preparing to be deleted
-  bool delete_prepare = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 8 [(protogen.backend) = true]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -120,7 +120,7 @@ message VMPoolMember {
   // VM part of VM Pool
   VM vm = 2 [(gogoproto.nullable) = false];
   // Override actions to CRM
-  CRMOverride crm_override = 3 [(protogen.hidetag) = "nocmp"];
+  CRMOverride crm_override = 3;
   option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt.Seconds,Vm.UpdatedAt.Nanos,Vm.InternalName,Vm.Flavor";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
@@ -223,7 +223,7 @@ message VMPoolInfo {
   // list of VMs
   repeated VM vms = 4 [(gogoproto.nullable) = false];
   // Current state of the VM pool on the Cloudlet
-  TrackedState state = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState state = 5 [(protogen.backend) = true];
   // Any errors trying to add/remove VM to/from VM Pool
   repeated string errors = 6 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events

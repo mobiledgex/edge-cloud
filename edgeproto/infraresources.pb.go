@@ -1078,6 +1078,9 @@ func (m *ContainerInfo) ValidateEnums() error {
 	return nil
 }
 
+func (s *ContainerInfo) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *IpAddr) CopyInFields(src *IpAddr) int {
 	changed := 0
 	if m.ExternalIp != src.ExternalIp {
@@ -1099,6 +1102,9 @@ func (m *IpAddr) DeepCopyIn(src *IpAddr) {
 // Helper method to check that enums have valid values
 func (m *IpAddr) ValidateEnums() error {
 	return nil
+}
+
+func (s *IpAddr) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *VmInfo) CopyInFields(src *VmInfo) int {
@@ -1176,6 +1182,19 @@ func (m *VmInfo) ValidateEnums() error {
 	return nil
 }
 
+func (s *VmInfo) ClearTagged(tags map[string]struct{}) {
+	if s.Ipaddresses != nil {
+		for ii := 0; ii < len(s.Ipaddresses); ii++ {
+			s.Ipaddresses[ii].ClearTagged(tags)
+		}
+	}
+	if s.Containers != nil {
+		for ii := 0; ii < len(s.Containers); ii++ {
+			s.Containers[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func (m *InfraResource) CopyInFields(src *InfraResource) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1222,6 +1241,9 @@ func (m *InfraResource) DeepCopyIn(src *InfraResource) {
 // Helper method to check that enums have valid values
 func (m *InfraResource) ValidateEnums() error {
 	return nil
+}
+
+func (s *InfraResource) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *NodeInfo) CopyInFields(src *NodeInfo) int {
@@ -1296,6 +1318,9 @@ func (m *NodeInfo) ValidateEnums() error {
 	return nil
 }
 
+func (s *NodeInfo) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *ClusterInstRefKey) CopyInFields(src *ClusterInstRefKey) int {
 	changed := 0
 	if m.ClusterKey.Name != src.ClusterKey.Name {
@@ -1356,6 +1381,10 @@ func (m *ClusterInstRefKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *ClusterInstRefKey) ClearTagged(tags map[string]struct{}) {
+	s.ClusterKey.ClearTagged(tags)
 }
 
 func (m *AppInstRefKey) CopyInFields(src *AppInstRefKey) int {
@@ -1436,6 +1465,11 @@ func (m *AppInstRefKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppInstRefKey) ClearTagged(tags map[string]struct{}) {
+	s.AppKey.ClearTagged(tags)
+	s.ClusterInstKey.ClearTagged(tags)
+}
+
 func (m *InfraResources) CopyInFields(src *InfraResources) int {
 	changed := 0
 	if src.Vms != nil {
@@ -1467,6 +1501,14 @@ func (m *InfraResources) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *InfraResources) ClearTagged(tags map[string]struct{}) {
+	if s.Vms != nil {
+		for ii := 0; ii < len(s.Vms); ii++ {
+			s.Vms[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *InfraResourcesSnapshot) CopyInFields(src *InfraResourcesSnapshot) int {
@@ -1560,6 +1602,29 @@ func (m *InfraResourcesSnapshot) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *InfraResourcesSnapshot) ClearTagged(tags map[string]struct{}) {
+	if s.PlatformVms != nil {
+		for ii := 0; ii < len(s.PlatformVms); ii++ {
+			s.PlatformVms[ii].ClearTagged(tags)
+		}
+	}
+	if s.Info != nil {
+		for ii := 0; ii < len(s.Info); ii++ {
+			s.Info[ii].ClearTagged(tags)
+		}
+	}
+	if s.ClusterInsts != nil {
+		for ii := 0; ii < len(s.ClusterInsts); ii++ {
+			s.ClusterInsts[ii].ClearTagged(tags)
+		}
+	}
+	if s.VmAppInsts != nil {
+		for ii := 0; ii < len(s.VmAppInsts); ii++ {
+			s.VmAppInsts[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *ContainerInfo) Size() (n int) {
