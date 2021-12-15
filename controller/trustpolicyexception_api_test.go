@@ -76,8 +76,16 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
 	require.Nil(t, err)
 
+	// State related tests - begin
+	tpeData.Fields = []string{edgeproto.TrustPolicyExceptionFieldState}
+
 	// test that TPE update state to STATE_ACTIVE, passes
 	tpeData.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+
+	// test that TPE update state to STATE_REJECTED
+	tpeData.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED
 	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
 	require.Nil(t, err)
 
@@ -86,6 +94,9 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "New state must be either Active or Rejected")
+
+	// State related tests - end
+	tpeData.Fields = []string{}
 
 	// test that TPE create when specified CloudletPool does not exist, fails
 	tpeData.Key.CloudletPoolKey.Organization = "Mission Mars"
