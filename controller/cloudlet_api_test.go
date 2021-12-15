@@ -20,6 +20,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -184,6 +185,8 @@ func TestCloudletApi(t *testing.T) {
 	require.Nil(t, err)
 	testBadLat(t, ctx, &cl, []float64{90.1, -90.1, -1323213, 1232334}, "update", apis)
 	testBadLong(t, ctx, &cl, []float64{180.1, -180.1, -1323213, 1232334}, "update", apis)
+
+	testCloudletDnsLabel(t, ctx, apis)
 
 	// Resource Mapping tests
 	testResMapKeysApi(t, ctx, &cl, apis)
@@ -1006,4 +1009,56 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	require.Equal(t, 1, len(show.Data), "ShowCloudletsForAppDeployment DryRun=True")
 	// TODO: Increase cloudlets refs such that San Jose can no longer support the App deployment
 	dummy.Stop()
+}
+
+func testCloudletDnsLabel(t *testing.T, ctx context.Context, apis *AllApis) {
+	var err error
+
+	data := testutil.CloudletData()
+	// Check that dns segment ids are unique for cloudlets.
+	cl0 := data[0]
+	cl0.Key.Name = "abc"
+	cl0.Key.Organization = "def"
+	cl0.ResTagMap = nil
+	cl0.GpuConfig = edgeproto.GPUConfig{}
+
+	cl1 := data[1]
+	cl1.Key.Name = "ab,c"
+	cl1.Key.Organization = "d,ef"
+	cl1.ResTagMap = nil
+	cl1.GpuConfig = edgeproto.GPUConfig{}
+
+	dnsLabel0 := "abc-def"
+	dnsLabel1 := "abc-def1"
+
+	err = apis.cloudletApi.CreateCloudlet(&cl0, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	err = apis.cloudletApi.CreateCloudlet(&cl1, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	check0 := edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl0.Key, &check0))
+	require.Equal(t, dnsLabel0, check0.DnsLabel)
+
+	check1 := edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl1.Key, &check1))
+	require.Equal(t, dnsLabel1, check1.DnsLabel)
+
+	require.NotEqual(t, dnsLabel0, dnsLabel1)
+	// check that ids are present in database
+	require.True(t, testHasCloudletDnsLabel(apis.cloudletApi.sync.store, dnsLabel0))
+	require.True(t, testHasCloudletDnsLabel(apis.cloudletApi.sync.store, dnsLabel1))
+
+	// clean up
+	err = apis.cloudletApi.DeleteCloudlet(&cl0, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	err = apis.cloudletApi.DeleteCloudlet(&cl1, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	// check that ids are removed from database
+	require.False(t, testHasCloudletDnsLabel(apis.cloudletApi.sync.store, dnsLabel0))
+	require.False(t, testHasCloudletDnsLabel(apis.cloudletApi.sync.store, dnsLabel1))
+}
+
+func testHasCloudletDnsLabel(kvstore objstore.KVStore, id string) bool {
+	return testKVStoreHasKey(kvstore, edgeproto.CloudletDnsLabelDbKey(id))
 }

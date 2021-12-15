@@ -14,6 +14,7 @@ build:
 	protoc ${INCLUDE} --grpc-gateway_out=${BUILTIN}:. *.proto
 	protoc ${INCLUDE} --cmd_out=${BUILTIN}:../gencmd *.proto
 	protoc ${INCLUDE} --notify_out=${BUILTIN}:../notify *.proto
+	protoc ${INCLUDE} --controller_out=${BUILTIN}:../controller version.proto
 	protoc ${INCLUDE} --controller-test_out=${BUILTIN}:../controller *.proto
 
 doc: build
