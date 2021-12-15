@@ -231,10 +231,10 @@ func (key *AppKey) ValidateKey() error {
 		return errors.New("Invalid app name")
 	}
 	if !util.ValidName(key.Version) {
-		return errors.New("Invalid app version string")
+		return errors.New("Invalid app version")
 	}
 	if !util.ValidName(key.Organization) {
-		return errors.New("Invalid organization name")
+		return errors.New("Invalid app organization")
 	}
 	return nil
 }
@@ -431,10 +431,10 @@ func (s *CloudletInternal) Validate(fields map[string]struct{}) error {
 
 func (key *CloudletPoolKey) ValidateKey() error {
 	if !util.ValidName(key.Organization) {
-		return errors.New("Invalid organization name")
+		return errors.New("Invalid cloudlet pool organization")
 	}
 	if !util.ValidName(key.Name) {
-		return fmt.Errorf("Invalid Cloudlet Pool name %q", key.Name)
+		return fmt.Errorf("Invalid cloudlet pool name")
 	}
 	return nil
 }
@@ -1376,7 +1376,7 @@ func (key *TrustPolicyExceptionKey) ValidateKey() error {
 	}
 	if err := key.CloudletPoolKey.ValidateKey(); err != nil {
 		errstring := err.Error()
-		return fmt.Errorf("Invalid CloudletKey in TrustPolicyExceptionKey, " + errstring)
+		return fmt.Errorf("Invalid CloudletPoolKey in TrustPolicyExceptionKey, " + errstring)
 	}
 	if key.Name == "" {
 		return fmt.Errorf("TrustPolicyException name cannot be empty")
