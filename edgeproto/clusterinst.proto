@@ -50,17 +50,17 @@ message ClusterInst {
   // Auto is set to true when automatically created by back-end (internal use only)
   bool auto = 10 [(protogen.backend) = true];
   // State of the cluster instance
-  TrackedState state = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  TrackedState state = 4 [(protogen.backend) = true];
   // Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Override actions to CRM
-  CRMOverride crm_override = 6 [(protogen.hidetag) = "nocmp"];
+  CRMOverride crm_override = 6;
   // IP access type (RootLB Type)
   IpAccess ip_access = 7 [(protogen.backend) = true];
   // Allocated IP for dedicated access
   string allocated_ip = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Cloudlet specific node flavor
-  string node_flavor = 11 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
+  string node_flavor = 11 [(protogen.backend) = true];
   // Deployment type (kubernetes or docker)
   string deployment = 15 [(protogen.backend) = true];
   // Number of k8s masters (In case of docker deployment, this field is not required)
@@ -70,13 +70,13 @@ message ClusterInst {
   // status is used to reflect progress of creation or other events
   StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
   // Size of external volume to be attached to nodes.  This is for the root partition
-  uint64 external_volume_size = 17 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
+  uint64 external_volume_size = 17 [(protogen.backend) = true];
   // Auto scale policy name
   string auto_scale_policy = 18 [(protogen.refers_to) = "AutoScalePolicy"];
   // Optional Resource AZ if any
   string availability_zone = 19;
   // Optional resource specific image to launch
-  string image_name = 20  [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
+  string image_name = 20  [(protogen.backend) = true];
   // If ClusterInst is reservable
   bool reservable = 21;
   // For reservable MobiledgeX ClusterInsts, the current developer tenant
@@ -84,13 +84,13 @@ message ClusterInst {
   // Size of an optional shared volume to be mounted on the master
   uint64 shared_volume_size = 23;
   // Generic flavor for k8s master VM when worker nodes > 0
-  string master_node_flavor = 25 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
+  string master_node_flavor = 25 [(protogen.backend) = true];
   // Prevents cleanup of resources on failure within CRM, used for diagnostic purposes
-  bool skip_crm_cleanup_on_failure = 26 [(protogen.hidetag) = "nocmp"];
+  bool skip_crm_cleanup_on_failure = 26;
   // Optional Resources required by OS flavor if any
-  string opt_res = 27 [(protogen.hidetag) = "nocmp", (protogen.backend) = true];
+  string opt_res = 27 [(protogen.backend) = true];
   // Resources used by cluster
-  InfraResources resources = 28 [(protogen.hidetag) = "nocmp", (protogen.backend) = true, (gogoproto.nullable) = false];
+  InfraResources resources = 28 [(protogen.backend) = true, (gogoproto.nullable) = false];
   // Created at time
   distributed_match_engine.Timestamp created_at = 29 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
   // Updated at time
@@ -102,7 +102,7 @@ message ClusterInst {
   // networks to connect to
   repeated string networks = 33 [(protogen.refers_to) = "Network"];
   // Preparing to be deleted
-  bool delete_prepare = 34 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 34 [(protogen.backend) = true]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

@@ -1,4 +1,4 @@
-status: FindFound
+status: Found
 fqdn: acmeappcosomeapplication110.reservable0.azure-cloud-4.azure.localtest.net
 ports:
 - proto: Tcp

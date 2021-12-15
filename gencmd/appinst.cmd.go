@@ -37,15 +37,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	for i0 := 0; i0 < len(in.MappedPorts); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Errors = nil
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
-	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -63,24 +54,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.HealthCheck = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.PowerState = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.ExternalVolumeSize = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.AvailabilityZone = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.VmFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.OptRes = ""
-	}
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -96,9 +69,6 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Uri = ""
 	}
 }
 

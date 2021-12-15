@@ -218,6 +218,9 @@ func (m *ClusterKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *ClusterKey) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *ClusterKey) Size() (n int) {
 	if m == nil {
 		return 0

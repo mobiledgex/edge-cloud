@@ -44,7 +44,7 @@ message Flavor {
   // form: $resource=$kind:[$alias]$count ex: optresmap=gpu=vgpu:nvidia-63:1
   map<string, string> opt_res_map = 6;
   // Preparing to be deleted
-  bool delete_prepare = 7 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 7 [(protogen.backend) = true]; 
 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

@@ -25,19 +25,6 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func FlavorHideTags(in *edgeproto.Flavor) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
-	}
-}
-
 var FlavorApiCmd edgeproto.FlavorApiClient
 
 var CreateFlavorCmd = &cli.Command{
@@ -264,7 +251,6 @@ func ShowFlavor(c *cli.Command, in *edgeproto.Flavor) error {
 			}
 			return fmt.Errorf("ShowFlavor recv failed: %s", errstr)
 		}
-		FlavorHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
