@@ -2338,6 +2338,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 
 	//Generate enum values validation
 	m.generateEnumValidation(message, desc)
+	m.generateClearTagged(desc)
 
 	visited := make([]*generator.Descriptor, 0)
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
@@ -2559,6 +2560,85 @@ func (m *mex) generateHideTagFields(parents []string, desc *generator.Descriptor
 			m.generateHideTagFields(append(parents, name),
 				subDesc, append(visited, desc))
 		}
+	}
+}
+
+func (m *mex) generateClearTagged(desc *generator.Descriptor) {
+	msgName := strings.Join(desc.TypeName(), "_")
+	m.P("func (s *", msgName, ") ClearTagged(tags map[string]struct{}) {")
+	visited := make([]*generator.Descriptor, 0)
+	srcPkg := m.support.GetPackageName(desc)
+	m.generateClearTaggedFields(srcPkg, make([]string, 0), desc, visited)
+	m.P("}")
+	m.P()
+}
+
+func (m *mex) generateClearTaggedFields(srcPkg string, parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	if gensupport.WasVisited(desc, visited) {
+		return
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if field.Type == nil || field.OneofIndex != nil {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		hierField := strings.Join(append(parents, name), ".")
+		mapType := m.support.GetMapType(m.gen, field)
+		repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
+
+		tag := GetHideTag(field)
+		if tag == "" && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && mapType == nil {
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			if srcPkg == m.support.GetPackageName(subDesc) {
+				// sub message should have ClearTags() defined
+				nilCheck := false
+				if repeated || gogoproto.IsNullable(field) {
+					m.P("if s.", hierField, " != nil {")
+					nilCheck = true
+				}
+				if repeated {
+					m.P("for ii := 0; ii < len(s.", hierField, "); ii++ {")
+					m.P("s.", hierField, "[ii].ClearTagged(tags)")
+					m.P("}")
+				} else {
+					m.P("s.", hierField, ".ClearTagged(tags)")
+				}
+				if nilCheck {
+					m.P("}")
+				}
+			} else {
+				// recurse
+				m.generateClearTaggedFields(srcPkg, append(parents, name), subDesc, append(visited, desc))
+			}
+			continue
+		}
+		if tag == "" {
+			continue
+		}
+		m.P("if _, found := tags[\"", tag, "\"]; found {")
+
+		// clear field
+		nilval := "0"
+		if repeated || mapType != nil {
+			nilval = "nil"
+		} else {
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+				if gogoproto.IsNullable(field) {
+					nilval = "nil"
+				} else {
+					subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+					nilval = m.support.FQTypeName(m.gen, subDesc) + "{}"
+				}
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				nilval = "\"\""
+			case descriptor.FieldDescriptorProto_TYPE_BOOL:
+				nilval = "false"
+			}
+		}
+		m.P("s.", hierField, " = ", nilval)
+		m.P("}")
 	}
 }
 

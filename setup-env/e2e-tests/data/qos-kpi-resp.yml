@@ -1,132 +1,42 @@
-status: RsSuccess
+status: Success
 positionresults:
 - positionid: 1
   gpslocation:
     latitude: 36.01
     longitude: -96.01
-  dluserthroughputmin: 10.040705
-  dluserthroughputavg: 55.703682
-  dluserthroughputmax: 100.23314
-  uluserthroughputmin: 4.1802945
-  uluserthroughputavg: 33.293118
-  uluserthroughputmax: 55.596127
-  latencymin: 29.60092
-  latencyavg: 40.549385
-  latencymax: 61.071667
 - positionid: 2
   gpslocation:
     latitude: 37.02
     longitude: -97.02
-  dluserthroughputmin: 6.3939757
-  dluserthroughputavg: 42.3422
-  dluserthroughputmax: 107.86454
-  uluserthroughputmin: 6.744058
-  uluserthroughputavg: 34.76275
-  uluserthroughputmax: 50.23063
-  latencymin: 24.200361
-  latencyavg: 43.08106
-  latencymax: 57.678886
 - positionid: 3
   gpslocation:
     latitude: 36.03
     longitude: -96.03
-  dluserthroughputmin: 7.2381563
-  dluserthroughputavg: 57.121708
-  dluserthroughputmax: 91.69856
-  uluserthroughputmin: 4.5843616
-  uluserthroughputavg: 27.566265
-  uluserthroughputmax: 49.06506
-  latencymin: 14.142728
-  latencyavg: 46.15352
-  latencymax: 67.69083
 - positionid: 4
   gpslocation:
     latitude: 37.04
     longitude: -97.04
-  dluserthroughputmin: 9.511803
-  dluserthroughputavg: 45.520813
-  dluserthroughputmax: 98.05858
-  uluserthroughputmin: 6.975525
-  uluserthroughputavg: 25.84844
-  uluserthroughputmax: 40.385693
-  latencymin: 27.396536
-  latencyavg: 42.343605
-  latencymax: 67.857376
 - positionid: 5
   gpslocation:
     latitude: 36.05
     longitude: -96.05
-  dluserthroughputmin: 10.095936
-  dluserthroughputavg: 40.841423
-  dluserthroughputmax: 107.33231
-  uluserthroughputmin: 4.4295993
-  uluserthroughputavg: 19.433018
-  uluserthroughputmax: 41.899616
-  latencymin: 23.909182
-  latencyavg: 47.795094
-  latencymax: 50.316475
 - positionid: 6
   gpslocation:
     latitude: 37.06
     longitude: -97.07
-  dluserthroughputmin: 2.2782733
-  dluserthroughputavg: 56.015877
-  dluserthroughputmax: 98.65322
-  uluserthroughputmin: 2.4944189
-  uluserthroughputavg: 33.374348
-  uluserthroughputmax: 51.91212
-  latencymin: 13.860725
-  latencyavg: 32.969578
-  latencymax: 53.498714
 - positionid: 7
   gpslocation:
     latitude: 36.07
     longitude: -96.07
-  dluserthroughputmin: 9.591034
-  dluserthroughputavg: 50.53829
-  dluserthroughputmax: 109.067665
-  uluserthroughputmin: 0.94551843
-  uluserthroughputavg: 22.959167
-  uluserthroughputmax: 50.426052
-  latencymin: 11.4367895
-  latencyavg: 44.32162
-  latencymax: 53.90544
 - positionid: 8
   gpslocation:
     latitude: 37.08
     longitude: -97.08
-  dluserthroughputmin: 10.773546
-  dluserthroughputavg: 55.550232
-  dluserthroughputmax: 108.011284
-  uluserthroughputmin: 9.128075
-  uluserthroughputavg: 18.140547
-  uluserthroughputmax: 42.663193
-  latencymin: 28.611214
-  latencyavg: 31.464472
-  latencymax: 61.02557
 - positionid: 9
   gpslocation:
     latitude: 36.09
     longitude: -96.09
-  dluserthroughputmin: 4.7228093
-  dluserthroughputavg: 53.7247
-  dluserthroughputmax: 92.248184
-  uluserthroughputmin: 10.2024
-  uluserthroughputavg: 25.090645
-  uluserthroughputmax: 45.610474
-  latencymin: 17.615461
-  latencyavg: 40.539238
-  latencymax: 64.07035
 - positionid: 10
   gpslocation:
     latitude: 37.1
     longitude: -97.1
-  dluserthroughputmin: 7.0671496
-  dluserthroughputavg: 51.01413
-  dluserthroughputmax: 91.53756
-  uluserthroughputmin: 7.5464416
-  uluserthroughputavg: 26.667171
-  uluserthroughputmax: 54.02499
-  latencymin: 19.106745
-  latencyavg: 47.990433
-  latencymax: 64.583115

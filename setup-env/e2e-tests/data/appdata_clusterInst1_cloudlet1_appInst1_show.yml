@@ -69,18 +69,19 @@ cloudlets:
     longitude: -91
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: DefaultPlatformFlavor
   physicalname: dmuus-cloud-1
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
 cloudletinfos:
 - key:
     organization: dmuus
     name: dmuus-cloud-1
   state: Ready
-  notifyid: 6
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -93,9 +94,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -129,6 +127,7 @@ cloudletinfos:
     - clusterkey:
         name: SmallCluster
       organization: AcmeAppCo
+  trustpolicystate: NotPresent
 clusterinsts:
 - key:
     clusterkey:
@@ -140,10 +139,23 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Shared
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-dmuus-cloud-1-smallcluster-acmeappco
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-1-smallcluster-acmeappco
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
 apps:
 - key:
     organization: AcmeAppCo
@@ -155,6 +167,73 @@ apps:
   defaultflavor:
     name: x1.small
   deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-tcp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      - name: tcp443
+        protocol: TCP
+        port: 443
+        targetPort: 443
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-udp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10002
+        protocol: UDP
+        port: 10002
+        targetPort: 10002
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: someapplication110-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: someapplication11.0
+      template:
+        metadata:
+          labels:
+            run: someapplication11.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: registry.mobiledgex.net
+          containers:
+          - name: someapplication110
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+            - containerPort: 10002
+              protocol: UDP
+  deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
 - key:
     organization: MobiledgeX
@@ -167,6 +246,7 @@ apps:
     name: x1.small
   annotations: version=9.4.10
   deployment: helm
+  delopt: AutoDelete
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -242,9 +322,13 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
+  state: Ready
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
@@ -268,6 +352,10 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
 appinstrefs:
 - key:

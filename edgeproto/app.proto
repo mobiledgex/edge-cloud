@@ -171,13 +171,13 @@ message App {
   // Deployment manifest is the deployment specific manifest file/config.
   // For docker deployment, this can be a docker-compose or docker run file.
   // For kubernetes deployment, this can be a kubernetes yaml or helm chart file.
-  string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string deployment_manifest = 16 [(protogen.backend) = true];
   // Deployment generator target to generate a basic deployment manifest
-  string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  string deployment_generator = 17 [(protogen.backend) = true];
   // Android package name used to match the App name from the Android package
   string android_package_name = 18;
   // Override actions to Controller
-  DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
+  DeleteType del_opt = 20;
   // Customization files passed through to implementing services
   repeated ConfigFile configs = 21;
   // Option to run App on all nodes of the cluster
@@ -198,7 +198,7 @@ message App {
   // (Deprecated) Access type
   AccessType access_type = 29; 
   // Preparing to be deleted
-  bool delete_prepare = 31 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  bool delete_prepare = 31 [(protogen.backend) = true];
   // Auto provisioning policy names, may be specified multiple times
   repeated string auto_prov_policies = 32 [(protogen.refers_to) = "AutoProvPolicy"];
   // Delimiter to be used for template parsing, defaults to "[[ ]]"

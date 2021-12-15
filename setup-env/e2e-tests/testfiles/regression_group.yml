@@ -38,7 +38,7 @@ tests:
     api: rest
   - includefile: get_pos_qos.yml
   - includefile: trustpol_add_update.yml
-  - includefile: trustpolexception_add_update.yml
+#  - includefile: trustpolexception_add_update.yml
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 

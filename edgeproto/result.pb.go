@@ -152,6 +152,9 @@ func (m *Result) ValidateEnums() error {
 	return nil
 }
 
+func (s *Result) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *Result) Size() (n int) {
 	if m == nil {
 		return 0

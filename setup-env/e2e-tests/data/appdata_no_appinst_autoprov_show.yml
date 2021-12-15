@@ -68,10 +68,13 @@ cloudlets:
     longitude: -99
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.small
   physicalname: att-cloud-1
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
 - key:
     organization: azure
@@ -81,10 +84,13 @@ cloudlets:
     longitude: -91
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.small
   physicalname: azure-cloud-4
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
 - key:
     organization: gcp
@@ -94,10 +100,13 @@ cloudlets:
     longitude: -95
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.small
   physicalname: gcp-cloud-5
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
@@ -107,10 +116,13 @@ cloudlets:
     longitude: -91
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.small
   physicalname: dmuus-cloud-1
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
 - key:
     organization: dmuus
@@ -120,18 +132,19 @@ cloudlets:
     longitude: -95
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.small
   physicalname: dmuus-cloud-2
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
 cloudletinfos:
 - key:
     organization: att
     name: att-cloud-1
   state: Ready
-  notifyid: 5
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -144,9 +157,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -176,12 +186,11 @@ cloudletinfos:
       inframaxvalue: 30
     - name: Instances
       value: 2
+  trustpolicystate: NotPresent
 - key:
     organization: azure
     name: azure-cloud-4
   state: Ready
-  notifyid: 3
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -194,9 +203,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -226,12 +232,11 @@ cloudletinfos:
       inframaxvalue: 30
     - name: Instances
       value: 2
+  trustpolicystate: NotPresent
 - key:
     organization: gcp
     name: gcp-cloud-5
   state: Ready
-  notifyid: 4
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -244,9 +249,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -276,12 +278,11 @@ cloudletinfos:
       inframaxvalue: 30
     - name: Instances
       value: 2
+  trustpolicystate: NotPresent
 - key:
     organization: dmuus
     name: dmuus-cloud-1
   state: Ready
-  notifyid: 1
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -294,9 +295,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -333,12 +331,11 @@ cloudletinfos:
     - clusterkey:
         name: SmallCluster
       organization: AcmeAppCo
+  trustpolicystate: NotPresent
 - key:
     organization: dmuus
     name: dmuus-cloud-2
   state: Ready
-  notifyid: 2
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -351,9 +348,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -390,6 +384,7 @@ cloudletinfos:
     - clusterkey:
         name: SmallCluster
       organization: AcmeAppCo
+  trustpolicystate: NotPresent
 autoprovpolicies:
 - key:
     organization: AcmeAppCo
@@ -432,11 +427,28 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Dedicated
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
   reservable: true
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-dmuus-cloud-1-reservablecluster-mobiledgex
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-1-reservablecluster-mobiledgex
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: reservablecluster.dmuus-cloud-1.dmuus.fake.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: ReservableCluster2
@@ -447,12 +459,29 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Dedicated
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
   reservable: true
   reservedby: AcmeAppCo
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-dmuus-cloud-2-reservablecluster2-mobiledgex
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-2-reservablecluster2-mobiledgex
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: reservablecluster2.dmuus-cloud-2.dmuus.fake.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: SmallCluster
@@ -463,10 +492,27 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Dedicated
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-dmuus-cloud-1-smallcluster-acmeappco
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-1-smallcluster-acmeappco
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: smallcluster.dmuus-cloud-1.dmuus.fake.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
 - key:
     clusterkey:
       name: SmallCluster
@@ -477,10 +523,23 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Shared
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-dmuus-cloud-2-smallcluster-acmeappco
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-dmuus-cloud-2-smallcluster-acmeappco
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
 apps:
 - key:
     organization: AcmeAppCo
@@ -492,6 +551,49 @@ apps:
   defaultflavor:
     name: x1.small
   deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: autoprovapp10-tcp
+      labels:
+        run: autoprovapp1.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp81
+        protocol: TCP
+        port: 81
+        targetPort: 81
+      selector:
+        run: autoprovapp1.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: autoprovapp10-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: autoprovapp1.0
+      template:
+        metadata:
+          labels:
+            run: autoprovapp1.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: registry.mobiledgex.net
+          containers:
+          - name: autoprovapp10
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 81
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
   officialfqdn: autoprovapp.acmeappco.com
   autoprovpolicy: autoprov1
   accesstype: LoadBalancer
@@ -505,6 +607,49 @@ apps:
   defaultflavor:
     name: x1.small
   deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: autoprovapp210-tcp
+      labels:
+        run: autoprovapp21.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp82
+        protocol: TCP
+        port: 82
+        targetPort: 82
+      selector:
+        run: autoprovapp21.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: autoprovapp210-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: autoprovapp21.0
+      template:
+        metadata:
+          labels:
+            run: autoprovapp21.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: registry.mobiledgex.net
+          containers:
+          - name: autoprovapp210
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 82
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
   officialfqdn: autoprovapp2.acmeappco.com
   autoprovpolicy: autoprov2
   accesstype: LoadBalancer
@@ -528,6 +673,73 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-tcp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      - name: tcp443
+        protocol: TCP
+        port: 443
+        targetPort: 443
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-udp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10002
+        protocol: UDP
+        port: 10002
+        targetPort: 10002
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: someapplication110-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: someapplication11.0
+      template:
+        metadata:
+          labels:
+            run: someapplication11.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: registry.mobiledgex.net
+          containers:
+          - name: someapplication110
+            image: registry.mobiledgex.net/mobiledgex_AcmeAppCo/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+            - containerPort: 10002
+              protocol: UDP
+  deploymentgenerator: kubernetes-basic
   androidpackagename: com.acme.someapplication1
   officialfqdn: someapplication1.acmeappco.com
   accesstype: LoadBalancer
@@ -542,6 +754,7 @@ apps:
     name: x1.small
   annotations: version=9.4.10
   deployment: helm
+  delopt: AutoDelete
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -597,6 +810,49 @@ apps:
   defaultflavor:
     name: x1.small
   deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: platosenablinglayer10-tcp
+      labels:
+        run: platosenablinglayer1.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp64000
+        protocol: TCP
+        port: 64000
+        targetPort: 64000
+      selector:
+        run: platosenablinglayer1.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: platosenablinglayer10-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: platosenablinglayer1.0
+      template:
+        metadata:
+          labels:
+            run: platosenablinglayer1.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: registry.mobiledgex.net
+          containers:
+          - name: platosenablinglayer10
+            image: registry.mobiledgex.net/dummyvalue
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 64000
+              protocol: TCP
+  deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
 appinstances:
 - key:
@@ -622,9 +878,13 @@ appinstances:
     publicport: 81
   flavor:
     name: x1.small
+  state: Ready
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   realclustername: ReservableCluster2
   uniqueid: acmeappcoautoprovapp10-autocluster-autoprov-dmuus-cloud-2-dmuus
 - key:
@@ -649,6 +909,10 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservablecluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
@@ -672,6 +936,10 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservablecluster2-dmuus-cloud-2-dmuus
 - key:
     appkey:
@@ -695,6 +963,10 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
@@ -718,6 +990,10 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-2-dmuus
 appinstrefs:
 - key:

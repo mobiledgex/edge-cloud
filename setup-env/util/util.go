@@ -14,6 +14,8 @@ import (
 	"net/http/cookiejar"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -21,8 +23,6 @@ import (
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	influxclient "github.com/influxdata/influxdb/client/v2"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -44,11 +44,9 @@ type TestSpec struct {
 }
 
 type CompareYaml struct {
-	Yaml1     string            `json:"yaml1" yaml:"yaml1"`
-	Yaml2     string            `json:"yaml2" yaml:"yaml2"`
-	FileType  string            `json:"filetype" yaml:"filetype"`
-	Yaml1Vars map[string]string `json:"yaml1vars" yaml:"yaml1vars"`
-	Yaml2Vars map[string]string `json:"yaml2vars" yaml:"yaml2vars"`
+	Yaml1    string `json:"yaml1" yaml:"yaml1"`
+	Yaml2    string `json:"yaml2" yaml:"yaml2"`
+	FileType string `json:"filetype" yaml:"filetype"`
 }
 
 var Deployment DeploymentData
@@ -517,26 +515,10 @@ func ValidateReplacedVars() ReadYamlOp {
 	}
 }
 
-func (c *CompareYaml) GetReadYamlOps() ([]ReadYamlOp, []ReadYamlOp) {
-	yaml1Ops := []ReadYamlOp{}
-	yaml2Ops := []ReadYamlOp{}
-	if c.Yaml1Vars != nil {
-		yaml1Ops = append(yaml1Ops, WithVars(c.Yaml1Vars))
-	}
-	if c.Yaml2Vars != nil {
-		yaml2Ops = append(yaml2Ops, WithVars(c.Yaml2Vars))
-	}
-	return yaml1Ops, yaml2Ops
-}
-
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
-func CompareYamlFiles(name string, compare *CompareYaml) bool {
-	firstYamlFile := compare.Yaml1
-	secondYamlFile := compare.Yaml2
-	fileType := compare.FileType
-
+func CompareYamlFiles(name string, actions []string, compare *CompareYaml) bool {
 	PrintStepBanner("running compareYamlFiles")
 
 	compareInfo, err := yaml.Marshal(compare)
@@ -544,257 +526,35 @@ func CompareYamlFiles(name string, compare *CompareYaml) bool {
 		log.Printf("Failed to marshal compare info, %v\n", err)
 		return false
 	}
-	log.Printf("Comparing for %s:\n%s", name, string(compareInfo))
+	log.Printf("Name: %s", name)
+	log.Printf("Actions: %s\n%s", strings.Join(actions, ", "), string(compareInfo))
 
-	var err1 error
-	var err2 error
-	var y1 interface{}
-	var y2 interface{}
-	copts := []cmp.Option{}
-	yaml1Ops, yaml2Ops := compare.GetReadYamlOps()
-
-	if fileType == "appdata" || fileType == "appdata-showcmp" {
-		//for appdata, use the AllData type so we can sort it
-		var a1 edgeproto.AllData
-		var a2 edgeproto.AllData
-
-		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
-
-		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
-		if fileType == "appdata" {
-			copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
-		}
-		if fileType == "appdata-showcmp" {
-			// need to clear controller field of CloudletInfo
-			// because it depends on local hostname.
-			clearCloudletInfoNocmp(&a1)
-			clearCloudletInfoNocmp(&a2)
-		}
-
-		y1 = a1
-		y2 = a2
-	} else if fileType == "appdata-output" {
-		var a1 testutil.AllDataOut
-		var a2 testutil.AllDataOut
-
-		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
-		// remove results for AppInst/ClusterInst/Cloudlet because
-		// they are non-deterministic
-		ClearAppDataOutputStatus(&a1)
-		ClearAppDataOutputStatus(&a2)
-
-		y1 = a1
-		y2 = a2
-	} else if fileType == "findcloudlet" {
-		var f1 dmeproto.FindCloudletReply
-		var f2 dmeproto.FindCloudletReply
-
-		err1 = ReadYamlFile(firstYamlFile, &f1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &f2, yaml2Ops...)
-
-		// Ignore EdgeEventsCookie
-		copts = []cmp.Option{
-			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
-		}
-
-		//publicport is variable so we nil it out for comparison purposes.
-		clearFindCloudletPorts(&f1)
-		clearFindCloudletPorts(&f2)
-
-		y1 = f1
-		y2 = f2
-	} else if fileType == "findcloudlets" {
-		var f1 []*dmeproto.FindCloudletReply
-		var f2 []*dmeproto.FindCloudletReply
-
-		err1 = ReadYamlFile(firstYamlFile, &f1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &f2, yaml2Ops...)
-
-		// Ignore EdgeEventsCookie
-		copts = []cmp.Option{
-			cmpopts.IgnoreFields(dmeproto.FindCloudletReply{}, "EdgeEventsCookie"),
-		}
-
-		//publicport is variable so we nil it out for comparison purposes.
-		for _, reply := range f1 {
-			clearFindCloudletPorts(reply)
-		}
-		for _, reply := range f2 {
-			clearFindCloudletPorts(reply)
-		}
-
-		y1 = f1
-		y2 = f2
-	} else if fileType == "getappinstlist" {
-		var a1 *dmeproto.AppInstListReply
-		var a2 *dmeproto.AppInstListReply
-
-		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &a2, yaml1Ops...)
-
-		clearAppInstEdgeEventsCookies(a1)
-		clearAppInstEdgeEventsCookies(a2)
-
-		y1 = a1
-		y2 = a2
-	} else if fileType == "getqospositionkpi" {
-		var q1 dmeproto.QosPositionKpiReply
-		var q2 dmeproto.QosPositionKpiReply
-
-		err1 = ReadYamlFile(firstYamlFile, &q1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &q2, yaml1Ops...)
-
-		qs := []dmeproto.QosPositionKpiReply{q1, q2}
-		for _, q := range qs {
-			for _, p := range q.PositionResults {
-				// nil the actual values as they are unpredictable.  We will just
-				//compare GPS locations vs positionIds
-				p.LatencyMin = 0
-				p.LatencyMax = 0
-				p.LatencyAvg = 0
-				p.DluserthroughputMin = 0
-				p.DluserthroughputMax = 0
-				p.DluserthroughputAvg = 0
-				p.UluserthroughputMin = 0
-				p.UluserthroughputMax = 0
-				p.UluserthroughputAvg = 0
-			}
-		}
-
-		y1 = q1
-		y2 = q2
-	} else if fileType == "influxdata" {
-		var r1 []influxclient.Result
-		var r2 []influxclient.Result
-
-		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
-		clearInfluxTime(r1)
-		clearInfluxTime(r2)
-
-		y1 = r1
-		y2 = r2
-	} else if fileType == "deviceshow" {
-		var r1 edgeproto.DeviceData
-		var r2 edgeproto.DeviceData
-
-		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
-		copts = []cmp.Option{
-			edgeproto.IgnoreDeviceFields("nocmp"),
-		}
-		y1 = r1
-		y2 = r2
-	} else if fileType == "debugoutput" {
-		var r1 testutil.DebugDataOut
-		var r2 testutil.DebugDataOut
-
-		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
-		copts = append(copts, edgeproto.IgnoreDebugReplyFields("nocmp"))
-		y1 = r1
-		y2 = r2
-	} else if fileType == "nodedata" {
-		var r1 edgeproto.NodeData
-		var r2 edgeproto.NodeData
-
-		err1 = ReadYamlFile(firstYamlFile, &r1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &r2, yaml2Ops...)
-		// Only compare keys of properties, since Node Property values
-		// are not constant.
-		for ii, _ := range r1.Nodes {
-			ClearMapValues(r1.Nodes[ii].Properties)
-		}
-		for ii, _ := range r2.Nodes {
-			ClearMapValues(r2.Nodes[ii].Properties)
-		}
-		copts = []cmp.Option{
-			edgeproto.IgnoreNodeFields("nocmp"),
-		}
-		y1 = r1
-		y2 = r2
-	} else if fileType == "appstream" {
-		//for appdata, use the AllData type so we can sort it
-		var a1 testutil.AllDataStreamOut
-		var a2 testutil.AllDataStreamOut
-
-		err1 = ReadYamlFile(firstYamlFile, &a1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &a2, yaml2Ops...)
-
-		y1 = a1
-		y2 = a2
-	} else if fileType == "raw" {
-		var dat1, dat2 string
-		dat1, err1 = ReadFile(firstYamlFile, compare.Yaml1Vars)
-		dat2, err2 = ReadFile(secondYamlFile, compare.Yaml2Vars)
-		y1 = dat1
-		y2 = dat2
-	} else if fileType == "streamedgeevent" {
-		var s1 dmeproto.ServerEdgeEvent
-		var s2 dmeproto.ServerEdgeEvent
-
-		err1 = ReadYamlFile(firstYamlFile, &s1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &s2, yaml2Ops...)
-
-		// Ignore dynamic fields (timestamp in statistics, and edgeeventscookie + public ports in newcloudlet)
-		ss := []dmeproto.ServerEdgeEvent{s1, s2}
-		for _, s := range ss {
-			if s.Statistics != nil {
-				s.Statistics.Timestamp.Seconds = 0
-				s.Statistics.Timestamp.Nanos = 0
-			}
-			if s.NewCloudlet != nil {
-				s.NewCloudlet.EdgeEventsCookie = ""
-				for _, port := range s.NewCloudlet.Ports {
-					port.PublicPort = 0
-				}
-			}
-		}
-		y1 = s1
-		y2 = s2
-	} else if fileType == "ratelimitsettings" {
-		var r1 edgeproto.RateLimitSettingsData
-		var r2 edgeproto.RateLimitSettingsData
-		err1 = ReadYamlFile(firstYamlFile, &r1)
-		err2 = ReadYamlFile(secondYamlFile, &r2)
-		y1 = r1
-		y2 = r2
-	} else if fileType == "alerts" {
-		var a1 []edgeproto.Alert
-		var a2 []edgeproto.Alert
-		err1 = ReadYamlFile(firstYamlFile, &a1)
-		err2 = ReadYamlFile(secondYamlFile, &a2)
-		y1 = a1
-		y2 = a2
-		sort.Slice(a1, func(i, j int) bool {
-			return fmt.Sprint(a1[i].Labels) < fmt.Sprint(a1[j].Labels)
-		})
-		sort.Slice(a2, func(i, j int) bool {
-			return fmt.Sprint(a2[i].Labels) < fmt.Sprint(a2[j].Labels)
-		})
-		copts = append(copts, cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}))
-		copts = append(copts, edgeproto.IgnoreAlertFields("nocmp"))
-
+	// figure out which file is the expected data based on the path
+	diffArgs := []string{"-au"}
+	expectedFile := ""
+	if strings.Contains(compare.Yaml1, "github.com/mobiledgex/") {
+		diffArgs = append(diffArgs, compare.Yaml1, compare.Yaml2)
+		expectedFile = compare.Yaml1
 	} else {
-		err1 = ReadYamlFile(firstYamlFile, &y1, yaml1Ops...)
-		err2 = ReadYamlFile(secondYamlFile, &y2, yaml2Ops...)
+		diffArgs = append(diffArgs, compare.Yaml2, compare.Yaml1)
+		expectedFile = compare.Yaml2
 	}
-	if err1 != nil {
-		log.Printf("Error in reading yaml file %v -- %v\n", firstYamlFile, err1)
-		return false
-	}
-	if err2 != nil {
-		log.Printf("Error in reading yaml file %v -- %v\n", secondYamlFile, err2)
-		return false
-	}
+	runDir := filepath.Dir(expectedFile)
+	diffFile := expectedFile + ".patch"
 
-	if !cmp.Equal(y1, y2, copts...) {
+	cmd := exec.Command("diff", diffArgs...)
+	cmd.Dir = runDir
+	out, err := cmd.CombinedOutput()
+	if err != nil {
 		log.Println("Comparison fail")
-		log.Printf(cmp.Diff(y1, y2, copts...))
+		log.Print(string(out))
+		err := ioutil.WriteFile(diffFile, out, 0644)
+		if err != nil {
+			log.Printf("Failed to write diff output to %s: %v", diffFile, err)
+		}
 		return false
 	}
+	os.Remove(diffFile)
 	log.Println("Comparison success")
 	return true
 }
@@ -851,7 +611,7 @@ func CallRESTPost(httpAddr string, client *http.Client, pb proto.Message, reply 
 	return nil
 }
 
-func clearInfluxTime(results []influxclient.Result) {
+func FilterInfluxTime(results []influxclient.Result) {
 	for ii, _ := range results {
 		for jj, _ := range results[ii].Series {
 			row := &results[ii].Series[jj]
@@ -870,7 +630,7 @@ func clearInfluxTime(results []influxclient.Result) {
 	}
 }
 
-func clearCloudletInfoNocmp(data *edgeproto.AllData) {
+func FilterCloudletInfoNocmp(data *edgeproto.AllData) {
 	for ii, _ := range data.CloudletInfos {
 		data.CloudletInfos[ii].Controller = ""
 		data.CloudletInfos[ii].NotifyId = 0
@@ -883,13 +643,11 @@ func clearCloudletInfoNocmp(data *edgeproto.AllData) {
 	}
 }
 
-func clearFindCloudletPorts(reply *dmeproto.FindCloudletReply) {
-	for _, p := range reply.Ports {
-		p.PublicPort = 0
-	}
+func FilterFindCloudletReply(reply *dmeproto.FindCloudletReply) {
+	reply.EdgeEventsCookie = ""
 }
 
-func clearAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
+func FilterAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
 	for _, cloudlet := range appInstReply.Cloudlets {
 		for _, appinst := range cloudlet.Appinstances {
 			appinst.EdgeEventsCookie = ""
@@ -898,10 +656,66 @@ func clearAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
 
 }
 
-func ClearAppDataOutputStatus(output *testutil.AllDataOut) {
+func FilterQosPositionKpiReply(reply *dmeproto.QosPositionKpiReply) {
+	for _, p := range reply.PositionResults {
+		// nil the actual values as they are unpredictable.  We will just
+		//compare GPS locations vs positionIds
+		p.LatencyMin = 0
+		p.LatencyMax = 0
+		p.LatencyAvg = 0
+		p.DluserthroughputMin = 0
+		p.DluserthroughputMax = 0
+		p.DluserthroughputAvg = 0
+		p.UluserthroughputMin = 0
+		p.UluserthroughputMax = 0
+		p.UluserthroughputAvg = 0
+	}
+}
+
+func FilterServerEdgeEvent(event *dmeproto.ServerEdgeEvent) {
+	if event.Statistics != nil {
+		event.Statistics.Timestamp.Seconds = 0
+		event.Statistics.Timestamp.Nanos = 0
+	}
+	if event.NewCloudlet != nil {
+		event.NewCloudlet.EdgeEventsCookie = ""
+		//for ii := range event.NewCloudlet.Ports {
+		//	event.NewCloudlet.Ports[ii].PublicPort = 0
+		//}
+	}
+}
+
+func FilterAlerts(alerts []edgeproto.Alert) {
+	sort.Slice(alerts, func(i, j int) bool {
+		return fmt.Sprint(alerts[i].Labels) < fmt.Sprint(alerts[j].Labels)
+	})
+	clearTags := map[string]struct{}{
+		"nocmp":     struct{}{},
+		"timestamp": struct{}{},
+	}
+	for ii := range alerts {
+		alerts[ii].ClearTagged(clearTags)
+	}
+}
+
+func FilterAppDataOutputStatus(output *testutil.AllDataOut) {
 	output.Cloudlets = testutil.FilterStreamResults(output.Cloudlets)
 	output.ClusterInsts = testutil.FilterStreamResults(output.ClusterInsts)
 	output.AppInstances = testutil.FilterStreamResults(output.AppInstances)
+}
+
+func FilterNodeData(data *edgeproto.NodeData) {
+	clearTags := map[string]struct{}{
+		"nocmp":     struct{}{},
+		"timestamp": struct{}{},
+	}
+	data.Sort()
+	data.ClearTagged(clearTags)
+	for ii, _ := range data.Nodes {
+		// Only compare keys of properties, since Node Property
+		//  values are not constant.
+		ClearMapValues(data.Nodes[ii].Properties)
+	}
 }
 
 // clears map values so that only key names are compared
@@ -960,4 +774,121 @@ func ReadConsoleURL(consoleUrl string, cookies []*http.Cookie) (string, error) {
 		}
 	}
 	return string(contents), nil
+}
+
+// Apply a transform to the value.
+type TransformFunc func(v reflect.Value)
+
+type Transformer struct {
+	transforms []*transform
+}
+
+type transform struct {
+	targetType  reflect.Type
+	targetField string
+	txFunc      TransformFunc
+}
+
+func NewTransformer() *Transformer {
+	t := Transformer{}
+	t.transforms = []*transform{}
+	return &t
+}
+
+func (s *Transformer) AddTransform(target reflect.Type, field string, fn TransformFunc) {
+	tx := &transform{
+		targetType:  target,
+		targetField: field,
+		txFunc:      fn,
+	}
+	s.transforms = append(s.transforms, tx)
+}
+
+func (s *Transformer) AddSetZeroType(typs ...interface{}) {
+	for _, typ := range typs {
+		t := reflect.TypeOf(typ)
+		s.AddTransform(t, "", s.SetZero)
+	}
+}
+
+func (s *Transformer) AddSetZeroTypeField(typ interface{}, fields ...string) {
+	t := reflect.TypeOf(typ)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	for _, field := range fields {
+		s.AddTransform(t, field, s.SetZero)
+	}
+}
+
+func (s *Transformer) SetZero(v reflect.Value) {
+	if !v.CanSet() {
+		return
+	}
+	t := v.Type()
+	z := reflect.Zero(t)
+	v.Set(z)
+}
+
+func (s *Transformer) Apply(obj interface{}) {
+	s.applyRecurse(reflect.ValueOf(obj))
+}
+
+func (s *Transformer) applyRecurse(v reflect.Value) {
+	for _, tx := range s.transforms {
+		if tx.targetType == v.Type() && tx.targetField == "" {
+			tx.txFunc(v)
+		}
+	}
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return
+		}
+		s.applyRecurse(v.Elem())
+	} else if v.Kind() == reflect.Struct {
+		for ii := 0; ii < v.NumField(); ii++ {
+			sf := v.Type().Field(ii)
+			// skip unexported fields, they cannot be set by reflect
+			if sf.PkgPath != "" {
+				continue
+			}
+			subv := v.Field(ii)
+			// apply transform on field
+			for _, tx := range s.transforms {
+				if tx.targetType == v.Type() && tx.targetField == sf.Name {
+					tx.txFunc(subv)
+				}
+			}
+			s.applyRecurse(subv)
+
+		}
+	} else if v.Kind() == reflect.Slice {
+		for ii := 0; ii < v.Len(); ii++ {
+			subv := v.Index(ii)
+			s.applyRecurse(subv)
+		}
+	} else if v.Kind() == reflect.Map {
+		iter := v.MapRange()
+		for iter.Next() {
+			subv := iter.Value()
+			// Maps are a special case because their values may not
+			// addressable. If so they are not modifiable in-place,
+			// so we need to make a copy and insert it into the map.
+			newCopy := false
+			if !subv.CanSet() {
+				newSubv := reflect.New(subv.Type()).Elem()
+				if !newSubv.CanSet() {
+					fmt.Printf("subvSettable %v:%v cannot set\n", iter.Key(), subv.Type())
+					continue
+				}
+				newSubv.Set(subv)
+				subv = newSubv
+				newCopy = true
+			}
+			s.applyRecurse(subv)
+			if newCopy {
+				v.SetMapIndex(iter.Key(), subv)
+			}
+		}
+	}
 }

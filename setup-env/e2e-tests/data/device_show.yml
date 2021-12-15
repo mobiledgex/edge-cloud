@@ -2,7 +2,3 @@ devices:
 - key:
     uniqueidtype: GSAFKDF:platos:PlatosEnablingLayer
     uniqueid: "123"
-  firstseen:
-    seconds: 1596232439
-    nanos: 844942000
-  notifyid: 4

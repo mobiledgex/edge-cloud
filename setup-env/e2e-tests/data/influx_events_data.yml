@@ -23,7 +23,7 @@
     - vcpu
     - ver
     values:
-    - - "2020-01-28T21:44:17.757749Z"
+    - - 0
       - someapplication1
       - AcmeAppCo
       - dmuus-cloud-1
@@ -43,7 +43,7 @@
       - UP
       - null
       - "1.0"
-    - - "2020-01-28T21:44:19.842019Z"
+    - - 0
       - someapplication1
       - AcmeAppCo
       - dmuus-cloud-1
@@ -63,7 +63,7 @@
       - DOWN
       - null
       - "1.0"
-    - - "2020-01-28T21:44:20.073059Z"
+    - - 0
       - someapplication1
       - AcmeAppCo
       - dmuus-cloud-1
@@ -83,7 +83,7 @@
       - UP
       - null
       - "1.0"
-    - - "2020-01-28T21:44:20.270832Z"
+    - - 0
       - someapplication1
       - AcmeAppCo
       - dmuus-cloud-1
@@ -128,7 +128,7 @@
     - vcpu
     - ver
     values:
-    - - "2020-01-28T21:44:17.248106Z"
+    - - 0
       - null
       - null
       - dmuus-cloud-1
@@ -148,7 +148,7 @@
       - UP
       - null
       - null
-    - - "2020-01-28T21:44:20.605077Z"
+    - - 0
       - null
       - null
       - dmuus-cloud-1
@@ -193,7 +193,7 @@
     - vcpu
     - ver
     values:
-    - - "2020-01-28T21:44:17.53257Z"
+    - - 0
       - null
       - null
       - dmuus-cloud-1
@@ -213,7 +213,7 @@
       - UP
       - 2
       - null
-    - - "2020-01-31T19:35:26.643773Z"
+    - - 0
       - null
       - null
       - dmuus-cloud-1

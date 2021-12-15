@@ -474,6 +474,9 @@ func (m *ControllerKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *ControllerKey) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *Controller) Matches(o *Controller, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1186,6 +1189,22 @@ func (m *Controller) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *Controller) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if _, found := tags["nocmp"]; found {
+		s.BuildMaster = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.BuildHead = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.BuildAuthor = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		s.Hostname = ""
+	}
 }
 
 func IgnoreControllerFields(taglist string) cmp.Option {

@@ -27,21 +27,6 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func AutoProvPolicyHideTags(in *edgeproto.AutoProvPolicy) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
-	}
-}
-
 func AutoProvInfoHideTags(in *edgeproto.AutoProvInfo) {
 	if cli.HideTags == "" {
 		return
@@ -281,7 +266,6 @@ func ShowAutoProvPolicy(c *cli.Command, in *edgeproto.AutoProvPolicy) error {
 			}
 			return fmt.Errorf("ShowAutoProvPolicy recv failed: %s", errstr)
 		}
-		AutoProvPolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {

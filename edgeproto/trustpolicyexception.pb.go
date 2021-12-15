@@ -702,6 +702,11 @@ func (m *TrustPolicyExceptionKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *TrustPolicyExceptionKey) ClearTagged(tags map[string]struct{}) {
+	s.AppKey.ClearTagged(tags)
+	s.CloudletPoolKey.ClearTagged(tags)
+}
+
 func (m *TrustPolicyException) Matches(o *TrustPolicyException, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1542,6 +1547,15 @@ func (m *TrustPolicyException) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *TrustPolicyException) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if s.OutboundSecurityRules != nil {
+		for ii := 0; ii < len(s.OutboundSecurityRules); ii++ {
+			s.OutboundSecurityRules[ii].ClearTagged(tags)
+		}
+	}
 }
 
 var TrustPolicyExceptionStateStrings = []string{

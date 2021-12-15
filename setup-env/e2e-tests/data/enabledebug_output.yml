@@ -17,52 +17,52 @@ requests:
     output: etcd,api,notify,infra,metrics,upgrade,events
   - node:
       type: crm
-      region: local
       cloudletkey:
         organization: azure
         name: azure-cloud-4
+      region: local
     output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
-      region: local
       cloudletkey:
         organization: gcp
         name: gcp-cloud-5
+      region: local
     output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
-      region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
+      region: local
     output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
-      region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
+      region: local
     output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: crm
-      region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-3
+      region: local
     output: api,notify,infra,metrics,upgrade,info,sampled
   - node:
       type: dme
-      region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-1
+      region: local
     output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled,events
   - node:
       type: dme
-      region: local
       cloudletkey:
         organization: dmuus
         name: dmuus-cloud-2
+      region: local
     output: etcd,notify,dmedb,dmereq,locapi,metrics,sampled,events
   - node:
       type: notifyroot

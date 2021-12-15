@@ -926,6 +926,9 @@ func (m *OperatorCode) ValidateEnums() error {
 	return nil
 }
 
+func (s *OperatorCode) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *OperatorCode) IsValidArgsForCreateOperatorCode() error {
 	return nil
 }

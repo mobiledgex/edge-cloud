@@ -104,7 +104,6 @@ cloudletinfos:
     organization: dmuus
     name: dmuus-cloud-1
   state: Ready
-  notifyid: 37
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -156,7 +155,6 @@ cloudletinfos:
     organization: dmuus
     name: dmuus-cloud-2
   state: Ready
-  notifyid: 38
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
