@@ -36,6 +36,14 @@ tests:
     yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'
     filetype: appdata
 
+- name: update to ApprovalRequested, should fail
+  apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_approvalrequested.yml"
+  actions: [ctrlapi-update,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'
+    filetype: appdata
+
 - name: reject a trust policy exception
   apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_rejected.yml"
   actions: [ctrlapi-update,ctrlapi-show]
