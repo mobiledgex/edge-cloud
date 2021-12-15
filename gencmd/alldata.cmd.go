@@ -31,24 +31,15 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		tags[tag] = struct{}{}
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.Flavors[i0].DeletePrepare = false
-		}
 	}
 	for i1 := 0; i1 < len(in.Settings.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i1++ {
 	}
 	for i0 := 0; i0 < len(in.OperatorCodes); i0++ {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.ResTagTables[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.TrustPolicies); i0++ {
 		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.TrustPolicies[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
@@ -59,22 +50,25 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.Cloudlets[i0].Status = edgeproto.StatusInfo{}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].CrmOverride = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].DeploymentLocal = false
-		}
-		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].NotifySrvAddr = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].Config = edgeproto.PlatformConfig{}
+			in.Cloudlets[i0].Config.NotifyCtrlAddrs = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].Deployment = ""
+			in.Cloudlets[i0].Config.PlatformTag = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.Span = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.CrmAccessPrivateKey = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.AccessApiAddr = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.SecondaryCrmAccessPrivateKey = ""
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].CrmAccessPublicKey = ""
@@ -85,25 +79,13 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].TrustPolicyState = 0
-		}
 		for i1 := 0; i1 < len(in.Cloudlets[i0].ResourceQuotas); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].DefaultResourceAlertThreshold = 0
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].HostController = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].DeletePrepare = false
-		}
-		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].SecondaryCrmAccessPublicKey = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].SecondaryCrmAccessKeyUpgradeRequired = false
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].SecondaryNotifySrvAddr = ""
@@ -138,9 +120,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i2 := 0; i2 < len(in.CloudletInfos[i0].ResourcesSnapshot.VmAppInsts); i2++ {
 		}
 		if _, found := tags["nocmp"]; found {
-			in.CloudletInfos[i0].TrustPolicyState = 0
-		}
-		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].CompatibilityVersion = 0
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].NodeInfos); i1++ {
@@ -153,67 +132,34 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.CloudletPools[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.CloudletPools[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.Networks); i0++ {
 		for i1 := 0; i1 < len(in.Networks[i0].Routes); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Networks[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicies); i0++ {
 		for i1 := 0; i1 < len(in.AutoProvPolicies[i0].Cloudlets); i1++ {
 		}
-		if _, found := tags["nocmp"]; found {
-			in.AutoProvPolicies[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicyCloudlets); i0++ {
 	}
 	for i0 := 0; i0 < len(in.AutoScalePolicies); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.AutoScalePolicies[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].Errors = nil
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].CrmOverride = 0
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].AllocatedIp = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].NodeFlavor = ""
-		}
-		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].Status = edgeproto.StatusInfo{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].ExternalVolumeSize = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].ImageName = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].MasterNodeFlavor = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].SkipCrmCleanupOnFailure = false
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].OptRes = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].Resources = edgeproto.InfraResources{}
+		for i2 := 0; i2 < len(in.ClusterInsts[i0].Resources.Vms); i2++ {
+			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Ipaddresses); i3++ {
+			}
+			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Containers); i3++ {
+			}
 		}
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].CreatedAt = distributed_match_engine.Timestamp{}
@@ -224,27 +170,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].ReservationEndedAt = distributed_match_engine.Timestamp{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeploymentManifest = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeploymentGenerator = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DelOpt = 0
-		}
 		for i1 := 0; i1 < len(in.Apps[i0].Configs); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Apps[i0].Revision = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeletePrepare = false
 		}
 		if _, found := tags["timestamp"]; found {
 			in.Apps[i0].CreatedAt = distributed_match_engine.Timestamp{}
@@ -257,15 +188,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
 		for i1 := 0; i1 < len(in.AppInstances[i0].MappedPorts); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].Errors = nil
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].CrmOverride = 0
 		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
@@ -284,24 +206,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.AppInstances[i0].Configs); i1++ {
 		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].HealthCheck = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].PowerState = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].ExternalVolumeSize = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].AvailabilityZone = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].VmFlavor = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].OptRes = ""
-		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
@@ -319,23 +223,11 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].Errors = nil
-		}
-		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].CrmOverride = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.GpuDrivers[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.AlertPolicies); i0++ {

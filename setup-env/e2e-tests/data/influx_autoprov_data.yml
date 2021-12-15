@@ -10,21 +10,21 @@
     - cloudletorg
     - ver
     values:
-    - - "2019-12-12T23:45:19.491217Z"
+    - - 0
       - autoprovapp
       - tmus-cloud-2
       - 1
       - AcmeAppCo
       - tmus
       - "1.0"
-    - - "2019-12-12T23:45:20.493668Z"
+    - - 0
       - autoprovapp2
       - tmus-cloud-1
       - 1
       - AcmeAppCo
       - tmus
       - "1.0"
-    - - "2019-12-19T00:26:02.005484Z"
+    - - 0
       - autoprovapp2
       - tmus-cloud-1
       - 2

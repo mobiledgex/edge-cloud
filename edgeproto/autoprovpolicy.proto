@@ -40,7 +40,7 @@ message AutoProvPolicy {
   // Number of intervals to check before triggering undeployment
   uint32 undeploy_interval_count = 9;
   // Preparing to be deleted
-  bool delete_prepare = 10 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"]; 
+  bool delete_prepare = 10 [(protogen.backend) = true]; 
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;

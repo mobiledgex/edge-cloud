@@ -528,6 +528,9 @@ func (m *StatusInfo) ValidateEnums() error {
 	return nil
 }
 
+func (s *StatusInfo) ClearTagged(tags map[string]struct{}) {
+}
+
 var LivenessStrings = []string{
 	"LIVENESS_UNKNOWN",
 	"LIVENESS_STATIC",

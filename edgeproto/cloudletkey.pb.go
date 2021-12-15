@@ -269,6 +269,9 @@ func (m *CloudletKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *CloudletKey) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *CloudletKey) Size() (n int) {
 	if m == nil {
 		return 0

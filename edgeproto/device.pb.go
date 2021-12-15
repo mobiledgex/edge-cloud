@@ -1000,6 +1000,10 @@ func (m *DeviceReport) ValidateEnums() error {
 	return nil
 }
 
+func (s *DeviceReport) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+}
+
 func (m *DeviceKey) Matches(o *DeviceKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1080,6 +1084,9 @@ func (m *DeviceKey) GetTags() map[string]string {
 // Helper method to check that enums have valid values
 func (m *DeviceKey) ValidateEnums() error {
 	return nil
+}
+
+func (s *DeviceKey) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *Device) Matches(o *Device, fopts ...MatchOpt) bool {
@@ -1891,6 +1898,19 @@ func (m *Device) ValidateEnums() error {
 	return nil
 }
 
+func (s *Device) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if _, found := tags["nocmp"]; found {
+		s.FirstSeen = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		s.LastSeen = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		s.NotifyId = 0
+	}
+}
+
 func IgnoreDeviceFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1928,6 +1948,14 @@ func (m *DeviceData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *DeviceData) ClearTagged(tags map[string]struct{}) {
+	if s.Devices != nil {
+		for ii := 0; ii < len(s.Devices); ii++ {
+			s.Devices[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func IgnoreDeviceDataFields(taglist string) cmp.Option {

@@ -709,6 +709,9 @@ func (m *AlertPolicyKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *AlertPolicyKey) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *AlertPolicy) Matches(o *AlertPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1681,6 +1684,13 @@ func (m *AlertPolicy) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *AlertPolicy) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	if _, found := tags["nocmp"]; found {
+		s.DeletePrepare = false
+	}
 }
 
 func IgnoreAlertPolicyFields(taglist string) cmp.Option {
