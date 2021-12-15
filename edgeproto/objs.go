@@ -1381,9 +1381,6 @@ func (key *TrustPolicyExceptionKey) ValidateKey() error {
 	if key.Name == "" {
 		return fmt.Errorf("TrustPolicyException name cannot be empty")
 	}
-	if key.Name == "" {
-		return fmt.Errorf("TrustPolicyException name cannot be empty")
-	}
 	return nil
 }
 
