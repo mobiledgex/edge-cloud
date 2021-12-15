@@ -62,19 +62,17 @@ enum ImageType {
 // The selected profile name will be included 
 // as the "qos" value in the qos-senf/v1/sessions POST.
 enum QosSessionProfile {
-  // Best effort. Will be sent as LATENCY_DEFAULT
-  QOS_LATENCY_NO_PRIORITY = 0;
+  // Specifies that no priority session should be created
+  QOS_NO_PRIORITY = 0;
   // Corresponds to a specific set of network parameters for low latency that will be 
   // negotiated with the network provider in advance
-  QOS_LATENCY_LOW = 1;
-  // Best effort. Will be sent as LATENCY_THROUGHPUT
-  QOS_THROUGHPUT_DOWN_NO_PRIORITY = 2;
+  QOS_LOW_LATENCY = 1;
   // Downlink traffic from AppInst to client is prioritized up to 20Mbps
-  QOS_THROUGHPUT_DOWN_S = 3;
+  QOS_THROUGHPUT_DOWN_S = 2;
   // Downlink traffic from AppInst to client is prioritized up to 50Mbps
-  QOS_THROUGHPUT_DOWN_M = 4;
+  QOS_THROUGHPUT_DOWN_M = 3;
   // Downlink traffic from AppInst to client is prioritized up to 100Mbps
-  QOS_THROUGHPUT_DOWN_L = 5;
+  QOS_THROUGHPUT_DOWN_L = 4;
 }
 
 // VmAppOsType
