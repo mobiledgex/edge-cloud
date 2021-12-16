@@ -165,7 +165,7 @@ func main() {
 			errs := setupmex.RunAction(ctx, a, outputDir, &spec, mods, config.Vars, &actionretry)
 			tryErrs = append(tryErrs, errs...)
 			ranTest = true
-			if len(errs) > 0 {
+			if len(errs) > 0 && !actionretry {
 				errors = append(errors, tryErrs...)
 			}
 			if *stopOnFail && len(errs) > 0 && !actionretry {
