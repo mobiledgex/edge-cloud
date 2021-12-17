@@ -261,6 +261,10 @@ clusterinsts:
   masternodeflavor: x1.small
   resources:
     vms:
+    - name: cluster2.cloudlet2.dmuus.fake.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
     - name: fake-master-1-cloudlet2-cluster2-acmeappco
       type: cluster-master
       status: ACTIVE
@@ -271,10 +275,6 @@ clusterinsts:
       infraflavor: x1.small
     - name: fake-node-2-cloudlet2-cluster2-acmeappco
       type: cluster-k8s-node
-      status: ACTIVE
-      infraflavor: x1.small
-    - name: cluster2.cloudlet2.dmuus.fake.net
-      type: rootlb
       status: ACTIVE
       infraflavor: x1.small
 apps:
