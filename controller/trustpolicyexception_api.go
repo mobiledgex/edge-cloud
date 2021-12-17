@@ -44,7 +44,7 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 		return nil, err
 	}
 	in.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
-	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", in.State)
+	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state", in.State)
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -70,58 +70,42 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 	return &edgeproto.Result{}, err
 }
 
-// A developer can call this api to update OutboundSecurityRules (protocol, port range min/max, cidr).
-// Such an update is allowed only when it's in approval requested state.
-// An operator can call this api to update State to Active or Rejected
-// Authz takes care of such 'incoming' State checks as per role, but it does not have current state.
-// This api does not have information on whether this is called by operator or developer.
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 	cur := edgeproto.TrustPolicyException{}
 
 	fields := edgeproto.MakeFieldMap(in.Fields)
 
+	rulesSpecified := false
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesProtocol]; found {
+		rulesSpecified = true
+	}
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMin]; found {
+		rulesSpecified = true
+	}
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMax]; found {
+		rulesSpecified = true
+	}
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesRemoteCidr]; found {
+		rulesSpecified = true
+	}
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		// Safeguard from incoming state as UNKNOWN
-		if in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_UNKNOWN {
-			return fmt.Errorf("User not allowed to update TrustPolicyException state to %s", in.State.String())
+		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state", in.State.String(), "cur state", cur.State.String())
+
+		if _, found := fields[edgeproto.TrustPolicyExceptionFieldState]; found {
+			// caller specified state change
+			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
+				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
+				return fmt.Errorf("New state must be either Active or Rejected")
+			}
+		}
+		if rulesSpecified && cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
+			return fmt.Errorf("Can update security rules only when trust policy exception is still in approval requested state")
 		}
 
-		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state:", in.State.String(), "cur state:", cur.State.String())
-
-		// Disallow going to APPROVAL_REQUESTED from Active or Rejected state
-		if (in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED) &&
-			(cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE ||
-				cur.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED) {
-			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException not allowed", "state:", cur.State.String())
-			return fmt.Errorf("New state must be either Active or Rejected, current state: %s", cur.State.String())
-		}
-		// Disallow OutboundSecurityRules changes if new state is going to be Active or Rejected
-		if in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE ||
-			in.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-			if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesProtocol]; found {
-				return fmt.Errorf("field %s not allowed in new state: %s",
-					edgeproto.TrustPolicyExceptionAllFieldsStringMap[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesProtocol],
-					in.State.String())
-			}
-			if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMin]; found {
-				return fmt.Errorf("field %s not allowed in new state: %s",
-					edgeproto.TrustPolicyExceptionAllFieldsStringMap[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMin],
-					in.State.String())
-			}
-			if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMax]; found {
-				return fmt.Errorf("field %s not allowed in new state: %s",
-					edgeproto.TrustPolicyExceptionAllFieldsStringMap[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMax],
-					in.State.String())
-			}
-			if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesRemoteCidr]; found {
-				return fmt.Errorf("field %s not allowed in new state: %s",
-					edgeproto.TrustPolicyExceptionAllFieldsStringMap[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesRemoteCidr],
-					in.State.String())
-			}
-		}
 		// Copy in user specified fields only
 		changed := cur.CopyInFields(in)
 		if changed == 0 {
@@ -131,7 +115,7 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}
-		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "state:", cur.State.String())
+		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "state", cur.State.String())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
