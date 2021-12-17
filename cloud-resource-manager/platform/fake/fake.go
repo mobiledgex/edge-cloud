@@ -218,17 +218,28 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 	if !ok {
 		return fmt.Errorf("missing cluster vms for %v", clusterInst.Key)
 	}
+	newcVMs := []edgeproto.VmInfo{}
 	for _, vmInfo := range cVMs {
 		if vmInfo.Type == cloudcommon.VMTypeClusterK8sNode {
 			if _, ok := fakeNodes[vmInfo.Name]; ok {
 				delete(fakeNodes, vmInfo.Name)
+				newcVMs = append(newcVMs, vmInfo)
+			} else {
+				UpdateCommonResourcesUsed(clusterInst.NodeFlavor, ResourceRemove)
 			}
 		} else if vmInfo.Type == cloudcommon.VMTypeClusterMaster {
 			if _, ok := fakeMasters[vmInfo.Name]; ok {
 				delete(fakeMasters, vmInfo.Name)
+				newcVMs = append(newcVMs, vmInfo)
+			} else {
+				UpdateCommonResourcesUsed(clusterInst.MasterNodeFlavor, ResourceRemove)
 			}
+		} else {
+			// rootlb
+			newcVMs = append(newcVMs, vmInfo)
 		}
 	}
+	FakeClusterVMs[clusterInst.Key] = newcVMs
 	for vmName, _ := range fakeNodes {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
