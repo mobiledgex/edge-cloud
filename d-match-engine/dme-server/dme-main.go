@@ -108,18 +108,8 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			duration = 24 * time.Hour // 24 hours - default value
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Session duration", "app.QosSessionDuration", app.QosSessionDuration, " derived duration", duration)
-		var priorityType string
 
-		if strings.HasPrefix(qos, "LATENCY") {
-			priorityType = "latency"
-		} else if strings.HasPrefix(qos, "THROUGHPUT") {
-			priorityType = "throughput"
-		} else {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "Received invalid value", "QosSessionProfile", app.QosSessionProfile)
-			priorityType = ""
-		}
-
-		if qos != "DEFAULT" && priorityType != "" {
+		if qos != "DEFAULT" {
 			var protocol string
 			var asAddr string
 			ips, _ := net.LookupIP(reply.Fqdn)
@@ -152,7 +142,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			} else if protocol == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
 			} else {
-				id, sesErr := operatorApiGw.CreatePrioritySession(ctx, priorityType, ueAddr, asAddr, asPort, protocol, qos, int64(duration.Seconds()))
+				id, sesErr := operatorApiGw.CreatePrioritySession(ctx, ueAddr, asAddr, asPort, protocol, qos, int64(duration.Seconds()))
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
 				}
