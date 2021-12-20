@@ -46,12 +46,12 @@ func (*OperatorApiGw) GetVersionProperties() map[string]string {
 	return version.BuildProps("DefaultOperator")
 }
 
-func (*OperatorApiGw) CreatePrioritySession(ctx context.Context, priorityType string, ueAddr string, asAddr string, asPort string, protocol string, qos string, duration int64) (string, error) {
+func (*OperatorApiGw) CreatePrioritySession(ctx context.Context, ueAddr string, asAddr string, asPort string, protocol string, qos string, duration int64) (string, error) {
 	log.DebugLog(log.DebugLevelDmereq, "No default implementation for CreatePrioritySession()")
 	return "", nil
 }
 
-func (*OperatorApiGw) DeletePrioritySession(ctx context.Context, priorityType string, sessionId string) error {
+func (*OperatorApiGw) DeletePrioritySession(ctx context.Context, sessionId string, qos string) error {
 	log.DebugLog(log.DebugLevelDmereq, "No default implementation for DeletePrioritySession()")
 	return nil
 }
