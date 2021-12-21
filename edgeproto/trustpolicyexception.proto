@@ -76,9 +76,8 @@ service TrustPolicyExceptionApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.CloudletPoolKey.Organization";
-    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization,State";
+    option (protogen.mc2_api_requires_org) = "Key.CloudletPoolKey.Organization";
     option (protogen.mc2_custom_authz) = true;
-    option (protogen.method_also_required) = "State";
   }
 
   // Delete a Trust Policy Exception, by App Developer Organization
