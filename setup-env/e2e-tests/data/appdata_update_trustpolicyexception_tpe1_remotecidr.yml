@@ -9,6 +9,7 @@ trustpolicyexceptions:
         organization: dmuus
         name: cloudlet2-pool
     name: tpe1
+  state: Active
   outboundsecurityrules:
     - protocol: tcp
       remotecidr: "3.3.3.3/16"

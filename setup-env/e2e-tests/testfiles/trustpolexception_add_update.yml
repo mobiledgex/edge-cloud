@@ -28,7 +28,7 @@ tests:
     yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'
     filetype: appdata
 
-- name: update an active trust policy exception, should fail
+- name: update remotecidr in an active trust policy exception, should fail
   apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_remotecidr.yml"
   actions: [ctrlapi-update-expecterr,ctrlapi-show]
   compareyaml:
@@ -36,9 +36,9 @@ tests:
     yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'
     filetype: appdata
 
-- name: update to ApprovalRequested, should fail
+- name: update Active state to ApprovalRequested, should fail
   apifile: "{{datadir}}/appdata_update_trustpolicyexception_tpe1_approvalrequested.yml"
-  actions: [ctrlapi-update,ctrlapi-show]
+  actions: [ctrlapi-update-expecterr,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: '{{datadir}}/trustpolicyexception_update_tpe1_active_show.yml'

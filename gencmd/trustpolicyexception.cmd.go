@@ -86,8 +86,8 @@ func CreateTrustPolicyExceptions(c *cli.Command, data []edgeproto.TrustPolicyExc
 
 var UpdateTrustPolicyExceptionCmd = &cli.Command{
 	Use:          "UpdateTrustPolicyException",
-	RequiredArgs: strings.Join(UpdateTrustPolicyExceptionRequiredArgs, " "),
-	OptionalArgs: strings.Join(UpdateTrustPolicyExceptionOptionalArgs, " "),
+	RequiredArgs: strings.Join(TrustPolicyExceptionRequiredArgs, " "),
+	OptionalArgs: strings.Join(TrustPolicyExceptionOptionalArgs, " "),
 	AliasArgs:    strings.Join(TrustPolicyExceptionAliasArgs, " "),
 	SpecialArgs:  &TrustPolicyExceptionSpecialArgs,
 	Comments:     TrustPolicyExceptionComments,
@@ -352,22 +352,6 @@ var CreateTrustPolicyExceptionRequiredArgs = []string{
 	"name",
 }
 var CreateTrustPolicyExceptionOptionalArgs = []string{
-	"outboundsecurityrules:#.protocol",
-	"outboundsecurityrules:#.portrangemin",
-	"outboundsecurityrules:#.portrangemax",
-	"outboundsecurityrules:#.remotecidr",
-}
-var UpdateTrustPolicyExceptionRequiredArgs = []string{
-	"app-org",
-	"app-name",
-	"app-ver",
-	"cloudletpool-org",
-	"cloudletpool-name",
-	"name",
-	"state",
-}
-var UpdateTrustPolicyExceptionOptionalArgs = []string{
-	"outboundsecurityrules:empty",
 	"outboundsecurityrules:#.protocol",
 	"outboundsecurityrules:#.portrangemin",
 	"outboundsecurityrules:#.portrangemax",
