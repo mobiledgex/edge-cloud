@@ -95,9 +95,27 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "New state must be either Active or Rejected")
 
-	// State related tests - end
-	tpeData.Fields = []string{}
+	// test that TPE update with non-existent CloudletPoolKey Organization, fails
+	tpeData.Fields = []string{
+		edgeproto.TrustPolicyExceptionFieldKeyCloudletPoolKeyOrganization,
+		edgeproto.TrustPolicyExceptionFieldKeyCloudletPoolKey}
+	tpeData.Key.CloudletPoolKey.Organization = "MarsCloudletPoolOrg"
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "not found")
 
+	// test that TPE update with non-existent AppKey Organization, fails
+	tpeData.Fields = []string{
+		edgeproto.TrustPolicyExceptionFieldKeyAppKey,
+		edgeproto.TrustPolicyExceptionFieldKeyAppKeyOrganization}
+	tpeData.Key.AppKey.Organization = "MarsAppOrg"
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "not found")
+
+	// State related tests - end, restore everything
+	tpeData.Key.AppKey.Organization = testutil.DevData[0]
+	tpeData.Fields = []string{}
 	// test that TPE create when specified CloudletPool does not exist, fails
 	tpeData.Key.CloudletPoolKey.Organization = "Mission Mars"
 	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeData)
