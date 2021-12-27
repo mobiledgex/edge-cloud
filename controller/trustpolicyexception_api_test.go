@@ -102,7 +102,8 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	tpeData.Key.CloudletPoolKey.Organization = "MarsCloudletPoolOrg"
 	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "not found")
+	strCloudOrgErr := "TrustPolicyException key {\"app_key\":{\"organization\":\"NianticInc\",\"name\":\"Pokemon Go!\",\"version\":\"1.0.0\"},\"cloudlet_pool_key\":{\"organization\":\"MarsCloudletPoolOrg\",\"name\":\"test-and-dev\"},\"name\":\"someapp-tpe2\"} not found"
+	require.Contains(t, err.Error(), strCloudOrgErr)
 
 	// test that TPE update with non-existent AppKey Organization, fails
 	tpeData.Fields = []string{
@@ -111,7 +112,8 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	tpeData.Key.AppKey.Organization = "MarsAppOrg"
 	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
-	require.Contains(t, err.Error(), "not found")
+	strAppOrgErr := "TrustPolicyException key {\"app_key\":{\"organization\":\"MarsAppOrg\",\"name\":\"Pokemon Go!\",\"version\":\"1.0.0\"},\"cloudlet_pool_key\":{\"organization\":\"MarsCloudletPoolOrg\",\"name\":\"test-and-dev\"},\"name\":\"someapp-tpe2\"} not found"
+	require.Contains(t, err.Error(), strAppOrgErr)
 
 	// State related tests - end, restore everything
 	tpeData.Key.AppKey.Organization = testutil.DevData[0]
