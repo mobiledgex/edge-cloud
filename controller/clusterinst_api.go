@@ -852,10 +852,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return fmt.Errorf("Failed to get features for platform: %s", err)
 		}
-		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if in.SharedVolumeSize != 0 && !features.SupportsSharedVolume {
-			return fmt.Errorf("Shared volumes not supported on %s", platName)
-		}
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
@@ -864,6 +860,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if features.IsSingleKubernetesCluster {
 			return fmt.Errorf("Single kubernetes cluster platform %s only supports AppInst creates", cloudlet.PlatformType.String())
+		}
+		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+		if in.SharedVolumeSize != 0 && !features.SupportsSharedVolume {
+			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
 			err = validateNumNodesForKubernetes(ctx, cloudlet.PlatformType, features, in.NumNodes)
