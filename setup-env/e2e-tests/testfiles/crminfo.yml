@@ -9,11 +9,11 @@ tests:
   actions: [ctrlapi-create,ctrlapi-show]
 
 - name: compare info
-  actions: [ctrlapi-show]
+  actions: [ctrlapi-shownohide]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/crm_info.yml"
-    filetype: appdata-showcmp
+    filetype: appdata
 
 - name: delete provisioning and make sure it is empty
   actions: [ctrlapi-delete,ctrlapi-show]

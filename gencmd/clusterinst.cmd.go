@@ -36,40 +36,19 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
 	}
 	if _, found := tags["nocmp"]; found {
 		in.AllocatedIp = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.NodeFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
 		in.Status = edgeproto.StatusInfo{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.ExternalVolumeSize = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.ImageName = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.MasterNodeFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.SkipCrmCleanupOnFailure = false
-	}
-	if _, found := tags["nocmp"]; found {
-		in.OptRes = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Resources = edgeproto.InfraResources{}
+	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
+		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
+		}
+		for i2 := 0; i2 < len(in.Resources.Vms[i1].Containers); i2++ {
+		}
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
@@ -79,9 +58,6 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	}
 	if _, found := tags["timestamp"]; found {
 		in.ReservationEndedAt = distributed_match_engine.Timestamp{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
 	}
 }
 

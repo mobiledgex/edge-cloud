@@ -528,6 +528,9 @@ func (m *StatusInfo) ValidateEnums() error {
 	return nil
 }
 
+func (s *StatusInfo) ClearTagged(tags map[string]struct{}) {
+}
+
 var LivenessStrings = []string{
 	"LIVENESS_UNKNOWN",
 	"LIVENESS_STATIC",
@@ -628,16 +631,12 @@ func (e *Liveness) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid Liveness value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e Liveness) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(Liveness_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Liveness")
 	return json.Marshal(str)
 }
-*/
+
 var LivenessCommonPrefix = "Liveness"
 
 var IpSupportStrings = []string{
@@ -735,16 +734,12 @@ func (e *IpSupport) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid IpSupport value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e IpSupport) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(IpSupport_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "IpSupport")
 	return json.Marshal(str)
 }
-*/
+
 var IpSupportCommonPrefix = "IpSupport"
 
 var IpAccessStrings = []string{
@@ -842,16 +837,12 @@ func (e *IpAccess) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid IpAccess value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e IpAccess) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(IpAccess_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "IpAccess")
 	return json.Marshal(str)
 }
-*/
+
 var IpAccessCommonPrefix = "IpAccess"
 
 var TrackedStateStrings = []string{
@@ -1005,15 +996,11 @@ func (e *TrackedState) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid TrackedState value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e TrackedState) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(TrackedState_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
+
 var CRMOverrideStrings = []string{
 	"NO_OVERRIDE",
 	"IGNORE_CRM_ERRORS",
@@ -1110,15 +1097,10 @@ func (e *CRMOverride) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid CRMOverride value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e CRMOverride) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(CRMOverride_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
 func (m *StatusInfo) Size() (n int) {
 	if m == nil {
 		return 0

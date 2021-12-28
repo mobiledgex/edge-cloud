@@ -173,7 +173,7 @@ func ReadSetupFile(setupfile string, deployment interface{}, vars map[string]str
 	setupdir := filepath.Dir(setupfile)
 	vars["setupdir"] = setupdir
 
-	util.ReadYamlFile(setupfile, &setupVars, util.WithStrict())
+	util.ReadYamlFile(setupfile, &setupVars)
 
 	for _, repl := range setupVars.Vars {
 		for varname, value := range repl {
@@ -734,7 +734,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 		}
 	case "ctrlapi":
 		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, outputDir, mods, retry) {
-			log.Printf("Unable to run api for %s, %v\n", action, mods)
+			log.Printf("Unable to run api for %s-%s, %v\n", action, actionSubtype, mods)
 			errors = append(errors, "controller api failed")
 		}
 	case "clientshow":

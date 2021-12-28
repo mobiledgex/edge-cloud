@@ -11,6 +11,7 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	"github.com/mobiledgex/edge-cloud/cli"
 	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
@@ -33,6 +34,9 @@ func AlertHideTags(in *edgeproto.Alert) {
 	tags := make(map[string]struct{})
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
+	}
+	if _, found := tags["timestamp"]; found {
+		in.ActiveAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0

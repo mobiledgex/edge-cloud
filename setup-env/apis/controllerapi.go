@@ -53,6 +53,9 @@ func readAppDataFileGeneric(file string, vars map[string]string) {
 }
 
 func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars map[string]string, outputDir string, mods []string, retry *bool) bool {
+	appData = edgeproto.AllData{}
+	appDataMap = map[string]interface{}{}
+
 	runCLI := false
 	for _, mod := range mods {
 		if mod == "cli" {
@@ -104,11 +107,23 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 	rc := true
 	run := testutil.NewRun(client, ctx, api, &rc)
 
-	if api == "show" {
+	clearTags := map[string]struct{}{
+		"nocmp":     struct{}{},
+		"timestamp": struct{}{},
+	}
+
+	if api == "show" || api == "shownohide" {
 		filter := &edgeproto.AllData{}
 		output := &edgeproto.AllData{}
+		run.Mode = "show"
 		testutil.RunAllDataShowApis(run, filter, output)
 		output.Sort()
+		if api == "shownohide" {
+			// preserve most of the nocmp fields
+			delete(clearTags, "nocmp")
+			util.FilterCloudletInfoNocmp(output)
+		}
+		output.ClearTagged(clearTags)
 		util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
 		// Some objects are generated asynchronously in response to
 		// other objects being created. For example, Prometheus metric
@@ -122,6 +137,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		output := &edgeproto.NodeData{}
 		run.Mode = "show"
 		testutil.RunNodeDataShowApis(run, filter, output)
+		util.FilterNodeData(output)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "debug") {
 		runDebug(run, api, apiFile, apiFileVars, outputDir)
@@ -129,11 +145,15 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		output := &edgeproto.DeviceData{}
 		run.Mode = "show"
 		run.DeviceApi(nil, nil, &output.Devices)
+		output.Sort()
+		output.ClearTagged(clearTags)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if api == "ratelimitshow" {
 		output := &edgeproto.RateLimitSettingsData{}
 		run.Mode = "show"
 		run.RateLimitSettingsApi(nil, nil, &output.Settings)
+		output.Sort()
+		output.ClearTagged(clearTags)
 		util.PrintToYamlFile("show-commands.yml", outputDir, &output, true)
 	} else if strings.HasPrefix(api, "organization") {
 		runOrg(run, api, apiFile, apiFileVars, outputDir)
@@ -141,6 +161,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		output := []edgeproto.Alert{}
 		run.Mode = "show"
 		run.AlertApi(nil, nil, &output)
+		util.FilterAlerts(output)
 		util.PrintToYamlFile("show-alerts.yml", outputDir, output, true)
 		*retry = true
 	} else {
@@ -159,6 +180,9 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 			//run in reverse order to delete child keys
 			output := &testutil.AllDataOut{}
 			testutil.RunAllDataReverseApis(run, &appData, appDataMap, output, testutil.NoApiCallback)
+			// remove results for AppInst/ClusterInst/Cloudlet because
+			// they are non-deterministic
+			util.FilterAppDataOutputStatus(output)
 			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		case "create":
 			fallthrough
@@ -169,6 +193,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		case "update":
 			output := &testutil.AllDataOut{}
 			testutil.RunAllDataApis(run, &appData, appDataMap, output, testutil.NoApiCallback)
+			util.FilterAppDataOutputStatus(output)
 			util.PrintToYamlFile("api-output.yml", outputDir, output, true)
 		case "stream":
 			output := &testutil.AllDataStreamOut{}
@@ -177,6 +202,8 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, apiFileVars m
 		case "showfiltered":
 			output := &edgeproto.AllData{}
 			testutil.RunAllDataShowApis(run, &appData, output)
+			output.Sort()
+			output.ClearTagged(clearTags)
 			util.PrintToYamlFile("show-commands.yml", outputDir, output, true)
 			*retry = true
 		default:
@@ -371,6 +398,10 @@ func runDebug(run *testutil.Run, api, apiFile string, apiFileVars map[string]str
 		os.Exit(1)
 	}
 
+	clearTags := map[string]struct{}{
+		"nocmp":     struct{}{},
+		"timestamp": struct{}{},
+	}
 	output := testutil.DebugDataOut{}
 	switch api {
 	case "debugenable":
@@ -378,7 +409,7 @@ func runDebug(run *testutil.Run, api, apiFile string, apiFileVars map[string]str
 	case "debugdisable":
 		run.Mode = "disabledebuglevels"
 	case "debugshow":
-		run.Mode = "show"
+		run.Mode = "showdebuglevels"
 	case "debugrun":
 		run.Mode = "rundebug"
 	default:
@@ -387,6 +418,12 @@ func runDebug(run *testutil.Run, api, apiFile string, apiFileVars map[string]str
 		return
 	}
 	testutil.RunDebugDataApis(run, &data, make(map[string]interface{}), &output, testutil.NoApiCallback)
+	output.Sort()
+	for ii := range output.Requests {
+		for jj := range output.Requests[ii] {
+			output.Requests[ii][jj].ClearTagged(clearTags)
+		}
+	}
 	util.PrintToYamlFile("api-output.yml", outputDir, &output, true)
 }
 

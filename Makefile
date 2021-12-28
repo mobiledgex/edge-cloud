@@ -3,7 +3,7 @@ include Makedefs
 
 GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
 
-EDGE_CLOUD_BASE_IMAGE = $(REGISTRY)/edge-cloud-base-image:4a0489acde7c3b38c270cbe0e6b19826d3918173
+EDGE_CLOUD_BASE_IMAGE = $(REGISTRY)/edge-cloud-base-image@sha256:eff33badbbcde56b3100b07a369f34445ff78ef79802241fcaed3e5f77964bd2
 
 export GO111MODULE=on
 
@@ -50,7 +50,7 @@ build-docker:
 		--build-arg EDGE_CLOUD_BASE_IMAGE=$(EDGE_CLOUD_BASE_IMAGE) \
 		--build-arg REGISTRY=$(REGISTRY) \
 		-t $(REGISTRY)/edge-cloud:$(TAG) -f docker/Dockerfile.edge-cloud ..
-	for COMP in alertmgr-sidecar autoprov cluster-svc controller crm dme edgeturn mc notifyroot; do \
+	for COMP in alertmgr-sidecar autoprov cluster-svc controller crm dme edgeturn frm mc notifyroot; do \
 		docker buildx build --push -t $(REGISTRY)/edge-cloud-$$COMP:$(TAG) \
 			--build-arg ALLINONE=$(REGISTRY)/edge-cloud:$(TAG) \
 			--build-arg EDGE_CLOUD_BASE_IMAGE=$(EDGE_CLOUD_BASE_IMAGE) \

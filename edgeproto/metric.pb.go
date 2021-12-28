@@ -496,6 +496,9 @@ func (m *MetricTag) ValidateEnums() error {
 	return nil
 }
 
+func (s *MetricTag) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *MetricVal) CopyInFields(src *MetricVal) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -512,6 +515,9 @@ func (m *MetricVal) DeepCopyIn(src *MetricVal) {
 // Helper method to check that enums have valid values
 func (m *MetricVal) ValidateEnums() error {
 	return nil
+}
+
+func (s *MetricVal) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *Metric) CopyInFields(src *Metric) int {
@@ -583,6 +589,19 @@ func (m *Metric) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *Metric) ClearTagged(tags map[string]struct{}) {
+	if s.Tags != nil {
+		for ii := 0; ii < len(s.Tags); ii++ {
+			s.Tags[ii].ClearTagged(tags)
+		}
+	}
+	if s.Vals != nil {
+		for ii := 0; ii < len(s.Vals); ii++ {
+			s.Vals[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *MetricTag) Size() (n int) {

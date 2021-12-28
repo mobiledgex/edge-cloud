@@ -26,12 +26,6 @@ clusterflavors:
   maxnodes: 3
   nummasters: 1
 
-clusters:
-- key:
-    name: jlmappcluster
-  defaultflavor:
-    name: x1.medium
-
 clusterinsts:
 - key:
     clusterkey:
@@ -78,7 +72,6 @@ cloudlets:
 - key:
     organization: TDG
     name: centraluscloudlet
-  accessuri:
   location:
     latitude: 44.977300
     longitude: -93.265469
@@ -87,7 +80,6 @@ cloudlets:
 - key:
     organization: TDG
     name: westuscloudlet
-  accessuri:
   location:
     latitude: 37.338
     longitude: -121.886
@@ -96,7 +88,6 @@ cloudlets:
 - key:
     organization: TDG
     name: bonncloudlet
-  accessuri:
   location:
     latitude: 50.737
     longitude: 7.098
@@ -105,7 +96,6 @@ cloudlets:
 - key:
     organization: azure
     name: azcentraluscloudlet
-  accessuri:
   location:
     latitude: 42.379
     longitude: -87.858
@@ -122,8 +112,6 @@ apps:
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
-  cluster:
-    name: jlmappcluster
   config: "http://35.199.188.102/apps/simapp.yaml"
 
 appinstances:

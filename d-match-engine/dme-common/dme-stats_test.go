@@ -53,7 +53,6 @@ func TestStatDrops(t *testing.T) {
 			key.Method = "findCloudlet"
 			key.CloudletFound.Name = "UnitTest"
 			key.CloudletFound.Organization = "unittest"
-			key.CellId = 1000
 
 			ch := time.After(10 * notifyInterval)
 			done := false
@@ -107,7 +106,6 @@ func TestStatChanged(t *testing.T) {
 	key.Method = "findCloudlet"
 	key.CloudletFound.Name = "UnitTest"
 	key.CloudletFound.Organization = "unittest"
-	key.CellId = 1000
 
 	mux.Lock()
 	stats.RecordApiStatCall(&ApiStatCall{

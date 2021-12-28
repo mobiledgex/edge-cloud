@@ -431,6 +431,9 @@ func (m *DlgMessage) ValidateEnums() error {
 	return nil
 }
 
+func (s *DlgMessage) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *DlgReply) CopyInFields(src *DlgReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -457,6 +460,9 @@ func (m *DlgReply) DeepCopyIn(src *DlgReply) {
 // Helper method to check that enums have valid values
 func (m *DlgReply) ValidateEnums() error {
 	return nil
+}
+
+func (s *DlgReply) ClearTagged(tags map[string]struct{}) {
 }
 
 var DlgAckStrings = []string{
@@ -554,16 +560,12 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid DlgMessage_DlgAck value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e DlgMessage_DlgAck) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Dlg")
 	return json.Marshal(str)
 }
-*/
+
 var DlgAckCommonPrefix = "Dlg"
 
 func (m *DlgMessage) IsValidArgsForSendToGroup() error {

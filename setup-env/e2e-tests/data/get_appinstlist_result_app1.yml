@@ -1,4 +1,4 @@
-status: AiSuccess
+status: Success
 cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-1

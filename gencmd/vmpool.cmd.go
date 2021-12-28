@@ -54,16 +54,7 @@ func VMPoolHideTags(in *edgeproto.VMPool) {
 		}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
 	}
 }
 
@@ -77,22 +68,6 @@ func VMPoolMemberHideTags(in *edgeproto.VMPoolMember) {
 	}
 	if _, found := tags["timestamp"]; found {
 		in.Vm.UpdatedAt = google_protobuf.Timestamp{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
-	}
-}
-
-func VMSpecHideTags(in *edgeproto.VMSpec) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Flavor.DeletePrepare = false
 	}
 }
 
@@ -111,9 +86,6 @@ func VMPoolInfoHideTags(in *edgeproto.VMPoolInfo) {
 		if _, found := tags["timestamp"]; found {
 			in.Vms[i0].UpdatedAt = google_protobuf.Timestamp{}
 		}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.State = 0
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil

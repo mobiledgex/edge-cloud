@@ -3,7 +3,6 @@ cloudlets:
 - key:
     organization: azure
     name: azcentraluscloudlet
-  accessuri:
   location:
     latitude: 42.379
     longitude: -87.858

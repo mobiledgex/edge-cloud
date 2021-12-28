@@ -1641,6 +1641,9 @@ func (m *FlowSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *FlowSettings) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *FlowRateLimitSettingsKey) Matches(o *FlowRateLimitSettingsKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1731,6 +1734,10 @@ func (m *FlowRateLimitSettingsKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *FlowRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
+	s.RateLimitKey.ClearTagged(tags)
 }
 
 func (m *FlowRateLimitSettings) Matches(o *FlowRateLimitSettings, fopts ...MatchOpt) bool {
@@ -2463,6 +2470,11 @@ func (m *FlowRateLimitSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *FlowRateLimitSettings) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	s.Settings.ClearTagged(tags)
+}
+
 func (m *MaxReqsSettings) Matches(o *MaxReqsSettings, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2519,6 +2531,9 @@ func (m *MaxReqsSettings) ValidateEnums() error {
 		return errors.New("invalid MaxReqsAlgorithm")
 	}
 	return nil
+}
+
+func (s *MaxReqsSettings) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *MaxReqsRateLimitSettingsKey) Matches(o *MaxReqsRateLimitSettingsKey, fopts ...MatchOpt) bool {
@@ -2611,6 +2626,10 @@ func (m *MaxReqsRateLimitSettingsKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *MaxReqsRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
+	s.RateLimitKey.ClearTagged(tags)
 }
 
 func (m *MaxReqsRateLimitSettings) Matches(o *MaxReqsRateLimitSettings, fopts ...MatchOpt) bool {
@@ -3343,6 +3362,11 @@ func (m *MaxReqsRateLimitSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *MaxReqsRateLimitSettings) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	s.Settings.ClearTagged(tags)
+}
+
 func (m *RateLimitSettingsKey) Matches(o *RateLimitSettingsKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -3441,6 +3465,9 @@ func (m *RateLimitSettingsKey) ValidateEnums() error {
 		return errors.New("invalid RateLimitTarget")
 	}
 	return nil
+}
+
+func (s *RateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) bool {
@@ -3767,6 +3794,10 @@ func (m *RateLimitSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *RateLimitSettings) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+}
+
 func (m *RateLimitSettingsData) DeepCopyIn(src *RateLimitSettingsData) {
 	if src.Settings != nil {
 		m.Settings = make([]RateLimitSettings, len(src.Settings), len(src.Settings))
@@ -3786,6 +3817,14 @@ func (m *RateLimitSettingsData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *RateLimitSettingsData) ClearTagged(tags map[string]struct{}) {
+	if s.Settings != nil {
+		for ii := 0; ii < len(s.Settings); ii++ {
+			s.Settings[ii].ClearTagged(tags)
+		}
+	}
 }
 
 var ApiEndpointTypeStrings = []string{
@@ -3869,15 +3908,11 @@ func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid ApiEndpointType value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e ApiEndpointType) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(ApiEndpointType_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
+
 var RateLimitTargetStrings = []string{
 	"UNKNOWN_TARGET",
 	"ALL_REQUESTS",
@@ -3969,15 +4004,11 @@ func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid RateLimitTarget value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e RateLimitTarget) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(RateLimitTarget_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
+
 var FlowRateLimitAlgorithmStrings = []string{
 	"UNKNOWN_FLOW_ALGORITHM",
 	"TOKEN_BUCKET_ALGORITHM",
@@ -4064,15 +4095,11 @@ func (e *FlowRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e FlowRateLimitAlgorithm) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(FlowRateLimitAlgorithm_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
+
 var MaxReqsRateLimitAlgorithmStrings = []string{
 	"UNKNOWN_MAX_REQS_ALGORITHM",
 	"FIXED_WINDOW_ALGORITHM",
@@ -4154,15 +4181,10 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e MaxReqsRateLimitAlgorithm) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(MaxReqsRateLimitAlgorithm_CamelName, int32(e))
 	return json.Marshal(str)
 }
-*/
 func (m *FlowRateLimitSettings) IsValidArgsForCreateFlowRateLimitSettings() error {
 	return nil
 }
