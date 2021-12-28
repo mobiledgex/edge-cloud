@@ -1093,6 +1093,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			initCloudletRefs(&cloudletRefs, &in.Key.ClusterInstKey.CloudletKey)
 		}
 
+		if cloudletFeatures.IsSingleKubernetesCluster {
+			if in.DedicatedIp {
+				ipaccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+			} else {
+				ipaccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+			}
+		}
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 		if !cloudcommon.IsClusterInstReqd(&app) {
 			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
