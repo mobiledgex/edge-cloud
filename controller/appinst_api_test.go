@@ -835,7 +835,7 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 	cloudletMTInfo := edgeproto.CloudletInfo{
 		Key:                  cloudletMT.Key,
 		State:                dme.CloudletState_CLOUDLET_STATE_READY,
-		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
+		CompatibilityVersion: 2, // cloudcommon.GetCRMCompatibilityVersion()
 	}
 	mtOrg := cloudcommon.OrganizationMobiledgeX
 	stOrg := testutil.AppInstData[0].Key.AppKey.Organization
@@ -889,6 +889,8 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 	// AppInst negative and positive tests
 	// TODO: resource allocation failure...
 	PASS := "PASS"
+	dedicatedIp := true
+	notDedicatedIp := false
 	appInstCreateTests := []struct {
 		desc            string
 		aiIdx           int
@@ -896,39 +898,61 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		clusterName     string
 		clusterOrg      string
 		realClusterName string
+		dedicatedIp     bool
+		uri             string
 		errStr          string
 	}{{
 		"MT non-serverless app",
-		3, &cloudletMT, "clust", mtOrg, "",
+		3, &cloudletMT, "clust", mtOrg, "", notDedicatedIp, "",
 		"Target cloudlet platform only supports serverless Apps",
 	}, {
 		"MT bad cluster org",
-		0, &cloudletMT, "clust", "foo", "",
+		0, &cloudletMT, "clust", "foo", "", notDedicatedIp, "",
 		"ClusterInst organization must be set to MobiledgeX",
 	}, {
 		"MT bad real cluster name",
-		0, &cloudletMT, "autocluster", mtOrg, "foo",
+		0, &cloudletMT, "autocluster", mtOrg, "foo", notDedicatedIp, "",
 		"Invalid RealClusterName for single kubernetes cluster cloudlet, should be left blank",
 	}, {
 		"ST bad cluster org", 0,
-		&cloudletST, "clust", "foo", "",
+		&cloudletST, "clust", "foo", "", notDedicatedIp, "",
 		"ClusterInst organization must be set to " + stOrg,
 	}, {
 		"ST bad real cluster name",
-		0, &cloudletST, "autocluster", stOrg, "foo",
+		0, &cloudletST, "autocluster", stOrg, "foo", notDedicatedIp, "",
 		"Invalid RealClusterName for single kubernetes cluster cloudlet, should be left blank",
 	}, {
 		"MT any clust name",
-		0, &cloudletMT, "clust", mtOrg, "", PASS,
+		0, &cloudletMT, "clust", mtOrg, "", notDedicatedIp,
+		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"MT auto clust name",
-		0, &cloudletMT, "autocluster", mtOrg, "", PASS,
+		0, &cloudletMT, "autocluster", mtOrg, "", notDedicatedIp,
+		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"ST any clust name",
-		0, &cloudletST, "clust", stOrg, "", PASS,
+		0, &cloudletST, "clust", stOrg, "", notDedicatedIp,
+		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"ST auto clust name",
-		0, &cloudletST, "autocluster", stOrg, "", PASS,
+		0, &cloudletST, "autocluster", stOrg, "", notDedicatedIp,
+		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"MT any clust name dedicated",
+		0, &cloudletMT, "clust", mtOrg, "", dedicatedIp,
+		"pillimogo100-atlanticinc.singlek8smt-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"MT auto clust name dedicated",
+		0, &cloudletMT, "autocluster", mtOrg, "", dedicatedIp,
+		"pillimogo100-atlanticinc.singlek8smt-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"ST any clust name dedicated",
+		0, &cloudletST, "clust", stOrg, "", dedicatedIp,
+		"pillimogo100-atlanticinc.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"ST auto clust name dedicated",
+		0, &cloudletST, "autocluster", stOrg, "", dedicatedIp,
+		"pillimogo100-atlanticinc.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}}
 	for _, test := range appInstCreateTests {
 		ai := testutil.AppInstData[test.aiIdx]
@@ -936,9 +960,14 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		ai.Key.ClusterInstKey.ClusterKey.Name = test.clusterName
 		ai.Key.ClusterInstKey.Organization = test.clusterOrg
 		ai.RealClusterName = test.realClusterName
+		ai.DedicatedIp = test.dedicatedIp
 		err = apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		if test.errStr == PASS {
 			require.Nil(t, err, test.desc)
+			aiCheck := edgeproto.AppInst{}
+			found := apis.appInstApi.cache.Get(&ai.Key, &aiCheck)
+			require.True(t, found)
+			require.Equal(t, test.uri, aiCheck.Uri, test.desc)
 			// clean up
 			err = apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 			require.Nil(t, err, test.desc)
@@ -1023,8 +1052,24 @@ func testAppInstId(t *testing.T, ctx context.Context, apis *AllApis) {
 	appInst1 := appInst0
 	appInst1.Key.AppKey = app1.Key
 
+	// also create ClusterInsts because they share the same dns id
+	// namespace as AppInsts
+	cl0 := testutil.ClusterInstData[0]
+	cl0.Key.ClusterKey.Name = app0.Key.Name + app0.Key.Version
+	cl0.Key.Organization = app0.Key.Organization
+
+	cl1 := cl0
+	cl1.Key.ClusterKey.Name = app1.Key.Name + app1.Key.Version
+	cl1.Key.Organization = app1.Key.Organization
+
 	expId0 := "atlanticincapp110-pillimos-sanjosesite-attinc"
 	expId1 := "atlanticincapp110-pillimos-sanjosesite-attinc-1"
+
+	dnsLabel0 := "app110-atlanticinc"
+	dnsLabel1 := "app110-atlanticinc1"
+
+	clDnsLabel0 := "app110-atlanticinc2"
+	clDnsLabel1 := "app110-atlanticinc3"
 
 	_, err = apis.appApi.CreateApp(ctx, &app0)
 	require.Nil(t, err)
@@ -1039,12 +1084,29 @@ func testAppInstId(t *testing.T, ctx context.Context, apis *AllApis) {
 	aiCheck0 := edgeproto.AppInst{}
 	require.True(t, apis.appInstApi.cache.Get(&appInst0.Key, &aiCheck0))
 	require.Equal(t, expId0, aiCheck0.UniqueId)
+	require.Equal(t, dnsLabel0, aiCheck0.DnsLabel)
 
 	aiCheck1 := edgeproto.AppInst{}
 	require.True(t, apis.appInstApi.cache.Get(&appInst1.Key, &aiCheck1))
 	require.Equal(t, expId1, aiCheck1.UniqueId)
+	require.Equal(t, dnsLabel1, aiCheck1.DnsLabel)
 
 	require.NotEqual(t, aiCheck0.UniqueId, aiCheck1.UniqueId)
+	require.NotEqual(t, aiCheck0.DnsLabel, aiCheck1.DnsLabel)
+
+	err = apis.clusterInstApi.CreateClusterInst(&cl0, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+	err = apis.clusterInstApi.CreateClusterInst(&cl1, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+
+	clCheck0 := edgeproto.ClusterInst{}
+	require.True(t, apis.clusterInstApi.cache.Get(&cl0.Key, &clCheck0))
+	require.Equal(t, clDnsLabel0, clCheck0.DnsLabel)
+
+	clCheck1 := edgeproto.ClusterInst{}
+	require.True(t, apis.clusterInstApi.cache.Get(&cl1.Key, &clCheck1))
+	require.Equal(t, clDnsLabel1, clCheck1.DnsLabel)
+
 	// func to check if ids are present in database
 	hasIds := func(hasId0, hasId1 bool) {
 		found0 := testHasAppInstId(apis.appInstApi.sync.store, expId0)
@@ -1052,17 +1114,37 @@ func testAppInstId(t *testing.T, ctx context.Context, apis *AllApis) {
 		found1 := testHasAppInstId(apis.appInstApi.sync.store, expId1)
 		require.Equal(t, hasId1, found1, "has id %s", expId1)
 	}
-
+	hasDnsLabels := func(hasIds bool, ids ...string) {
+		for _, id := range ids {
+			// note that all objects are on the same cloudlet
+			found := testHasAppInstDnsLabel(apis.appInstApi.sync.store, &appInst0.Key.ClusterInstKey.CloudletKey, id)
+			require.Equal(t, hasIds, found, "has id %s", id)
+		}
+	}
 	// check that expected ids are there
 	hasIds(true, true)
+	hasDnsLabels(true, dnsLabel0, dnsLabel1, clDnsLabel0, clDnsLabel1)
 
 	// make sure deleting AppInsts also removes ids
 	err = apis.appInstApi.DeleteAppInst(&appInst0, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err)
 	hasIds(false, true)
+	hasDnsLabels(false, dnsLabel0)
+	hasDnsLabels(true, dnsLabel1, clDnsLabel0, clDnsLabel1)
 	err = apis.appInstApi.DeleteAppInst(&appInst1, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err)
 	hasIds(false, false)
+	hasDnsLabels(false, dnsLabel0, dnsLabel1)
+	hasDnsLabels(true, clDnsLabel0, clDnsLabel1)
+
+	// make sure deleting ClusterInsts also removes ids
+	err = apis.clusterInstApi.DeleteClusterInst(&cl0, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+	hasDnsLabels(false, dnsLabel0, dnsLabel1, clDnsLabel0)
+	hasDnsLabels(true, clDnsLabel1)
+	err = apis.clusterInstApi.DeleteClusterInst(&cl1, testutil.NewCudStreamoutClusterInst(ctx))
+	require.Nil(t, err)
+	hasDnsLabels(false, dnsLabel0, dnsLabel1, clDnsLabel0, clDnsLabel1)
 
 	// clean up
 	_, err = apis.appApi.DeleteApp(ctx, &app0)
@@ -1072,7 +1154,14 @@ func testAppInstId(t *testing.T, ctx context.Context, apis *AllApis) {
 }
 
 func testHasAppInstId(kvstore objstore.KVStore, id string) bool {
-	keystr := edgeproto.AppInstIdDbKey(id)
+	return testKVStoreHasKey(kvstore, edgeproto.AppInstIdDbKey(id))
+}
+
+func testHasAppInstDnsLabel(kvstore objstore.KVStore, ckey *edgeproto.CloudletKey, id string) bool {
+	return testKVStoreHasKey(kvstore, edgeproto.CloudletObjectDnsLabelDbKey(ckey, id))
+}
+
+func testKVStoreHasKey(kvstore objstore.KVStore, keystr string) bool {
 	val, _, _, err := kvstore.Get(keystr)
 	if err != nil {
 		return false

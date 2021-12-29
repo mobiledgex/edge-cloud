@@ -75,6 +75,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: azure-cloud-9-azure
+  rootlbfqdn: shared.azure-cloud-9-azure.local.localtest.net
 - key:
     organization: gcp
     name: gcp-cloud-10
@@ -91,6 +93,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: gcp-cloud-10-gcp
+  rootlbfqdn: shared.gcp-cloud-10-gcp.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-1
@@ -107,6 +111,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-1-dmuus
+  rootlbfqdn: shared.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -123,6 +129,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-2-dmuus
+  rootlbfqdn: shared.dmuus-cloud-2-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-3
@@ -139,6 +147,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-3-dmuus
+  rootlbfqdn: shared.dmuus-cloud-3-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-4
@@ -155,6 +165,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-4-dmuus
+  rootlbfqdn: shared.dmuus-cloud-4-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-5
@@ -171,6 +183,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-5-dmuus
+  rootlbfqdn: shared.dmuus-cloud-5-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-6
@@ -187,6 +201,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-6-dmuus
+  rootlbfqdn: shared.dmuus-cloud-6-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-7
@@ -203,6 +219,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-7-dmuus
+  rootlbfqdn: shared.dmuus-cloud-7-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-8
@@ -219,6 +237,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-8-dmuus
+  rootlbfqdn: shared.dmuus-cloud-8-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: azure
@@ -781,10 +801,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: reservable0.azure-cloud-9.azure.fake.net
+    - name: reservable0-mobiledgex.azure-cloud-9-azure.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.azure-cloud-9-azure.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -815,10 +837,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: reservable0.gcp-cloud-10.gcp.fake.net
+    - name: reservable0-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -849,6 +873,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -879,6 +905,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -909,6 +937,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-3-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -939,6 +969,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-4-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -969,6 +1001,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-5-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -999,6 +1033,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-6-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -1029,6 +1065,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-7-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -1059,6 +1097,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.dmuus-cloud-8-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1089,10 +1129,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: reservable1.azure-cloud-9.azure.fake.net
+    - name: reservable1-mobiledgex.azure-cloud-9-azure.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.azure-cloud-9-azure.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1123,10 +1165,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: reservable1.gcp-cloud-10.gcp.fake.net
+    - name: reservable1-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1157,6 +1201,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1187,6 +1233,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1217,6 +1265,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-3-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1247,6 +1297,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-4-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1277,6 +1329,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-5-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1307,6 +1361,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-6-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1337,6 +1393,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-7-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -1367,6 +1425,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.dmuus-cloud-8-dmuus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -1618,7 +1678,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-  uri: acmeappcosomeapplication110.reservable0.azure-cloud-9.azure.localtest.net
+  uri: someapplication110-acmeappco.azure-cloud-9-azure.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1644,6 +1704,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-azure-cloud-9-azure
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1659,7 +1720,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-  uri: acmeappcosomeapplication110.reservable0.gcp-cloud-10.gcp.localtest.net
+  uri: someapplication110-acmeappco.gcp-cloud-10-gcp.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1685,6 +1746,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-gcp-cloud-10-gcp
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1700,7 +1762,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: shared.dmuus-cloud-1.dmuus.localtest.net
+  uri: shared.dmuus-cloud-1-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1723,6 +1785,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-1-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1738,7 +1801,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: shared.dmuus-cloud-2.dmuus.localtest.net
+  uri: shared.dmuus-cloud-2-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1761,6 +1824,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-2-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1776,7 +1840,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: shared.dmuus-cloud-3.dmuus.localtest.net
+  uri: shared.dmuus-cloud-3-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1799,6 +1863,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-3-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1814,7 +1879,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: shared.dmuus-cloud-4.dmuus.localtest.net
+  uri: shared.dmuus-cloud-4-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1837,6 +1902,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-4-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1852,7 +1918,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: shared.dmuus-cloud-5.dmuus.localtest.net
+  uri: shared.dmuus-cloud-5-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1875,6 +1941,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-5-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1890,7 +1957,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: shared.dmuus-cloud-6.dmuus.localtest.net
+  uri: shared.dmuus-cloud-6-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1913,6 +1980,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-6-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1928,7 +1996,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: shared.dmuus-cloud-7.dmuus.localtest.net
+  uri: shared.dmuus-cloud-7-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1951,6 +2019,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-7-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -1966,7 +2035,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: shared.dmuus-cloud-8.dmuus.localtest.net
+  uri: shared.dmuus-cloud-8-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1989,6 +2058,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-dmuus-cloud-8-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2004,7 +2074,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-  uri: acmeappcosomeapplication210.reservable1.azure-cloud-9.azure.localtest.net
+  uri: someapplication210-acmeappco.azure-cloud-9-azure.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2030,6 +2100,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-azure-cloud-9-azure
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2045,7 +2116,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-  uri: acmeappcosomeapplication210.reservable1.gcp-cloud-10.gcp.localtest.net
+  uri: someapplication210-acmeappco.gcp-cloud-10-gcp.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2071,6 +2142,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-gcp-cloud-10-gcp
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2086,7 +2158,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: shared.dmuus-cloud-1.dmuus.localtest.net
+  uri: shared.dmuus-cloud-1-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2109,6 +2181,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-1-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2124,7 +2197,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: shared.dmuus-cloud-2.dmuus.localtest.net
+  uri: shared.dmuus-cloud-2-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2147,6 +2220,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-2-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2162,7 +2236,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: shared.dmuus-cloud-3.dmuus.localtest.net
+  uri: shared.dmuus-cloud-3-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2185,6 +2259,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-3-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2200,7 +2275,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: shared.dmuus-cloud-4.dmuus.localtest.net
+  uri: shared.dmuus-cloud-4-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2223,6 +2298,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-4-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2238,7 +2314,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: shared.dmuus-cloud-5.dmuus.localtest.net
+  uri: shared.dmuus-cloud-5-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2261,6 +2337,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-5-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2276,7 +2353,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: shared.dmuus-cloud-6.dmuus.localtest.net
+  uri: shared.dmuus-cloud-6-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2299,6 +2376,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-6-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2314,7 +2392,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: shared.dmuus-cloud-7.dmuus.localtest.net
+  uri: shared.dmuus-cloud-7-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2337,6 +2415,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-7-dmuus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -2352,7 +2431,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: shared.dmuus-cloud-8.dmuus.localtest.net
+  uri: shared.dmuus-cloud-8-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -2375,6 +2454,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-dmuus-cloud-8-dmuus
+  dnslabel: someapplication210-acmeappco
 appinstrefs:
 - key:
     organization: AcmeAppCo

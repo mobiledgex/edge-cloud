@@ -159,61 +159,35 @@ var AllocatedIpDynamic = "dynamic"
 
 var RootLBHostname = "shared"
 
-// GetCloudletBaseFQDN gets the base 3-label FQDN for the cloudlet.
-// For TLS termination, we should only require a single cert that
-// wildcard matches *.<cloudlet-base-fqdn>, as all other DNS names
-// should only add one more label on top of the base fqdn.
-func GetCloudletBaseFQDN(key *edgeproto.CloudletKey, domain string) string {
-	loc := util.DNSSanitize(key.Name)
-	oper := util.DNSSanitize(key.Organization)
-	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
-}
+// Fully Qualified Domain Names (FQDNs) primarily come in the
+// the following format of 4 "labels" (where domain can actually
+// be more than one label itself, i.e. mobiledgex.net):
+// cloudletobject.cloudlet.region.domain
+// In some cases, another label will be prepended
+// (such as for ip-per-k8s-services, the service name is prepended).
+// To help avoid the total length limit of 253 when prepending additional
+// labels, we restrict the base labels to less than the DNS spec
+// per-label restriction of 63, based on how long we expect those
+// labels to be in general. For example, we expect most region names to
+// be 3-4 characters, while appname+version+org is likely to be much
+// longer.
+const DnsDomainLabelMaxLen = 40
+const DnsRegionLabelMaxLen = 10
+const DnsCloudletLabelMaxLen = 50
+const DnsCloudletObjectLabelMaxLen = 63
 
-// GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
-// for apps using "shared" IP access.
-func GetRootLBFQDN(key *edgeproto.CloudletKey, domain string) string {
-	return fmt.Sprintf("%s.%s", RootLBHostname, GetCloudletBaseFQDN(key, domain))
+// Wildcard cert for all LBs both shared and dedicated
+func GetRootLBFQDNWildcard(cloudlet *edgeproto.Cloudlet) string {
+	names := strings.Split(cloudlet.RootLbFqdn, ".")
+	names[0] = "*"
+	return strings.Join(names, ".")
 }
 
 // Old version of getting the shared root lb, does not match wildcard cert.
 func GetRootLBFQDNOld(key *edgeproto.CloudletKey, domain string) string {
-	return GetCloudletBaseFQDN(key, domain)
-}
-
-// Wildcard cert for all LBs both shared and dedicated
-func GetRootLBFQDNWildcard(key *edgeproto.CloudletKey, domain string) string {
-	return "*." + GetCloudletBaseFQDN(key, domain)
-}
-
-// GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
-// for clusters using "dedicated" IP access.
-func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
-	clust := util.DNSSanitize(clusterKey.Name)
-	return fmt.Sprintf("%s.%s", clust, GetCloudletBaseFQDN(cloudletKey, domain))
-}
-
-// Get Fully Qualified Name for the App i.e. with developer & version info
-func GetAppFQN(key *edgeproto.AppKey) string {
-	app := util.DNSSanitize(key.Name)
-	dev := util.DNSSanitize(key.Organization)
-	ver := util.DNSSanitize(key.Version)
-	return fmt.Sprintf("%s%s%s", dev, app, ver)
-}
-
-// GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
-// for apps using "dedicated" IP access. This will not allow TLS, but will
-// ensure uniqueness when an IP is assigned per k8s-service per AppInst per cluster.
-func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
-	clusterBase := GetDedicatedLBFQDN(cloudletKey, clusterKey, domain)
-	appFQN := GetAppFQN(&key.AppKey)
-	return fmt.Sprintf("%s.%s", appFQN, clusterBase)
-}
-
-// GetVMAppFQDN gets the app-specific Fully Qualified Domain Name
-// for VM based apps
-func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, domain string) string {
-	appFQN := GetAppFQN(&key.AppKey)
-	return fmt.Sprintf("%s.%s", appFQN, GetCloudletBaseFQDN(cloudletKey, domain))
+	loc := util.DNSSanitize(key.Name)
+	oper := util.DNSSanitize(key.Organization)
+	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
 }
 
 // GetAppInstId returns a string for this AppInst that is likely to be

@@ -333,7 +333,7 @@ func main() {
 
 		// setup rootlb certs
 		tlsSpan := log.StartSpan(log.DebugLevelInfo, "tls certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-		wildcardName := cloudcommon.GetRootLBFQDNWildcard(&myCloudletInfo.Key, *appDNSRoot)
+		wildcardName := cloudcommon.GetRootLBFQDNWildcard(&cloudlet)
 		rootlb, err := platform.GetClusterPlatformClient(
 			ctx,
 			&edgeproto.ClusterInst{
@@ -392,6 +392,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		EnvVars:             cloudlet.EnvVar,
 		NodeMgr:             &nodeMgr,
 		AppDNSRoot:          *appDNSRoot,
+		RootLBFQDN:          cloudlet.RootLbFqdn,
 		DeploymentTag:       nodeMgr.DeploymentTag,
 		Upgrade:             *upgrade,
 		AccessApi:           accessApi,

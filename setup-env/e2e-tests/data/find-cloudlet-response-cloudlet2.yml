@@ -1,5 +1,5 @@
 status: Found
-fqdn: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
+fqdn: reservablecluster2-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
 ports:
 - proto: Tcp
   internalport: 80

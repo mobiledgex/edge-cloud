@@ -28,6 +28,7 @@ type PlatformConfig struct {
 	EnvVars             map[string]string
 	NodeMgr             *node.NodeMgr
 	AppDNSRoot          string
+	RootLBFQDN          string
 	ChefServerPath      string
 	DeploymentTag       string
 	Upgrade             bool

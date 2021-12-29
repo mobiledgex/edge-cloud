@@ -1,4 +1,4 @@
-package edgeproto
+package main
 
 import (
 	"encoding/json"
@@ -8,17 +8,18 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	context "golang.org/x/net/context"
 )
 
-func CheckForHttpPorts(ctx context.Context, objStore objstore.KVStore) error {
+func CheckForHttpPorts(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
 	cbErrs := make([]error, 0)
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var appInst AppInst
+		var appInst edgeproto.AppInst
 		err2 := json.Unmarshal(val, &appInst)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appInst", appInst)
@@ -53,11 +54,11 @@ func CheckForHttpPorts(ctx context.Context, objStore objstore.KVStore) error {
 
 var PlatosEnablingLayer = "PlatosEnablingLayer"
 
-func PruneplatosPlatformDevices(ctx context.Context, objStore objstore.KVStore) error {
+func PruneplatosPlatformDevices(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "PruneplatosPlatformDevices")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Device"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var device Device
+		var device edgeproto.Device
 		err2 := json.Unmarshal(val, &device)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2)
@@ -77,12 +78,12 @@ func PruneplatosPlatformDevices(ctx context.Context, objStore objstore.KVStore) 
 
 // SetTrusted sets the Trusted bit to true for all InternalPorts apps on
 // the assumption that Internal-only apps are trusted
-func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
+func SetTrusted(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted")
 
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var app App
+		var app edgeproto.App
 		err2 := json.Unmarshal(val, &app)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
@@ -110,12 +111,12 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore) error {
 // * Set default resource alert threshold for cloudlets
 // * AddCloudletRefsClusterInstKeys adds ClusterInst keys to cloudlet refs
 //   the assumption that Internal-only apps are trusted
-func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "CloudletResourceUpgradeFunc")
 
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Cloudlet"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var cloudlet Cloudlet
+		var cloudlet edgeproto.Cloudlet
 		err2 := json.Unmarshal(val, &cloudlet)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudlet", cloudlet)
@@ -137,16 +138,16 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 		return nil
 	})
 
-	clusterMap := make(map[CloudletKey][]ClusterInstRefKey)
+	clusterMap := make(map[edgeproto.CloudletKey][]edgeproto.ClusterInstRefKey)
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
 	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var clusterInst ClusterInst
+		var clusterInst edgeproto.ClusterInst
 		err2 := json.Unmarshal(val, &clusterInst)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "clusterinst", clusterInst)
 			return err2
 		}
-		clKey := ClusterInstRefKey{}
+		clKey := edgeproto.ClusterInstRefKey{}
 		clKey.FromClusterInstKey(&clusterInst.Key)
 		clusterMap[clusterInst.Key.CloudletKey] = append(clusterMap[clusterInst.Key.CloudletKey], clKey)
 		return nil
@@ -155,10 +156,10 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 		return err
 	}
 
-	vmAppMap := make(map[AppKey]struct{})
+	vmAppMap := make(map[edgeproto.AppKey]struct{})
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
 	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var app App
+		var app edgeproto.App
 		err2 := json.Unmarshal(val, &app)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
@@ -173,10 +174,10 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 		return err
 	}
 
-	vmAppInstMap := make(map[CloudletKey][]AppInstRefKey)
+	vmAppInstMap := make(map[edgeproto.CloudletKey][]edgeproto.AppInstRefKey)
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
 	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var appInst AppInst
+		var appInst edgeproto.AppInst
 		err2 := json.Unmarshal(val, &appInst)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appinst", appInst)
@@ -185,7 +186,7 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 		if _, ok := vmAppMap[appInst.Key.AppKey]; !ok {
 			return nil
 		}
-		aiKey := AppInstRefKey{}
+		aiKey := edgeproto.AppInstRefKey{}
 		aiKey.FromAppInstKey(&appInst.Key)
 		clKey := appInst.Key.ClusterInstKey.CloudletKey
 		vmAppInstMap[clKey] = append(vmAppInstMap[clKey], aiKey)
@@ -197,7 +198,7 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 
 	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletRefs"))
 	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var refs CloudletRefs
+		var refs edgeproto.CloudletRefs
 		err2 := json.Unmarshal(val, &refs)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletrefs", refs)
@@ -235,12 +236,12 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore)
 }
 
 // Handles initializing a new map on existing AppInstRefs objects.
-func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
+func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "AppInstRefsDR")
 
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInstRefs"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var refs AppInstRefs
+		var refs edgeproto.AppInstRefs
 		err2 := json.Unmarshal(val, &refs)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appinstrefs", refs)
@@ -265,7 +266,7 @@ func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore) error {
 }
 
 // TrustPolicyException upgrade func
-func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVStore) error {
+func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc")
 
 	type RemoteConnection struct {
@@ -283,7 +284,7 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var app App
+		var app edgeproto.App
 		err2 := json.Unmarshal(val, &app)
 		if err2 != nil {
 			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
@@ -297,9 +298,9 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 		}
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
 		if len(appV0.RequiredOutboundConnections) > 0 {
-			newReqdConns := []SecurityRule{}
+			newReqdConns := []edgeproto.SecurityRule{}
 			for _, conn := range appV0.RequiredOutboundConnections {
-				secRule := SecurityRule{
+				secRule := edgeproto.SecurityRule{
 					Protocol:     conn.Protocol,
 					PortRangeMin: conn.Port,
 					PortRangeMax: conn.Port,
@@ -323,7 +324,7 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 }
 
 // Initiate and back-populate cluster refs objects for existing AppInsts
-func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
+func AddClusterRefs(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "ClusterRefs")
 
 	// Get all AppInsts
@@ -347,7 +348,7 @@ func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
 				// must have been deleted in the meantime
 				return nil
 			}
-			appInst := AppInst{}
+			appInst := edgeproto.AppInst{}
 			err := json.Unmarshal([]byte(appInstStr), &appInst)
 			if err != nil {
 				return fmt.Errorf("Unmarshal AppInst %s failed: %s", aiKey, err)
@@ -358,7 +359,7 @@ func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
 			if appStr == "" {
 				return fmt.Errorf("No App found for AppInst %s", aiKey)
 			}
-			app := App{}
+			app := edgeproto.App{}
 			err = json.Unmarshal([]byte(appStr), &app)
 			if err != nil {
 				return fmt.Errorf("Unmarshal App %s failed: %s", appKey, err)
@@ -371,7 +372,7 @@ func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
 			clusterInstKey := appInst.ClusterInstKey()
 			refsKey := objstore.DbKeyString("ClusterRefs", clusterInstKey)
 			refsStr := stm.Get(refsKey)
-			refs := ClusterRefs{}
+			refs := edgeproto.ClusterRefs{}
 			if refsStr != "" {
 				err = json.Unmarshal([]byte(refsStr), &refs)
 				if err != nil {
@@ -413,21 +414,16 @@ func AddClusterRefs(ctx context.Context, objStore objstore.KVStore) error {
 
 // This is the old cloudcommon.GetAppFQN() function which was used by
 // the vmlayer to generate the name for heat stacks, etc.
-func oldGetAppFQN(key *AppKey) string {
+func oldGetAppFQN(key *edgeproto.AppKey) string {
 	app := util.DNSSanitize(key.Name)
 	dev := util.DNSSanitize(key.Organization)
 	ver := util.DNSSanitize(key.Version)
 	return fmt.Sprintf("%s%s%s", dev, app, ver)
 }
 
-func AddAppInstUniqueId(ctx context.Context, objStore objstore.KVStore) error {
+func AddAppInstUniqueId(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	// Get all AppInsts
-	appInstKeys := make(map[string]struct{})
-	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
-	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		appInstKeys[string(key)] = struct{}{}
-		return nil
-	})
+	appInstKeys, err := getDbObjectKeys(objStore, "AppInst")
 	if err != nil {
 		return err
 	}
@@ -442,7 +438,7 @@ func AddAppInstUniqueId(ctx context.Context, objStore objstore.KVStore) error {
 				// must have been deleted in the meantime
 				return nil
 			}
-			appInst := AppInst{}
+			appInst := edgeproto.AppInst{}
 			err := json.Unmarshal([]byte(appInstStr), &appInst)
 			if err != nil {
 				return fmt.Errorf("Unmarshal AppInst %s failed: %s", aiKey, err)
@@ -459,8 +455,164 @@ func AddAppInstUniqueId(ctx context.Context, objStore objstore.KVStore) error {
 			stm.Put(aiKey, string(aiData))
 			// store unique id - these may conflict but
 			// there's not much we can do about the old ones.
-			idKey := AppInstIdDbKey(appInst.UniqueId)
+			idKey := edgeproto.AppInstIdDbKey(appInst.UniqueId)
 			stm.Put(idKey, appInst.UniqueId)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getDbObjectKeys(objStore objstore.KVStore, dbPrefix string) (map[string]struct{}, error) {
+	keys := make(map[string]struct{})
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString(dbPrefix))
+	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
+		keys[string(key)] = struct{}{}
+		return nil
+	})
+	return keys, err
+}
+
+// deprecated fqdn functions
+
+const oldRootLBHostname = "shared"
+
+// GetCloudletBaseFQDN gets the base 3-label FQDN for the cloudlet.
+// For TLS termination, we should only require a single cert that
+// wildcard matches *.<cloudlet-base-fqdn>, as all other DNS names
+// should only add one more label on top of the base fqdn.
+func oldGetCloudletBaseFQDN(key *edgeproto.CloudletKey, domain string) string {
+	loc := util.DNSSanitize(key.Name)
+	oper := util.DNSSanitize(key.Organization)
+	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
+}
+
+// GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
+// for apps using "shared" IP access.
+func oldGetRootLBFQDN(key *edgeproto.CloudletKey, domain string) string {
+	return fmt.Sprintf("%s.%s", oldRootLBHostname, oldGetCloudletBaseFQDN(key, domain))
+}
+
+// GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
+// for clusters using "dedicated" IP access.
+func oldGetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
+	clust := util.DNSSanitize(clusterKey.Name)
+	return fmt.Sprintf("%s.%s", clust, oldGetCloudletBaseFQDN(cloudletKey, domain))
+}
+
+// GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
+// for apps using "dedicated" IP access. This will not allow TLS, but will
+// ensure uniqueness when an IP is assigned per k8s-service per AppInst per cluster.
+func oldGetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey, domain string) string {
+	clusterBase := oldGetDedicatedLBFQDN(cloudletKey, clusterKey, domain)
+	appFQN := oldGetAppFQN(&key.AppKey)
+	return fmt.Sprintf("%s.%s", appFQN, clusterBase)
+}
+
+// GetVMAppFQDN gets the app-specific Fully Qualified Domain Name
+// for VM based apps
+func oldGetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, domain string) string {
+	appFQN := oldGetAppFQN(&key.AppKey)
+	return fmt.Sprintf("%s.%s", appFQN, oldGetCloudletBaseFQDN(cloudletKey, domain))
+}
+
+func AddDnsLabels(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
+	// Process cloudlets first
+	cloudletKeys, err := getDbObjectKeys(objStore, "Cloudlet")
+	if err != nil {
+		return err
+	}
+	for key, _ := range cloudletKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get cloudlet
+			cloudletStr := stm.Get(key)
+			if cloudletStr == "" {
+				return nil // was deleted
+			}
+			cloudlet := edgeproto.Cloudlet{}
+			err := json.Unmarshal([]byte(cloudletStr), &cloudlet)
+			if err != nil {
+				return fmt.Errorf("Unmarshal Cloudlet %s failed: %s", key, err)
+			}
+			if cloudlet.DnsLabel != "" {
+				return nil // already done
+			}
+			if err := allApis.cloudletApi.setDnsLabel(stm, &cloudlet); err != nil {
+				return fmt.Errorf("Set dns label for cloudlet %s failed, %s", key, err)
+			}
+			if cloudlet.RootLbFqdn == "" {
+				// set old version of rootLBFQDN
+				cloudlet.RootLbFqdn = oldGetRootLBFQDN(&cloudlet.Key, *appDNSRoot)
+			}
+			allApis.cloudletApi.store.STMPut(stm, &cloudlet)
+			allApis.cloudletApi.dnsLabelStore.STMPut(stm, cloudlet.DnsLabel)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	clusterInstKeys, err := getDbObjectKeys(objStore, "ClusterInst")
+	if err != nil {
+		return err
+	}
+	for key, _ := range clusterInstKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			clusterInstStr := stm.Get(key)
+			if clusterInstStr == "" {
+				return nil // was deleted
+			}
+			clusterInst := edgeproto.ClusterInst{}
+			err := json.Unmarshal([]byte(clusterInstStr), &clusterInst)
+			if err != nil {
+				return fmt.Errorf("Unmarshal ClusterInst %s failed: %s", key, err)
+			}
+			if clusterInst.DnsLabel != "" {
+				return nil // already done
+			}
+			if err := allApis.clusterInstApi.setDnsLabel(stm, &clusterInst); err != nil {
+				return fmt.Errorf("Set dns label for ClusterInst %s failed, %s", key, err)
+			}
+			if clusterInst.Fqdn == "" {
+				clusterInst.Fqdn = oldGetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, *appDNSRoot)
+			}
+
+			allApis.clusterInstApi.store.STMPut(stm, &clusterInst)
+			allApis.clusterInstApi.dnsLabelStore.STMPut(stm, &clusterInst.Key.CloudletKey, clusterInst.DnsLabel)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	appInstKeys, err := getDbObjectKeys(objStore, "AppInst")
+	if err != nil {
+		return err
+	}
+	for key, _ := range appInstKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			appInstStr := stm.Get(key)
+			if appInstStr == "" {
+				return nil // was deleted
+			}
+			appInst := edgeproto.AppInst{}
+			err := json.Unmarshal([]byte(appInstStr), &appInst)
+			if err != nil {
+				return fmt.Errorf("Unmarshal ClusterInst %s failed: %s", key, err)
+			}
+			if appInst.DnsLabel != "" {
+				return nil // already done
+			}
+			if err := allApis.appInstApi.setDnsLabel(stm, &appInst); err != nil {
+				return fmt.Errorf("Set dns label for AppInst %s failed, %s", key, err)
+			}
+			allApis.appInstApi.store.STMPut(stm, &appInst)
+			allApis.appInstApi.dnsLabelStore.STMPut(stm, &appInst.Key.ClusterInstKey.CloudletKey, appInst.DnsLabel)
 			return nil
 		})
 		if err != nil {

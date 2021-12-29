@@ -29,6 +29,7 @@ build: check-vers
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	go install ./protoc-gen-notify
+	go install ./protoc-gen-controller
 	go install ./protoc-gen-controller-test
 	make -C ./protoc-gen-cmd
 	make -C ./log

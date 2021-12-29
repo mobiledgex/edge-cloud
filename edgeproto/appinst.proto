@@ -158,6 +158,8 @@ message AppInst {
   bool dedicated_ip = 39;
   // A unique id for the AppInst within the region to be used by platforms
   string unique_id = 40 [(protogen.backend) = true];
+  // DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts
+  string dns_label = 41 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
