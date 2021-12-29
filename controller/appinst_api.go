@@ -23,11 +23,12 @@ import (
 )
 
 type AppInstApi struct {
-	all     *AllApis
-	sync    *Sync
-	store   edgeproto.AppInstStore
-	cache   edgeproto.AppInstCache
-	idStore edgeproto.AppInstIdStore
+	all           *AllApis
+	sync          *Sync
+	store         edgeproto.AppInstStore
+	cache         edgeproto.AppInstCache
+	idStore       edgeproto.AppInstIdStore
+	dnsLabelStore *edgeproto.CloudletObjectDnsLabelStore
 }
 
 const RootLBSharedPortBegin int32 = 10000
@@ -50,6 +51,7 @@ func NewAppInstApi(sync *Sync, all *AllApis) *AppInstApi {
 	appInstApi.all = all
 	appInstApi.sync = sync
 	appInstApi.store = edgeproto.NewAppInstStore(sync.store)
+	appInstApi.dnsLabelStore = &all.cloudletApi.objectDnsLabelStore
 	edgeproto.InitAppInstCache(&appInstApi.cache)
 	sync.RegisterCache(&appInstApi.cache)
 	return &appInstApi
@@ -887,6 +889,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.UniqueId == "" {
 			return fmt.Errorf("Unable to compute unique AppInstId, please change AppInst key values")
 		}
+		if err := s.setDnsLabel(stm, in); err != nil {
+			return err
+		}
 
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
@@ -894,6 +899,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		s.idStore.STMPut(stm, in.UniqueId)
+		s.dnsLabelStore.STMPut(stm, &in.Key.ClusterInstKey.CloudletKey, in.DnsLabel)
 		s.all.appInstRefsApi.addRef(stm, &in.Key)
 		if cloudcommon.IsClusterInstReqd(&app) {
 			s.all.clusterRefsApi.addRef(stm, in)
@@ -928,6 +934,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				if curr.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
 					s.store.STMDel(stm, &in.Key)
 					s.idStore.STMDel(stm, in.UniqueId)
+					s.dnsLabelStore.STMDel(stm, &in.Key.ClusterInstKey.CloudletKey, in.DnsLabel)
 					s.all.appInstRefsApi.removeRef(stm, &in.Key)
 					if cloudcommon.IsClusterInstReqd(&app) {
 						s.all.clusterRefsApi.removeRef(stm, in)
@@ -1063,10 +1070,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
-		var clusterKey *edgeproto.ClusterKey
+		cloudlet := edgeproto.Cloudlet{}
+		if !s.all.cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
+			return errors.New("Specified Cloudlet not found")
+		}
+		clusterInst := edgeproto.ClusterInst{}
 		ipaccess := edgeproto.IpAccess_IP_ACCESS_SHARED
 		if cloudcommon.IsClusterInstReqd(&app) {
-			clusterInst := edgeproto.ClusterInst{}
 			if !s.all.clusterInstApi.store.STMGet(stm, in.ClusterInstKey(), &clusterInst) {
 				return errors.New("ClusterInst does not exist for App")
 			}
@@ -1084,7 +1094,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return fmt.Errorf("Cannot deploy %s App into %s ClusterInst", app.Deployment, clusterInst.Deployment)
 			}
 			ipaccess = clusterInst.IpAccess
-			clusterKey = &clusterInst.Key.ClusterKey
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -1093,15 +1102,14 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			initCloudletRefs(&cloudletRefs, &in.Key.ClusterInstKey.CloudletKey)
 		}
 
+		in.Uri = getAppInstFQDN(in, &cloudlet)
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 		if !cloudcommon.IsClusterInstReqd(&app) {
-			in.Uri = cloudcommon.GetVMAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			for ii := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
 		} else if in.DedicatedIp {
 			// Per AppInst dedicated IP
-			in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 			for ii := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
@@ -1112,8 +1120,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// updated to current version.
 				in.Uri = cloudcommon.GetRootLBFQDNOld(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
 			} else {
-				// current style FQDN
-				in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.ClusterInstKey.CloudletKey, *appDNSRoot)
+				// uri points to cloudlet shared root LB
+				in.Uri = cloudlet.RootLbFqdn
 			}
 			if cloudletRefs.RootLbPorts == nil {
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
@@ -1164,7 +1172,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		} else {
 			if isIPAllocatedPerService(ctx, cloudletPlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
 				// dedicated access in which each service gets a different ip
-				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
 				for ii := range ports {
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
@@ -1174,7 +1181,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return err
 				}
 				// dedicated access in which IP is that of the LB
-				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey, *appDNSRoot)
+				in.Uri = clusterInst.Fqdn
 				for ii := range ports {
 					ports[ii].PublicPort = ports[ii].InternalPort
 				}
@@ -1681,7 +1688,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsChanged := false
 		hasRefs := s.all.cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudletRefs)
-		if hasRefs && clusterInstReqd && clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts {
+		if hasRefs && clusterInstReqd && clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_SHARED && !app.InternalPorts && !in.DedicatedIp {
 			// shared root load balancer
 			log.SpanLog(ctx, log.DebugLevelApi, "refs", "AppInst", in)
 			for ii, _ := range in.MappedPorts {
@@ -1746,6 +1753,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
 			s.idStore.STMDel(stm, in.UniqueId)
+			s.dnsLabelStore.STMDel(stm, &in.Key.ClusterInstKey.CloudletKey, in.DnsLabel)
 			s.all.appInstRefsApi.removeRef(stm, &in.Key)
 			if cloudcommon.IsClusterInstReqd(&app) {
 				s.all.clusterRefsApi.removeRef(stm, in)
@@ -1937,6 +1945,7 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		}
 		s.store.STMDel(stm, &in.Key)
 		s.idStore.STMDel(stm, inst.UniqueId)
+		s.dnsLabelStore.STMDel(stm, &in.Key.ClusterInstKey.CloudletKey, inst.DnsLabel)
 		s.all.appInstRefsApi.removeRef(stm, &in.Key)
 		s.all.clusterRefsApi.removeRef(stm, &inst)
 
@@ -1961,6 +1970,7 @@ func (s *AppInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.AppIns
 		if newState == edgeproto.TrackedState_DELETE_DONE {
 			s.store.STMDel(stm, &in.Key)
 			s.idStore.STMDel(stm, inst.UniqueId)
+			s.dnsLabelStore.STMDel(stm, &in.Key.ClusterInstKey.CloudletKey, inst.DnsLabel)
 			s.all.appInstRefsApi.removeRef(stm, &in.Key)
 			s.all.clusterRefsApi.removeRef(stm, &inst)
 		} else {

@@ -77,6 +77,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-1-dmuus
+  rootlbfqdn: shared.dmuus-cloud-1-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: dmuus
@@ -156,6 +158,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: smallcluster-acmeappco
+  fqdn: smallcluster-acmeappco.dmuus-cloud-1-dmuus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -320,6 +324,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

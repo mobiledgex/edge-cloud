@@ -177,6 +177,9 @@ func startServices() error {
 	if !util.ValidRegion(*region) {
 		return fmt.Errorf("invalid region name")
 	}
+	if len(*appDNSRoot) > cloudcommon.DnsDomainLabelMaxLen {
+		return fmt.Errorf("appDNSRoot %q must be less than %d characters", *appDNSRoot, cloudcommon.DnsDomainLabelMaxLen)
+	}
 
 	ctx, span, err := nodeMgr.Init(node.NodeTypeController, node.CertIssuerRegional, node.WithName(ControllerId), node.WithContainerVersion(*versionTag), node.WithRegion(*region))
 	if err != nil {
@@ -212,12 +215,16 @@ func startServices() error {
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
 	}
 
+	sync := InitSync(objStore)
+	allApis := NewAllApis(sync)
+	services.allApis = allApis
+
 	// We might need to upgrade the stored objects
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
 		version, err := checkVersion(ctx, objStore)
 		if err != nil && strings.Contains(err.Error(), ErrCtrlUpgradeRequired.Error()) && *autoUpgrade {
-			err = edgeproto.UpgradeToLatest(version, objStore)
+			err = UpgradeToLatest(version, objStore, allApis)
 			if err != nil {
 				return fmt.Errorf("Failed to ugprade data model: %v", err)
 			}
@@ -231,9 +238,6 @@ func startServices() error {
 	}
 	services.listeners = append(services.listeners, lis)
 
-	sync := InitSync(objStore)
-	allApis := NewAllApis(sync)
-	services.allApis = allApis
 	sync.Start()
 	services.sync = sync
 	// requireNotifyAccessKey allows for backwards compatibility when

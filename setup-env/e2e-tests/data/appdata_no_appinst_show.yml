@@ -76,6 +76,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: att-cloud-1-att
+  rootlbfqdn: shared.att-cloud-1-att.local.localtest.net
 - key:
     organization: azure
     name: azure-cloud-4
@@ -92,6 +94,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: azure-cloud-4-azure
+  rootlbfqdn: shared.azure-cloud-4-azure.local.localtest.net
 - key:
     organization: gcp
     name: gcp-cloud-5
@@ -108,6 +112,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: gcp-cloud-5-gcp
+  rootlbfqdn: shared.gcp-cloud-5-gcp.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-1
@@ -124,6 +130,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-1-dmuus
+  rootlbfqdn: shared.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -140,6 +148,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-2-dmuus
+  rootlbfqdn: shared.dmuus-cloud-2-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: att
@@ -445,10 +455,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: reservablecluster.dmuus-cloud-1.dmuus.fake.net
+    - name: reservablecluster-mobiledgex.dmuus-cloud-1-dmuus.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservablecluster-mobiledgex
+  fqdn: reservablecluster-mobiledgex.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: ReservableCluster2
@@ -477,10 +489,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: reservablecluster2.dmuus-cloud-2.dmuus.fake.net
+    - name: reservablecluster2-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservablecluster2-mobiledgex
+  fqdn: reservablecluster2-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: SmallCluster
@@ -508,10 +522,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: smallcluster.dmuus-cloud-1.dmuus.fake.net
+    - name: smallcluster-acmeappco.dmuus-cloud-1-dmuus.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: smallcluster-acmeappco
+  fqdn: smallcluster-acmeappco.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: SmallCluster
@@ -539,6 +555,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: smallcluster-acmeappco
+  fqdn: smallcluster-acmeappco.dmuus-cloud-2-dmuus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -881,6 +899,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservablecluster-dmuus-cloud-1-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex1
 - key:
     appkey:
       organization: MobiledgeX
@@ -908,6 +927,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservablecluster2-dmuus-cloud-2-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex1
 - key:
     appkey:
       organization: MobiledgeX
@@ -935,6 +955,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -962,6 +983,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-2-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

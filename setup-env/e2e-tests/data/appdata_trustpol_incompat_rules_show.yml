@@ -93,6 +93,8 @@ cloudlets:
   trustpolicy: TrustPolicy1
   trustpolicystate: Ready
   defaultresourcealertthreshold: 80
+  dnslabel: cloudlet1-dmuus
+  rootlbfqdn: shared.cloudlet1-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: cloudlet2
@@ -109,6 +111,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: cloudlet2-dmuus
+  rootlbfqdn: shared.cloudlet2-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: dmuus
@@ -238,6 +242,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: cluster1-acmeappco
+  fqdn: cluster1-acmeappco.cloudlet1-dmuus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -384,6 +390,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-cluster1-cloudlet1-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

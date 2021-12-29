@@ -1,5 +1,5 @@
 - status: Found
-  fqdn: acmeappcosomeapplication110.reservable0.azure-cloud-4.azure.localtest.net
+  fqdn: someapplication110-acmeappco.azure-cloud-4-azure.local.localtest.net
   ports:
   - proto: Tcp
     internalport: 80
@@ -17,7 +17,7 @@
     latitude: 32
     longitude: -91
 - status: Found
-  fqdn: reservablecluster2.dmuus-cloud-2.dmuus.localtest.net
+  fqdn: reservablecluster2-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
   ports:
   - proto: Tcp
     internalport: 80
@@ -32,7 +32,7 @@
     latitude: 35
     longitude: -95
 - status: Found
-  fqdn: shared.att-cloud-1.att.localtest.net
+  fqdn: shared.att-cloud-1-att.local.localtest.net
   ports:
   - proto: Tcp
     internalport: 80

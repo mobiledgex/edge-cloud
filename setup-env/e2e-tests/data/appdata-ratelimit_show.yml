@@ -75,6 +75,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: azure-cloud-4-azure
+  rootlbfqdn: shared.azure-cloud-4-azure.local.localtest.net
 - key:
     organization: gcp
     name: gcp-cloud-5
@@ -91,6 +93,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: gcp-cloud-5-gcp
+  rootlbfqdn: shared.gcp-cloud-5-gcp.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-1
@@ -107,6 +111,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-1-dmuus
+  rootlbfqdn: shared.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-2
@@ -123,6 +129,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-2-dmuus
+  rootlbfqdn: shared.dmuus-cloud-2-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: dmuus-cloud-3
@@ -139,6 +147,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: dmuus-cloud-3-dmuus
+  rootlbfqdn: shared.dmuus-cloud-3-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: azure
@@ -429,6 +439,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: smallcluster-acmeappco
+  fqdn: smallcluster-acmeappco.dmuus-cloud-1-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: SmallCluster
@@ -460,10 +472,12 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: smallcluster.dmuus-cloud-2.dmuus.fake.net
+    - name: smallcluster-acmeappco.dmuus-cloud-2-dmuus.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: smallcluster-acmeappco
+  fqdn: smallcluster-acmeappco.dmuus-cloud-2-dmuus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -819,6 +833,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappconoportsapp10-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: noportsapp10-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -834,7 +849,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: shared.dmuus-cloud-1.dmuus.localtest.net
+  uri: shared.dmuus-cloud-1-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Udp
@@ -847,6 +862,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcohelmapplication10-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: helmapplication10-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -862,7 +878,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: shared.dmuus-cloud-1.dmuus.localtest.net
+  uri: shared.dmuus-cloud-1-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -893,6 +909,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -908,7 +925,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: smallcluster.dmuus-cloud-2.dmuus.localtest.net
+  uri: smallcluster-acmeappco.dmuus-cloud-2-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -939,6 +956,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-2-dmuus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -954,7 +972,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: acmeappco1vmapp110.dmuus-cloud-1.dmuus.localtest.net
+  uri: vmapp110-acmeappco1.dmuus-cloud-1-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -973,6 +991,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappco1vmapp110-dmuus-cloud-1-dmuus
+  dnslabel: vmapp110-acmeappco1
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -988,7 +1007,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: acmeappco1vmapp210.dmuus-cloud-2.dmuus.localtest.net
+  uri: vmapp210-acmeappco1.dmuus-cloud-2-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -1007,6 +1026,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappco1vmapp210-dmuus-cloud-2-dmuus
+  dnslabel: vmapp210-acmeappco1
 - key:
     appkey:
       organization: MobiledgeX
@@ -1034,6 +1054,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -1061,6 +1082,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-2-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -1084,6 +1106,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexnfsautoprovision10-smallcluster-dmuus-cloud-1-dmuus
+  dnslabel: nfsautoprovision10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

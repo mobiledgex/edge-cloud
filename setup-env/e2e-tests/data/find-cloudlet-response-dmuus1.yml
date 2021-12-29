@@ -1,5 +1,5 @@
 status: Found
-fqdn: shared.dmuus-cloud-1.dmuus.localtest.net
+fqdn: shared.dmuus-cloud-1-dmuus.local.localtest.net
 ports:
 - proto: Tcp
   internalport: 80

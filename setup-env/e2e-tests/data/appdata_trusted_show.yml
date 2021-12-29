@@ -93,6 +93,8 @@ cloudlets:
   trustpolicy: TrustPolicy1
   trustpolicystate: Ready
   defaultresourcealertthreshold: 80
+  dnslabel: cloudlet1-dmuus
+  rootlbfqdn: shared.cloudlet1-dmuus.local.localtest.net
 - key:
     organization: dmuus
     name: cloudlet2
@@ -109,6 +111,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: cloudlet2-dmuus
+  rootlbfqdn: shared.cloudlet2-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: dmuus
@@ -242,6 +246,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: cluster1-acmeappco
+  fqdn: cluster1-acmeappco.cloudlet1-dmuus.local.localtest.net
 - key:
     clusterkey:
       name: cluster2
@@ -261,7 +267,7 @@ clusterinsts:
   masternodeflavor: x1.small
   resources:
     vms:
-    - name: cluster2.cloudlet2.dmuus.fake.net
+    - name: cluster2-acmeappco.cloudlet2-dmuus.local.localtest.net
       type: rootlb
       status: ACTIVE
       infraflavor: x1.small
@@ -277,6 +283,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: cluster2-acmeappco
+  fqdn: cluster2-acmeappco.cloudlet2-dmuus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -471,7 +479,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: cluster2.cloudlet2.dmuus.localtest.net
+  uri: cluster2-acmeappco.cloudlet2-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -488,6 +496,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappconontrustedapp10-cluster2-cloudlet2-dmuus
+  dnslabel: nontrustedapp10-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -503,7 +512,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: shared.cloudlet1.dmuus.localtest.net
+  uri: shared.cloudlet1-dmuus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -520,6 +529,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcotrustedapp10-cluster1-cloudlet1-dmuus
+  dnslabel: trustedapp10-acmeappco
 - key:
     appkey:
       organization: MobiledgeX
@@ -547,6 +557,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-cluster1-cloudlet1-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -574,6 +585,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-cluster2-cloudlet2-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

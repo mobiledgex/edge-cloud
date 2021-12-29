@@ -25,6 +25,7 @@ type ClusterInstApi struct {
 	all            *AllApis
 	sync           *Sync
 	store          edgeproto.ClusterInstStore
+	dnsLabelStore  *edgeproto.CloudletObjectDnsLabelStore
 	cache          edgeproto.ClusterInstCache
 	cleanupWorkers tasks.KeyWorkers
 }
@@ -56,6 +57,7 @@ func NewClusterInstApi(sync *Sync, all *AllApis) *ClusterInstApi {
 	clusterInstApi.all = all
 	clusterInstApi.sync = sync
 	clusterInstApi.store = edgeproto.NewClusterInstStore(sync.store)
+	clusterInstApi.dnsLabelStore = &all.cloudletApi.objectDnsLabelStore
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
 	clusterInstApi.cleanupWorkers.Init("ClusterInst-cleanup", clusterInstApi.cleanupClusterInst)
@@ -984,6 +986,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		refs.ClusterInsts = append(refs.ClusterInsts, cRefKey)
 		s.all.cloudletRefsApi.store.STMPut(stm, &refs)
 
+		if err := s.setDnsLabel(stm, in); err != nil {
+			return err
+		}
+		in.Fqdn = getClusterInstFQDN(in, &cloudlet)
+
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 
 		if ignoreCRM(cctx) {
@@ -993,6 +1000,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
+		s.dnsLabelStore.STMPut(stm, &in.Key.CloudletKey, in.DnsLabel)
 		return nil
 	})
 	if err != nil {
@@ -1391,6 +1399,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			s.dnsLabelStore.STMDel(stm, &in.Key.CloudletKey, in.DnsLabel)
 			s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 			// delete associated streamobj as well
 			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
@@ -1553,6 +1562,7 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		s.dnsLabelStore.STMDel(stm, &in.Key.CloudletKey, inst.DnsLabel)
 		s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 
 		// delete associated streamobj as well
@@ -1577,6 +1587,7 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 		}
 		if newState == edgeproto.TrackedState_NOT_PRESENT {
 			s.store.STMDel(stm, &in.Key)
+			s.dnsLabelStore.STMDel(stm, &in.Key.CloudletKey, inst.DnsLabel)
 			s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 		} else {
 			inst.State = newState
@@ -1831,21 +1842,33 @@ func getDefaultClustKey(cloudletKey edgeproto.CloudletKey, ownerOrg string) *edg
 
 // The cloudlet singular cluster is a software-only cluster that represents
 // the singular infra k8s cluster that already exists and is the entire cloudlet.
-func (s *ClusterInstApi) createCloudletSingularCluster(stm concurrency.STM, key *edgeproto.CloudletKey, ownerOrg string) {
+func (s *ClusterInstApi) createCloudletSingularCluster(stm concurrency.STM, cloudlet *edgeproto.Cloudlet, ownerOrg string) error {
 	clusterInst := edgeproto.ClusterInst{}
 	multiTenant := false
 	if ownerOrg == "" {
 		multiTenant = true
 	}
-	clusterInst.Key = *getDefaultClustKey(*key, ownerOrg)
+	clusterInst.Key = *getDefaultClustKey(cloudlet.Key, ownerOrg)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 	clusterInst.MultiTenant = multiTenant
 	clusterInst.State = edgeproto.TrackedState_READY
+	clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+	if err := s.setDnsLabel(stm, &clusterInst); err != nil {
+		return err
+	}
+	clusterInst.Fqdn = getClusterInstFQDN(&clusterInst, cloudlet)
 	s.store.STMPut(stm, &clusterInst)
+	s.dnsLabelStore.STMPut(stm, &clusterInst.Key.CloudletKey, clusterInst.DnsLabel)
+	return nil
 }
 
 func (s *ClusterInstApi) deleteCloudletSingularCluster(stm concurrency.STM, key *edgeproto.CloudletKey, ownerOrg string) {
 	clusterInstKey := getDefaultClustKey(*key, ownerOrg)
+	clusterInst := edgeproto.ClusterInst{}
+	if !s.store.STMGet(stm, clusterInstKey, &clusterInst) {
+		return
+	}
 	s.store.STMDel(stm, clusterInstKey)
+	s.dnsLabelStore.STMDel(stm, key, clusterInst.DnsLabel)
 	s.all.clusterRefsApi.deleteRef(stm, clusterInstKey)
 }

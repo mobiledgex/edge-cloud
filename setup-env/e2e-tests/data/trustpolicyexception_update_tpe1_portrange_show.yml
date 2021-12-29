@@ -73,6 +73,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: cloudlet2-dmuus
+  rootlbfqdn: shared.cloudlet2-dmuus.local.localtest.net
 cloudletinfos:
 - key:
     organization: dmuus
@@ -150,6 +152,10 @@ clusterinsts:
   masternodeflavor: x1.small
   resources:
     vms:
+    - name: Untomt-cluster-22-Untomt.cloudlet2-dmuus.local.localtest.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
     - name: fake-master-1-cloudlet2-Untomt-cluster-22-Untomt
       type: cluster-master
       status: ACTIVE
@@ -158,10 +164,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: Untomt-cluster-22.cloudlet2.dmuus.fake.net
-      type: rootlb
-      status: ACTIVE
-      infraflavor: x1.small
+  dnslabel: Untomt-cluster-22-Untomt
+  fqdn: Untomt-cluster-22-Untomt.cloudlet2-dmuus.local.localtest.net
 apps:
 - key:
     organization: Untomt
@@ -290,7 +294,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: Untomt-cluster-22.cloudlet2.dmuus.localtest.net
+  uri: Untomt-cluster-22-Untomt.cloudlet2-dmuus.local.localtest.net
   liveness: Dynamic
   mappedports:
   - proto: Tcp
@@ -306,6 +310,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: Untomtvrmax100-Untomt-cluster-22-cloudlet2-dmuus
+  dnslabel: vrmax100-Untomt
 - key:
     appkey:
       organization: MobiledgeX
@@ -333,6 +338,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-Untomt-cluster-22-cloudlet2-dmuus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: Untomt
