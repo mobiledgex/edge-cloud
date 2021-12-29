@@ -9,8 +9,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
-// CloudletDnsLabelStore is used to store Cloudlet DNS LABELs which are
-// valid DNS segements and are unique within the region.
+// CloudletDnsLabelStore is used to store Cloudlet DNS labels which are
+// valid DNS segments and are unique within the region.
 type CloudletDnsLabelStore struct{}
 
 func CloudletDnsLabelDbKey(label string) string {
@@ -36,7 +36,7 @@ func (s *CloudletDnsLabelStore) STMDel(stm concurrency.STM, label string) {
 	stm.Del(keystr)
 }
 
-// CloudletObjectDnsLabelStore is used to store Cloudlet Object DNS LABELs
+// CloudletObjectDnsLabelStore is used to store Cloudlet Object DNS labels
 // which are valid DNS segments and are unique within the cloudlet.
 // Examples of cloudlet objects are AppInsts and ClusterInsts.
 type CloudletObjectDnsLabelStore struct{}

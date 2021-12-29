@@ -68,10 +68,17 @@ func (s *AppInstApi) setDnsLabel(stm concurrency.STM, ai *edgeproto.AppInst) err
 	// to avoid being truncated. Truncate fields separately
 	// to avoid the last field from being completely truncated
 	// if other fields are too long.
-	app := dnsSanitizeTrunc(ai.Key.AppKey.Name, 40)
-	ver := dnsSanitizeTrunc(ai.Key.AppKey.Version, 15)
-	org := dnsSanitizeTrunc(ai.Key.AppKey.Organization, 20)
+	app := dnsSanitizeTrunc(ai.Key.AppKey.Name, 60)
+	ver := dnsSanitizeTrunc(ai.Key.AppKey.Version, 60)
+	org := dnsSanitizeTrunc(ai.Key.AppKey.Organization, 60)
 	baseLabel := app + ver + "-" + org
+
+	if len(baseLabel) > cloudcommon.DnsCloudletObjectLabelMaxLen {
+		// prioritize truncation of appname+version
+		app = dnsSanitizeTrunc(app, 40)
+		ver = dnsSanitizeTrunc(ver, 10)
+		baseLabel = app + ver + "-" + org
+	}
 
 	// Number of iterations must be fairly low to avoid STM limits
 	ai.DnsLabel = ""

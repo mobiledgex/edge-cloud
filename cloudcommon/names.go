@@ -175,7 +175,6 @@ const DnsDomainLabelMaxLen = 40
 const DnsRegionLabelMaxLen = 10
 const DnsCloudletLabelMaxLen = 50
 const DnsCloudletObjectLabelMaxLen = 63
-const DnsLabelMaxLen = 63
 
 // Wildcard cert for all LBs both shared and dedicated
 func GetRootLBFQDNWildcard(cloudlet *edgeproto.Cloudlet) string {
