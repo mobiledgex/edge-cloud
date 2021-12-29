@@ -267,6 +267,10 @@ clusterinsts:
   masternodeflavor: x1.small
   resources:
     vms:
+    - name: cluster2.cloudlet2.tmus.fake.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
     - name: fake-master-1-cloudlet2-cluster2-acmeappco
       type: cluster-master
       status: ACTIVE

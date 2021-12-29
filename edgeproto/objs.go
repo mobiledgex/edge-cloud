@@ -74,6 +74,11 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ClusterInsts[:], func(i, j int) bool {
 		return a.ClusterInsts[i].Key.GetKeyString() < a.ClusterInsts[j].Key.GetKeyString()
 	})
+	for ii := range a.ClusterInsts {
+		sort.Slice(a.ClusterInsts[ii].Resources.Vms, func(i, j int) bool {
+			return a.ClusterInsts[ii].Resources.Vms[i].Name < a.ClusterInsts[ii].Resources.Vms[j].Name
+		})
+	}
 	sort.Slice(a.Flavors[:], func(i, j int) bool {
 		return a.Flavors[i].Key.GetKeyString() < a.Flavors[j].Key.GetKeyString()
 	})
