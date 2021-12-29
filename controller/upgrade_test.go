@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/stretchr/testify/require"
@@ -157,18 +157,29 @@ func TestAllUpgradeFuncs(t *testing.T) {
 	objstore.InitRegion(1)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
+
+	cplookup := &node.CloudletPoolCache{}
+	cplookup.Init()
+	nodeMgr.CloudletPoolLookup = cplookup
+	cloudletLookup := &node.CloudletCache{}
+	cloudletLookup.Init()
+	nodeMgr.CloudletLookup = cloudletLookup
+
+	sync := InitSync(&objStore)
+	apis := NewAllApis(sync)
+
 	ctx := log.StartTestSpan(context.Background())
-	for ii, fn := range edgeproto.VersionHash_UpgradeFuncs {
+	for ii, fn := range VersionHash_UpgradeFuncs {
 		if fn == nil {
 			continue
 		}
 		objStore.Start()
-		err := buildDbFromTestData(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
+		err := buildDbFromTestData(&objStore, VersionHash_UpgradeFuncNames[ii])
 		require.Nil(t, err, "Unable to build db from testData")
-		err = edgeproto.RunSingleUpgrade(ctx, &objStore, fn)
+		err = RunSingleUpgrade(ctx, &objStore, apis, fn)
 		require.Nil(t, err, "Upgrade failed")
-		err = compareDbToExpected(&objStore, edgeproto.VersionHash_UpgradeFuncNames[ii])
-		require.Nil(t, err, "Unexpected result from upgrade function(%s)", edgeproto.VersionHash_UpgradeFuncNames[ii])
+		err = compareDbToExpected(&objStore, VersionHash_UpgradeFuncNames[ii])
+		require.Nil(t, err, "Unexpected result from upgrade function(%s)", VersionHash_UpgradeFuncNames[ii])
 		// Stop it, so it's re-created again
 		objStore.Stop()
 	}
@@ -176,7 +187,7 @@ func TestAllUpgradeFuncs(t *testing.T) {
 	objStore.Start()
 	err := buildDbFromTestData(&objStore, "CheckForHttpPortsFail")
 	require.Nil(t, err, "Unable to build db from testData")
-	err = edgeproto.RunSingleUpgrade(ctx, &objStore, edgeproto.CheckForHttpPorts)
+	err = RunSingleUpgrade(ctx, &objStore, apis, CheckForHttpPorts)
 	require.NotNil(t, err, "Upgrade did not fail")
 	objStore.Stop()
 }

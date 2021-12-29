@@ -80,6 +80,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: tmus-cloud-1-tmus
+  rootlbfqdn: shared.tmus-cloud-1-tmus.local.localtest.net
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -96,6 +98,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: tmus-cloud-2-tmus
+  rootlbfqdn: shared.tmus-cloud-2-tmus.local.localtest.net
 cloudletinfos:
 - key:
     organization: tmus
@@ -225,6 +229,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: someapplication1-acmeappco
+  fqdn: someapplication1-acmeappco.tmus-cloud-1-tmus.local.localtest.net
 - key:
     clusterkey:
       name: someapplication1
@@ -252,6 +258,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: someapplication1-acmeappco
+  fqdn: someapplication1-acmeappco.tmus-cloud-2-tmus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -415,7 +423,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: shared.tmus-cloud-1.tmus.localtest.net
+  uri: shared.tmus-cloud-1-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -437,6 +445,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-someapplication1-tmus-cloud-1-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -452,7 +461,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: shared.tmus-cloud-2.tmus.localtest.net
+  uri: shared.tmus-cloud-2-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -474,6 +483,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-someapplication1-tmus-cloud-2-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: MobiledgeX
@@ -501,6 +511,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-someapplication1-tmus-cloud-1-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -528,6 +539,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-someapplication1-tmus-cloud-2-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

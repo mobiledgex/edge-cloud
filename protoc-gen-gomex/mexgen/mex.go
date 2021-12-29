@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -175,25 +174,6 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	m.support.PrintUsedImports(m.gen)
 }
 
-func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
-	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
-	for _, e := range enum.Value {
-		if GetUpgradeFunc(e) != "" {
-			m.P(e.Number, ": ", GetUpgradeFunc(e), ",")
-		} else {
-			m.P(e.Number, ": nil,")
-		}
-	}
-	m.P("}")
-}
-func (m *mex) generateUpgradeFuncNames(enum *descriptor.EnumDescriptorProto) {
-	m.P("var ", enum.Name, "_UpgradeFuncNames = map[int32]string{")
-	for _, e := range enum.Value {
-		m.P(e.Number, ": ", strconv.Quote(GetUpgradeFunc(e)), ",")
-	}
-	m.P("}")
-}
-
 func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumDescriptor) {
 	en := desc.EnumDescriptorProto
 	m.P("var ", en.Name, "Strings = []string{")
@@ -247,9 +227,6 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages, salt))
 		// Generate a hash of all the key messages.
 		m.generateVersionString(hashStr)
-		// Generate an array with function names
-		m.generateUpgradeFuncs(en)
-		m.generateUpgradeFuncNames(en)
 		// Generate version check code for version message
 		validateVersionHash(en, hashStr, file)
 	}
@@ -2586,7 +2563,6 @@ func (m *mex) generateClearTaggedFields(srcPkg string, parents []string, desc *g
 		hierField := strings.Join(append(parents, name), ".")
 		mapType := m.support.GetMapType(m.gen, field)
 		repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
-
 		tag := GetHideTag(field)
 		if tag == "" && *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && mapType == nil {
 			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())

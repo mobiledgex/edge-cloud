@@ -1,5 +1,5 @@
 status: Found
-fqdn: shared.tmus-cloud-1.tmus.localtest.net
+fqdn: shared.tmus-cloud-1-tmus.local.localtest.net
 ports:
 - proto: Tcp
   internalport: 80
