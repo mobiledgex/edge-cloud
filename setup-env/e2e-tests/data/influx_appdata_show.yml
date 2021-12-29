@@ -75,6 +75,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: tmus-cloud-1-tmus
+  rootlbfqdn: shared.tmus-cloud-1-tmus.local.localtest.net
 cloudletinfos:
 - key:
     organization: tmus
@@ -159,6 +161,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: smallcluster-acmeappco
+  fqdn: smallcluster-acmeappco.tmus-cloud-1-tmus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -346,7 +350,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: shared.tmus-cloud-1.tmus.localtest.net
+  uri: shared.tmus-cloud-1-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -369,6 +373,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-smallcluster-tmus-cloud-1-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: MobiledgeX
@@ -396,6 +401,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-1-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -419,6 +425,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexnfsautoprovision10-smallcluster-tmus-cloud-1-tmus
+  dnslabel: nfsautoprovision10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

@@ -639,6 +639,8 @@ var ClusterInstComments = map[string]string{
 	"multitenant":                            "Multi-tenant kubernetes cluster",
 	"networks":                               "networks to connect to, specify networks:empty=true to clear",
 	"deleteprepare":                          "Preparing to be deleted",
+	"dnslabel":                               "DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts",
+	"fqdn":                                   "FQDN is a globally unique DNS id for the ClusterInst",
 }
 var ClusterInstSpecialArgs = map[string]string{
 	"errors":      "StringArray",

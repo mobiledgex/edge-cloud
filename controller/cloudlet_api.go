@@ -28,11 +28,13 @@ import (
 )
 
 type CloudletApi struct {
-	all             *AllApis
-	sync            *Sync
-	store           edgeproto.CloudletStore
-	cache           *edgeproto.CloudletCache
-	accessKeyServer *node.AccessKeyServer
+	all                 *AllApis
+	sync                *Sync
+	store               edgeproto.CloudletStore
+	cache               *edgeproto.CloudletCache
+	accessKeyServer     *node.AccessKeyServer
+	dnsLabelStore       edgeproto.CloudletDnsLabelStore
+	objectDnsLabelStore edgeproto.CloudletObjectDnsLabelStore
 }
 
 // Vault roles for all services
@@ -130,6 +132,7 @@ func (s *CloudletApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cloud
 		}
 		if newState == edgeproto.TrackedState_NOT_PRESENT {
 			s.store.STMDel(stm, &in.Key)
+			s.dnsLabelStore.STMDel(stm, inst.DnsLabel)
 			s.all.cloudletRefsApi.store.STMDel(stm, &in.Key)
 			s.all.clusterInstApi.deleteCloudletSingularCluster(stm, &in.Key, inst.SingleKubernetesClusterOwner)
 		} else {
@@ -634,9 +637,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
+		if err := s.setDnsLabel(stm, in); err != nil {
+			return err
+		}
+		in.RootLbFqdn = getCloudletRootLBFQDN(in)
 		if features.IsSingleKubernetesCluster {
 			// create ClusterInst representation of Cloudlet
-			s.all.clusterInstApi.createCloudletSingularCluster(stm, &in.Key, in.SingleKubernetesClusterOwner)
+			err := s.all.clusterInstApi.createCloudletSingularCluster(stm, in, in.SingleKubernetesClusterOwner)
+			if err != nil {
+				return err
+			}
 		}
 
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
@@ -647,6 +657,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			in.State = edgeproto.TrackedState_CREATING
 		}
 		s.store.STMPut(stm, in)
+		s.dnsLabelStore.STMPut(stm, in.DnsLabel)
 		return nil
 	})
 	if err != nil {
@@ -1595,6 +1606,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		s.dnsLabelStore.STMDel(stm, updateCloudlet.DnsLabel)
 		s.all.cloudletRefsApi.store.STMDel(stm, &in.Key)
 		if features.IsSingleKubernetesCluster {
 			s.all.clusterInstApi.deleteCloudletSingularCluster(stm, &in.Key, updateCloudlet.SingleKubernetesClusterOwner)

@@ -9,7 +9,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: smallcluster.tmus-cloud-2.tmus.localtest.net
+    fqdn: smallcluster-acmeappco.tmus-cloud-2-tmus.local.localtest.net
     ports:
     - proto: Tcp
       internalport: 80
