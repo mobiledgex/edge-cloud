@@ -50,6 +50,7 @@ type Controller struct {
 	CheckpointInterval   string
 	AppDNSRoot           string
 	ChefServerPath       string
+	ThanosRecvAddr       string
 }
 type Dme struct {
 	Common      `yaml:",inline"`

@@ -148,6 +148,7 @@ metadata:
   name: {{.Name}}
   labels:
     run: {{.Run}}
+    monitor: mobiledgex
 spec:
   type: LoadBalancer
   ports:

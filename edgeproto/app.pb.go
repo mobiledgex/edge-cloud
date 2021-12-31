@@ -4387,16 +4387,12 @@ func (e *QosSessionProfile) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("Invalid QosSessionProfile value %v", b)
 }
 
-/*
- * This is removed because we do not have enough time in
- * release 3.0 to update the SDK, UI, and documentation for this
- * change. It should be done in 3.1.
 func (e QosSessionProfile) MarshalJSON() ([]byte, error) {
 	str := proto.EnumName(QosSessionProfile_CamelName, int32(e))
 	str = strings.TrimPrefix(str, "Qos")
 	return json.Marshal(str)
 }
-*/
+
 var QosSessionProfileCommonPrefix = "Qos"
 
 var VmAppOsTypeStrings = []string{
