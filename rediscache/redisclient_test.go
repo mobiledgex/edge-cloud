@@ -16,7 +16,7 @@ func TestDummyRedisClient(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	client := NewDummyRedisClient()
+	client := NewDummyRedis()
 
 	resStr, err := client.Set(ctx, "k1", "v1", 0)
 	require.Nil(t, err)

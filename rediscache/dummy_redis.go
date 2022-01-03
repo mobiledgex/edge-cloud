@@ -15,24 +15,24 @@ type dummyData struct {
 	expirationTime  time.Duration
 }
 
-type DummyRedisClient struct {
+type DummyRedis struct {
 	db     map[string]*dummyData
 	msgChs map[string]chan *redis.Message
 	mux    util.Mutex
 }
 
-func NewDummyRedisClient() *DummyRedisClient {
-	client := DummyRedisClient{}
-	client.db = make(map[string]*dummyData)
-	client.msgChs = make(map[string]chan *redis.Message)
-	return &client
+func NewDummyRedis() *DummyRedis {
+	rdb := DummyRedis{}
+	rdb.db = make(map[string]*dummyData)
+	rdb.msgChs = make(map[string]chan *redis.Message)
+	return &rdb
 }
 
-func (r *DummyRedisClient) IsServerReady() error {
+func (r *DummyRedis) IsServerReady() error {
 	return nil
 }
 
-func (r *DummyRedisClient) Get(ctx context.Context, key string) (string, error) {
+func (r *DummyRedis) Get(ctx context.Context, key string) (string, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	if r.db == nil {
@@ -51,7 +51,7 @@ func (r *DummyRedisClient) Get(ctx context.Context, key string) (string, error) 
 	return data.val, nil
 }
 
-func (r *DummyRedisClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) (string, error) {
+func (r *DummyRedis) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) (string, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	if r.db == nil {
@@ -71,7 +71,7 @@ func (r *DummyRedisClient) Set(ctx context.Context, key string, value interface{
 	return "OK", nil
 }
 
-func (r *DummyRedisClient) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) (bool, error) {
+func (r *DummyRedis) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) (bool, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	if r.db == nil {
@@ -95,7 +95,7 @@ func (r *DummyRedisClient) SetNX(ctx context.Context, key string, value interfac
 	return true, nil
 }
 
-func (r *DummyRedisClient) Del(ctx context.Context, keys ...string) (int64, error) {
+func (r *DummyRedis) Del(ctx context.Context, keys ...string) (int64, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	if r.db == nil {
@@ -111,12 +111,12 @@ func (r *DummyRedisClient) Del(ctx context.Context, keys ...string) (int64, erro
 	return keysRem, nil
 }
 
-func (r *DummyRedisClient) Subscribe(ctx context.Context, channels ...string) (RedisPubSub, error) {
+func (r *DummyRedis) Subscribe(ctx context.Context, channels ...string) (RedisPubSub, error) {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 
 	if len(channels) != 1 {
-		return nil, fmt.Errorf("for dummy client, only one channel is supported")
+		return nil, fmt.Errorf("for dummy redis server, only one channel is supported")
 	}
 
 	pubsub := dummyRedisPubSub{}
@@ -127,7 +127,7 @@ func (r *DummyRedisClient) Subscribe(ctx context.Context, channels ...string) (R
 	return &pubsub, nil
 }
 
-func (r *DummyRedisClient) Publish(ctx context.Context, channel string, message interface{}) error {
+func (r *DummyRedis) Publish(ctx context.Context, channel string, message interface{}) error {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	msgCh, found := r.msgChs[channel]

@@ -30,8 +30,6 @@ func TestAlertApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	redisClient = rediscache.NewDummyRedisClient()
-
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)
 	sync.Start()
@@ -95,8 +93,6 @@ func TestAppInstDownAlert(t *testing.T) {
 
 	dummy := dummyEtcd{}
 	dummy.Start()
-
-	redisClient = rediscache.NewDummyRedisClient()
 
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)
@@ -173,6 +169,7 @@ func testinit() {
 	cloudletLookup := &node.CloudletCache{}
 	cloudletLookup.Init()
 	nodeMgr.CloudletLookup = cloudletLookup
+	redisClient = rediscache.NewDummyRedis()
 }
 
 func testfinish() {

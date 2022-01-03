@@ -59,27 +59,27 @@ func (r *RedisClient) IsServerReady() error {
 
 func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
 	out, err := r.client.Get(key).Result()
-	log.DebugLog(log.DebugLevelRedis, "got data", "key", key, "val", out, "err", err)
+	log.SpanLog(ctx, log.DebugLevelRedis, "got data", "key", key, "val", out, "err", err)
 	return out, err
 }
 
 func (r *RedisClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) (string, error) {
 	out, err := r.client.Set(key, value, expiration).Result()
-	log.DebugLog(log.DebugLevelRedis, "set data", "key", key, "val", value,
+	log.SpanLog(ctx, log.DebugLevelRedis, "set data", "key", key, "val", value,
 		"expiration", expiration, "out", out, "err", err)
 	return out, err
 }
 
 func (r *RedisClient) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) (bool, error) {
 	out, err := r.client.SetNX(key, value, expiration).Result()
-	log.DebugLog(log.DebugLevelRedis, "set data if not exists", "key", key, "val", value,
+	log.SpanLog(ctx, log.DebugLevelRedis, "set data if not exists", "key", key, "val", value,
 		"expiration", expiration, "out", out, "err", err)
 	return out, err
 }
 
 func (r *RedisClient) Del(ctx context.Context, keys ...string) (int64, error) {
 	out, err := r.client.Del(keys...).Result()
-	log.DebugLog(log.DebugLevelRedis, "del data", "keys", keys, "out", out, "err", err)
+	log.SpanLog(ctx, log.DebugLevelRedis, "del data", "keys", keys, "out", out, "err", err)
 	return out, err
 }
 
@@ -89,12 +89,12 @@ func (r *RedisClient) Subscribe(ctx context.Context, channels ...string) (RedisP
 	// Wait for confirmation that subscription is created before publishing anything.
 	_, err := pubsub.Receive()
 	if err != nil {
-		log.DebugLog(log.DebugLevelRedis, "failed to subscribe to channels",
+		log.SpanLog(ctx, log.DebugLevelRedis, "failed to subscribe to channels",
 			"channels", channels, "err", err)
 		return nil, err
 	}
 
-	log.DebugLog(log.DebugLevelRedis, "subscribed to channels", "channels", channels)
+	log.SpanLog(ctx, log.DebugLevelRedis, "subscribed to channels", "channels", channels)
 	return &redisPubSub{pubsub: pubsub}, nil
 }
 

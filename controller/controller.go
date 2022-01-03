@@ -220,7 +220,7 @@ func startServices() error {
 	}
 
 	if *dummyRedis {
-		redisClient = rediscache.NewDummyRedisClient()
+		redisClient = rediscache.NewDummyRedis()
 	} else {
 		redisClient, err = rediscache.NewClient(*redisAddr)
 		if err != nil {

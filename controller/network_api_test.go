@@ -6,7 +6,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +20,6 @@ func TestNetworkApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 	defer dummy.Stop()
-	redisClient = rediscache.NewDummyRedisClient()
 	sync := InitSync(&dummy)
 	apis := NewAllApis(sync)
 	sync.Start()
