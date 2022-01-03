@@ -21,9 +21,6 @@ tests:
   - includefile: get_fqdnlist.yml
   - includefile: get_fqdnlist.yml
     api: rest
-  - includefile: app_official_fqdn_app1.yml
-  - includefile: app_official_fqdn_app1.yml
-    api: rest
   - includefile: find_cloudlet.yml
   - includefile: find_cloudlet.yml
     api: rest
@@ -41,6 +38,7 @@ tests:
     api: rest
   - includefile: get_pos_qos.yml
   - includefile: trustpol_add_update.yml
+  - includefile: trustpolexception_add_update.yml
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 

@@ -1173,6 +1173,10 @@ func (m *AppInstClientKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *AppInstClientKey) ClearTagged(tags map[string]struct{}) {
+	s.AppInstKey.ClearTagged(tags)
+}
+
 const AppInstClientFieldClientKey = "2"
 const AppInstClientFieldClientKeyAppInstKey = "2.1"
 const AppInstClientFieldClientKeyAppInstKeyAppKey = "2.1.1"
@@ -1545,6 +1549,16 @@ func (m *AppInstClient) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *AppInstClient) ClearTagged(tags map[string]struct{}) {
+	s.ClientKey.ClearTagged(tags)
+	if _, found := tags["nocmp"]; found {
+		s.Location = distributed_match_engine.Loc{}
+	}
+	if _, found := tags["nocmp"]; found {
+		s.NotifyId = 0
+	}
 }
 
 func IgnoreAppInstClientFields(taglist string) cmp.Option {

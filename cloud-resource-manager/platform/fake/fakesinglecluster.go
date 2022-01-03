@@ -9,5 +9,6 @@ type PlatformSingleCluster struct {
 func (s *PlatformSingleCluster) GetFeatures() *platform.Features {
 	features := s.Platform.GetFeatures()
 	features.IsSingleKubernetesCluster = true
+	features.SupportsAppInstDedicatedIP = true
 	return features
 }

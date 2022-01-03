@@ -2,7 +2,6 @@ package dmecommon
 
 import (
 	"flag"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -184,8 +183,6 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddIntVal("errs", stat.errs)
 	metric.AddStringVal("foundCloudlet", key.CloudletFound.Name)
 	metric.AddStringVal("foundOperator", key.CloudletFound.Organization)
-	// Cell ID is just a unique number - keep it as a string
-	metric.AddStringVal("cellID", strconv.FormatUint(uint64(key.CellId), 10))
 	stat.latency.AddToMetric(&metric)
 	return &metric
 }
@@ -215,28 +212,6 @@ func MetricToStat(metric *edgeproto.Metric) (*StatKey, *ApiStat) {
 	}
 	stat.latency.FromMetric(metric)
 	return key, stat
-}
-
-func getCellIdFromDmeReq(req interface{}) uint32 {
-	switch typ := req.(type) {
-	case *dme.RegisterClientRequest:
-		return typ.CellId
-	case *dme.FindCloudletRequest:
-		return typ.CellId
-	case *dme.VerifyLocationRequest:
-		return typ.CellId
-	case *dme.GetLocationRequest:
-		return typ.CellId
-	case *dme.AppInstListRequest:
-		return typ.CellId
-	case *dme.FqdnListRequest:
-		return typ.CellId
-	case *dme.DynamicLocGroupRequest:
-		return typ.CellId
-	case *dme.QosPositionRequest:
-		return typ.CellId
-	}
-	return 0
 }
 
 func getAppInstClient(appname, appver, apporg string, loc *dme.Loc) *edgeproto.AppInstClient {
@@ -348,7 +323,6 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 		call.Key.AppKey.Name = ckey.AppName
 		call.Key.AppKey.Version = ckey.AppVers
 	}
-	call.Key.CellId = getCellIdFromDmeReq(req)
 	if err != nil {
 		call.Fail = true
 	}

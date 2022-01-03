@@ -661,6 +661,9 @@ func (m *StreamKey) ValidateEnums() error {
 	return nil
 }
 
+func (s *StreamKey) ClearTagged(tags map[string]struct{}) {
+}
+
 var StreamStateStrings = []string{
 	"STREAM_UNKNOWN",
 	"STREAM_START",

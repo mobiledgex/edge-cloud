@@ -25,21 +25,6 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func TrustPolicyHideTags(in *edgeproto.TrustPolicy) {
-	if cli.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cli.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-	for i0 := 0; i0 < len(in.OutboundSecurityRules); i0++ {
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
-	}
-}
-
 var TrustPolicyApiCmd edgeproto.TrustPolicyApiClient
 
 var CreateTrustPolicyCmd = &cli.Command{
@@ -338,7 +323,6 @@ func ShowTrustPolicy(c *cli.Command, in *edgeproto.TrustPolicy) error {
 			}
 			return fmt.Errorf("ShowTrustPolicy recv failed: %s", errstr)
 		}
-		TrustPolicyHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -379,10 +363,10 @@ var SecurityRuleOptionalArgs = []string{
 }
 var SecurityRuleAliasArgs = []string{}
 var SecurityRuleComments = map[string]string{
-	"protocol":     "tcp, udp, icmp",
+	"protocol":     "TCP, UDP, ICMP",
 	"portrangemin": "TCP or UDP port range start",
 	"portrangemax": "TCP or UDP port range end",
-	"remotecidr":   "remote CIDR X.X.X.X/X",
+	"remotecidr":   "Remote CIDR X.X.X.X/X",
 }
 var SecurityRuleSpecialArgs = map[string]string{}
 var TrustPolicyRequiredArgs = []string{
@@ -404,11 +388,11 @@ var TrustPolicyComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":                         "Name of the organization for the cluster that this policy will apply to",
 	"name":                                 "Policy name",
-	"outboundsecurityrules:empty":          "list of outbound security rules for whitelisting traffic, specify outboundsecurityrules:empty=true to clear",
-	"outboundsecurityrules:#.protocol":     "tcp, udp, icmp",
+	"outboundsecurityrules:empty":          "List of outbound security rules for whitelisting traffic, specify outboundsecurityrules:empty=true to clear",
+	"outboundsecurityrules:#.protocol":     "TCP, UDP, ICMP",
 	"outboundsecurityrules:#.portrangemin": "TCP or UDP port range start",
 	"outboundsecurityrules:#.portrangemax": "TCP or UDP port range end",
-	"outboundsecurityrules:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"outboundsecurityrules:#.remotecidr":   "Remote CIDR X.X.X.X/X",
 	"deleteprepare":                        "Preparing to be deleted",
 }
 var TrustPolicySpecialArgs = map[string]string{

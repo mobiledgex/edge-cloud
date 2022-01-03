@@ -313,6 +313,9 @@ func (m *Organization) ValidateEnums() error {
 	return nil
 }
 
+func (s *Organization) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *OrganizationData) DeepCopyIn(src *OrganizationData) {
 	if src.Orgs != nil {
 		m.Orgs = make([]Organization, len(src.Orgs), len(src.Orgs))
@@ -332,6 +335,14 @@ func (m *OrganizationData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *OrganizationData) ClearTagged(tags map[string]struct{}) {
+	if s.Orgs != nil {
+		for ii := 0; ii < len(s.Orgs); ii++ {
+			s.Orgs[ii].ClearTagged(tags)
+		}
+	}
 }
 
 func (m *Organization) IsValidArgsForOrganizationInUse() error {

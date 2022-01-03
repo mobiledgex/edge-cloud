@@ -218,17 +218,28 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 	if !ok {
 		return fmt.Errorf("missing cluster vms for %v", clusterInst.Key)
 	}
+	newcVMs := []edgeproto.VmInfo{}
 	for _, vmInfo := range cVMs {
 		if vmInfo.Type == cloudcommon.VMTypeClusterK8sNode {
 			if _, ok := fakeNodes[vmInfo.Name]; ok {
 				delete(fakeNodes, vmInfo.Name)
+				newcVMs = append(newcVMs, vmInfo)
+			} else {
+				UpdateCommonResourcesUsed(clusterInst.NodeFlavor, ResourceRemove)
 			}
 		} else if vmInfo.Type == cloudcommon.VMTypeClusterMaster {
 			if _, ok := fakeMasters[vmInfo.Name]; ok {
 				delete(fakeMasters, vmInfo.Name)
+				newcVMs = append(newcVMs, vmInfo)
+			} else {
+				UpdateCommonResourcesUsed(clusterInst.MasterNodeFlavor, ResourceRemove)
 			}
+		} else {
+			// rootlb
+			newcVMs = append(newcVMs, vmInfo)
 		}
 	}
+	FakeClusterVMs[clusterInst.Key] = newcVMs
 	for vmName, _ := range fakeNodes {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
@@ -277,9 +288,8 @@ func updateClusterResCount(clusterInst *edgeproto.ClusterInst) {
 		UpdateCommonResourcesUsed(clusterInst.NodeFlavor, ResourceAdd)
 	}
 	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-		rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
-			Name:        rootLBFQDN,
+			Name:        clusterInst.Fqdn,
 			Type:        cloudcommon.VMTypeRootLB,
 			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
@@ -291,7 +301,7 @@ func updateClusterResCount(clusterInst *edgeproto.ClusterInst) {
 
 func updateVmAppResCount(ctx context.Context, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) {
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
-		appFQN := cloudcommon.GetAppFQN(&app.Key)
+		appFQN := appInst.DnsLabel
 		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
 		if len(FakeClusterVMs) == 0 {
 			FakeClusterVMs = make(map[edgeproto.ClusterInstKey][]edgeproto.VmInfo)
@@ -331,9 +341,9 @@ func (s *Platform) CreateClusterInst(ctx context.Context, clusterInst *edgeproto
 func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto.ClusterInst, updateCallback edgeproto.CacheUpdateCallback) error {
 	updateCallback(edgeproto.UpdateTask, "First Delete Task")
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
-	rootLBFQDN := cloudcommon.GetDedicatedLBFQDN(&clusterInst.Key.CloudletKey, &clusterInst.Key.ClusterKey, FakeAppDNSRoot)
+	fqdn := clusterInst.Fqdn
 	vms := make(map[string]string)
-	vms[rootLBFQDN] = "x1.small"
+	vms[fqdn] = "x1.small"
 	vmNameSuffix := k8smgmt.GetCloudletClusterName(&clusterInst.Key)
 	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
 		vmName := fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix)
@@ -347,7 +357,7 @@ func (s *Platform) DeleteClusterInst(ctx context.Context, clusterInst *edgeproto
 		for _, vm := range clusterVMs {
 			if vmFlavor, ok := vms[vm.Name]; ok {
 				UpdateCommonResourcesUsed(vmFlavor, ResourceRemove)
-				if vm.Name == rootLBFQDN {
+				if vm.Name == fqdn {
 					FakeExternalIpsUsed -= 1
 				}
 				continue
@@ -477,7 +487,7 @@ func (s *Platform) DeleteAppInst(ctx context.Context, clusterInst *edgeproto.Clu
 	updateCallback(edgeproto.UpdateTask, "Second Delete Task")
 	log.SpanLog(ctx, log.DebugLevelInfra, "fake AppInst deleted")
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
-		appFQN := cloudcommon.GetAppFQN(&app.Key)
+		appFQN := appInst.DnsLabel
 		clusterInst.Key.ClusterKey.Name = appFQN + "-" + appInst.Key.ClusterInstKey.ClusterKey.Name
 		UpdateCommonResourcesUsed(appInst.VmFlavor, ResourceRemove)
 		if app.AccessType == edgeproto.AccessType_ACCESS_TYPE_DIRECT {

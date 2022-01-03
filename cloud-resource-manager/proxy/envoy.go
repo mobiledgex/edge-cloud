@@ -57,13 +57,17 @@ func CreateEnvoyProxy(ctx context.Context, client ssh.Client, name, listenIP, ba
 	if opts.MetricIP != "" {
 		metricIP = opts.MetricIP
 	}
-	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, metricIP, appInst, skipHcPorts)
+	isTLS, err := createEnvoyYaml(ctx, client, dir, name, listenIP, backendIP, metricIP, opts.MetricUDS, appInst, skipHcPorts)
 	if err != nil {
 		return fmt.Errorf("create envoy.yaml failed, %v", err)
 	}
 
+	metricEndpoint := metricIP
+	if opts.MetricUDS {
+		metricEndpoint = cloudcommon.ProxyMetricsListenUDS
+	}
 	// container name is envoy+name for now to avoid conflicts with the nginx containers
-	cmdArgs := []string{"run", "-d", "-l edge-cloud", "--restart=unless-stopped", "--name", "envoy" + name}
+	cmdArgs := []string{"run", "-d", "-l edge-cloud", "-l", cloudcommon.MexMetricEndpoint + "=" + metricEndpoint, "--restart=unless-stopped", "--name", "envoy" + name}
 	if opts.DockerPublishPorts {
 		cmdArgs = append(cmdArgs, dockermgmt.GetDockerPortString(appInst.MappedPorts, dockermgmt.UsePublicPortInContainer, dockermgmt.EnvoyProxy, listenIP)...)
 	}
@@ -146,7 +150,7 @@ func getBackendIpToUse(ctx context.Context, appInst *edgeproto.AppInst, port *dm
 	return serviceBackendIP, nil
 }
 
-func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, defaultBackendIP, metricIP string, appInst *edgeproto.AppInst, skipHcPorts string) (bool, error) {
+func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, listenIP, defaultBackendIP, metricIP string, metricUDS bool, appInst *edgeproto.AppInst, skipHcPorts string) (bool, error) {
 	var skipHcAll = false
 	var skipHcPortsMap map[string]struct{}
 	var err error
@@ -155,6 +159,7 @@ func createEnvoyYaml(ctx context.Context, client ssh.Client, yamldir, name, list
 		Name:       name,
 		MetricIP:   metricIP,
 		MetricPort: cloudcommon.ProxyMetricsPort,
+		MetricUDS:  metricUDS,
 		CertName:   cloudcommon.CertName,
 	}
 	// check skip health check ports
@@ -376,9 +381,14 @@ static_resources:
 admin:
   access_log_path: "/tmp/admin.log"
   address:
+  {{- if .MetricUDS}}
+    pipe:
+       path: "/var/tmp/metrics.sock"
+  {{- else}}
     socket_address:
       address: {{.MetricIP}}
       port_value: {{.MetricPort}}
+  {{- end}}
 `
 
 var sdsYaml = `

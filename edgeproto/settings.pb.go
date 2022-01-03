@@ -2264,6 +2264,14 @@ func (m *Settings) ValidateEnums() error {
 	return nil
 }
 
+func (s *Settings) ClearTagged(tags map[string]struct{}) {
+	if s.EdgeEventsMetricsContinuousQueriesCollectionIntervals != nil {
+		for ii := 0; ii < len(s.EdgeEventsMetricsContinuousQueriesCollectionIntervals); ii++ {
+			s.EdgeEventsMetricsContinuousQueriesCollectionIntervals[ii].ClearTagged(tags)
+		}
+	}
+}
+
 func (m *CollectionInterval) CopyInFields(src *CollectionInterval) int {
 	changed := 0
 	if m.Interval != src.Interval {
@@ -2285,6 +2293,9 @@ func (m *CollectionInterval) DeepCopyIn(src *CollectionInterval) {
 // Helper method to check that enums have valid values
 func (m *CollectionInterval) ValidateEnums() error {
 	return nil
+}
+
+func (s *CollectionInterval) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *Settings) IsValidArgsForUpdateSettings() error {

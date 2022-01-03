@@ -73,6 +73,11 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ClusterInsts[:], func(i, j int) bool {
 		return a.ClusterInsts[i].Key.GetKeyString() < a.ClusterInsts[j].Key.GetKeyString()
 	})
+	for ii := range a.ClusterInsts {
+		sort.Slice(a.ClusterInsts[ii].Resources.Vms, func(i, j int) bool {
+			return a.ClusterInsts[ii].Resources.Vms[i].Name < a.ClusterInsts[ii].Resources.Vms[j].Name
+		})
+	}
 	sort.Slice(a.Flavors[:], func(i, j int) bool {
 		return a.Flavors[i].Key.GetKeyString() < a.Flavors[j].Key.GetKeyString()
 	})
@@ -135,7 +140,26 @@ func (a *NodeData) Sort() {
 		ikey.Name = ""
 		jkey := a.Nodes[j].Key
 		jkey.Name = ""
+		if ikey.GetKeyString() == jkey.GetKeyString() {
+			// In e2e-tests, one controller creates the fake
+			// cloudlet, so it loads the plugin, which adds in
+			// the properties. Otherwise, they keys are the same.
+			// For determinism, sort by the number of properties.
+			return len(a.Nodes[i].Properties) < len(a.Nodes[j].Properties)
+		}
 		return ikey.GetKeyString() < jkey.GetKeyString()
+	})
+}
+
+func (s *DeviceData) Sort() {
+	sort.Slice(s.Devices, func(i, j int) bool {
+		return s.Devices[i].GetKey().GetKeyString() < s.Devices[j].GetKey().GetKeyString()
+	})
+}
+
+func (s *RateLimitSettingsData) Sort() {
+	sort.Slice(s.Settings, func(i, j int) bool {
+		return s.Settings[i].GetKey().GetKeyString() < s.Settings[j].GetKey().GetKeyString()
 	})
 }
 
@@ -218,10 +242,10 @@ func (key *AppKey) ValidateKey() error {
 		return errors.New("Invalid app name")
 	}
 	if !util.ValidName(key.Version) {
-		return errors.New("Invalid app version string")
+		return errors.New("Invalid app version")
 	}
 	if !util.ValidName(key.Organization) {
-		return errors.New("Invalid organization name")
+		return errors.New("Invalid app organization")
 	}
 	return nil
 }
@@ -418,10 +442,10 @@ func (s *CloudletInternal) Validate(fields map[string]struct{}) error {
 
 func (key *CloudletPoolKey) ValidateKey() error {
 	if !util.ValidName(key.Organization) {
-		return errors.New("Invalid organization name")
+		return errors.New("Invalid cloudlet pool organization")
 	}
 	if !util.ValidName(key.Name) {
-		return fmt.Errorf("Invalid Cloudlet Pool name %q", key.Name)
+		return fmt.Errorf("Invalid cloudlet pool name")
 	}
 	return nil
 }
@@ -1337,7 +1361,10 @@ func (key *TrustPolicyExceptionKey) ValidateKey() error {
 	}
 	if err := key.CloudletPoolKey.ValidateKey(); err != nil {
 		errstring := err.Error()
-		return fmt.Errorf("Invalid CloudletKey in TrustPolicyExceptionKey, " + errstring)
+		return fmt.Errorf("Invalid CloudletPoolKey in TrustPolicyExceptionKey, " + errstring)
+	}
+	if key.Name == "" {
+		return fmt.Errorf("TrustPolicyException name cannot be empty")
 	}
 	return nil
 }

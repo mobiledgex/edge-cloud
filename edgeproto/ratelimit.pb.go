@@ -1640,6 +1640,9 @@ func (m *FlowSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *FlowSettings) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *FlowRateLimitSettingsKey) Matches(o *FlowRateLimitSettingsKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1730,6 +1733,10 @@ func (m *FlowRateLimitSettingsKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *FlowRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
+	s.RateLimitKey.ClearTagged(tags)
 }
 
 func (m *FlowRateLimitSettings) Matches(o *FlowRateLimitSettings, fopts ...MatchOpt) bool {
@@ -2462,6 +2469,11 @@ func (m *FlowRateLimitSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *FlowRateLimitSettings) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	s.Settings.ClearTagged(tags)
+}
+
 func (m *MaxReqsSettings) Matches(o *MaxReqsSettings, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2518,6 +2530,9 @@ func (m *MaxReqsSettings) ValidateEnums() error {
 		return errors.New("invalid MaxReqsAlgorithm")
 	}
 	return nil
+}
+
+func (s *MaxReqsSettings) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *MaxReqsRateLimitSettingsKey) Matches(o *MaxReqsRateLimitSettingsKey, fopts ...MatchOpt) bool {
@@ -2610,6 +2625,10 @@ func (m *MaxReqsRateLimitSettingsKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func (s *MaxReqsRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
+	s.RateLimitKey.ClearTagged(tags)
 }
 
 func (m *MaxReqsRateLimitSettings) Matches(o *MaxReqsRateLimitSettings, fopts ...MatchOpt) bool {
@@ -3342,6 +3361,11 @@ func (m *MaxReqsRateLimitSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *MaxReqsRateLimitSettings) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	s.Settings.ClearTagged(tags)
+}
+
 func (m *RateLimitSettingsKey) Matches(o *RateLimitSettingsKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -3440,6 +3464,9 @@ func (m *RateLimitSettingsKey) ValidateEnums() error {
 		return errors.New("invalid RateLimitTarget")
 	}
 	return nil
+}
+
+func (s *RateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) bool {
@@ -3766,6 +3793,10 @@ func (m *RateLimitSettings) ValidateEnums() error {
 	return nil
 }
 
+func (s *RateLimitSettings) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+}
+
 func (m *RateLimitSettingsData) DeepCopyIn(src *RateLimitSettingsData) {
 	if src.Settings != nil {
 		m.Settings = make([]RateLimitSettings, len(src.Settings), len(src.Settings))
@@ -3785,6 +3816,14 @@ func (m *RateLimitSettingsData) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *RateLimitSettingsData) ClearTagged(tags map[string]struct{}) {
+	if s.Settings != nil {
+		for ii := 0; ii < len(s.Settings); ii++ {
+			s.Settings[ii].ClearTagged(tags)
+		}
+	}
 }
 
 var ApiEndpointTypeStrings = []string{

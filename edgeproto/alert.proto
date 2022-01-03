@@ -27,7 +27,7 @@ message Alert {
   // State of the alert
   string state = 3;
   // When alert became active
-  distributed_match_engine.Timestamp active_at = 4 [(gogoproto.nullable) = false];
+  distributed_match_engine.Timestamp active_at = 4 [(gogoproto.nullable) = false, (protogen.hidetag) = "timestamp"];
   // Any value associated with alert
   double value = 5;
   // Id of client assigned by server (internal use only)

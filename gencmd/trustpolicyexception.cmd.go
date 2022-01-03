@@ -29,8 +29,8 @@ var TrustPolicyExceptionApiCmd edgeproto.TrustPolicyExceptionApiClient
 
 var CreateTrustPolicyExceptionCmd = &cli.Command{
 	Use:          "CreateTrustPolicyException",
-	RequiredArgs: strings.Join(TrustPolicyExceptionRequiredArgs, " "),
-	OptionalArgs: strings.Join(TrustPolicyExceptionOptionalArgs, " "),
+	RequiredArgs: strings.Join(CreateTrustPolicyExceptionRequiredArgs, " "),
+	OptionalArgs: strings.Join(CreateTrustPolicyExceptionOptionalArgs, " "),
 	AliasArgs:    strings.Join(TrustPolicyExceptionAliasArgs, " "),
 	SpecialArgs:  &TrustPolicyExceptionSpecialArgs,
 	Comments:     TrustPolicyExceptionComments,
@@ -86,8 +86,8 @@ func CreateTrustPolicyExceptions(c *cli.Command, data []edgeproto.TrustPolicyExc
 
 var UpdateTrustPolicyExceptionCmd = &cli.Command{
 	Use:          "UpdateTrustPolicyException",
-	RequiredArgs: strings.Join(UpdateTrustPolicyExceptionRequiredArgs, " "),
-	OptionalArgs: strings.Join(UpdateTrustPolicyExceptionOptionalArgs, " "),
+	RequiredArgs: strings.Join(TrustPolicyExceptionRequiredArgs, " "),
+	OptionalArgs: strings.Join(TrustPolicyExceptionOptionalArgs, " "),
 	AliasArgs:    strings.Join(TrustPolicyExceptionAliasArgs, " "),
 	SpecialArgs:  &TrustPolicyExceptionSpecialArgs,
 	Comments:     TrustPolicyExceptionComments,
@@ -144,8 +144,8 @@ func UpdateTrustPolicyExceptions(c *cli.Command, data []edgeproto.TrustPolicyExc
 
 var DeleteTrustPolicyExceptionCmd = &cli.Command{
 	Use:          "DeleteTrustPolicyException",
-	RequiredArgs: strings.Join(TrustPolicyExceptionRequiredArgs, " "),
-	OptionalArgs: strings.Join(TrustPolicyExceptionOptionalArgs, " "),
+	RequiredArgs: strings.Join(DeleteTrustPolicyExceptionRequiredArgs, " "),
+	OptionalArgs: strings.Join(DeleteTrustPolicyExceptionOptionalArgs, " "),
 	AliasArgs:    strings.Join(TrustPolicyExceptionAliasArgs, " "),
 	SpecialArgs:  &TrustPolicyExceptionSpecialArgs,
 	Comments:     TrustPolicyExceptionComments,
@@ -335,25 +335,37 @@ var TrustPolicyExceptionComments = map[string]string{
 	"name":                                 "TrustPolicyExceptionKey name",
 	"state":                                "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
 	"outboundsecurityrules:empty":          "List of outbound security rules for whitelisting traffic, specify outboundsecurityrules:empty=true to clear",
-	"outboundsecurityrules:#.protocol":     "tcp, udp, icmp",
+	"outboundsecurityrules:#.protocol":     "TCP, UDP, ICMP",
 	"outboundsecurityrules:#.portrangemin": "TCP or UDP port range start",
 	"outboundsecurityrules:#.portrangemax": "TCP or UDP port range end",
-	"outboundsecurityrules:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"outboundsecurityrules:#.remotecidr":   "Remote CIDR X.X.X.X/X",
 }
 var TrustPolicyExceptionSpecialArgs = map[string]string{
 	"fields": "StringArray",
 }
-var UpdateTrustPolicyExceptionRequiredArgs = []string{
+var CreateTrustPolicyExceptionRequiredArgs = []string{
 	"app-org",
 	"app-name",
 	"app-ver",
 	"cloudletpool-org",
 	"cloudletpool-name",
 	"name",
-	"state",
 }
-var UpdateTrustPolicyExceptionOptionalArgs = []string{
-	"outboundsecurityrules:empty",
+var CreateTrustPolicyExceptionOptionalArgs = []string{
+	"outboundsecurityrules:#.protocol",
+	"outboundsecurityrules:#.portrangemin",
+	"outboundsecurityrules:#.portrangemax",
+	"outboundsecurityrules:#.remotecidr",
+}
+var DeleteTrustPolicyExceptionRequiredArgs = []string{
+	"app-org",
+	"app-name",
+	"app-ver",
+	"cloudletpool-org",
+	"cloudletpool-name",
+	"name",
+}
+var DeleteTrustPolicyExceptionOptionalArgs = []string{
 	"outboundsecurityrules:#.protocol",
 	"outboundsecurityrules:#.portrangemin",
 	"outboundsecurityrules:#.portrangemax",

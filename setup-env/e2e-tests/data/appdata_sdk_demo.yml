@@ -15,13 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: x1.small
-
 clusterinsts:
 - key:
     clusterkey:
@@ -37,7 +30,6 @@ cloudlets:
 - key:
     organization: TDG
     name: Nacogdoches1
-  accessuri: nacogdoches1.tdg
   location:
     latitude: 31.6298
     longitude: -94.6493
@@ -46,7 +38,6 @@ cloudlets:
 - key:
     organization: TDG
     name: Saginaw1
-  accessuri: saginaw1.tdg
   location:
     latitude: 32.8719
     longitude: -97.3617
@@ -55,7 +46,6 @@ cloudlets:
 - key:
     organization: TDG
     name: Austin1
-  accessuri: austin1.tdg
   location:
     latitude: 30.2849
     longitude: -97.7362
@@ -64,7 +54,6 @@ cloudlets:
 - key:
     organization: TDG
     name: Houston1
-  accessuri: houston1.tdg
   location:
     latitude: 29.7199
     longitude: -95.3444
@@ -81,8 +70,6 @@ apps:
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
 
 appinstances:
 - key:

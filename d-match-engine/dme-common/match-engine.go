@@ -71,6 +71,8 @@ type DmeApp struct {
 	AutoProvPolicies   map[string]*AutoProvPolicy
 	Deployment         string
 	DefaultFlavor      string
+	QosSessionProfile  string
+	QosSessionDuration time.Duration
 	// Non mapped AppPorts from App definition (used for AppOfficialFqdnReply)
 	Ports []dme.AppPort
 }
@@ -110,11 +112,12 @@ var DmeAppTbl *DmeApps
 
 var Settings edgeproto.Settings
 
+var OptionFindCloudletRandomizeVeryClose bool = true
+
 // Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {
 	AppKey        edgeproto.AppKey
 	CloudletFound edgeproto.CloudletKey
-	CellId        uint32
 	Method        string
 }
 
@@ -193,6 +196,9 @@ func AddApp(ctx context.Context, in *edgeproto.App) {
 	app.DefaultFlavor = in.DefaultFlavor.Name
 	ports, _ := edgeproto.ParseAppPorts(in.AccessPorts)
 	app.Ports = ports
+	app.QosSessionProfile = in.QosSessionProfile.String()
+	app.QosSessionDuration = in.QosSessionDuration.TimeDuration()
+	log.SpanLog(ctx, log.DebugLevelDmedb, "QOS Priority Session values", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration)
 	clearAutoProvStats := []string{}
 	inAP := make(map[string]struct{})
 	if in.AutoProvPolicy != "" {
@@ -810,7 +816,7 @@ func (s *policySearch) log(ctx context.Context) {
 	log.SpanLog(ctx, log.DebugLevelDmereq, "search policySearch result", "potentialType", s.typ, "potentialPolicy", s.policy, "policySearch", s.cloudlet, "distance", s.distance, "freeInst", s.freeInst)
 }
 
-func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.AppKey, loc *dme.Loc, resultLimit int) []*foundAppInst {
+func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.AppKey, loc *dme.Loc, resultLimit int) ([]*foundAppInst, *DmeApp) {
 	tbl := DmeAppTbl
 	carrierName = translateCarrierName(carrierName)
 
@@ -819,12 +825,12 @@ func findBestForCarrier(ctx context.Context, carrierName string, key *edgeproto.
 	app, ok := tbl.Apps[*key]
 	if !ok {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findBestForCarrier app not found", "key", *key)
-		return nil
+		return nil, nil
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmereq, "Find Closest", "appkey", key, "carrierName", carrierName, "loc", *loc)
 
-	return SearchAppInsts(ctx, carrierName, app, loc, app.Carriers, resultLimit)
+	return SearchAppInsts(ctx, carrierName, app, loc, app.Carriers, resultLimit), app
 }
 
 // given the carrier, update the reply if we find a cloudlet closer
@@ -965,7 +971,7 @@ func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appI
 func (s *searchAppInst) insertResult(found *foundAppInst) bool {
 	inserted := false
 	for ii, ai := range s.results {
-		if s.veryClose(found, ai) {
+		if s.veryClose(found, ai) && OptionFindCloudletRandomizeVeryClose {
 			if rand.Float64() > .5 {
 				continue
 			}
@@ -999,6 +1005,10 @@ func (s *searchAppInst) insertResult(found *foundAppInst) bool {
 func (s *searchAppInst) less(f1, f2 *foundAppInst) bool {
 	// For now we sort by distance, but in the future
 	// we may sort by latency or some other metric.
+	if f1.distance == f2.distance {
+		// same cloudlet, go by name
+		return f1.AppInst.virtualClusterInstKey.GetKeyString() < f2.AppInst.virtualClusterInstKey.GetKeyString()
+	}
 	return f1.distance < f2.distance
 }
 
@@ -1118,19 +1128,20 @@ func ConstructFindCloudletReplyFromDmeAppInst(ctx context.Context, appinst *DmeA
 	mreply.EdgeEventsCookie = eecookie
 }
 
-func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration time.Duration) error {
+func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration time.Duration) (error, *DmeApp) {
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
 	// if the app itself is a platform app, it is not returned here
 	if cloudcommon.IsPlatformApp(appkey.Organization, appkey.Name) {
-		return nil
+		return nil, nil
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet", "carrier", carrier, "app", appkey.Name, "developer", appkey.Organization, "version", appkey.Version)
+	var app *DmeApp
 
 	// first find carrier cloudlet
-	list := findBestForCarrier(ctx, carrier, appkey, loc, 1)
+	list, app := findBestForCarrier(ctx, carrier, appkey, loc, 1)
 	if len(list) > 0 {
 		best := list[0]
 		ConstructFindCloudletReplyFromDmeAppInst(ctx, best.AppInst, loc, mreply, edgeEventsCookieExpiration)
@@ -1141,7 +1152,7 @@ func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string,
 	} else {
 		log.SpanLog(ctx, log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
 	}
-	return nil
+	return nil, app
 }
 
 func GetFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
@@ -1230,7 +1241,8 @@ func GetAppInstList(ctx context.Context, ckey *CookieKey, mreq *dme.AppInstListR
 	if resultLimit == 0 {
 		resultLimit = 3
 	}
-	list := findBestForCarrier(ctx, mreq.CarrierName, &appkey, mreq.GpsLocation, resultLimit)
+	list, app := findBestForCarrier(ctx, mreq.CarrierName, &appkey, mreq.GpsLocation, resultLimit)
+	log.SpanLog(ctx, log.DebugLevelDmereq, "Found App", "app", app)
 
 	// group by cloudlet but preserve order.
 	// assumes all AppInsts on a Cloudlet are at the same distance.
@@ -1464,7 +1476,7 @@ loop:
 			}
 			// Check if there is a better cloudlet based on location update
 			fcreply := new(dme.FindCloudletReply)
-			err = FindCloudlet(ctx, &appInstKey.AppKey, lastCarrier, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
+			err, _ = FindCloudlet(ctx, &appInstKey.AppKey, lastCarrier, cupdate.GpsLocation, fcreply, edgeEventsCookieExpiration)
 			if err != nil {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Error trying to find closer cloudlet", "err", err)
 				continue
