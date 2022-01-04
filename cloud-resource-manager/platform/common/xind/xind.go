@@ -3,6 +3,7 @@ package xind
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
@@ -72,6 +73,9 @@ func (s *Xind) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletI
 			return fmt.Errorf("fail to fetch flavor %s", k)
 		}
 	}
+	sort.Slice(flavors[:], func(i, j int) bool {
+		return flavors[i].Name < flavors[j].Name
+	})
 	info.Flavors = flavors
 	return nil
 }
