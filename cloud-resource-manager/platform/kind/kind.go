@@ -18,7 +18,8 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 
 func (s *Platform) GetFeatures() *platform.Features {
 	return &platform.Features{
-		SupportsMultiTenantCluster: true,
-		CloudletServicesLocal:      true,
+		SupportsMultiTenantCluster:   true,
+		CloudletServicesLocal:        true,
+		NoKubernetesClusterAutoScale: true,
 	}
 }

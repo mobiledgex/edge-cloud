@@ -1164,7 +1164,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				if !features.SupportsMultiTenantCluster {
 					return fmt.Errorf("Serverless cluster not supported on %s", platName)
 				}
-				go s.all.clusterInstApi.createDefaultMultiTenantCluster(ctx, cur.Key)
+				go s.all.clusterInstApi.createDefaultMultiTenantCluster(ctx, cur.Key, features)
 			} else {
 				go s.all.clusterInstApi.deleteDefaultMultiTenantCluster(ctx, cur.Key)
 			}
