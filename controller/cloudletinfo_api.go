@@ -85,7 +85,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
 		if err == nil {
 			if features.SupportsMultiTenantCluster && cloudlet.EnableDefaultServerlessCluster {
-				go s.all.clusterInstApi.createDefaultMultiTenantCluster(ctx, in.Key)
+				go s.all.clusterInstApi.createDefaultMultiTenantCluster(ctx, in.Key, features)
 			}
 		}
 	}
