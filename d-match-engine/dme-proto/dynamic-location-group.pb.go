@@ -16,6 +16,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	reflect "reflect"
 	"strconv"
 	strings "strings"
 )
@@ -491,43 +492,10 @@ var DlgMessage_DlgAck_CamelValue = map[string]int32{
 	"DlgNoAck":            2,
 }
 
-func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := DlgMessage_DlgAck_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = DlgMessage_DlgAck_CamelValue["Dlg"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = DlgMessage_DlgAck_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid DlgMessage_DlgAck value %q", str)
-	}
-	*e = DlgMessage_DlgAck(val)
-	return nil
-}
-
-func (e DlgMessage_DlgAck) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Dlg")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseDlgMessage_DlgAck(data interface{}) (DlgMessage_DlgAck, error) {
+	if val, ok := data.(DlgMessage_DlgAck); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := DlgMessage_DlgAck_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -542,22 +510,67 @@ func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid DlgMessage_DlgAck value %q", str)
+			return DlgMessage_DlgAck(0), fmt.Errorf("Invalid DlgMessage_DlgAck value %q", str)
 		}
-		*e = DlgMessage_DlgAck(val)
-		return nil
+		return DlgMessage_DlgAck(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := DlgMessage_DlgAck_CamelName[ival]; ok {
+			return DlgMessage_DlgAck(ival), nil
+		} else {
+			return DlgMessage_DlgAck(0), fmt.Errorf("Invalid DlgMessage_DlgAck value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return DlgMessage_DlgAck(0), fmt.Errorf("Invalid DlgMessage_DlgAck value %v", data)
+}
+
+func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseDlgMessage_DlgAck(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e DlgMessage_DlgAck) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(DlgMessage_DlgAck_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Dlg")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := DlgMessage_DlgAck_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid DlgMessage_DlgAck value %d", val)
+		val, err := ParseDlgMessage_DlgAck(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(DlgMessage_DlgAck(0)),
+			}
 		}
 		*e = DlgMessage_DlgAck(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid DlgMessage_DlgAck value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseDlgMessage_DlgAck(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(DlgMessage_DlgAck(0)),
+	}
 }
 
 func (e DlgMessage_DlgAck) MarshalJSON() ([]byte, error) {

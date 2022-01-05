@@ -1729,25 +1729,44 @@ var NetworkConnectionType_CamelValue = map[string]int32{
 	"ConnectToAll":          3,
 }
 
+func ParseNetworkConnectionType(data interface{}) (NetworkConnectionType, error) {
+	if val, ok := data.(NetworkConnectionType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := NetworkConnectionType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = NetworkConnectionType_CamelName[val]
+			}
+		}
+		if !ok {
+			return NetworkConnectionType(0), fmt.Errorf("Invalid NetworkConnectionType value %q", str)
+		}
+		return NetworkConnectionType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := NetworkConnectionType_CamelName[ival]; ok {
+			return NetworkConnectionType(ival), nil
+		} else {
+			return NetworkConnectionType(0), fmt.Errorf("Invalid NetworkConnectionType value %d", ival)
+		}
+	}
+	return NetworkConnectionType(0), fmt.Errorf("Invalid NetworkConnectionType value %v", data)
+}
+
 func (e *NetworkConnectionType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := NetworkConnectionType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = NetworkConnectionType_CamelName[val]
-		}
+	val, err := ParseNetworkConnectionType(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid NetworkConnectionType value %q", str)
-	}
-	*e = NetworkConnectionType(val)
+	*e = val
 	return nil
 }
 
@@ -1761,32 +1780,29 @@ func (e *NetworkConnectionType) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := NetworkConnectionType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = NetworkConnectionType_CamelName[val]
+		val, err := ParseNetworkConnectionType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(NetworkConnectionType(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid NetworkConnectionType value %q", str)
-		}
 		*e = NetworkConnectionType(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := NetworkConnectionType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid NetworkConnectionType value %d", val)
+		val, err := ParseNetworkConnectionType(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = NetworkConnectionType(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid NetworkConnectionType value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(NetworkConnectionType(0)),
+	}
 }
 
 func (e NetworkConnectionType) MarshalJSON() ([]byte, error) {

@@ -4223,43 +4223,10 @@ var ImageType_CamelValue = map[string]int32{
 	"ImageTypeOvf":     4,
 }
 
-func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := ImageType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = ImageType_CamelValue["ImageType"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ImageType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid ImageType value %q", str)
-	}
-	*e = ImageType(val)
-	return nil
-}
-
-func (e ImageType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(ImageType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "ImageType")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *ImageType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseImageType(data interface{}) (ImageType, error) {
+	if val, ok := data.(ImageType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := ImageType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -4274,22 +4241,67 @@ func (e *ImageType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid ImageType value %q", str)
+			return ImageType(0), fmt.Errorf("Invalid ImageType value %q", str)
 		}
-		*e = ImageType(val)
-		return nil
+		return ImageType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := ImageType_CamelName[ival]; ok {
+			return ImageType(ival), nil
+		} else {
+			return ImageType(0), fmt.Errorf("Invalid ImageType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return ImageType(0), fmt.Errorf("Invalid ImageType value %v", data)
+}
+
+func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseImageType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e ImageType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(ImageType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "ImageType")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *ImageType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := ImageType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid ImageType value %d", val)
+		val, err := ParseImageType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(ImageType(0)),
+			}
 		}
 		*e = ImageType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid ImageType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseImageType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(ImageType(0)),
+	}
 }
 
 func (e ImageType) MarshalJSON() ([]byte, error) {
@@ -4336,43 +4348,10 @@ var QosSessionProfile_CamelValue = map[string]int32{
 	"QosThroughputDownL": 4,
 }
 
-func (e *QosSessionProfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := QosSessionProfile_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = QosSessionProfile_CamelValue["Qos"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = QosSessionProfile_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid QosSessionProfile value %q", str)
-	}
-	*e = QosSessionProfile(val)
-	return nil
-}
-
-func (e QosSessionProfile) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(QosSessionProfile_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Qos")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *QosSessionProfile) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseQosSessionProfile(data interface{}) (QosSessionProfile, error) {
+	if val, ok := data.(QosSessionProfile); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := QosSessionProfile_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -4387,22 +4366,67 @@ func (e *QosSessionProfile) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid QosSessionProfile value %q", str)
+			return QosSessionProfile(0), fmt.Errorf("Invalid QosSessionProfile value %q", str)
 		}
-		*e = QosSessionProfile(val)
-		return nil
+		return QosSessionProfile(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := QosSessionProfile_CamelName[ival]; ok {
+			return QosSessionProfile(ival), nil
+		} else {
+			return QosSessionProfile(0), fmt.Errorf("Invalid QosSessionProfile value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return QosSessionProfile(0), fmt.Errorf("Invalid QosSessionProfile value %v", data)
+}
+
+func (e *QosSessionProfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseQosSessionProfile(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e QosSessionProfile) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(QosSessionProfile_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qos")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *QosSessionProfile) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := QosSessionProfile_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid QosSessionProfile value %d", val)
+		val, err := ParseQosSessionProfile(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(QosSessionProfile(0)),
+			}
 		}
 		*e = QosSessionProfile(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid QosSessionProfile value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseQosSessionProfile(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(QosSessionProfile(0)),
+	}
 }
 
 func (e QosSessionProfile) MarshalJSON() ([]byte, error) {
@@ -4454,43 +4478,10 @@ var VmAppOsType_CamelValue = map[string]int32{
 	"VmAppOsWindows2019": 5,
 }
 
-func (e *VmAppOsType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := VmAppOsType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = VmAppOsType_CamelValue["VmAppOs"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = VmAppOsType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid VmAppOsType value %q", str)
-	}
-	*e = VmAppOsType(val)
-	return nil
-}
-
-func (e VmAppOsType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(VmAppOsType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "VmAppOs")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseVmAppOsType(data interface{}) (VmAppOsType, error) {
+	if val, ok := data.(VmAppOsType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := VmAppOsType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -4505,22 +4496,67 @@ func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid VmAppOsType value %q", str)
+			return VmAppOsType(0), fmt.Errorf("Invalid VmAppOsType value %q", str)
 		}
-		*e = VmAppOsType(val)
-		return nil
+		return VmAppOsType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := VmAppOsType_CamelName[ival]; ok {
+			return VmAppOsType(ival), nil
+		} else {
+			return VmAppOsType(0), fmt.Errorf("Invalid VmAppOsType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return VmAppOsType(0), fmt.Errorf("Invalid VmAppOsType value %v", data)
+}
+
+func (e *VmAppOsType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseVmAppOsType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e VmAppOsType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(VmAppOsType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "VmAppOs")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *VmAppOsType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := VmAppOsType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid VmAppOsType value %d", val)
+		val, err := ParseVmAppOsType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(VmAppOsType(0)),
+			}
 		}
 		*e = VmAppOsType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid VmAppOsType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseVmAppOsType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(VmAppOsType(0)),
+	}
 }
 
 func (e VmAppOsType) MarshalJSON() ([]byte, error) {
@@ -4552,25 +4588,44 @@ var DeleteType_CamelValue = map[string]int32{
 	"AutoDelete":   1,
 }
 
+func ParseDeleteType(data interface{}) (DeleteType, error) {
+	if val, ok := data.(DeleteType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := DeleteType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = DeleteType_CamelName[val]
+			}
+		}
+		if !ok {
+			return DeleteType(0), fmt.Errorf("Invalid DeleteType value %q", str)
+		}
+		return DeleteType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := DeleteType_CamelName[ival]; ok {
+			return DeleteType(ival), nil
+		} else {
+			return DeleteType(0), fmt.Errorf("Invalid DeleteType value %d", ival)
+		}
+	}
+	return DeleteType(0), fmt.Errorf("Invalid DeleteType value %v", data)
+}
+
 func (e *DeleteType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := DeleteType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = DeleteType_CamelName[val]
-		}
+	val, err := ParseDeleteType(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid DeleteType value %q", str)
-	}
-	*e = DeleteType(val)
+	*e = val
 	return nil
 }
 
@@ -4584,32 +4639,29 @@ func (e *DeleteType) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := DeleteType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = DeleteType_CamelName[val]
+		val, err := ParseDeleteType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(DeleteType(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid DeleteType value %q", str)
-		}
 		*e = DeleteType(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := DeleteType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid DeleteType value %d", val)
+		val, err := ParseDeleteType(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = DeleteType(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid DeleteType value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(DeleteType(0)),
+	}
 }
 
 func (e DeleteType) MarshalJSON() ([]byte, error) {
@@ -4643,43 +4695,10 @@ var AccessType_CamelValue = map[string]int32{
 	"AccessTypeLoadBalancer":         2,
 }
 
-func (e *AccessType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := AccessType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = AccessType_CamelValue["AccessType"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = AccessType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid AccessType value %q", str)
-	}
-	*e = AccessType(val)
-	return nil
-}
-
-func (e AccessType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(AccessType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "AccessType")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *AccessType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseAccessType(data interface{}) (AccessType, error) {
+	if val, ok := data.(AccessType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := AccessType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -4694,22 +4713,67 @@ func (e *AccessType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid AccessType value %q", str)
+			return AccessType(0), fmt.Errorf("Invalid AccessType value %q", str)
 		}
-		*e = AccessType(val)
-		return nil
+		return AccessType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := AccessType_CamelName[ival]; ok {
+			return AccessType(ival), nil
+		} else {
+			return AccessType(0), fmt.Errorf("Invalid AccessType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return AccessType(0), fmt.Errorf("Invalid AccessType value %v", data)
+}
+
+func (e *AccessType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseAccessType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e AccessType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(AccessType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "AccessType")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *AccessType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := AccessType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid AccessType value %d", val)
+		val, err := ParseAccessType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(AccessType(0)),
+			}
 		}
 		*e = AccessType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid AccessType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseAccessType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(AccessType(0)),
+	}
 }
 
 func (e AccessType) MarshalJSON() ([]byte, error) {

@@ -3,6 +3,7 @@ package edgeproto
 import (
 	"encoding/json"
 	fmt "fmt"
+	reflect "reflect"
 	"strconv"
 	strings "strings"
 )
@@ -204,7 +205,10 @@ func (u *Udec64) UnmarshalJSON(b []byte) error {
 	if err == nil {
 		udec64, err := ParseUdec64(str)
 		if err != nil {
-			return err
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(Udec64{}),
+			}
 		}
 		*u = *udec64
 		return nil
@@ -215,7 +219,10 @@ func (u *Udec64) UnmarshalJSON(b []byte) error {
 		u.Whole = val
 		return nil
 	}
-	return fmt.Errorf("Invalid unsigned decimal 64 type")
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(Udec64{}),
+	}
 }
 
 func (u Udec64) MarshalJSON() ([]byte, error) {

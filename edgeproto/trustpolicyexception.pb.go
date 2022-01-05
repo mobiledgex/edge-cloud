@@ -1589,43 +1589,10 @@ var TrustPolicyExceptionState_CamelValue = map[string]int32{
 	"TrustPolicyExceptionStateRejected":          3,
 }
 
-func (e *TrustPolicyExceptionState) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = TrustPolicyExceptionState_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid TrustPolicyExceptionState value %q", str)
-	}
-	*e = TrustPolicyExceptionState(val)
-	return nil
-}
-
-func (e TrustPolicyExceptionState) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(TrustPolicyExceptionState_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "TrustPolicyExceptionState")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *TrustPolicyExceptionState) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseTrustPolicyExceptionState(data interface{}) (TrustPolicyExceptionState, error) {
+	if val, ok := data.(TrustPolicyExceptionState); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -1640,22 +1607,67 @@ func (e *TrustPolicyExceptionState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid TrustPolicyExceptionState value %q", str)
+			return TrustPolicyExceptionState(0), fmt.Errorf("Invalid TrustPolicyExceptionState value %q", str)
 		}
-		*e = TrustPolicyExceptionState(val)
-		return nil
+		return TrustPolicyExceptionState(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := TrustPolicyExceptionState_CamelName[ival]; ok {
+			return TrustPolicyExceptionState(ival), nil
+		} else {
+			return TrustPolicyExceptionState(0), fmt.Errorf("Invalid TrustPolicyExceptionState value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return TrustPolicyExceptionState(0), fmt.Errorf("Invalid TrustPolicyExceptionState value %v", data)
+}
+
+func (e *TrustPolicyExceptionState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseTrustPolicyExceptionState(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e TrustPolicyExceptionState) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(TrustPolicyExceptionState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "TrustPolicyExceptionState")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *TrustPolicyExceptionState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := TrustPolicyExceptionState_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid TrustPolicyExceptionState value %d", val)
+		val, err := ParseTrustPolicyExceptionState(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(TrustPolicyExceptionState(0)),
+			}
 		}
 		*e = TrustPolicyExceptionState(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid TrustPolicyExceptionState value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseTrustPolicyExceptionState(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(TrustPolicyExceptionState(0)),
+	}
 }
 
 func (e TrustPolicyExceptionState) MarshalJSON() ([]byte, error) {

@@ -3848,25 +3848,44 @@ var ApiEndpointType_CamelValue = map[string]int32{
 	"Dme":                    1,
 }
 
+func ParseApiEndpointType(data interface{}) (ApiEndpointType, error) {
+	if val, ok := data.(ApiEndpointType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = ApiEndpointType_CamelName[val]
+			}
+		}
+		if !ok {
+			return ApiEndpointType(0), fmt.Errorf("Invalid ApiEndpointType value %q", str)
+		}
+		return ApiEndpointType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := ApiEndpointType_CamelName[ival]; ok {
+			return ApiEndpointType(ival), nil
+		} else {
+			return ApiEndpointType(0), fmt.Errorf("Invalid ApiEndpointType value %d", ival)
+		}
+	}
+	return ApiEndpointType(0), fmt.Errorf("Invalid ApiEndpointType value %v", data)
+}
+
 func (e *ApiEndpointType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ApiEndpointType_CamelName[val]
-		}
+	val, err := ParseApiEndpointType(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid ApiEndpointType value %q", str)
-	}
-	*e = ApiEndpointType(val)
+	*e = val
 	return nil
 }
 
@@ -3880,32 +3899,29 @@ func (e *ApiEndpointType) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := ApiEndpointType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = ApiEndpointType_CamelName[val]
+		val, err := ParseApiEndpointType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(ApiEndpointType(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid ApiEndpointType value %q", str)
-		}
 		*e = ApiEndpointType(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := ApiEndpointType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid ApiEndpointType value %d", val)
+		val, err := ParseApiEndpointType(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = ApiEndpointType(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid ApiEndpointType value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(ApiEndpointType(0)),
+	}
 }
 
 func (e ApiEndpointType) MarshalJSON() ([]byte, error) {
@@ -3944,25 +3960,44 @@ var RateLimitTarget_CamelValue = map[string]int32{
 	"PerUser":       3,
 }
 
+func ParseRateLimitTarget(data interface{}) (RateLimitTarget, error) {
+	if val, ok := data.(RateLimitTarget); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = RateLimitTarget_CamelName[val]
+			}
+		}
+		if !ok {
+			return RateLimitTarget(0), fmt.Errorf("Invalid RateLimitTarget value %q", str)
+		}
+		return RateLimitTarget(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := RateLimitTarget_CamelName[ival]; ok {
+			return RateLimitTarget(ival), nil
+		} else {
+			return RateLimitTarget(0), fmt.Errorf("Invalid RateLimitTarget value %d", ival)
+		}
+	}
+	return RateLimitTarget(0), fmt.Errorf("Invalid RateLimitTarget value %v", data)
+}
+
 func (e *RateLimitTarget) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = RateLimitTarget_CamelName[val]
-		}
+	val, err := ParseRateLimitTarget(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid RateLimitTarget value %q", str)
-	}
-	*e = RateLimitTarget(val)
+	*e = val
 	return nil
 }
 
@@ -3976,32 +4011,29 @@ func (e *RateLimitTarget) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := RateLimitTarget_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = RateLimitTarget_CamelName[val]
+		val, err := ParseRateLimitTarget(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(RateLimitTarget(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid RateLimitTarget value %q", str)
-		}
 		*e = RateLimitTarget(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := RateLimitTarget_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid RateLimitTarget value %d", val)
+		val, err := ParseRateLimitTarget(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = RateLimitTarget(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid RateLimitTarget value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(RateLimitTarget(0)),
+	}
 }
 
 func (e RateLimitTarget) MarshalJSON() ([]byte, error) {
@@ -4035,25 +4067,44 @@ var FlowRateLimitAlgorithm_CamelValue = map[string]int32{
 	"LeakyBucketAlgorithm": 2,
 }
 
+func ParseFlowRateLimitAlgorithm(data interface{}) (FlowRateLimitAlgorithm, error) {
+	if val, ok := data.(FlowRateLimitAlgorithm); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = FlowRateLimitAlgorithm_CamelName[val]
+			}
+		}
+		if !ok {
+			return FlowRateLimitAlgorithm(0), fmt.Errorf("Invalid FlowRateLimitAlgorithm value %q", str)
+		}
+		return FlowRateLimitAlgorithm(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := FlowRateLimitAlgorithm_CamelName[ival]; ok {
+			return FlowRateLimitAlgorithm(ival), nil
+		} else {
+			return FlowRateLimitAlgorithm(0), fmt.Errorf("Invalid FlowRateLimitAlgorithm value %d", ival)
+		}
+	}
+	return FlowRateLimitAlgorithm(0), fmt.Errorf("Invalid FlowRateLimitAlgorithm value %v", data)
+}
+
 func (e *FlowRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = FlowRateLimitAlgorithm_CamelName[val]
-		}
+	val, err := ParseFlowRateLimitAlgorithm(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %q", str)
-	}
-	*e = FlowRateLimitAlgorithm(val)
+	*e = val
 	return nil
 }
 
@@ -4067,32 +4118,29 @@ func (e *FlowRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = FlowRateLimitAlgorithm_CamelName[val]
+		val, err := ParseFlowRateLimitAlgorithm(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(FlowRateLimitAlgorithm(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %q", str)
-		}
 		*e = FlowRateLimitAlgorithm(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := FlowRateLimitAlgorithm_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %d", val)
+		val, err := ParseFlowRateLimitAlgorithm(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = FlowRateLimitAlgorithm(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid FlowRateLimitAlgorithm value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(FlowRateLimitAlgorithm(0)),
+	}
 }
 
 func (e FlowRateLimitAlgorithm) MarshalJSON() ([]byte, error) {
@@ -4121,25 +4169,44 @@ var MaxReqsRateLimitAlgorithm_CamelValue = map[string]int32{
 	"FixedWindowAlgorithm":    1,
 }
 
+func ParseMaxReqsRateLimitAlgorithm(data interface{}) (MaxReqsRateLimitAlgorithm, error) {
+	if val, ok := data.(MaxReqsRateLimitAlgorithm); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = MaxReqsRateLimitAlgorithm_CamelName[val]
+			}
+		}
+		if !ok {
+			return MaxReqsRateLimitAlgorithm(0), fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %q", str)
+		}
+		return MaxReqsRateLimitAlgorithm(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := MaxReqsRateLimitAlgorithm_CamelName[ival]; ok {
+			return MaxReqsRateLimitAlgorithm(ival), nil
+		} else {
+			return MaxReqsRateLimitAlgorithm(0), fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %d", ival)
+		}
+	}
+	return MaxReqsRateLimitAlgorithm(0), fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %v", data)
+}
+
 func (e *MaxReqsRateLimitAlgorithm) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = MaxReqsRateLimitAlgorithm_CamelName[val]
-		}
+	val, err := ParseMaxReqsRateLimitAlgorithm(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %q", str)
-	}
-	*e = MaxReqsRateLimitAlgorithm(val)
+	*e = val
 	return nil
 }
 
@@ -4153,32 +4220,29 @@ func (e *MaxReqsRateLimitAlgorithm) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = MaxReqsRateLimitAlgorithm_CamelName[val]
+		val, err := ParseMaxReqsRateLimitAlgorithm(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %q", str)
-		}
 		*e = MaxReqsRateLimitAlgorithm(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := MaxReqsRateLimitAlgorithm_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %d", val)
+		val, err := ParseMaxReqsRateLimitAlgorithm(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = MaxReqsRateLimitAlgorithm(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid MaxReqsRateLimitAlgorithm value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)),
+	}
 }
 
 func (e MaxReqsRateLimitAlgorithm) MarshalJSON() ([]byte, error) {

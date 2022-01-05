@@ -44,7 +44,10 @@ func (e *Duration) UnmarshalJSON(b []byte) error {
 	if err == nil {
 		dur, err := time.ParseDuration(str)
 		if err != nil {
-			return NewDurationParseError(str, err)
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(Duration(0)),
+			}
 		}
 		*e = Duration(dur)
 		return nil
@@ -55,7 +58,10 @@ func (e *Duration) UnmarshalJSON(b []byte) error {
 		*e = Duration(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid duration type")
+	return &json.UnmarshalTypeError{
+		Value: "value " + str,
+		Type:  reflect.TypeOf(Duration(0)),
+	}
 }
 
 func (e Duration) MarshalJSON() ([]byte, error) {
@@ -95,7 +101,7 @@ func DecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
 }
 
 // DurationParseError wraps a time.Duration parse error so that
-// it can be recognized as such from errors returned from json.Unmarshal.
+// it can be recognized as such from errors returned from map decode.
 type DurationParseError struct {
 	Value string
 	Err   error
