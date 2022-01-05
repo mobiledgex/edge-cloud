@@ -1129,7 +1129,7 @@ func ConstructFindCloudletReplyFromDmeAppInst(ctx context.Context, appinst *DmeA
 }
 
 func FindCloudlet(ctx context.Context, appkey *edgeproto.AppKey, carrier string, loc *dme.Loc, mreply *dme.FindCloudletReply, edgeEventsCookieExpiration time.Duration) (error, *DmeApp) {
-	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
+	mreply.Status = dme.FindCloudletReply_FIND_NOT_FOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
 	// if the app itself is a platform app, it is not returned here

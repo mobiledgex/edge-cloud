@@ -758,7 +758,7 @@ var FindCloudletReplyOptionalArgs = []string{
 var FindCloudletReplyAliasArgs = []string{}
 var FindCloudletReplyComments = map[string]string{
 	"ver":                                 "API version _(hidden)_ Reserved for future use",
-	"status":                              "Status return, one of Unknown, Found, Notfound",
+	"status":                              "Status return, one of Unknown, Found, NotFound",
 	"fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
 	"ports:#.proto":                       "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"ports:#.internalport":                "Container port",
@@ -1507,7 +1507,7 @@ var ServerEdgeEventComments = map[string]string{
 	"statistics.variance":                             "Unbiased variance",
 	"statistics.numsamples":                           "Number of samples to create stats",
 	"newcloudlet.ver":                                 "API version _(hidden)_ Reserved for future use",
-	"newcloudlet.status":                              "Status return, one of Unknown, Found, Notfound",
+	"newcloudlet.status":                              "Status return, one of Unknown, Found, NotFound",
 	"newcloudlet.fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
 	"newcloudlet.ports:#.proto":                       "TCP (L4) or UDP (L4) protocol, one of Unknown, Tcp, Udp",
 	"newcloudlet.ports:#.internalport":                "Container port",
