@@ -73,7 +73,7 @@ spec:
 			// 1000 port range, mapped
 			Proto:        dme.LProto_L_PROTO_TCP,
 			InternalPort: 51000,
-			EndPort:      52000,
+			EndPort:      51009,
 			PublicPort:   61000,
 		},
 	}
@@ -102,7 +102,24 @@ spec:
       port: 10101
     - protocol: TCP
       port: 51000
-      endPort: 52000
+    - protocol: TCP
+      port: 51001
+    - protocol: TCP
+      port: 51002
+    - protocol: TCP
+      port: 51003
+    - protocol: TCP
+      port: 51004
+    - protocol: TCP
+      port: 51005
+    - protocol: TCP
+      port: 51006
+    - protocol: TCP
+      port: 51007
+    - protocol: TCP
+      port: 51008
+    - protocol: TCP
+      port: 51009
 `)
 
 }
