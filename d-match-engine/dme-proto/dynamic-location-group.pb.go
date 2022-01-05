@@ -431,6 +431,9 @@ func (m *DlgMessage) ValidateEnums() error {
 	return nil
 }
 
+func (s *DlgMessage) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *DlgReply) CopyInFields(src *DlgReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -457,6 +460,9 @@ func (m *DlgReply) DeepCopyIn(src *DlgReply) {
 // Helper method to check that enums have valid values
 func (m *DlgReply) ValidateEnums() error {
 	return nil
+}
+
+func (s *DlgReply) ClearTagged(tags map[string]struct{}) {
 }
 
 var DlgAckStrings = []string{

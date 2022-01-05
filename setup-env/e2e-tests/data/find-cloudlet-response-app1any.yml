@@ -1,5 +1,5 @@
-- status: FindFound
-  fqdn: acmeappcosomeapplication110.reservable0.azure-cloud-4.azure.localtest.net
+- status: Found
+  fqdn: someapplication110-acmeappco.azure-cloud-4-azure.local.localtest.net
   ports:
   - proto: Tcp
     internalport: 80
@@ -16,8 +16,8 @@
   cloudletlocation:
     latitude: 32
     longitude: -91
-- status: FindFound
-  fqdn: reservablecluster2.tmus-cloud-2.tmus.localtest.net
+- status: Found
+  fqdn: reservablecluster2-mobiledgex.tmus-cloud-2-tmus.local.localtest.net
   ports:
   - proto: Tcp
     internalport: 80
@@ -31,8 +31,8 @@
   cloudletlocation:
     latitude: 35
     longitude: -95
-- status: FindFound
-  fqdn: shared.att-cloud-1.att.localtest.net
+- status: Found
+  fqdn: shared.att-cloud-1-att.local.localtest.net
   ports:
   - proto: Tcp
     internalport: 80

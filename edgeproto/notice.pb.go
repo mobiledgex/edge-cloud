@@ -484,6 +484,9 @@ func (m *Notice) ValidateEnums() error {
 	return nil
 }
 
+func (s *Notice) ClearTagged(tags map[string]struct{}) {
+}
+
 var NoticeActionStrings = []string{
 	"NONE",
 	"UPDATE",

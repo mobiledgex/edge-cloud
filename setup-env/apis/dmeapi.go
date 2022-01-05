@@ -243,7 +243,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[stri
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		log.Printf("RunDmeAPIiter[%d]\n", ii)
-		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client)
+		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client, YesFilterOutput)
 		if !ok {
 			rc = false
 			continue
@@ -269,7 +269,14 @@ func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[stri
 	return true
 }
 
-func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiRequest *dmeApiRequest, client dmeproto.MatchEngineApiClient) (bool, interface{}) {
+type FilterOutput bool
+
+const (
+	NoFilterOutput  = false
+	YesFilterOutput = true
+)
+
+func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiRequest *dmeApiRequest, client dmeproto.MatchEngineApiClient, filterOutput FilterOutput) (bool, interface{}) {
 	//generic struct so we can do the marshal in one place even though return types are different
 	var dmereply interface{}
 	var dmeerror error
@@ -287,7 +294,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
 				time.Since(registerStatus.At) > time.Hour) {
 			log.Printf("Re-registering for api %s - cached registerStatus: %+v, current Rcreq: %+v\n", api, registerStatus, apiRequest.Rcreq)
-			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client)
+			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client, NoFilterOutput)
 			if !ok {
 				return false, nil
 			}
@@ -312,7 +319,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				time.Since(findCloudlet.At) > 10*time.Minute {
 				log.Printf("Redoing findcloudlet for api %s - cached findCloudlet %+v, current Fcreq: %+v\n", api, findCloudlet, apiRequest.Fcreq)
 				ctx = context.WithValue(ctx, "edgeevents", true)
-				ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client)
+				ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client, NoFilterOutput)
 				if !ok {
 					return false, nil
 				}
@@ -365,10 +372,11 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 					log.Printf("fcreq %v\n", apiRequest.Fcreq)
 					reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)
 				}
-				if reply != nil {
+				if reply != nil && filterOutput {
 					sort.Slice(reply.Ports, func(i, j int) bool {
 						return reply.Ports[i].InternalPort < reply.Ports[j].InternalPort
 					})
+					util.FilterFindCloudletReply(reply)
 				}
 				dmereply = reply
 				dmeerror = err
@@ -455,7 +463,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 					return c.Appinstances[i].AppName < c.Appinstances[j].AppName
 				})
 			}
-
+			util.FilterAppInstEdgeEventsCookies(mel)
 		}
 		dmereply = mel
 		dmeerror = err
@@ -483,7 +491,11 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		log.Printf("getqospositionkpi request: %+v\n", apiRequest.Qosreq)
 		resp, err := client.GetQosPositionKpi(ctx, &apiRequest.Qosreq)
 		if err == nil {
-			dmereply, err = resp.Recv()
+			reply, err := resp.Recv()
+			if err == nil {
+				util.FilterQosPositionKpiReply(reply)
+				dmereply = reply
+			}
 		}
 		dmeerror = err
 	case "edgeeventinit":
@@ -495,11 +507,13 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			// Send init request
 			err = resp.Send(&apiRequest.Eereq)
 			// Receive init confirmation
-			dmereply, err = resp.Recv()
+			reply, err := resp.Recv()
 			if err != nil {
 				dmeerror = err
 				break
 			}
+			util.FilterServerEdgeEvent(reply)
+			dmereply = reply
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
 			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
@@ -544,11 +558,13 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			latencyEvent.Samples = samples
 			err = resp.Send(latencyEvent)
 			// Receive processed latency samples
-			dmereply, err = resp.Recv()
+			reply, err := resp.Recv()
 			if err != nil {
 				dmeerror = err
 				break
 			}
+			util.FilterServerEdgeEvent(reply)
+			dmereply = reply
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
 			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION
@@ -579,11 +595,13 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			gpsUpdateEvent.DeviceInfoDynamic = apiRequest.Eereq.DeviceInfoDynamic
 			err = resp.Send(gpsUpdateEvent)
 			// Receive processed latency samples
-			dmereply, err = resp.Recv()
+			reply, err := resp.Recv()
 			if err != nil {
 				dmeerror = err
 				break
 			}
+			util.FilterServerEdgeEvent(reply)
+			dmereply = reply
 			// Terminate persistent connection
 			terminateEvent := new(dmeproto.ClientEdgeEvent)
 			terminateEvent.EventType = dmeproto.ClientEdgeEvent_EVENT_TERMINATE_CONNECTION

@@ -1,0 +1,12 @@
+
+trustpolicyexceptions:
+- key:
+    appkey:
+        organization: 1000realities
+        name: VRmax
+        version: 1.0.0
+    cloudletpoolkey:
+        organization: tmus
+        name: cloudlet2-pool
+    name: tpe1
+  state: Active

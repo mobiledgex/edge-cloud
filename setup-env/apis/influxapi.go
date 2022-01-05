@@ -45,6 +45,7 @@ func RunInfluxAPI(api, influxname, apiFile string, apiFileVars map[string]string
 		log.Printf("failed to query influxdb, cmd %s, db %s, err %v\n", data.Cmd, data.Database, err)
 		return false
 	}
+	util.FilterInfluxTime(resp.Results)
 	out, err := yaml.Marshal(resp.Results)
 	if err != nil {
 		log.Printf("failed to marshal influx query result, %v, %v\n", resp.Results, err)

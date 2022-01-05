@@ -25,6 +25,7 @@ type ClusterInstApi struct {
 	all            *AllApis
 	sync           *Sync
 	store          edgeproto.ClusterInstStore
+	dnsLabelStore  *edgeproto.CloudletObjectDnsLabelStore
 	cache          edgeproto.ClusterInstCache
 	cleanupWorkers tasks.KeyWorkers
 }
@@ -56,6 +57,7 @@ func NewClusterInstApi(sync *Sync, all *AllApis) *ClusterInstApi {
 	clusterInstApi.all = all
 	clusterInstApi.sync = sync
 	clusterInstApi.store = edgeproto.NewClusterInstStore(sync.store)
+	clusterInstApi.dnsLabelStore = &all.cloudletApi.objectDnsLabelStore
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
 	sync.RegisterCache(&clusterInstApi.cache)
 	clusterInstApi.cleanupWorkers.Init("ClusterInst-cleanup", clusterInstApi.cleanupClusterInst)
@@ -852,9 +854,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return fmt.Errorf("Failed to get features for platform: %s", err)
 		}
-		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
-		if in.SharedVolumeSize != 0 && !features.SupportsSharedVolume {
-			return fmt.Errorf("Shared volumes not supported on %s", platName)
+		if features.IsSingleKubernetesCluster {
+			return fmt.Errorf("Single kubernetes cluster platform %s only supports AppInst creates", cloudlet.PlatformType.String())
 		}
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
@@ -862,8 +863,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if features.SupportsKubernetesOnly && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 			return fmt.Errorf("Platform %s only supports kubernetes-based deployments", cloudlet.PlatformType.String())
 		}
-		if features.IsSingleKubernetesCluster {
-			return fmt.Errorf("Single kubernetes cluster platform %s only supports AppInst creates", cloudlet.PlatformType.String())
+		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
+		if in.SharedVolumeSize != 0 && !features.SupportsSharedVolume {
+			return fmt.Errorf("Shared volumes not supported on %s", platName)
 		}
 		if in.Deployment == cloudcommon.DeploymentTypeKubernetes {
 			err = validateNumNodesForKubernetes(ctx, cloudlet.PlatformType, features, in.NumNodes)
@@ -984,6 +986,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		refs.ClusterInsts = append(refs.ClusterInsts, cRefKey)
 		s.all.cloudletRefsApi.store.STMPut(stm, &refs)
 
+		if err := s.setDnsLabel(stm, in); err != nil {
+			return err
+		}
+		in.Fqdn = getClusterInstFQDN(in, &cloudlet)
+
 		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 
 		if ignoreCRM(cctx) {
@@ -993,6 +1000,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
+		s.dnsLabelStore.STMPut(stm, &in.Key.CloudletKey, in.DnsLabel)
 		return nil
 	})
 	if err != nil {
@@ -1391,6 +1399,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			// operation failed, so just need to clean up
 			// controller state.
 			s.store.STMDel(stm, &in.Key)
+			s.dnsLabelStore.STMDel(stm, &in.Key.CloudletKey, in.DnsLabel)
 			s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 			// delete associated streamobj as well
 			streamKey := edgeproto.GetStreamKeyFromClusterInstKey(in.Key.Virtual(""))
@@ -1553,6 +1562,7 @@ func (s *ClusterInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.Clust
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		s.dnsLabelStore.STMDel(stm, &in.Key.CloudletKey, inst.DnsLabel)
 		s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 
 		// delete associated streamobj as well
@@ -1577,6 +1587,7 @@ func (s *ClusterInstApi) ReplaceErrorState(ctx context.Context, in *edgeproto.Cl
 		}
 		if newState == edgeproto.TrackedState_NOT_PRESENT {
 			s.store.STMDel(stm, &in.Key)
+			s.dnsLabelStore.STMDel(stm, &in.Key.CloudletKey, inst.DnsLabel)
 			s.all.clusterRefsApi.deleteRef(stm, &in.Key)
 		} else {
 			inst.State = newState
@@ -1713,7 +1724,7 @@ func (s *StreamoutCb) Context() context.Context {
 	return s.ctx
 }
 
-func (s *ClusterInstApi) createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.CloudletKey) {
+func (s *ClusterInstApi) createDefaultMultiTenantCluster(ctx context.Context, cloudletKey edgeproto.CloudletKey, features *platform.Features) {
 	span, ctx := log.ChildSpan(ctx, log.DebugLevelApi, "Create default multi-tenant cluster")
 	defer span.Finish()
 
@@ -1750,22 +1761,25 @@ func (s *ClusterInstApi) createDefaultMultiTenantCluster(ctx context.Context, cl
 	}
 	s.all.flavorApi.cache.Mux.Unlock()
 
-	// default autoscale policy
-	// TODO: make these settings configurable
-	policy := edgeproto.AutoScalePolicy{}
-	policy.Key.Organization = cloudcommon.OrganizationMobiledgeX
-	policy.Key.Name = cloudcommon.DefaultMultiTenantCluster
-	policy.TargetCpu = 70
-	policy.TargetMem = 80
-	policy.StabilizationWindowSec = 300
-	policy.MinNodes = 1
-	policy.MaxNodes = 4
-	_, err := s.all.autoScalePolicyApi.CreateAutoScalePolicy(ctx, &policy)
-	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst autoscale policy", "policy", policy, "err", err)
-	if err != nil && !strings.Contains(err.Error(), "already exists") {
-		return
+	autoScalePolicy := ""
+	if !features.NoKubernetesClusterAutoScale {
+		// default autoscale policy
+		// TODO: make these settings configurable
+		policy := edgeproto.AutoScalePolicy{}
+		policy.Key.Organization = cloudcommon.OrganizationMobiledgeX
+		policy.Key.Name = cloudcommon.DefaultMultiTenantCluster
+		policy.TargetCpu = 70
+		policy.TargetMem = 80
+		policy.StabilizationWindowSec = 300
+		policy.MinNodes = 1
+		policy.MaxNodes = 4
+		_, err := s.all.autoScalePolicyApi.CreateAutoScalePolicy(ctx, &policy)
+		log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst autoscale policy", "policy", policy, "err", err)
+		if err != nil && !strings.Contains(err.Error(), "already exists") {
+			return
+		}
+		autoScalePolicy = policy.Key.Name
 	}
-
 	clusterInst := edgeproto.ClusterInst{}
 	clusterInst.Key = *getDefaultMTClustKey(cloudletKey)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
@@ -1774,13 +1788,13 @@ func (s *ClusterInstApi) createDefaultMultiTenantCluster(ctx context.Context, cl
 	// TODO: custom settings or per-cloudlet config for the below fields?
 	clusterInst.NumMasters = 1
 	clusterInst.NumNodes = 3
-	clusterInst.AutoScalePolicy = policy.Key.Name
+	clusterInst.AutoScalePolicy = autoScalePolicy
 	cb := StreamoutCb{
 		ctx: ctx,
 	}
 	start := time.Now()
 
-	err = s.all.clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
+	err := s.all.clusterInstApi.createClusterInstInternal(DefCallContext(), &clusterInst, &cb)
 	log.SpanLog(ctx, log.DebugLevelApi, "create default multi-tenant ClusterInst", "cluster", clusterInst, "err", err)
 
 	if err != nil && err.Error() == clusterInst.Key.ExistsError().Error() {
@@ -1831,21 +1845,33 @@ func getDefaultClustKey(cloudletKey edgeproto.CloudletKey, ownerOrg string) *edg
 
 // The cloudlet singular cluster is a software-only cluster that represents
 // the singular infra k8s cluster that already exists and is the entire cloudlet.
-func (s *ClusterInstApi) createCloudletSingularCluster(stm concurrency.STM, key *edgeproto.CloudletKey, ownerOrg string) {
+func (s *ClusterInstApi) createCloudletSingularCluster(stm concurrency.STM, cloudlet *edgeproto.Cloudlet, ownerOrg string) error {
 	clusterInst := edgeproto.ClusterInst{}
 	multiTenant := false
 	if ownerOrg == "" {
 		multiTenant = true
 	}
-	clusterInst.Key = *getDefaultClustKey(*key, ownerOrg)
+	clusterInst.Key = *getDefaultClustKey(cloudlet.Key, ownerOrg)
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 	clusterInst.MultiTenant = multiTenant
 	clusterInst.State = edgeproto.TrackedState_READY
+	clusterInst.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
+	if err := s.setDnsLabel(stm, &clusterInst); err != nil {
+		return err
+	}
+	clusterInst.Fqdn = getClusterInstFQDN(&clusterInst, cloudlet)
 	s.store.STMPut(stm, &clusterInst)
+	s.dnsLabelStore.STMPut(stm, &clusterInst.Key.CloudletKey, clusterInst.DnsLabel)
+	return nil
 }
 
 func (s *ClusterInstApi) deleteCloudletSingularCluster(stm concurrency.STM, key *edgeproto.CloudletKey, ownerOrg string) {
 	clusterInstKey := getDefaultClustKey(*key, ownerOrg)
+	clusterInst := edgeproto.ClusterInst{}
+	if !s.store.STMGet(stm, clusterInstKey, &clusterInst) {
+		return
+	}
 	s.store.STMDel(stm, clusterInstKey)
+	s.dnsLabelStore.STMDel(stm, key, clusterInst.DnsLabel)
 	s.all.clusterRefsApi.deleteRef(stm, clusterInstKey)
 }

@@ -35,22 +35,10 @@ func AppHideTags(in *edgeproto.App) {
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.DeploymentManifest = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeploymentGenerator = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DelOpt = 0
-	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Revision = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.DeletePrepare = false
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
@@ -70,22 +58,10 @@ func DeploymentCloudletRequestHideTags(in *edgeproto.DeploymentCloudletRequest) 
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DeploymentManifest = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DeploymentGenerator = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DelOpt = 0
-	}
 	for i1 := 0; i1 < len(in.App.Configs); i1++ {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.App.Revision = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.App.DeletePrepare = false
 	}
 	if _, found := tags["timestamp"]; found {
 		in.App.CreatedAt = distributed_match_engine.Timestamp{}
@@ -775,17 +751,17 @@ var AppComments = map[string]string{
 	"skiphcports":                            "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002",
 	"trusted":                                "Indicates that an instance of this app can be started on a trusted cloudlet",
 	"requiredoutboundconnections:empty":      "Connections this app require to determine if the app is compatible with a trust policy, specify requiredoutboundconnections:empty=true to clear",
-	"requiredoutboundconnections:#.protocol": "tcp, udp, icmp",
+	"requiredoutboundconnections:#.protocol": "TCP, UDP, ICMP",
 	"requiredoutboundconnections:#.portrangemin": "TCP or UDP port range start",
 	"requiredoutboundconnections:#.portrangemax": "TCP or UDP port range end",
-	"requiredoutboundconnections:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"requiredoutboundconnections:#.remotecidr":   "Remote CIDR X.X.X.X/X",
 	"allowserverless":              "App is allowed to deploy as serverless containers",
 	"serverlessconfig.vcpus":       "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"serverlessconfig.ram":         "RAM allocation in megabytes per container when serverless",
 	"serverlessconfig.minreplicas": "Minimum number of replicas when serverless",
 	"vmappostype":                  "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"alertpolicies":                "Alert Policies, specify alertpolicies:empty=true to clear",
-	"qossessionprofile":            "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"qossessionprofile":            "Qualifier for the requested latency profile, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
 	"qossessionduration":           "Session duration in seconds. Maximal value of 24 hours is used if not set",
 }
 var AppSpecialArgs = map[string]string{
@@ -924,17 +900,17 @@ var DeploymentCloudletRequestComments = map[string]string{
 	"app.templatedelimiter":   "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"app.skiphcports":         "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002",
 	"app.trusted":             "Indicates that an instance of this app can be started on a trusted cloudlet",
-	"app.requiredoutboundconnections:#.protocol":     "tcp, udp, icmp",
+	"app.requiredoutboundconnections:#.protocol":     "TCP, UDP, ICMP",
 	"app.requiredoutboundconnections:#.portrangemin": "TCP or UDP port range start",
 	"app.requiredoutboundconnections:#.portrangemax": "TCP or UDP port range end",
-	"app.requiredoutboundconnections:#.remotecidr":   "remote CIDR X.X.X.X/X",
+	"app.requiredoutboundconnections:#.remotecidr":   "Remote CIDR X.X.X.X/X",
 	"app.allowserverless":                            "App is allowed to deploy as serverless containers",
 	"app.serverlessconfig.vcpus":                     "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"app.serverlessconfig.ram":                       "RAM allocation in megabytes per container when serverless",
 	"app.serverlessconfig.minreplicas":               "Minimum number of replicas when serverless",
 	"app.vmappostype":                                "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"app.alertpolicies":                              "Alert Policies",
-	"app.qossessionprofile":                          "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"app.qossessionprofile":                          "Qualifier for the requested latency profile, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
 	"app.qossessionduration":                         "Session duration in seconds. Maximal value of 24 hours is used if not set",
 	"dryrundeploy":                                   "Attempt to qualify cloudlet resources for deployment",
 	"numnodes":                                       "Optional number of worker VMs in dry run K8s Cluster, default = 2",

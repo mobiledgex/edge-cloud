@@ -108,18 +108,8 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			duration = 24 * time.Hour // 24 hours - default value
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "Session duration", "app.QosSessionDuration", app.QosSessionDuration, " derived duration", duration)
-		var priorityType string
 
-		if strings.HasPrefix(qos, "LATENCY") {
-			priorityType = "latency"
-		} else if strings.HasPrefix(qos, "THROUGHPUT") {
-			priorityType = "throughput"
-		} else {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "Received invalid value", "QosSessionProfile", app.QosSessionProfile)
-			priorityType = ""
-		}
-
-		if qos != "DEFAULT" && priorityType != "" {
+		if qos != "DEFAULT" {
 			var protocol string
 			var asAddr string
 			ips, _ := net.LookupIP(reply.Fqdn)
@@ -143,14 +133,16 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			}
 			asPort := fmt.Sprintf("%d", port.InternalPort)
 
-			if ueAddr == "" {
+			if qos == "QOS_NO_PRIORITY" {
+				log.SpanLog(ctx, log.DebugLevelDmereq, "QOS_NO_PRIORITY specified. Will not create priority session")
+			} else if ueAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "ip_user_equipment value not found in tags. Aborting.", "req.Tags", req.Tags)
 			} else if asAddr == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Could not decode app inst FQDN. Aborting.", "reply.Fqdn", reply.Fqdn)
 			} else if protocol == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
 			} else {
-				id, sesErr := operatorApiGw.CreatePrioritySession(ctx, priorityType, ueAddr, asAddr, asPort, protocol, qos, int64(duration.Seconds()))
+				id, sesErr := operatorApiGw.CreatePrioritySession(ctx, ueAddr, asAddr, asPort, protocol, qos, int64(duration.Seconds()))
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
 				}
@@ -541,6 +533,10 @@ func main() {
 	defer func() {
 		close(done)
 	}()
+
+	if os.Getenv("E2ETEST_NORANDOM") == "true" {
+		dmecommon.OptionFindCloudletRandomizeVeryClose = false
+	}
 
 	var myCertIssuer string
 	if *cloudletDme {

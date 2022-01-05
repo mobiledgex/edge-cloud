@@ -85,23 +85,16 @@ cloudlets:
   ipsupport: Dynamic
   numdynamicips: 254
   state: Ready
-  notifysrvaddr: 127.0.0.1:0
   flavor:
     name: DefaultPlatformFlavor
   physicalname: cloudlet1
   containerversion: "2019-10-24"
   deployment: docker
-  crmaccesspublickey: |
-    -----BEGIN PUBLIC KEY-----
-    MCowBQYDK2VwAyEAAmZiwmWsOgjZee3LVV2cHmquPwUVShOeabhHHdk9FlQ=
-    -----END PUBLIC KEY-----
-  createdat:
-    seconds: 1616188340
-    nanos: 272637000
   trustpolicy: TrustPolicy1
   trustpolicystate: Ready
   defaultresourcealertthreshold: 80
-  hostcontroller: 127.0.0.1:55001
+  dnslabel: cloudlet1-tmus
+  rootlbfqdn: shared.cloudlet1-tmus.local.localtest.net
 - key:
     organization: tmus
     name: cloudlet2
@@ -111,29 +104,20 @@ cloudlets:
   ipsupport: Dynamic
   numdynamicips: 254
   state: Ready
-  notifysrvaddr: 127.0.0.1:0
   flavor:
     name: DefaultPlatformFlavor
   physicalname: cloudlet2
   containerversion: "2019-10-24"
   deployment: docker
-  crmaccesspublickey: |
-    -----BEGIN PUBLIC KEY-----
-    MCowBQYDK2VwAyEABaCuWsjvTRm0NMU8t2jNmukZ4oahEKXREsme6anPleM=
-    -----END PUBLIC KEY-----
-  createdat:
-    seconds: 1616188340
-    nanos: 940280000
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
-  hostcontroller: 127.0.0.1:55001
+  dnslabel: cloudlet2-tmus
+  rootlbfqdn: shared.cloudlet2-tmus.local.localtest.net
 cloudletinfos:
 - key:
     organization: tmus
     name: cloudlet1
   state: Ready
-  notifyid: 32
-  controller: Jon-Mex.lan@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -180,13 +164,10 @@ cloudletinfos:
         name: cluster1
       organization: AcmeAppCo
   trustpolicystate: Ready
-  compatibilityversion: 1
 - key:
     organization: tmus
     name: cloudlet2
   state: Ready
-  notifyid: 33
-  controller: Jon-Mex.lan@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -229,7 +210,6 @@ cloudletinfos:
     - name: Instances
       value: 2
   trustpolicystate: NotPresent
-  compatibilityversion: 1
 clusterinsts:
 - key:
     clusterkey:
@@ -262,9 +242,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-  createdat:
-    seconds: 1616188341
-    nanos: 580549000
+  dnslabel: cluster1-acmeappco
+  fqdn: cluster1-acmeappco.cloudlet1-tmus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -306,6 +285,7 @@ apps:
         metadata:
           labels:
             run: trustedapp1.0
+            mexDeployGen: kubernetes-basic
         spec:
           volumes:
           imagePullSecrets:
@@ -319,9 +299,6 @@ apps:
               protocol: TCP
   deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
-  createdat:
-    seconds: 1616188343
-    nanos: 142769000
   trusted: true
   requiredoutboundconnections:
   - protocol: tcp
@@ -384,9 +361,6 @@ apps:
         mexAppVersion: "10"
   internalports: true
   accesstype: LoadBalancer
-  createdat:
-    seconds: 1616188341
-    nanos: 993788000
   trusted: true
 appinstances:
 - key:
@@ -412,13 +386,11 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
-  createdat:
-    seconds: 1616188342
-    nanos: 222479000
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-cluster1-cloudlet1-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

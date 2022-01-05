@@ -1235,6 +1235,11 @@ func (m *StreamObj) ValidateEnums() error {
 	return nil
 }
 
+func (s *StreamObj) ClearTagged(tags map[string]struct{}) {
+	s.Key.ClearTagged(tags)
+	s.Status.ClearTagged(tags)
+}
+
 var StreamStateStrings = []string{
 	"STREAM_UNKNOWN",
 	"STREAM_START",

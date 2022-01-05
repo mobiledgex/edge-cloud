@@ -37,15 +37,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	for i0 := 0; i0 < len(in.MappedPorts); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.State = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Errors = nil
-	}
-	if _, found := tags["nocmp"]; found {
-		in.CrmOverride = 0
-	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -63,24 +54,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
-	if _, found := tags["nocmp"]; found {
-		in.HealthCheck = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.PowerState = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.ExternalVolumeSize = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.AvailabilityZone = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.VmFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.OptRes = ""
-	}
 	if _, found := tags["timestamp"]; found {
 		in.UpdatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -96,9 +69,6 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Uri = ""
 	}
 }
 
@@ -801,7 +771,6 @@ var AppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
-	"privacypolicy",
 	"powerstate",
 	"realclustername",
 	"dedicatedip",
@@ -858,7 +827,6 @@ var AppInstComments = map[string]string{
 	"configs:#.kind":                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":               "Config file contents or URI reference",
 	"healthcheck":                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
-	"privacypolicy":                  "Optional privacy policy name",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
@@ -868,6 +836,7 @@ var AppInstComments = map[string]string{
 	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
 	"dedicatedip":                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
 	"uniqueid":                       "A unique id for the AppInst within the region to be used by platforms",
+	"dnslabel":                       "DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts",
 }
 var AppInstSpecialArgs = map[string]string{
 	"errors":                   "StringArray",
@@ -1052,7 +1021,6 @@ var CreateAppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
-	"privacypolicy",
 	"realclustername",
 	"dedicatedip",
 }
@@ -1074,7 +1042,6 @@ var DeleteAppInstOptionalArgs = []string{
 	"configs:#.kind",
 	"configs:#.config",
 	"healthcheck",
-	"privacypolicy",
 	"realclustername",
 	"dedicatedip",
 }
@@ -1092,7 +1059,6 @@ var RefreshAppInstOptionalArgs = []string{
 	"crmoverride",
 	"forceupdate",
 	"updatemultiple",
-	"privacypolicy",
 	"realclustername",
 	"dedicatedip",
 }
@@ -1111,7 +1077,6 @@ var UpdateAppInstOptionalArgs = []string{
 	"configs:empty",
 	"configs:#.kind",
 	"configs:#.config",
-	"privacypolicy",
 	"powerstate",
 	"realclustername",
 	"dedicatedip",

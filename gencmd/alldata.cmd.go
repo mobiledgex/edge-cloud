@@ -31,24 +31,15 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		tags[tag] = struct{}{}
 	}
 	for i0 := 0; i0 < len(in.Flavors); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.Flavors[i0].DeletePrepare = false
-		}
 	}
 	for i1 := 0; i1 < len(in.Settings.EdgeEventsMetricsContinuousQueriesCollectionIntervals); i1++ {
 	}
 	for i0 := 0; i0 < len(in.OperatorCodes); i0++ {
 	}
 	for i0 := 0; i0 < len(in.ResTagTables); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.ResTagTables[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.TrustPolicies); i0++ {
 		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.TrustPolicies[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
@@ -59,22 +50,25 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.Cloudlets[i0].Status = edgeproto.StatusInfo{}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].CrmOverride = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].DeploymentLocal = false
-		}
-		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].NotifySrvAddr = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].Config = edgeproto.PlatformConfig{}
+			in.Cloudlets[i0].Config.NotifyCtrlAddrs = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].Deployment = ""
+			in.Cloudlets[i0].Config.PlatformTag = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.Span = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.CrmAccessPrivateKey = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.AccessApiAddr = ""
+		}
+		if _, found := tags["nocmp"]; found {
+			in.Cloudlets[i0].Config.SecondaryCrmAccessPrivateKey = ""
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].CrmAccessPublicKey = ""
@@ -85,25 +79,13 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.Cloudlets[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].TrustPolicyState = 0
-		}
 		for i1 := 0; i1 < len(in.Cloudlets[i0].ResourceQuotas); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].DefaultResourceAlertThreshold = 0
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].HostController = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].DeletePrepare = false
-		}
-		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].SecondaryCrmAccessPublicKey = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].SecondaryCrmAccessKeyUpgradeRequired = false
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].SecondaryNotifySrvAddr = ""
@@ -138,9 +120,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i2 := 0; i2 < len(in.CloudletInfos[i0].ResourcesSnapshot.VmAppInsts); i2++ {
 		}
 		if _, found := tags["nocmp"]; found {
-			in.CloudletInfos[i0].TrustPolicyState = 0
-		}
-		if _, found := tags["nocmp"]; found {
 			in.CloudletInfos[i0].CompatibilityVersion = 0
 		}
 		for i1 := 0; i1 < len(in.CloudletInfos[i0].NodeInfos); i1++ {
@@ -153,67 +132,34 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.CloudletPools[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.CloudletPools[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.Networks); i0++ {
 		for i1 := 0; i1 < len(in.Networks[i0].Routes); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Networks[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicies); i0++ {
 		for i1 := 0; i1 < len(in.AutoProvPolicies[i0].Cloudlets); i1++ {
 		}
-		if _, found := tags["nocmp"]; found {
-			in.AutoProvPolicies[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.AutoProvPolicyCloudlets); i0++ {
 	}
 	for i0 := 0; i0 < len(in.AutoScalePolicies); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.AutoScalePolicies[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.ClusterInsts); i0++ {
 		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].Errors = nil
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].CrmOverride = 0
 		}
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].AllocatedIp = ""
 		}
 		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].NodeFlavor = ""
-		}
-		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].Status = edgeproto.StatusInfo{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].ExternalVolumeSize = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].ImageName = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].MasterNodeFlavor = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].SkipCrmCleanupOnFailure = false
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].OptRes = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].Resources = edgeproto.InfraResources{}
+		for i2 := 0; i2 < len(in.ClusterInsts[i0].Resources.Vms); i2++ {
+			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Ipaddresses); i3++ {
+			}
+			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Containers); i3++ {
+			}
 		}
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].CreatedAt = distributed_match_engine.Timestamp{}
@@ -224,27 +170,12 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["timestamp"]; found {
 			in.ClusterInsts[i0].ReservationEndedAt = distributed_match_engine.Timestamp{}
 		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].DeletePrepare = false
-		}
 	}
 	for i0 := 0; i0 < len(in.Apps); i0++ {
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeploymentManifest = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeploymentGenerator = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DelOpt = 0
-		}
 		for i1 := 0; i1 < len(in.Apps[i0].Configs); i1++ {
 		}
 		if _, found := tags["nocmp"]; found {
 			in.Apps[i0].Revision = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.Apps[i0].DeletePrepare = false
 		}
 		if _, found := tags["timestamp"]; found {
 			in.Apps[i0].CreatedAt = distributed_match_engine.Timestamp{}
@@ -257,15 +188,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 	}
 	for i0 := 0; i0 < len(in.AppInstances); i0++ {
 		for i1 := 0; i1 < len(in.AppInstances[i0].MappedPorts); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].Errors = nil
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].CrmOverride = 0
 		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
@@ -284,24 +206,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		for i1 := 0; i1 < len(in.AppInstances[i0].Configs); i1++ {
 		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].HealthCheck = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].PowerState = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].ExternalVolumeSize = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].AvailabilityZone = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].VmFlavor = ""
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].OptRes = ""
-		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].UpdatedAt = distributed_match_engine.Timestamp{}
 		}
@@ -319,23 +223,11 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			}
 		}
 		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].State = 0
-		}
-		if _, found := tags["nocmp"]; found {
 			in.VmPools[i0].Errors = nil
-		}
-		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].CrmOverride = 0
-		}
-		if _, found := tags["nocmp"]; found {
-			in.VmPools[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
 		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
-		}
-		if _, found := tags["nocmp"]; found {
-			in.GpuDrivers[i0].DeletePrepare = false
 		}
 	}
 	for i0 := 0; i0 < len(in.AlertPolicies); i0++ {
@@ -523,6 +415,8 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.secondarycrmaccesspublickey",
 	"cloudlets:#.secondarycrmaccesskeyupgraderequired",
 	"cloudlets:#.secondarynotifysrvaddr",
+	"cloudlets:#.dnslabel",
+	"cloudlets:#.rootlbfqdn",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -702,6 +596,8 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.multitenant",
 	"clusterinsts:#.networks",
 	"clusterinsts:#.deleteprepare",
+	"clusterinsts:#.dnslabel",
+	"clusterinsts:#.fqdn",
 	"apps:#.fields",
 	"apps:#.key.organization",
 	"apps:#.key.name",
@@ -796,7 +692,6 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.configs:#.kind",
 	"appinstances:#.configs:#.config",
 	"appinstances:#.healthcheck",
-	"appinstances:#.privacypolicy",
 	"appinstances:#.powerstate",
 	"appinstances:#.externalvolumesize",
 	"appinstances:#.availabilityzone",
@@ -808,6 +703,7 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.internalporttolbip",
 	"appinstances:#.dedicatedip",
 	"appinstances:#.uniqueid",
+	"appinstances:#.dnslabel",
 	"appinstrefs:#.key.organization",
 	"appinstrefs:#.key.name",
 	"appinstrefs:#.key.version",
@@ -969,10 +865,10 @@ var AllDataComments = map[string]string{
 	"trustpolicies:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"trustpolicies:#.key.organization":                                              "Name of the organization for the cluster that this policy will apply to",
 	"trustpolicies:#.key.name":                                                      "Policy name",
-	"trustpolicies:#.outboundsecurityrules:#.protocol":                              "tcp, udp, icmp",
+	"trustpolicies:#.outboundsecurityrules:#.protocol":                              "TCP, UDP, ICMP",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemin":                          "TCP or UDP port range start",
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax":                          "TCP or UDP port range end",
-	"trustpolicies:#.outboundsecurityrules:#.remotecidr":                            "remote CIDR X.X.X.X/X",
+	"trustpolicies:#.outboundsecurityrules:#.remotecidr":                            "Remote CIDR X.X.X.X/X",
 	"trustpolicies:#.deleteprepare":                                                 "Preparing to be deleted",
 	"cloudlets:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                                                  "Organization of the cloudlet site",
@@ -1064,6 +960,8 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.secondarycrmaccesspublickey":                                       "CRM secondary access public key for H/A",
 	"cloudlets:#.secondarycrmaccesskeyupgraderequired":                              "CRM secondary access key upgrade required for H/A",
 	"cloudlets:#.secondarynotifysrvaddr":                                            "Address for the secondary CRM notify listener to run on",
+	"cloudlets:#.dnslabel":                                                          "DNS label that is unique within the region",
+	"cloudlets:#.rootlbfqdn":                                                        "Root LB FQDN which is globally unique",
 	"cloudletinfos:#.fields":                                                        "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                              "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                      "Name of the cloudlet",
@@ -1209,6 +1107,8 @@ var AllDataComments = map[string]string{
 	"clusterinsts:#.multitenant":                                                    "Multi-tenant kubernetes cluster",
 	"clusterinsts:#.networks":                                                       "networks to connect to",
 	"clusterinsts:#.deleteprepare":                                                  "Preparing to be deleted",
+	"clusterinsts:#.dnslabel":                                                       "DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts",
+	"clusterinsts:#.fqdn":                                                           "FQDN is a globally unique DNS id for the ClusterInst",
 	"apps:#.fields":                                                                 "Fields are used for the Update API to specify which fields to apply",
 	"apps:#.key.organization":                                                       "App developer organization",
 	"apps:#.key.name":                                                               "App name",
@@ -1239,17 +1139,17 @@ var AllDataComments = map[string]string{
 	"apps:#.templatedelimiter":                                                      "Delimiter to be used for template parsing, defaults to [[ ]]",
 	"apps:#.skiphcports":                                                            "Comma separated list of protocol:port pairs that we should not run health check on. Should be configured in case app does not always listen on these ports. all can be specified if no health check to be run for this app. Numerical values must be decimal format. i.e. tcp:80,udp:10002",
 	"apps:#.trusted":                                                                "Indicates that an instance of this app can be started on a trusted cloudlet",
-	"apps:#.requiredoutboundconnections:#.protocol":                                 "tcp, udp, icmp",
+	"apps:#.requiredoutboundconnections:#.protocol":                                 "TCP, UDP, ICMP",
 	"apps:#.requiredoutboundconnections:#.portrangemin":                             "TCP or UDP port range start",
 	"apps:#.requiredoutboundconnections:#.portrangemax":                             "TCP or UDP port range end",
-	"apps:#.requiredoutboundconnections:#.remotecidr":                               "remote CIDR X.X.X.X/X",
+	"apps:#.requiredoutboundconnections:#.remotecidr":                               "Remote CIDR X.X.X.X/X",
 	"apps:#.allowserverless":                                                        "App is allowed to deploy as serverless containers",
 	"apps:#.serverlessconfig.vcpus":                                                 "Virtual CPUs allocation per container when serverless, may be decimal in increments of 0.001",
 	"apps:#.serverlessconfig.ram":                                                   "RAM allocation in megabytes per container when serverless",
 	"apps:#.serverlessconfig.minreplicas":                                           "Minimum number of replicas when serverless",
 	"apps:#.vmappostype":                                                            "OS Type for VM Apps, one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019",
 	"apps:#.alertpolicies":                                                          "Alert Policies",
-	"apps:#.qossessionprofile":                                                      "Qualifier for the requested latency profile, one of LatencyNoPriority, LatencyLow, ThroughputDownNoPriority, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"apps:#.qossessionprofile":                                                      "Qualifier for the requested latency profile, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
 	"apps:#.qossessionduration":                                                     "Session duration in seconds. Maximal value of 24 hours is used if not set",
 	"appinstances:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"appinstances:#.key.appkey.organization":                                        "App developer organization",
@@ -1289,7 +1189,6 @@ var AllDataComments = map[string]string{
 	"appinstances:#.configs:#.kind":                                                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"appinstances:#.configs:#.config":                                               "Config file contents or URI reference",
 	"appinstances:#.healthcheck":                                                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
-	"appinstances:#.privacypolicy":                                                  "Optional privacy policy name",
 	"appinstances:#.powerstate":                                                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"appinstances:#.externalvolumesize":                                             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances:#.availabilityzone":                                               "Optional Availability Zone if any",
@@ -1299,6 +1198,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.internalporttolbip":                                             "mapping of ports to load balancer IPs",
 	"appinstances:#.dedicatedip":                                                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
 	"appinstances:#.uniqueid":                                                       "A unique id for the AppInst within the region to be used by platforms",
+	"appinstances:#.dnslabel":                                                       "DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts",
 	"appinstrefs:#.key.organization":                                                "App developer organization",
 	"appinstrefs:#.key.name":                                                        "App name",
 	"appinstrefs:#.key.version":                                                     "App version",
@@ -1383,10 +1283,10 @@ var AllDataComments = map[string]string{
 	"trustpolicyexceptions:#.key.cloudletpoolkey.name":                              "CloudletPool Name",
 	"trustpolicyexceptions:#.key.name":                                              "TrustPolicyExceptionKey name",
 	"trustpolicyexceptions:#.state":                                                 "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
-	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol":                      "tcp, udp, icmp",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.protocol":                      "TCP, UDP, ICMP",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemin":                  "TCP or UDP port range start",
 	"trustpolicyexceptions:#.outboundsecurityrules:#.portrangemax":                  "TCP or UDP port range end",
-	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr":                    "remote CIDR X.X.X.X/X",
+	"trustpolicyexceptions:#.outboundsecurityrules:#.remotecidr":                    "Remote CIDR X.X.X.X/X",
 }
 var AllDataSpecialArgs = map[string]string{
 	"alertpolicies:#.annotations":             "StringToString",

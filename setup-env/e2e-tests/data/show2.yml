@@ -72,11 +72,16 @@ cloudlets:
     longitude: 1
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.medium
   physicalname: tmus-cloud-1
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: tmus-cloud-1-tmus
+  rootlbfqdn: shared.tmus-cloud-1-tmus.local.localtest.net
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -85,18 +90,21 @@ cloudlets:
     longitude: 2
   ipsupport: Dynamic
   numdynamicips: 254
+  state: Ready
   flavor:
     name: x1.medium
   physicalname: tmus-cloud-2
   containerversion: "2019-10-24"
+  deployment: docker
+  trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: tmus-cloud-2-tmus
+  rootlbfqdn: shared.tmus-cloud-2-tmus.local.localtest.net
 cloudletinfos:
 - key:
     organization: tmus
     name: tmus-cloud-1
   state: Ready
-  notifyid: 37
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -109,9 +117,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -145,12 +150,11 @@ cloudletinfos:
     - clusterkey:
         name: someapplication1
       organization: AcmeAppCo
+  trustpolicystate: NotPresent
 - key:
     organization: tmus
     name: tmus-cloud-2
   state: Ready
-  notifyid: 38
-  controller: Jon-Mex@127.0.0.1:55001
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -163,9 +167,6 @@ cloudletinfos:
     vcpus: 2
     ram: 4096
     disk: 40
-  status:
-    tasknumber: 3
-    taskname: Gathering Cloudlet Info
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -199,6 +200,7 @@ cloudletinfos:
     - clusterkey:
         name: someapplication1
       organization: AcmeAppCo
+  trustpolicystate: NotPresent
 clusterinsts:
 - key:
     clusterkey:
@@ -210,10 +212,25 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Shared
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-tmus-cloud-1-someapplication1-acmeappco
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-tmus-cloud-1-someapplication1-acmeappco
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+  dnslabel: someapplication1-acmeappco
+  fqdn: someapplication1-acmeappco.tmus-cloud-1-tmus.local.localtest.net
 - key:
     clusterkey:
       name: someapplication1
@@ -224,10 +241,25 @@ clusterinsts:
   flavor:
     name: x1.small
   liveness: Static
+  state: Ready
   ipaccess: Shared
+  nodeflavor: x1.small
   deployment: kubernetes
   nummasters: 1
   numnodes: 1
+  masternodeflavor: x1.small
+  resources:
+    vms:
+    - name: fake-master-1-tmus-cloud-2-someapplication1-acmeappco
+      type: cluster-master
+      status: ACTIVE
+      infraflavor: x1.small
+    - name: fake-node-1-tmus-cloud-2-someapplication1-acmeappco
+      type: cluster-k8s-node
+      status: ACTIVE
+      infraflavor: x1.small
+  dnslabel: someapplication1-acmeappco
+  fqdn: someapplication1-acmeappco.tmus-cloud-2-tmus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -249,6 +281,73 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-tcp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      - name: tcp443
+        protocol: TCP
+        port: 443
+        targetPort: 443
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication110-udp
+      labels:
+        run: someapplication11.0
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10002
+        protocol: UDP
+        port: 10002
+        targetPort: 10002
+      selector:
+        run: someapplication11.0
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: someapplication110-deployment
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          run: someapplication11.0
+      template:
+        metadata:
+          labels:
+            run: someapplication11.0
+            mexDeployGen: kubernetes-basic
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: docker.mobiledgex.net
+          containers:
+          - name: someapplication110
+            image: docker.mobiledgex.net/AcmeAppCo/images/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 80
+              protocol: TCP
+            - containerPort: 443
+              protocol: TCP
+            - containerPort: 10002
+              protocol: UDP
+  deploymentgenerator: kubernetes-basic
   officialfqdn: someapplication1.acmeappco.com
   accesstype: LoadBalancer
 - key:
@@ -262,6 +361,7 @@ apps:
     name: x1.small
   annotations: version=9.4.10
   deployment: helm
+  delopt: AutoDelete
   configs:
   - kind: helmCustomizationYaml
     config: |
@@ -323,7 +423,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-  uri: shared.tmus-cloud-1.tmus.localtest.net
+  uri: shared.tmus-cloud-1-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -337,10 +437,15 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
+  state: Ready
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-someapplication1-tmus-cloud-1-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -356,7 +461,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: shared.tmus-cloud-2.tmus.localtest.net
+  uri: shared.tmus-cloud-2-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -370,10 +475,15 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
+  state: Ready
   runtimeinfo:
     containerids:
     - appOnClusterNode0
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: acmeappcosomeapplication110-someapplication1-tmus-cloud-2-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: MobiledgeX
@@ -396,7 +506,12 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-someapplication1-tmus-cloud-1-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -419,7 +534,12 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
+  state: Ready
+  healthcheck: Ok
+  powerstate: PowerOn
+  vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-someapplication1-tmus-cloud-2-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: AcmeAppCo

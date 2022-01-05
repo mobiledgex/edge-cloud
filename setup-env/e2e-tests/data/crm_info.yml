@@ -80,6 +80,8 @@ cloudlets:
   defaultresourcealertthreshold: 80
   hostcontroller: 127.0.0.1:55001
   secondarynotifysrvaddr: 127.0.0.1:0
+  dnslabel: tmus-cloud-1-tmus
+  rootlbfqdn: shared.tmus-cloud-1-tmus.local.localtest.net
 - key:
     organization: tmus
     name: tmus-cloud-2
@@ -99,12 +101,13 @@ cloudlets:
   defaultresourcealertthreshold: 80
   hostcontroller: 127.0.0.1:55001
   secondarynotifysrvaddr: 127.0.0.1:0
+  dnslabel: tmus-cloud-2-tmus
+  rootlbfqdn: shared.tmus-cloud-2-tmus.local.localtest.net
 cloudletinfos:
 - key:
     organization: tmus
     name: tmus-cloud-1
   state: Ready
-  notifyid: 37
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -156,7 +159,6 @@ cloudletinfos:
     organization: tmus
     name: tmus-cloud-2
   state: Ready
-  notifyid: 38
   osmaxram: 40960
   osmaxvcores: 50
   osmaxvolgb: 5000
@@ -238,6 +240,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.tmus-cloud-1-tmus.local.localtest.net
 - key:
     clusterkey:
       name: reservable0
@@ -268,6 +272,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable0-mobiledgex
+  fqdn: reservable0-mobiledgex.tmus-cloud-2-tmus.local.localtest.net
 - key:
     clusterkey:
       name: reservable1
@@ -298,6 +304,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
+  dnslabel: reservable1-mobiledgex
+  fqdn: reservable1-mobiledgex.tmus-cloud-2-tmus.local.localtest.net
 apps:
 - key:
     organization: AcmeAppCo
@@ -522,7 +530,7 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: shared.tmus-cloud-1.tmus.localtest.net
+  uri: shared.tmus-cloud-1-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -545,6 +553,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-1-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -560,7 +569,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: shared.tmus-cloud-2.tmus.localtest.net
+  uri: shared.tmus-cloud-2-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -583,6 +592,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable0
   uniqueid: acmeappcosomeapplication110-autoclustersomeapplication1-tmus-cloud-2-tmus
+  dnslabel: someapplication110-acmeappco
 - key:
     appkey:
       organization: AcmeAppCo
@@ -598,7 +608,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: shared.tmus-cloud-2.tmus.localtest.net
+  uri: shared.tmus-cloud-2-tmus.local.localtest.net
   liveness: Static
   mappedports:
   - proto: Tcp
@@ -618,6 +628,7 @@ appinstances:
   vmflavor: x1.small
   realclustername: reservable1
   uniqueid: acmeappcosomeapplication210-autoclustersomeapplication2-tmus-cloud-2-tmus
+  dnslabel: someapplication210-acmeappco
 - key:
     appkey:
       organization: MobiledgeX
@@ -645,6 +656,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservable0-tmus-cloud-1-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -672,6 +684,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservable0-tmus-cloud-2-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 - key:
     appkey:
       organization: MobiledgeX
@@ -699,6 +712,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-reservable1-tmus-cloud-2-tmus
+  dnslabel: mexprometheusappname10-mobiledgex1
 appinstrefs:
 - key:
     organization: AcmeAppCo

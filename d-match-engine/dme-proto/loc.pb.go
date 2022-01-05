@@ -561,6 +561,9 @@ func (m *Timestamp) ValidateEnums() error {
 	return nil
 }
 
+func (s *Timestamp) ClearTagged(tags map[string]struct{}) {
+}
+
 func (m *Loc) CopyInFields(src *Loc) int {
 	changed := 0
 	if m.Latitude != src.Latitude {
@@ -635,6 +638,12 @@ func (m *Loc) ValidateEnums() error {
 	return nil
 }
 
+func (s *Loc) ClearTagged(tags map[string]struct{}) {
+	if s.Timestamp != nil {
+		s.Timestamp.ClearTagged(tags)
+	}
+}
+
 func (m *Sample) CopyInFields(src *Sample) int {
 	changed := 0
 	if m.Value != src.Value {
@@ -695,6 +704,12 @@ func (m *Sample) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *Sample) ClearTagged(tags map[string]struct{}) {
+	if s.Timestamp != nil {
+		s.Timestamp.ClearTagged(tags)
+	}
 }
 
 func (m *Statistics) CopyInFields(src *Statistics) int {
@@ -764,6 +779,12 @@ func (m *Statistics) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func (s *Statistics) ClearTagged(tags map[string]struct{}) {
+	if s.Timestamp != nil {
+		s.Timestamp.ClearTagged(tags)
+	}
 }
 
 func (m *Timestamp) Size() (n int) {

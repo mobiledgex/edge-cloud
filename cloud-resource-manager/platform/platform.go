@@ -28,6 +28,7 @@ type PlatformConfig struct {
 	EnvVars             map[string]string
 	NodeMgr             *node.NodeMgr
 	AppDNSRoot          string
+	RootLBFQDN          string
 	ChefServerPath      string
 	DeploymentTag       string
 	Upgrade             bool
@@ -75,6 +76,7 @@ type Features struct {
 	IsSingleKubernetesCluster        bool // Entire platform is just a single K8S cluster
 	SupportsAppInstDedicatedIP       bool // Supports per AppInst dedicated IPs
 	SupportsPlatformHighAvailability bool // Supports High Availablity with 2 CRMs
+	NoKubernetesClusterAutoScale     bool // No support for k8s cluster auto-scale
 }
 
 // Platform abstracts the underlying cloudlet platform.

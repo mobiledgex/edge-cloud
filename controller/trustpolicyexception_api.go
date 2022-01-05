@@ -26,9 +26,7 @@ func NewTrustPolicyExceptionApi(sync *Sync, all *AllApis) *TrustPolicyExceptionA
 	return &trustPolicyExceptionApi
 }
 
-func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
-
-	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
+func (s *TrustPolicyExceptionApi) fixupPortRangeMax(ctx context.Context, in *edgeproto.TrustPolicyException) {
 	// port range max is optional, set it to min if min is present but not max
 	for i, o := range in.OutboundSecurityRules {
 		if o.PortRangeMax == 0 {
@@ -36,11 +34,17 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
 		}
 	}
+}
+
+func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
+	s.fixupPortRangeMax(ctx, in)
 	if err := in.Validate(nil); err != nil {
 		return nil, err
 	}
 	in.State = edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED
-	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state:", in.State)
+	log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionState", "state", in.State)
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -69,19 +73,49 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 	cur := edgeproto.TrustPolicyException{}
 
+	fields := edgeproto.MakeFieldMap(in.Fields)
+
+	rulesSpecified := false
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesProtocol]; found {
+		rulesSpecified = true
+	}
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMin]; found {
+		rulesSpecified = true
+	}
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesPortRangeMax]; found {
+		rulesSpecified = true
+	}
+	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesRemoteCidr]; found {
+		rulesSpecified = true
+	}
+
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if in.State == cur.State {
-			return fmt.Errorf("Current state is already %s", in.State.String())
+		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state", in.State.String(), "cur state", cur.State.String())
+
+		if _, found := fields[edgeproto.TrustPolicyExceptionFieldState]; found {
+			// caller specified state change
+			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
+				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
+				return fmt.Errorf("New state must be either Active or Rejected")
+			}
 		}
-		if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
-			in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-			return fmt.Errorf("New state must be either Active or Rejected")
+		if rulesSpecified && cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
+			return fmt.Errorf("Can update security rules only when trust policy exception is still in approval requested state")
 		}
-		cur.State = in.State
-		log.SpanLog(ctx, log.DebugLevelApi, "Setting TrustPolicyExceptionResponseState", "state:", cur.State)
+
+		// Copy in user specified fields only
+		changed := cur.CopyInFields(in)
+		if changed == 0 {
+			return nil // no changes
+		}
+		s.fixupPortRangeMax(ctx, &cur)
+		if err := cur.Validate(nil); err != nil {
+			return err
+		}
+		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "state", cur.State.String())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})

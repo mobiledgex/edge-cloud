@@ -112,6 +112,8 @@ var DmeAppTbl *DmeApps
 
 var Settings edgeproto.Settings
 
+var OptionFindCloudletRandomizeVeryClose bool = true
+
 // Stats are collected per App per Cloudlet and per method name (verifylocation, etc).
 type StatKey struct {
 	AppKey        edgeproto.AppKey
@@ -969,7 +971,7 @@ func (s *searchAppInst) searchAppInsts(ctx context.Context, carrier string, appI
 func (s *searchAppInst) insertResult(found *foundAppInst) bool {
 	inserted := false
 	for ii, ai := range s.results {
-		if s.veryClose(found, ai) {
+		if s.veryClose(found, ai) && OptionFindCloudletRandomizeVeryClose {
 			if rand.Float64() > .5 {
 				continue
 			}
@@ -1003,6 +1005,10 @@ func (s *searchAppInst) insertResult(found *foundAppInst) bool {
 func (s *searchAppInst) less(f1, f2 *foundAppInst) bool {
 	// For now we sort by distance, but in the future
 	// we may sort by latency or some other metric.
+	if f1.distance == f2.distance {
+		// same cloudlet, go by name
+		return f1.AppInst.virtualClusterInstKey.GetKeyString() < f2.AppInst.virtualClusterInstKey.GetKeyString()
+	}
 	return f1.distance < f2.distance
 }
 
