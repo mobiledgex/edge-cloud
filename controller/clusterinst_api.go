@@ -854,14 +854,14 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return fmt.Errorf("Failed to get features for platform: %s", err)
 		}
+		if features.IsSingleKubernetesCluster {
+			return fmt.Errorf("Single kubernetes cluster platform %s only supports AppInst creates", cloudlet.PlatformType.String())
+		}
 		if len(in.Key.ClusterKey.Name) > cloudcommon.MaxClusterNameLength {
 			return fmt.Errorf("Cluster name limited to %d characters", cloudcommon.MaxClusterNameLength)
 		}
 		if features.SupportsKubernetesOnly && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
 			return fmt.Errorf("Platform %s only supports kubernetes-based deployments", cloudlet.PlatformType.String())
-		}
-		if features.IsSingleKubernetesCluster {
-			return fmt.Errorf("Single kubernetes cluster platform %s only supports AppInst creates", cloudlet.PlatformType.String())
 		}
 		platName := edgeproto.PlatformType_name[int32(cloudlet.PlatformType)]
 		if in.SharedVolumeSize != 0 && !features.SupportsSharedVolume {
