@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-redis/redis"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -26,7 +27,7 @@ type HAWatcher interface {
 type HighAvailabilityManager struct {
 	redisAddr              string
 	nodeGroupKey           string
-	redisClient            *rediscache.RedisClient
+	redisClient            *redis.Client
 	HARole                 string
 	HAEnabled              bool
 	activeDuration         time.Duration
@@ -66,7 +67,7 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	if err != nil {
 		return err
 	}
-	if err := s.redisClient.IsServerReady(); err != nil {
+	if err := rediscache.IsServerReady(s.redisClient); err != nil {
 		return err
 	}
 
@@ -91,7 +92,7 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) bool {
 		s.BumpActiveExpire(ctx)
 		return true
 	}
-	v, err := s.redisClient.SetNX(ctx, s.nodeGroupKey, s.HARole, s.activeDuration)
+	v, err := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "tryActive setNX error", "key", s.nodeGroupKey, "v", v, "err", err)
 	}
@@ -100,7 +101,7 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) bool {
 
 func (s *HighAvailabilityManager) CheckActive(ctx context.Context) bool {
 
-	v, err := s.redisClient.Get(ctx, s.nodeGroupKey)
+	v, err := s.redisClient.Get(s.nodeGroupKey).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "v", v, "err", err)
 		return false
@@ -110,7 +111,7 @@ func (s *HighAvailabilityManager) CheckActive(ctx context.Context) bool {
 }
 
 func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
-	v, err := s.redisClient.Set(ctx, s.nodeGroupKey, s.HARole, s.activeDuration)
+	v, err := s.redisClient.Set(s.nodeGroupKey, s.HARole, s.activeDuration).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire error", "key", s.nodeGroupKey, "v", v, "err", err)
 		return err

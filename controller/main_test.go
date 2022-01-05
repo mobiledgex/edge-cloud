@@ -18,6 +18,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +40,11 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
-	*dummyRedis = true
+
+	dummyRedisSrv, err := rediscache.MockRedisServer()
+	require.Nil(t, err, "start mock redis server")
+	*redisAddr = dummyRedisSrv.Addr()
+
 	testinit()
 	defer testfinish()
 	// avoid dummy influxQs created by testinit() since we're calling startServices
@@ -51,7 +56,7 @@ func TestController(t *testing.T) {
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
 
-	err := startServices()
+	err = startServices()
 	defer stopServices()
 	require.Nil(t, err, "start")
 	apis := services.allApis
@@ -214,12 +219,15 @@ func TestEdgeCloudBug26(t *testing.T) {
 
 	*localEtcd = true
 	*initLocalEtcd = true
-	*dummyRedis = true
+
+	dummyRedisSrv, err := rediscache.MockRedisServer()
+	require.Nil(t, err, "start mock redis server")
+	*redisAddr = dummyRedisSrv.Addr()
 
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
 
-	err := startServices()
+	err = startServices()
 	defer stopServices()
 	require.Nil(t, err, "start")
 	apis := services.allApis

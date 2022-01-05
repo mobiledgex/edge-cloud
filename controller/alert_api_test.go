@@ -169,7 +169,7 @@ func testinit() {
 	cloudletLookup := &node.CloudletCache{}
 	cloudletLookup.Init()
 	nodeMgr.CloudletLookup = cloudletLookup
-	redisClient = rediscache.NewDummyRedis()
+	redisClient, _ = rediscache.NewDummyRedisClient()
 }
 
 func testfinish() {
