@@ -13,7 +13,6 @@ import (
 type networkPolicyPort struct {
 	Protocol string
 	Port     int32
-	EndPort  int32
 }
 
 type networkPolicyArgs struct {
@@ -50,9 +49,6 @@ spec:
 {{- range .Ports}}
     - protocol: {{.Protocol}}
       port: {{.Port}}
-{{- if .EndPort}}
-      endPort: {{.EndPort}}
-{{- end}}
 {{- end}}
 {{- end}}
 `))
@@ -76,10 +72,15 @@ func GetNetworkPolicy(ctx context.Context, app *edgeproto.App, appInst *edgeprot
 			continue
 		}
 		npp.Port = port.InternalPort
-		npp.EndPort = port.EndPort
-		args.Ports = append(args.Ports, npp)
+		endport := port.InternalPort
+		if port.EndPort > 0 {
+			endport = port.EndPort
+		}
+		for p := port.InternalPort; p <= endport; p++ {
+			npp.Port = p
+			args.Ports = append(args.Ports, npp)
+		}
 	}
-
 	buf := bytes.Buffer{}
 	err := k8sNetworkPolicyTemplate.Execute(&buf, &args)
 	if err != nil {
