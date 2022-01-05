@@ -2,6 +2,7 @@ package gensupport
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -348,10 +349,19 @@ func argSpecified(arg string, entries map[string]struct{}) bool {
 }
 
 func GetEnumCommonPrefix(en *descriptor.EnumDescriptorProto) string {
+	symbolsFile := "/tmp/dme_enum_symbols.txt"
+	f, err := os.OpenFile(symbolsFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		os.Stderr.WriteString("Did not open file for writing enum symbols!")
+	}
+	defer f.Close()
+
 	if prefix, found := FindStringExtension(en.Options, protogen.E_CommonPrefix); found {
+		f.WriteString(util.CamelCase(strings.TrimPrefix(*en.Value[0].Name, prefix)) + "\n")
 		return util.CamelCase(prefix)
 	}
 	if len(en.Value) <= 1 {
+		f.WriteString(util.CamelCase(*en.Value[0].Name) + "\n")
 		return ""
 	}
 	prefix := *en.Value[0].Name
@@ -367,8 +377,10 @@ func GetEnumCommonPrefix(en *descriptor.EnumDescriptorProto) string {
 		prefix = prefix[:kk]
 		if kk == 0 {
 			// no common prefix
+			f.WriteString(util.CamelCase(name) + "\n")
 			break
 		}
+		f.WriteString(util.CamelCase(strings.TrimPrefix(name, prefix)) + "\n")
 	}
 	return util.CamelCase(prefix)
 }
