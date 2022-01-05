@@ -35,13 +35,6 @@ enum StreamState {
   STREAM_ERROR = 3;
 }
 
-message StreamKey {
-  string name = 1 [(protogen.keytag) = "stream"];
-  option (protogen.obj_key) = true;
-  option (gogoproto.gostring) = true;
-  option (protogen.generate_matches) = true;
-}
-
 service StreamObjApi {
   // Stream Application Instance current progress
   rpc StreamAppInst(AppInstKey) returns (stream Result) {
@@ -79,6 +72,4 @@ service StreamObjApi {
     option (protogen.stream_out_incremental) = true;
     option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
   }
-  // This is used internally to forward requests to other Controllers
-  rpc StreamLocalMsgs(StreamKey) returns (stream Result) {}
 }

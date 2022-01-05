@@ -255,7 +255,7 @@ func validateVMNetInfo(vmCur, vmNew *edgeproto.VM) error {
 }
 
 func (s *VMPoolApi) startVMPoolStream(ctx context.Context, key *edgeproto.VMPoolKey) (*streamSend, error) {
-	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), nil)
+	streamSendObj, _, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), nil)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start VMPool stream", "err", err)
 		return nil, err

@@ -190,15 +190,12 @@ func (s *CloudletApi) getPlatformConfig(ctx context.Context, cloudlet *edgeproto
 }
 
 func (s *CloudletApi) startCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, inCb edgeproto.CloudletApi_CreateCloudletServer) (*streamSend, edgeproto.CloudletApi_CreateCloudletServer, error) {
-	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
+	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start Cloudlet stream", "err", err)
 		return nil, inCb, err
 	}
-	return streamSendObj, &CbWrapper{
-		streamSendObj: streamSendObj,
-		GenericCb:     inCb,
-	}, nil
+	return streamSendObj, outCb, err
 }
 
 func (s *CloudletApi) stopCloudletStream(ctx context.Context, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error) {

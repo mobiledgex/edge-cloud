@@ -11,14 +11,24 @@ import (
 
 const MaxRedisWait = time.Second * 30
 
+// Special IDs in the streams API
+const RedisSmallestId = "-"
+const RedisGreatestId = "+"
+const RedisLastId = "$"
+
 type RedisCache interface {
 	IsServerReady() error
 	Get(ctx context.Context, key string) (string, error)
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) (string, error)
 	SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) (bool, error)
 	Del(ctx context.Context, keys ...string) (int64, error)
+	Exists(ctx context.Context, keys ...string) (int64, error)
 	Subscribe(ctx context.Context, channels ...string) (RedisPubSub, error)
 	Publish(ctx context.Context, channel string, message interface{}) error
+	XAdd(ctx context.Context, stream string, values map[string]interface{}) error
+	XRange(ctx context.Context, stream, start, stop string) ([]XReadStreamMsg, error)
+	XRead(ctx context.Context, streams []string, count int64, block time.Duration) ([]XReadStream, error)
+	Expire(ctx context.Context, key string, expiration time.Duration) error
 }
 
 type RedisClient struct {
@@ -83,6 +93,12 @@ func (r *RedisClient) Del(ctx context.Context, keys ...string) (int64, error) {
 	return out, err
 }
 
+func (r *RedisClient) Exists(ctx context.Context, keys ...string) (int64, error) {
+	out, err := r.client.Exists(keys...).Result()
+	log.SpanLog(ctx, log.DebugLevelRedis, "key exists", "keys", keys, "out", out, "err", err)
+	return out, err
+}
+
 func (r *RedisClient) Subscribe(ctx context.Context, channels ...string) (RedisPubSub, error) {
 	pubsub := r.client.Subscribe(channels...)
 
@@ -127,4 +143,65 @@ func (p *redisPubSub) Close() error {
 	}
 	// Close() also closes subscribed channels
 	return p.pubsub.Close()
+}
+
+func (r *RedisClient) XAdd(ctx context.Context, stream string, values map[string]interface{}) error {
+	xaddArgs := redis.XAddArgs{}
+	xaddArgs.Stream = stream
+	xaddArgs.Values = values
+	err := r.client.XAdd(&xaddArgs).Err()
+	return err
+}
+
+type XReadStreamMsg struct {
+	ID     string
+	Values map[string]interface{}
+}
+
+type XReadStream struct {
+	Stream string
+	Msgs   []XReadStreamMsg
+}
+
+func (r *RedisClient) XRange(ctx context.Context, stream, start, stop string) ([]XReadStreamMsg, error) {
+	res, err := r.client.XRange(stream, start, stop).Result()
+	out := []XReadStreamMsg{}
+	for _, r := range res {
+		out = append(out, XReadStreamMsg{
+			ID:     r.ID,
+			Values: r.Values,
+		})
+	}
+	return out, err
+}
+
+func (r *RedisClient) XRead(ctx context.Context, streams []string, count int64, block time.Duration) ([]XReadStream, error) {
+	xreadArgs := redis.XReadArgs{}
+	xreadArgs.Streams = streams
+	xreadArgs.Count = count
+	xreadArgs.Block = block
+	res, err := r.client.XRead(&xreadArgs).Result()
+	xreadStreamOut := []XReadStream{}
+	for _, r := range res {
+		xreadOut := XReadStream{}
+		xreadOut.Stream = r.Stream
+		out := []XReadStreamMsg{}
+		for _, msg := range r.Messages {
+			out = append(out, XReadStreamMsg{
+				ID:     msg.ID,
+				Values: msg.Values,
+			})
+		}
+		xreadOut.Msgs = out
+		xreadStreamOut = append(xreadStreamOut, xreadOut)
+	}
+	return xreadStreamOut, err
+}
+
+func (r *RedisClient) Expire(ctx context.Context, key string, expiration time.Duration) error {
+	err := r.client.Expire(key, expiration).Err()
+	if err != nil {
+		return err
+	}
+	return nil
 }

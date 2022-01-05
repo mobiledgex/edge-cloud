@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"sync"
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/rediscache"
@@ -17,15 +15,17 @@ import (
 )
 
 var (
-	streamObjs = cloudcommon.StreamObj{}
+	StreamMsgTypeMessage = "message"
+	StreamMsgTypeError   = "error"
+	StreamMsgTypeEOM     = "end-of-stream-message"
 
-	StreamTimeout = 30 * time.Minute
+	StreamMsgReadTimeout = 30 * time.Minute
+	StreamExpiration     = 10 * time.Minute
 )
 
 type streamSend struct {
 	cb        GenericCb
 	mux       sync.Mutex
-	streamer  *cloudcommon.Streamer
 	crmPubSub rediscache.RedisPubSub
 	crmMsgCh  <-chan *redis.Message
 }
@@ -41,7 +41,8 @@ type GenericCb interface {
 
 type CbWrapper struct {
 	GenericCb
-	streamSendObj *streamSend
+	ctx       context.Context
+	streamKey string
 }
 
 func NewStreamObjApi(sync *Sync, all *AllApis) *StreamObjApi {
@@ -52,113 +53,119 @@ func NewStreamObjApi(sync *Sync, all *AllApis) *StreamObjApi {
 
 func (s *CbWrapper) Send(res *edgeproto.Result) error {
 	if res != nil {
-		if s.streamSendObj.streamer != nil {
-			s.streamSendObj.streamer.Publish(res.Message)
+		var streamMsg map[string]interface{}
+		inMsg, err := json.Marshal(res)
+		if err != nil {
+			return err
 		}
+		err = json.Unmarshal(inMsg, &streamMsg)
+		if err != nil {
+			return err
+		}
+
+		// TODO: Make them atomic
+		redisClient.XAdd(s.ctx, s.streamKey, streamMsg)
+		redisClient.Expire(s.ctx, s.streamKey, StreamExpiration)
 	}
 	s.GenericCb.Send(res)
-	return nil
-}
-
-func (s *StreamObjApi) StreamLocalMsgs(streamKeyObj *edgeproto.StreamKey, cb edgeproto.StreamObjApi_StreamLocalMsgsServer) error {
-	ctx := cb.Context()
-	streamKey := streamKeyObj.Name
-	log.SpanLog(ctx, log.DebugLevelApi, "Stream obj messages", "key", streamKey)
-	streamer := streamObjs.Get(streamKey)
-	if streamer == nil {
-		// stream not found, nothing to show
-		log.SpanLog(ctx, log.DebugLevelApi, "Stream obj not found", "key", streamKey)
-		return nil
-	}
-	streamCh := streamer.Subscribe()
-	defer streamer.Unsubscribe(streamCh)
-
-	for streamMsg := range streamCh {
-		switch out := streamMsg.(type) {
-		case string:
-			cb.Send(&edgeproto.Result{Message: out})
-		case error:
-			return out
-		default:
-			return fmt.Errorf("Unsupported message type received: %v", streamMsg)
-		}
-	}
-
 	return nil
 }
 
 func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	ctx := cb.Context()
 
-	streamKeyObj := edgeproto.StreamKey{Name: streamKey}
-	if *externalApiAddr == "" {
-		// unit test
-		return s.StreamLocalMsgs(&streamKeyObj, cb)
+	out, err := redisClient.Exists(ctx, streamKey)
+	if err != nil {
+		return err
+	}
+	if out == 0 {
+		// stream key does not exist
+		return nil
 	}
 
-	// Currently we don't know which controller has the streamer Obj for this key
-	// (or if it's even present), so just broadcast to all.
+	streamMsgs, err := redisClient.XRange(ctx, streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId)
+	if err != nil {
+		panic(err)
+	}
 
-	// In case CRM loses connection to controller during an action in-progress
-	// (for ex: during CreateClusterInst), and reconnects to a different controller
-	// than it did earlier, then end-user might not see any status messages.
-	// For now we won't handle this case, as it will just affect the status updates
-	// which shouldn't be a big deal
-	err := s.all.controllerApi.RunJobs(func(arg interface{}, addr string) error {
-		if addr == *externalApiAddr {
-			// local node
-			return s.StreamLocalMsgs(&streamKeyObj, cb)
-		}
-		// connect to remote node
-		conn, cErr := ControllerConnect(ctx, addr)
-		if cErr != nil {
-			return cErr
-		}
-		defer conn.Close()
+	decodeStreamMsg := func(sMsg map[string]interface{}) (bool, error) {
+		done := false
+		for k, v := range sMsg {
+			switch k {
+			case StreamMsgTypeMessage:
+				val, ok := v.(string)
+				if !ok {
+					return done, fmt.Errorf("Invalid stream message %v, must be of type string", v)
+				}
+				cb.Send(&edgeproto.Result{Message: val})
+			case StreamMsgTypeError:
+				val, ok := v.(string)
+				if !ok {
+					return done, fmt.Errorf("Invalid stream error %v, must be of type string", v)
+				}
+				return done, fmt.Errorf(val)
+			case StreamMsgTypeEOM:
+				done = true
+				break
+			default:
+				return done, fmt.Errorf("Unsupported message type received: %v", k)
+			}
 
-		cmd := edgeproto.NewStreamObjApiClient(conn)
-		ctx, cancel := context.WithTimeout(context.Background(), StreamTimeout)
-		defer cancel()
-		stream, sErr := cmd.StreamLocalMsgs(ctx, &streamKeyObj)
-		if sErr != nil {
-			return sErr
 		}
-		var sMsg *edgeproto.Result
-		for {
-			sMsg, sErr = stream.Recv()
-			if sErr == io.EOF {
-				sErr = nil
-				break
-			}
-			if sErr != nil {
-				break
-			}
-			cb.Send(sMsg)
+		return done, nil
+	}
+
+	lastStreamMsgId := ""
+	for _, sMsg := range streamMsgs {
+		lastStreamMsgId = sMsg.ID
+		done, err := decodeStreamMsg(sMsg.Values)
+		if err != nil {
+			return err
 		}
-		if sErr != nil {
-			return sErr
+		if done {
+			return nil
 		}
-		return nil
-	}, nil)
-	return err
+	}
+	if lastStreamMsgId == "" {
+		lastStreamMsgId = rediscache.RedisSmallestId
+	}
+
+	for {
+		// Blocking read for new stream messages until EOM is found
+		sMsg, err := redisClient.XRead(ctx, []string{streamKey, lastStreamMsgId}, 1, StreamMsgReadTimeout)
+		if err != nil {
+			return fmt.Errorf("Error reading from stream %s, %v", streamKey, err)
+		}
+		if len(sMsg) != 1 {
+			return fmt.Errorf("Output should only be for a single stream %s, but multiple found %v", streamKey, sMsg)
+		}
+		sMsgs := sMsg[0].Msgs
+		if len(sMsgs) != 1 {
+			return fmt.Errorf("Output should only be for a single message, but multiple found %s, %v", streamKey, sMsgs)
+		}
+		lastStreamMsgId = sMsgs[0].ID
+		done, err := decodeStreamMsg(sMsgs[0].Values)
+		if err != nil {
+			return err
+		}
+		if done {
+			return nil
+		}
+	}
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb GenericCb) (*streamSend, error) {
+func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
-	streamer := streamObjs.Get(streamKey)
-	if streamer != nil {
-		// stream is already in progress for this key
-		if streamer.State == edgeproto.StreamState_STREAM_START {
-			return nil, fmt.Errorf("Stream already in progress for %s", streamKey)
-		}
-	}
 
+	// Start subscription to redis channel identified by stream key.
+	// Objects from CRM will be published to this channel and hence,
+	// will be received by intended receiver
 	pubsub, err := redisClient.Subscribe(ctx, streamKey)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// Go channel which receives messages.
+	// Go channel to receives messages.
 	ch := pubsub.Channel()
 
 	streamSendObj := streamSend{}
@@ -166,13 +173,22 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 	streamSendObj.crmMsgCh = ch
 
 	if inCb != nil {
-		streamer = cloudcommon.NewStreamer()
-		streamSendObj.streamer = streamer
 		streamSendObj.cb = inCb
-		streamObjs.Add(streamKey, streamer)
 	}
 
-	return &streamSendObj, nil
+	// Delete any existing streams
+	_, err = redisClient.Del(ctx, streamKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	outCb := &CbWrapper{
+		GenericCb: inCb,
+		ctx:       ctx,
+		streamKey: streamKey,
+	}
+
+	return &streamSendObj, outCb, nil
 }
 
 func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamSendObj *streamSend, objErr error) error {
@@ -180,11 +196,20 @@ func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamS
 	if streamSendObj != nil {
 		streamSendObj.mux.Lock()
 		defer streamSendObj.mux.Unlock()
-		if streamSendObj.streamer != nil {
-			if objErr != nil {
-				streamSendObj.streamer.Publish(objErr)
+		if objErr != nil {
+			streamMsg := map[string]interface{}{
+				StreamMsgTypeError: objErr.Error(),
 			}
-			streamSendObj.streamer.Stop()
+			// TODO: Make them atomic
+			redisClient.XAdd(ctx, streamKey, streamMsg)
+			redisClient.Expire(ctx, streamKey, StreamExpiration)
+		} else {
+			// TODO: Make them atomic
+			streamMsg := map[string]interface{}{
+				StreamMsgTypeEOM: "",
+			}
+			redisClient.XAdd(ctx, streamKey, streamMsg)
+			redisClient.Expire(ctx, streamKey, StreamExpiration)
 		}
 		if streamSendObj.crmPubSub != nil {
 			// Close() also closes channels

@@ -3,14 +3,23 @@ package rediscache
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
+const (
+	DummyDataTypeString int = iota
+	DummyDataTypeStream
+)
+
 type dummyData struct {
+	datatype        int
 	val             string
+	streamVal       []XReadStreamMsg
+	streamLis       map[string]chan XReadStreamMsg
 	lastUpdatedTime time.Time
 	expirationTime  time.Duration
 }
@@ -48,6 +57,9 @@ func (r *DummyRedis) Get(ctx context.Context, key string) (string, error) {
 		delete(r.db, key)
 		return "", redis.Nil
 	}
+	if data.datatype != DummyDataTypeString {
+		return "", fmt.Errorf("WRONGTYPE Operation against a key holding the wrong kind of value")
+	}
 	return data.val, nil
 }
 
@@ -64,6 +76,7 @@ func (r *DummyRedis) Set(ctx context.Context, key string, value interface{}, exp
 		return "", fmt.Errorf("invalid value, must be string")
 	}
 	r.db[key] = &dummyData{
+		datatype:        DummyDataTypeString,
 		val:             valstr,
 		lastUpdatedTime: time.Now(),
 		expirationTime:  expiration,
@@ -88,6 +101,7 @@ func (r *DummyRedis) SetNX(ctx context.Context, key string, value interface{}, e
 		return false, fmt.Errorf("invalid value, must be string")
 	}
 	r.db[key] = &dummyData{
+		datatype:        DummyDataTypeString,
 		val:             valstr,
 		lastUpdatedTime: time.Now(),
 		expirationTime:  expiration,
@@ -109,6 +123,21 @@ func (r *DummyRedis) Del(ctx context.Context, keys ...string) (int64, error) {
 		}
 	}
 	return keysRem, nil
+}
+
+func (r *DummyRedis) Exists(ctx context.Context, keys ...string) (int64, error) {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+	if r.db == nil {
+		return 0, fmt.Errorf("redis not initialized")
+	}
+	keysExists := int64(0)
+	for _, key := range keys {
+		if _, ok := r.db[key]; ok {
+			keysExists++
+		}
+	}
+	return keysExists, nil
 }
 
 func (r *DummyRedis) Subscribe(ctx context.Context, channels ...string) (RedisPubSub, error) {
@@ -171,5 +200,215 @@ func (r *dummyRedisPubSub) Close() error {
 		close(msgCh)
 		delete(r.msgChs, r.channelKey)
 	}
+	return nil
+}
+
+func (r *DummyRedis) XAdd(ctx context.Context, stream string, values map[string]interface{}) error {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+	if r.db == nil {
+		return fmt.Errorf("redis not initialized")
+	}
+	streamVals := []XReadStreamMsg{}
+	// if already present, just append
+	streamData, ok := r.db[stream]
+	if ok {
+		if streamData.datatype != DummyDataTypeStream {
+			return fmt.Errorf("WRONGTYPE Operation against a key holding the wrong kind of value")
+		}
+		if streamData.expirationTime > 0 &&
+			(time.Since(streamData.lastUpdatedTime) > streamData.expirationTime) {
+			// key has expired
+			streamVals = []XReadStreamMsg{}
+		} else {
+			streamVals = streamData.streamVal
+		}
+	} else {
+		streamData = &dummyData{
+			datatype: DummyDataTypeStream,
+		}
+	}
+	streamMsg := XReadStreamMsg{
+		ID:     strconv.FormatInt(time.Now().UTC().UnixNano(), 10),
+		Values: values,
+	}
+	streamVals = append(streamVals, streamMsg)
+	streamData.streamVal = streamVals
+	streamData.lastUpdatedTime = time.Now()
+	r.db[stream] = streamData
+	if len(streamData.streamLis) > 0 {
+		for _, lis := range streamData.streamLis {
+			lis <- streamMsg
+		}
+	}
+	return nil
+}
+
+func (r *DummyRedis) XRange(ctx context.Context, stream, start, stop string) ([]XReadStreamMsg, error) {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+	if r.db == nil {
+		return nil, fmt.Errorf("redis not initialized")
+	}
+	out := []XReadStreamMsg{}
+	streamData, ok := r.db[stream]
+	if !ok {
+		return out, nil
+	}
+	if streamData.datatype != DummyDataTypeStream {
+		return nil, fmt.Errorf("WRONGTYPE Operation against a key holding the wrong kind of value")
+	}
+
+	if len(streamData.streamVal) == 0 {
+		return out, nil
+	}
+
+	if start == RedisSmallestId {
+		start = streamData.streamVal[0].ID
+	}
+	if stop == RedisGreatestId {
+		stop = streamData.streamVal[len(streamData.streamVal)-1].ID
+	}
+
+	if streamData.expirationTime > 0 &&
+		(time.Since(streamData.lastUpdatedTime) > streamData.expirationTime) {
+		// key has expired
+		return out, nil
+	}
+
+	streamStartFound := false
+	streamEndFound := false
+	for _, sVal := range streamData.streamVal {
+		if sVal.ID == start {
+			streamStartFound = true
+		}
+		if sVal.ID == stop {
+			streamEndFound = true
+		}
+		if streamStartFound {
+			out = append(out, sVal)
+		}
+		if streamEndFound {
+			break
+		}
+	}
+	if !streamStartFound || !streamEndFound {
+		return nil, fmt.Errorf("ERR Invalid stream ID specified as stream command argument")
+	}
+	return out, nil
+}
+
+func (r *DummyRedis) XRead(ctx context.Context, streams []string, count int64, block time.Duration) ([]XReadStream, error) {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+	if r.db == nil {
+		return nil, fmt.Errorf("redis not initialized")
+	}
+
+	if len(streams) != 2 {
+		return nil, fmt.Errorf("Invalid value specified for streams %v, must only have two values 'streamkey' and 'streamstartid'", streams)
+	}
+	stream := streams[0]
+	streamStartId := streams[1]
+
+	streamData, ok := r.db[stream]
+	if !ok {
+		return []XReadStream{}, nil
+	}
+	if streamData.datatype != DummyDataTypeStream {
+		return nil, fmt.Errorf("WRONGTYPE Operation against a key holding the wrong kind of value")
+	}
+	if count < 0 {
+		return nil, fmt.Errorf("Invalid value for count specified %d", count)
+	}
+	if streamStartId == RedisLastId {
+		if len(streamData.streamVal) > 0 {
+			streamStartId = streamData.streamVal[len(streamData.streamVal)-1].ID
+		} else {
+			streamStartId = ""
+		}
+	}
+
+	if streamData.expirationTime > 0 &&
+		(time.Since(streamData.lastUpdatedTime) > streamData.expirationTime) {
+		// key has expired
+		return []XReadStream{}, nil
+	}
+
+	xreadStreamOut := []XReadStream{}
+	xreadOut := XReadStream{}
+	xreadOut.Stream = stream
+	msgs := []XReadStreamMsg{}
+	streamStartFound := false
+	streamEndFound := false
+	for _, val := range streamData.streamVal {
+		if streamStartId == "" {
+			streamStartFound = true
+		}
+		if streamStartId == val.ID {
+			streamStartFound = true
+			continue
+		}
+		if streamStartFound {
+			msgs = append(msgs, val)
+		}
+		if int64(len(msgs)) == count {
+			streamEndFound = true
+			break
+		}
+	}
+
+	if !streamStartFound {
+		return nil, fmt.Errorf("ERR Invalid stream ID specified as stream command argument")
+	}
+
+	if !streamEndFound {
+		// Wait until target number of messages is received
+		sMsgChan := make(chan XReadStreamMsg, 100)
+		if len(streamData.streamLis) == 0 {
+			streamData.streamLis = make(map[string]chan XReadStreamMsg)
+		}
+		streamData.streamLis[stream] = sMsgChan
+		r.mux.Unlock()
+		for {
+			select {
+			case newSMsg := <-sMsgChan:
+				msgs = append(msgs, newSMsg)
+				if int64(len(msgs)) == count {
+					streamEndFound = true
+				} else {
+					continue
+				}
+			case <-time.After(block):
+				streamEndFound = false
+			}
+			break
+		}
+		r.mux.Lock()
+		close(sMsgChan)
+		delete(streamData.streamLis, stream)
+		if !streamEndFound {
+			return nil, redis.Nil
+		}
+	}
+
+	xreadOut.Msgs = msgs
+	xreadStreamOut = append(xreadStreamOut, xreadOut)
+
+	return xreadStreamOut, nil
+}
+
+func (r *DummyRedis) Expire(ctx context.Context, key string, expiration time.Duration) error {
+	r.mux.Lock()
+	defer r.mux.Unlock()
+	if r.db == nil {
+		return fmt.Errorf("redis not initialized")
+	}
+	data, ok := r.db[key]
+	if !ok {
+		return redis.Nil
+	}
+	data.expirationTime = expiration
+	r.db[key] = data
 	return nil
 }

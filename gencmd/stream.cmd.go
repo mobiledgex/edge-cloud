@@ -351,95 +351,9 @@ func StreamGPUDrivers(c *cli.Command, data []edgeproto.GPUDriverKey, err *error)
 	}
 }
 
-var StreamLocalMsgsCmd = &cli.Command{
-	Use:          "StreamLocalMsgs",
-	RequiredArgs: strings.Join(StreamKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(StreamKeyOptionalArgs, " "),
-	AliasArgs:    strings.Join(StreamKeyAliasArgs, " "),
-	SpecialArgs:  &StreamKeySpecialArgs,
-	Comments:     StreamKeyComments,
-	ReqData:      &edgeproto.StreamKey{},
-	ReplyData:    &edgeproto.Result{},
-	Run:          runStreamLocalMsgs,
-}
-
-func runStreamLocalMsgs(c *cli.Command, args []string) error {
-	if cli.SilenceUsage {
-		c.CobraCmd.SilenceUsage = true
-	}
-	obj := c.ReqData.(*edgeproto.StreamKey)
-	_, err := c.ParseInput(args)
-	if err != nil {
-		return err
-	}
-	return StreamLocalMsgs(c, obj)
-}
-
-func StreamLocalMsgs(c *cli.Command, in *edgeproto.StreamKey) error {
-	if StreamObjApiCmd == nil {
-		return fmt.Errorf("StreamObjApi client not initialized")
-	}
-	ctx := context.Background()
-	stream, err := StreamObjApiCmd.StreamLocalMsgs(ctx, in)
-	if err != nil {
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("StreamLocalMsgs failed: %s", errstr)
-	}
-
-	objs := make([]*edgeproto.Result, 0)
-	for {
-		obj, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("StreamLocalMsgs recv failed: %s", errstr)
-		}
-		objs = append(objs, obj)
-	}
-	if len(objs) == 0 {
-		return nil
-	}
-	c.WriteOutput(c.CobraCmd.OutOrStdout(), objs, cli.OutputFormat)
-	return nil
-}
-
-// this supports "Create" and "Delete" commands on ApplicationData
-func StreamLocalMsgss(c *cli.Command, data []edgeproto.StreamKey, err *error) {
-	if *err != nil {
-		return
-	}
-	for ii, _ := range data {
-		fmt.Printf("StreamLocalMsgs %v\n", data[ii])
-		myerr := StreamLocalMsgs(c, &data[ii])
-		if myerr != nil {
-			*err = myerr
-			break
-		}
-	}
-}
-
 var StreamObjApiCmds = []*cobra.Command{
 	StreamAppInstCmd.GenCmd(),
 	StreamClusterInstCmd.GenCmd(),
 	StreamCloudletCmd.GenCmd(),
 	StreamGPUDriverCmd.GenCmd(),
-	StreamLocalMsgsCmd.GenCmd(),
 }
-
-var StreamKeyRequiredArgs = []string{}
-var StreamKeyOptionalArgs = []string{
-	"name",
-}
-var StreamKeyAliasArgs = []string{}
-var StreamKeyComments = map[string]string{}
-var StreamKeySpecialArgs = map[string]string{}

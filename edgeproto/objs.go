@@ -1251,13 +1251,6 @@ func (s *AppInstKey) FromClusterRefsAppInstKey(key *ClusterRefsAppInstKey, cKey 
 	s.ClusterInstKey.CloudletKey = cKey.CloudletKey
 }
 
-func (s *StreamKey) Validate(fields map[string]struct{}) error {
-	if !util.ValidName(s.Name) {
-		return errors.New("Invalid stream name")
-	}
-	return nil
-}
-
 func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {
 	if inRes == nil || len(inRes.Vms) == 0 {
 		return false

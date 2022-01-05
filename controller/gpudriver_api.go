@@ -162,15 +162,12 @@ func (s *GPUDriverApi) undoStateChange(ctx context.Context, key *edgeproto.GPUDr
 }
 
 func (s *GPUDriverApi) startGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, inCb edgeproto.GPUDriverApi_CreateGPUDriverServer) (*streamSend, edgeproto.GPUDriverApi_CreateGPUDriverServer, error) {
-	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
+	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start GPU driver stream", "err", err)
 		return nil, inCb, err
 	}
-	return streamSendObj, &CbWrapper{
-		streamSendObj: streamSendObj,
-		GenericCb:     inCb,
-	}, nil
+	return streamSendObj, outCb, err
 }
 
 func (s *GPUDriverApi) stopGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
