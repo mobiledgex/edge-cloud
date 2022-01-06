@@ -303,8 +303,8 @@ var TrustPolicyExceptionKeyComments = map[string]string{
 var TrustPolicyExceptionKeySpecialArgs = map[string]string{}
 var TrustPolicyExceptionRequiredArgs = []string{
 	"app-org",
-	"app-name",
-	"app-ver",
+	"appname",
+	"appvers",
 	"cloudletpool-org",
 	"cloudletpool-name",
 	"name",
@@ -319,8 +319,8 @@ var TrustPolicyExceptionOptionalArgs = []string{
 }
 var TrustPolicyExceptionAliasArgs = []string{
 	"app-org=key.appkey.organization",
-	"app-name=key.appkey.name",
-	"app-ver=key.appkey.version",
+	"appname=key.appkey.name",
+	"appvers=key.appkey.version",
 	"cloudletpool-org=key.cloudletpoolkey.organization",
 	"cloudletpool-name=key.cloudletpoolkey.name",
 	"name=key.name",
@@ -328,8 +328,8 @@ var TrustPolicyExceptionAliasArgs = []string{
 var TrustPolicyExceptionComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
 	"app-org":                              "App developer organization",
-	"app-name":                             "App name",
-	"app-ver":                              "App version",
+	"appname":                              "App name",
+	"appvers":                              "App version",
 	"cloudletpool-org":                     "Name of the organization this pool belongs to",
 	"cloudletpool-name":                    "CloudletPool Name",
 	"name":                                 "TrustPolicyExceptionKey name",
@@ -345,8 +345,8 @@ var TrustPolicyExceptionSpecialArgs = map[string]string{
 }
 var CreateTrustPolicyExceptionRequiredArgs = []string{
 	"app-org",
-	"app-name",
-	"app-ver",
+	"appname",
+	"appvers",
 	"cloudletpool-org",
 	"cloudletpool-name",
 	"name",
@@ -359,8 +359,8 @@ var CreateTrustPolicyExceptionOptionalArgs = []string{
 }
 var DeleteTrustPolicyExceptionRequiredArgs = []string{
 	"app-org",
-	"app-name",
-	"app-ver",
+	"appname",
+	"appvers",
 	"cloudletpool-org",
 	"cloudletpool-name",
 	"name",
