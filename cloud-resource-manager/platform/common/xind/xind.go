@@ -7,7 +7,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/proxy"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/vault"
 	ssh "github.com/mobiledgex/golang-ssh"
@@ -23,16 +22,6 @@ type Xind struct {
 func (s *Xind) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, clusterManager ClusterManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	s.Caches = caches
 	s.clusterManager = clusterManager
-	// for backwards compatibility, removes l7 proxies, can delete this later
-	client, err := s.GetNodePlatformClient(ctx, nil)
-	if err != nil {
-		return err
-	}
-	updateCallback(edgeproto.UpdateTask, "Setting up Nginx L7 Proxy")
-	err = proxy.InitL7Proxy(ctx, client, proxy.WithDockerPublishPorts())
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

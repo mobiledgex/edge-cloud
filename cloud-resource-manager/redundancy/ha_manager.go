@@ -176,7 +176,7 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
 				s.PlatformInstanceActive = true
-				elapsedSinceBumpActive = time.Since(time.Now())
+				timeLastBumpActive = time.Now()
 				s.haWatcher.ActiveChanged(ctx, true)
 				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
 			}
@@ -215,7 +215,6 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				}
 			}
 			timeLastBumpActive = time.Now()
-
 		}
 		time.Sleep(s.activePollInterval)
 	}

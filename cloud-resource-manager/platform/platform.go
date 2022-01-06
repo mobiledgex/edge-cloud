@@ -9,6 +9,7 @@ import (
 	cloudflare "github.com/cloudflare/cloudflare-go"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/chefmgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -45,6 +46,7 @@ type Caches struct {
 	TrustPolicyExceptionCache *edgeproto.TrustPolicyExceptionCache
 	CloudletPoolCache         *edgeproto.CloudletPoolCache
 	ClusterInstCache          *edgeproto.ClusterInstCache
+	ClusterInstInfoCache      *edgeproto.ClusterInstInfoCache
 	AppInstCache              *edgeproto.AppInstCache
 	AppCache                  *edgeproto.AppCache
 	ResTagTableCache          *edgeproto.ResTagTableCache
@@ -86,7 +88,7 @@ type Platform interface {
 	// Get platform features
 	GetFeatures() *Features
 	// Init is called once during CRM startup.
-	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, platformActive bool, updateCallback edgeproto.CacheUpdateCallback) error
+	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	// Returns true if sync with controller is required

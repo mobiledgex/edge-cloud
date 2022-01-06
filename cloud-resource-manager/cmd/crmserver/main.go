@@ -224,6 +224,7 @@ func main() {
 			TrustPolicyExceptionCache: &controllerData.TrustPolicyExceptionCache,
 			CloudletPoolCache:         controllerData.CloudletPoolCache,
 			ClusterInstCache:          &controllerData.ClusterInstCache,
+			ClusterInstInfoCache:      &controllerData.ClusterInstInfoCache,
 			AppCache:                  &controllerData.AppCache,
 			AppInstCache:              &controllerData.AppInstCache,
 			ResTagTableCache:          &controllerData.ResTagTableCache,
@@ -257,7 +258,7 @@ func main() {
 		}
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, highAvailabilityManager.PlatformInstanceActive, updateCloudletStatus); err != nil {
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -376,7 +377,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, platformActive bool, updateCallback edgeproto.CacheUpdateCallback) error {
+func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 	accessApi := accessapi.NewControllerClient(accessClient)
@@ -404,7 +405,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 	}
 	pfType := pf.GetType(cloudlet.PlatformType.String())
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
-	err := platform.Init(ctx, &pc, caches, platformActive, updateCallback)
+	err := platform.Init(ctx, &pc, caches, haMgr, updateCallback)
 	return err
 }
 
