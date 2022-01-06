@@ -221,6 +221,10 @@ func (m *ClusterKey) ValidateEnums() error {
 func (s *ClusterKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *ClusterKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *ClusterKey) Size() (n int) {
 	if m == nil {
 		return 0

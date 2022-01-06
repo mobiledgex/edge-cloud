@@ -155,6 +155,10 @@ func (m *Result) ValidateEnums() error {
 func (s *Result) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *Result) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *Result) Size() (n int) {
 	if m == nil {
 		return 0

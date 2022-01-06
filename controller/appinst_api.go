@@ -893,7 +893,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
-		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		s.idStore.STMPut(stm, in.UniqueId)
 		s.dnsLabelStore.STMPut(stm, &in.Key.ClusterInstKey.CloudletKey, in.DnsLabel)
@@ -1384,7 +1383,6 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			}
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
-		curr.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &curr)
 		return nil
 	})
@@ -1757,7 +1755,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
-			in.Status = edgeproto.StatusInfo{}
 			s.store.STMPut(stm, in)
 			s.all.appInstRefsApi.addDeleteRequestedRef(stm, &in.Key)
 		}
@@ -1817,7 +1814,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.AppInst) error {
-		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})

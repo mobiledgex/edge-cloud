@@ -1247,6 +1247,10 @@ func (s *{{.Name}}StoreImpl) parseGetData(val []byte, buf *{{.Name}}) bool {
 
 func (s *{{.Name}}StoreImpl) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("{{.Name}} json marshal failed", "obj", obj, "err", err)
@@ -2296,6 +2300,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	//Generate enum values validation
 	m.generateEnumValidation(message, desc)
 	m.generateClearTagged(desc)
+	m.generateClearRedisStoredFields(desc)
 
 	visited := make([]*generator.Descriptor, 0)
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
@@ -2598,6 +2603,45 @@ func (m *mex) generateClearTaggedFields(srcPkg string, parents []string, desc *g
 	}
 }
 
+func (m *mex) generateClearRedisStoredFields(desc *generator.Descriptor) {
+	msgName := strings.Join(desc.TypeName(), "_")
+	m.P("func (s *", msgName, ") ClearRedisCachedFields() {")
+	m.P("// Clear fields so that they are not stored in DB, as they are cached in Redis")
+
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		cachedInRedis := GetCachedInRedis(field)
+		if !cachedInRedis {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		mapType := m.support.GetMapType(m.gen, field)
+		repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
+		// clear field
+		nilval := "0"
+		if repeated || mapType != nil {
+			nilval = "nil"
+		} else {
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+				if gogoproto.IsNullable(field) {
+					nilval = "nil"
+				} else {
+					subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+					nilval = m.support.FQTypeName(m.gen, subDesc) + "{}"
+				}
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				nilval = "\"\""
+			case descriptor.FieldDescriptorProto_TYPE_BOOL:
+				nilval = "false"
+			}
+		}
+		m.P("s.", name, " = ", nilval)
+	}
+	m.P("}")
+	m.P()
+}
+
 func (m *mex) setKeyTags(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
 	for _, field := range desc.DescriptorProto.Field {
 		if field.Type == nil || field.OneofIndex != nil {
@@ -2896,4 +2940,8 @@ func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 
 func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
 	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
+}
+
+func GetCachedInRedis(field *descriptor.FieldDescriptorProto) bool {
+	return proto.GetBoolExtension(field.Options, protogen.E_CachedInRedis, false)
 }

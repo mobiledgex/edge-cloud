@@ -993,7 +993,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		} else {
 			in.State = edgeproto.TrackedState_CREATE_REQUESTED
 		}
-		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		s.dnsLabelStore.STMPut(stm, &in.Key.CloudletKey, in.DnsLabel)
 		return nil
@@ -1145,7 +1144,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
 		inbuf.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
-		inbuf.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &inbuf)
 		return nil
 	})
@@ -1295,7 +1293,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		// a lot of other code does checks against state READY that
 		// would need to be modified.
 		cur.State = edgeproto.TrackedState_DELETE_PREPARE
-		cur.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -1438,7 +1435,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 
 func (s *ClusterInstApi) ShowClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_ShowClusterInstServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.ClusterInst) error {
-		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})

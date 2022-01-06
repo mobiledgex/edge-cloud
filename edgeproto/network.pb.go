@@ -781,6 +781,10 @@ func (m *Route) ValidateEnums() error {
 func (s *Route) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *Route) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *NetworkKey) Matches(o *NetworkKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -875,6 +879,10 @@ func (m *NetworkKey) ValidateEnums() error {
 
 func (s *NetworkKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
+}
+
+func (s *NetworkKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Network) Matches(o *Network, fopts ...MatchOpt) bool {
@@ -1266,6 +1274,10 @@ func (s *NetworkStoreImpl) parseGetData(val []byte, buf *Network) bool {
 
 func (s *NetworkStoreImpl) STMPut(stm concurrency.STM, obj *Network, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Network", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Network json marshal failed", "obj", obj, "err", err)
@@ -1699,6 +1711,10 @@ func (s *Network) ClearTagged(tags map[string]struct{}) {
 			s.Routes[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *Network) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var NetworkConnectionTypeStrings = []string{

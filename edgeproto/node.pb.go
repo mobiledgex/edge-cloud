@@ -713,6 +713,10 @@ func (s *NodeKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
+func (s *NodeKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreNodeKeyFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1257,6 +1261,10 @@ func (s *NodeStoreImpl) parseGetData(val []byte, buf *Node) bool {
 
 func (s *NodeStoreImpl) STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Node", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Node json marshal failed", "obj", obj, "err", err)
@@ -1717,6 +1725,10 @@ func (s *Node) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *Node) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreNodeFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1774,6 +1786,10 @@ func (s *NodeData) ClearTagged(tags map[string]struct{}) {
 			s.Nodes[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *NodeData) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreNodeDataFields(taglist string) cmp.Option {

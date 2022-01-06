@@ -487,6 +487,10 @@ func (m *Notice) ValidateEnums() error {
 func (s *Notice) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *Notice) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 var NoticeActionStrings = []string{
 	"NONE",
 	"UPDATE",

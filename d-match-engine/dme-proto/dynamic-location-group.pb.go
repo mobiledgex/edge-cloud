@@ -434,6 +434,10 @@ func (m *DlgMessage) ValidateEnums() error {
 func (s *DlgMessage) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *DlgMessage) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *DlgReply) CopyInFields(src *DlgReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -463,6 +467,10 @@ func (m *DlgReply) ValidateEnums() error {
 }
 
 func (s *DlgReply) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *DlgReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var DlgAckStrings = []string{

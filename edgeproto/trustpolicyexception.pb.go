@@ -707,6 +707,10 @@ func (s *TrustPolicyExceptionKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletPoolKey.ClearTagged(tags)
 }
 
+func (s *TrustPolicyExceptionKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *TrustPolicyException) Matches(o *TrustPolicyException, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1126,6 +1130,10 @@ func (s *TrustPolicyExceptionStoreImpl) parseGetData(val []byte, buf *TrustPolic
 
 func (s *TrustPolicyExceptionStoreImpl) STMPut(stm concurrency.STM, obj *TrustPolicyException, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("TrustPolicyException", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("TrustPolicyException json marshal failed", "obj", obj, "err", err)
@@ -1556,6 +1564,10 @@ func (s *TrustPolicyException) ClearTagged(tags map[string]struct{}) {
 			s.OutboundSecurityRules[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *TrustPolicyException) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var TrustPolicyExceptionStateStrings = []string{

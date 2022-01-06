@@ -46,7 +46,6 @@ func (s *CloudletInfoApi) EvictCloudletInfo(ctx context.Context, in *edgeproto.C
 
 func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.CloudletInfo) error {
-		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})
@@ -76,7 +75,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				changedToOnline = true
 			}
 		}
-		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		return nil
 	})

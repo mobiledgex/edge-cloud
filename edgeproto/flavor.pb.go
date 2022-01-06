@@ -705,6 +705,10 @@ func (m *FlavorKey) ValidateEnums() error {
 func (s *FlavorKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *FlavorKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *Flavor) Matches(o *Flavor, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1102,6 +1106,10 @@ func (s *FlavorStoreImpl) parseGetData(val []byte, buf *Flavor) bool {
 
 func (s *FlavorStoreImpl) STMPut(stm concurrency.STM, obj *Flavor, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Flavor", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Flavor json marshal failed", "obj", obj, "err", err)
@@ -1512,6 +1520,10 @@ func (m *Flavor) ValidateEnums() error {
 
 func (s *Flavor) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
+}
+
+func (s *Flavor) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Flavor) IsValidArgsForCreateFlavor() error {

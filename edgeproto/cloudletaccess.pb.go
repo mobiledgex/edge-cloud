@@ -965,6 +965,10 @@ func (m *IssueCertRequest) ValidateEnums() error {
 func (s *IssueCertRequest) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *IssueCertRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *IssueCertReply) CopyInFields(src *IssueCertReply) int {
 	changed := 0
 	if m.PublicCertPem != src.PublicCertPem {
@@ -991,6 +995,10 @@ func (m *IssueCertReply) ValidateEnums() error {
 func (s *IssueCertReply) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *IssueCertReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *GetCasRequest) CopyInFields(src *GetCasRequest) int {
 	changed := 0
 	if m.Issuer != src.Issuer {
@@ -1012,6 +1020,10 @@ func (m *GetCasRequest) ValidateEnums() error {
 func (s *GetCasRequest) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *GetCasRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *GetCasReply) CopyInFields(src *GetCasReply) int {
 	changed := 0
 	if m.CaChainPem != src.CaChainPem {
@@ -1031,6 +1043,10 @@ func (m *GetCasReply) ValidateEnums() error {
 }
 
 func (s *GetCasReply) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *GetCasReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *UpgradeAccessKeyClientMsg) CopyInFields(src *UpgradeAccessKeyClientMsg) int {
@@ -1064,6 +1080,10 @@ func (m *UpgradeAccessKeyClientMsg) ValidateEnums() error {
 func (s *UpgradeAccessKeyClientMsg) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *UpgradeAccessKeyClientMsg) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *UpgradeAccessKeyServerMsg) CopyInFields(src *UpgradeAccessKeyServerMsg) int {
 	changed := 0
 	if m.Msg != src.Msg {
@@ -1088,6 +1108,10 @@ func (m *UpgradeAccessKeyServerMsg) ValidateEnums() error {
 }
 
 func (s *UpgradeAccessKeyServerMsg) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *UpgradeAccessKeyServerMsg) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AccessDataRequest) CopyInFields(src *AccessDataRequest) int {
@@ -1116,6 +1140,10 @@ func (m *AccessDataRequest) ValidateEnums() error {
 func (s *AccessDataRequest) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *AccessDataRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AccessDataReply) CopyInFields(src *AccessDataReply) int {
 	changed := 0
 	if src.Data != nil {
@@ -1135,6 +1163,10 @@ func (m *AccessDataReply) ValidateEnums() error {
 }
 
 func (s *AccessDataReply) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *AccessDataReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *IssueCertRequest) IsValidArgsForIssueCert() error {

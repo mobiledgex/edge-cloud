@@ -959,6 +959,10 @@ func (s *DeviceReportStoreImpl) parseGetData(val []byte, buf *DeviceReport) bool
 
 func (s *DeviceReportStoreImpl) STMPut(stm concurrency.STM, obj *DeviceReport, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("DeviceReport", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("DeviceReport json marshal failed", "obj", obj, "err", err)
@@ -1002,6 +1006,10 @@ func (m *DeviceReport) ValidateEnums() error {
 
 func (s *DeviceReport) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
+}
+
+func (s *DeviceReport) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *DeviceKey) Matches(o *DeviceKey, fopts ...MatchOpt) bool {
@@ -1087,6 +1095,10 @@ func (m *DeviceKey) ValidateEnums() error {
 }
 
 func (s *DeviceKey) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *DeviceKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Device) Matches(o *Device, fopts ...MatchOpt) bool {
@@ -1460,6 +1472,10 @@ func (s *DeviceStoreImpl) parseGetData(val []byte, buf *Device) bool {
 
 func (s *DeviceStoreImpl) STMPut(stm concurrency.STM, obj *Device, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Device", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Device json marshal failed", "obj", obj, "err", err)
@@ -1911,6 +1927,10 @@ func (s *Device) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *Device) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreDeviceFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1956,6 +1976,10 @@ func (s *DeviceData) ClearTagged(tags map[string]struct{}) {
 			s.Devices[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *DeviceData) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreDeviceDataFields(taglist string) cmp.Option {

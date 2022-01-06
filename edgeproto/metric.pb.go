@@ -499,6 +499,10 @@ func (m *MetricTag) ValidateEnums() error {
 func (s *MetricTag) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *MetricTag) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *MetricVal) CopyInFields(src *MetricVal) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -518,6 +522,10 @@ func (m *MetricVal) ValidateEnums() error {
 }
 
 func (s *MetricVal) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *MetricVal) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Metric) CopyInFields(src *Metric) int {
@@ -602,6 +610,10 @@ func (s *Metric) ClearTagged(tags map[string]struct{}) {
 			s.Vals[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *Metric) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *MetricTag) Size() (n int) {

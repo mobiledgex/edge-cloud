@@ -95,7 +95,7 @@ message VMPool {
   // Any errors trying to add/remove VM to/from VM Pool
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // status is used to reflect progress of creation or other events
-  StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.cached_in_redis) = true];
   // Override actions to CRM
   CRMOverride crm_override = 7;
   // Preparing to be deleted

@@ -722,6 +722,10 @@ func (s *AppInstClientKeyStoreImpl) parseGetData(val []byte, buf *AppInstClientK
 
 func (s *AppInstClientKeyStoreImpl) STMPut(stm concurrency.STM, obj *AppInstClientKey, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstClientKey", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AppInstClientKey json marshal failed", "obj", obj, "err", err)
@@ -1177,6 +1181,10 @@ func (s *AppInstClientKey) ClearTagged(tags map[string]struct{}) {
 	s.AppInstKey.ClearTagged(tags)
 }
 
+func (s *AppInstClientKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 const AppInstClientFieldClientKey = "2"
 const AppInstClientFieldClientKeyAppInstKey = "2.1"
 const AppInstClientFieldClientKeyAppInstKeyAppKey = "2.1.1"
@@ -1559,6 +1567,10 @@ func (s *AppInstClient) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.NotifyId = 0
 	}
+}
+
+func (s *AppInstClient) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreAppInstClientFields(taglist string) cmp.Option {

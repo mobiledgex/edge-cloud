@@ -1111,6 +1111,10 @@ func (s *VMResource) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *VMResource) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1462,6 +1466,10 @@ func (s *CloudletRefsStoreImpl) parseGetData(val []byte, buf *CloudletRefs) bool
 
 func (s *CloudletRefsStoreImpl) STMPut(stm concurrency.STM, obj *CloudletRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletRefs", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("CloudletRefs json marshal failed", "obj", obj, "err", err)
@@ -1893,6 +1901,10 @@ func (s *CloudletRefs) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *CloudletRefs) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *ClusterRefsAppInstKey) Matches(o *ClusterRefsAppInstKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1987,6 +1999,10 @@ func (m *ClusterRefsAppInstKey) ValidateEnums() error {
 
 func (s *ClusterRefsAppInstKey) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
+}
+
+func (s *ClusterRefsAppInstKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
@@ -2226,6 +2242,10 @@ func (s *ClusterRefsStoreImpl) parseGetData(val []byte, buf *ClusterRefs) bool {
 
 func (s *ClusterRefsStoreImpl) STMPut(stm concurrency.STM, obj *ClusterRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterRefs", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("ClusterRefs json marshal failed", "obj", obj, "err", err)
@@ -2647,6 +2667,10 @@ func (s *ClusterRefs) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *ClusterRefs) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2904,6 +2928,10 @@ func (s *AppInstRefsStoreImpl) parseGetData(val []byte, buf *AppInstRefs) bool {
 
 func (s *AppInstRefsStoreImpl) STMPut(stm concurrency.STM, obj *AppInstRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstRefs", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AppInstRefs json marshal failed", "obj", obj, "err", err)
@@ -3313,6 +3341,10 @@ func (m *AppInstRefs) ValidateEnums() error {
 
 func (s *AppInstRefs) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
+}
+
+func (s *AppInstRefs) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *VMResource) Size() (n int) {

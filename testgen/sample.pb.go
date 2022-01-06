@@ -1163,6 +1163,10 @@ func (m *NestedMessage) ValidateEnums() error {
 func (s *NestedMessage) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *NestedMessage) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *IncludeMessage) CopyInFields(src *IncludeMessage) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1214,6 +1218,10 @@ func (s *IncludeMessage) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *IncludeMessage) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *IncludeFields) CopyInFields(src *IncludeFields) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1233,6 +1241,10 @@ func (m *IncludeFields) ValidateEnums() error {
 }
 
 func (s *IncludeFields) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *IncludeFields) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
@@ -3138,6 +3150,10 @@ func (s *TestGen) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *TestGen) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreTestGenFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -3174,6 +3190,10 @@ func (m *TestGen_InnerMessage) ValidateEnums() error {
 }
 
 func (s *TestGen_InnerMessage) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *TestGen_InnerMessage) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var OuterEnumStrings = []string{

@@ -674,6 +674,10 @@ func (m *PolicyKey) ValidateEnums() error {
 func (s *PolicyKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *PolicyKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AutoScalePolicy) Matches(o *AutoScalePolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1137,6 +1141,10 @@ func (s *AutoScalePolicyStoreImpl) parseGetData(val []byte, buf *AutoScalePolicy
 
 func (s *AutoScalePolicyStoreImpl) STMPut(stm concurrency.STM, obj *AutoScalePolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoScalePolicy", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AutoScalePolicy json marshal failed", "obj", obj, "err", err)
@@ -1554,6 +1562,10 @@ func (m *AutoScalePolicy) ValidateEnums() error {
 
 func (s *AutoScalePolicy) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
+}
+
+func (s *AutoScalePolicy) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AutoScalePolicy) IsValidArgsForCreateAutoScalePolicy() error {

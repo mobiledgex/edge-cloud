@@ -641,6 +641,10 @@ func (m *SecurityRule) ValidateEnums() error {
 func (s *SecurityRule) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *SecurityRule) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *TrustPolicy) Matches(o *TrustPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -994,6 +998,10 @@ func (s *TrustPolicyStoreImpl) parseGetData(val []byte, buf *TrustPolicy) bool {
 
 func (s *TrustPolicyStoreImpl) STMPut(stm concurrency.STM, obj *TrustPolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("TrustPolicy", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("TrustPolicy json marshal failed", "obj", obj, "err", err)
@@ -1424,6 +1432,10 @@ func (s *TrustPolicy) ClearTagged(tags map[string]struct{}) {
 			s.OutboundSecurityRules[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *TrustPolicy) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *TrustPolicy) IsValidArgsForCreateTrustPolicy() error {

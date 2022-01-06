@@ -814,6 +814,10 @@ func (m *ResTagTableKey) ValidateEnums() error {
 func (s *ResTagTableKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *ResTagTableKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *ResTagTable) Matches(o *ResTagTable, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1185,6 +1189,10 @@ func (s *ResTagTableStoreImpl) parseGetData(val []byte, buf *ResTagTable) bool {
 
 func (s *ResTagTableStoreImpl) STMPut(stm concurrency.STM, obj *ResTagTable, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ResTagTable", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("ResTagTable json marshal failed", "obj", obj, "err", err)
@@ -1602,6 +1610,10 @@ func (m *ResTagTable) ValidateEnums() error {
 
 func (s *ResTagTable) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
+}
+
+func (s *ResTagTable) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var OptResNamesStrings = []string{

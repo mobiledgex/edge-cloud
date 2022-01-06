@@ -4959,6 +4959,10 @@ func (m *RegisterClientRequest) ValidateEnums() error {
 func (s *RegisterClientRequest) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *RegisterClientRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5024,6 +5028,10 @@ func (m *RegisterClientReply) ValidateEnums() error {
 }
 
 func (s *RegisterClientReply) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *RegisterClientReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
@@ -5138,6 +5146,10 @@ func (s *FindCloudletRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *FindCloudletRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *PlatformFindCloudletRequest) CopyInFields(src *PlatformFindCloudletRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5190,6 +5202,10 @@ func (m *PlatformFindCloudletRequest) ValidateEnums() error {
 }
 
 func (s *PlatformFindCloudletRequest) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *PlatformFindCloudletRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
@@ -5339,6 +5355,10 @@ func (s *FindCloudletReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *FindCloudletReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5456,6 +5476,10 @@ func (s *VerifyLocationRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *VerifyLocationRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5516,6 +5540,10 @@ func (m *VerifyLocationReply) ValidateEnums() error {
 func (s *VerifyLocationReply) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *VerifyLocationReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5563,6 +5591,10 @@ func (m *GetLocationRequest) ValidateEnums() error {
 }
 
 func (s *GetLocationRequest) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *GetLocationRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
@@ -5685,6 +5717,10 @@ func (s *GetLocationReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *GetLocationReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -5802,6 +5838,10 @@ func (s *AppInstListRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *AppInstListRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *Appinstance) CopyInFields(src *Appinstance) int {
 	changed := 0
 	if m.AppName != src.AppName {
@@ -5868,6 +5908,10 @@ func (s *Appinstance) ClearTagged(tags map[string]struct{}) {
 			s.Ports[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *Appinstance) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
@@ -5991,6 +6035,10 @@ func (s *CloudletLocation) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *CloudletLocation) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AppInstListReply) CopyInFields(src *AppInstListReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6065,6 +6113,10 @@ func (s *AppInstListReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *AppInstListReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *FqdnListRequest) CopyInFields(src *FqdnListRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6107,6 +6159,10 @@ func (m *FqdnListRequest) ValidateEnums() error {
 }
 
 func (s *FqdnListRequest) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *FqdnListRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppFqdn) CopyInFields(src *AppFqdn) int {
@@ -6158,6 +6214,10 @@ func (m *AppFqdn) ValidateEnums() error {
 }
 
 func (s *AppFqdn) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *AppFqdn) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *FqdnListReply) CopyInFields(src *FqdnListReply) int {
@@ -6232,6 +6292,10 @@ func (s *FqdnListReply) ClearTagged(tags map[string]struct{}) {
 			s.AppFqdns[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *FqdnListReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
@@ -6341,6 +6405,10 @@ func (s *AppOfficialFqdnRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *AppOfficialFqdnRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AppOfficialFqdnReply) CopyInFields(src *AppOfficialFqdnReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6425,6 +6493,10 @@ func (s *AppOfficialFqdnReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *AppOfficialFqdnReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6487,6 +6559,10 @@ func (m *DynamicLocGroupRequest) ValidateEnums() error {
 func (s *DynamicLocGroupRequest) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *DynamicLocGroupRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -6542,6 +6618,10 @@ func (m *DynamicLocGroupReply) ValidateEnums() error {
 }
 
 func (s *DynamicLocGroupReply) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *DynamicLocGroupReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *QosPosition) CopyInFields(src *QosPosition) int {
@@ -6628,6 +6708,10 @@ func (s *QosPosition) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *QosPosition) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *BandSelection) CopyInFields(src *BandSelection) int {
 	changed := 0
 	if src.Rat_2G != nil {
@@ -6702,6 +6786,10 @@ func (m *BandSelection) ValidateEnums() error {
 }
 
 func (s *BandSelection) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *BandSelection) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
@@ -6827,6 +6915,10 @@ func (s *QosPositionRequest) ClearTagged(tags map[string]struct{}) {
 	if s.BandSelection != nil {
 		s.BandSelection.ClearTagged(tags)
 	}
+}
+
+func (s *QosPositionRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
@@ -6958,6 +7050,10 @@ func (s *QosPositionKpiResult) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *QosPositionKpiResult) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *QosPositionKpiReply) CopyInFields(src *QosPositionKpiReply) int {
 	changed := 0
 	if m.Ver != src.Ver {
@@ -7030,6 +7126,10 @@ func (s *QosPositionKpiReply) ClearTagged(tags map[string]struct{}) {
 			s.PositionResults[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *QosPositionKpiReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
@@ -7239,6 +7339,10 @@ func (s *ClientEdgeEvent) ClearTagged(tags map[string]struct{}) {
 	if s.DeviceInfoDynamic != nil {
 		s.DeviceInfoDynamic.ClearTagged(tags)
 	}
+}
+
+func (s *ClientEdgeEvent) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
@@ -7471,6 +7575,10 @@ func (s *ServerEdgeEvent) ClearTagged(tags map[string]struct{}) {
 	if s.NewCloudlet != nil {
 		s.NewCloudlet.ClearTagged(tags)
 	}
+}
+
+func (s *ServerEdgeEvent) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var IDTypesStrings = []string{

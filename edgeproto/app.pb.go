@@ -1974,6 +1974,10 @@ func (m *AppKey) ValidateEnums() error {
 func (s *AppKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *AppKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *ConfigFile) CopyInFields(src *ConfigFile) int {
 	changed := 0
 	if m.Kind != src.Kind {
@@ -1998,6 +2002,10 @@ func (m *ConfigFile) ValidateEnums() error {
 }
 
 func (s *ConfigFile) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *ConfigFile) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
@@ -3221,6 +3229,10 @@ func (s *AppStoreImpl) parseGetData(val []byte, buf *App) bool {
 
 func (s *AppStoreImpl) STMPut(stm concurrency.STM, obj *App, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("App", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("App json marshal failed", "obj", obj, "err", err)
@@ -3803,6 +3815,10 @@ func (s *App) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *App) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreAppFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -3860,6 +3876,10 @@ func (s *ServerlessConfig) ClearTagged(tags map[string]struct{}) {
 	s.Vcpus.ClearTagged(tags)
 }
 
+func (s *ServerlessConfig) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AppAutoProvPolicy) CopyInFields(src *AppAutoProvPolicy) int {
 	changed := 0
 	if m.AppKey.Organization != src.AppKey.Organization {
@@ -3898,6 +3918,10 @@ func (s *AppAutoProvPolicy) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
 }
 
+func (s *AppAutoProvPolicy) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AppAlertPolicy) CopyInFields(src *AppAlertPolicy) int {
 	changed := 0
 	if m.AppKey.Organization != src.AppKey.Organization {
@@ -3934,6 +3958,10 @@ func (m *AppAlertPolicy) ValidateEnums() error {
 
 func (s *AppAlertPolicy) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
+}
+
+func (s *AppAlertPolicy) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *DeploymentCloudletRequest) CopyInFields(src *DeploymentCloudletRequest) int {
@@ -4167,6 +4195,10 @@ func (s *DeploymentCloudletRequest) ClearTagged(tags map[string]struct{}) {
 	if s.App != nil {
 		s.App.ClearTagged(tags)
 	}
+}
+
+func (s *DeploymentCloudletRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreDeploymentCloudletRequestFields(taglist string) cmp.Option {

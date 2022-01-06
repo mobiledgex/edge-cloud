@@ -812,6 +812,10 @@ func (m *CloudletPoolKey) ValidateEnums() error {
 func (s *CloudletPoolKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *CloudletPoolKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1216,6 +1220,10 @@ func (s *CloudletPoolStoreImpl) parseGetData(val []byte, buf *CloudletPool) bool
 
 func (s *CloudletPoolStoreImpl) STMPut(stm concurrency.STM, obj *CloudletPool, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletPool", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("CloudletPool json marshal failed", "obj", obj, "err", err)
@@ -1748,6 +1756,10 @@ func (s *CloudletPool) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *CloudletPool) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreCloudletPoolFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1815,6 +1827,10 @@ func (m *CloudletPoolMember) ValidateEnums() error {
 
 func (s *CloudletPoolMember) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
+}
+
+func (s *CloudletPoolMember) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *CloudletPool) IsValidArgsForCreateCloudletPool() error {

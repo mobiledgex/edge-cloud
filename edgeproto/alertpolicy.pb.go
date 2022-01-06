@@ -712,6 +712,10 @@ func (m *AlertPolicyKey) ValidateEnums() error {
 func (s *AlertPolicyKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *AlertPolicyKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *AlertPolicy) Matches(o *AlertPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1271,6 +1275,10 @@ func (s *AlertPolicyStoreImpl) parseGetData(val []byte, buf *AlertPolicy) bool {
 
 func (s *AlertPolicyStoreImpl) STMPut(stm concurrency.STM, obj *AlertPolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AlertPolicy", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AlertPolicy json marshal failed", "obj", obj, "err", err)
@@ -1691,6 +1699,10 @@ func (s *AlertPolicy) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.DeletePrepare = false
 	}
+}
+
+func (s *AlertPolicy) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreAlertPolicyFields(taglist string) cmp.Option {

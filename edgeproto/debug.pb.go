@@ -763,6 +763,10 @@ func (s *DebugRequest) ClearTagged(tags map[string]struct{}) {
 	s.Node.ClearTagged(tags)
 }
 
+func (s *DebugRequest) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreDebugRequestFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -830,6 +834,10 @@ func (s *DebugReply) ClearTagged(tags map[string]struct{}) {
 	s.Node.ClearTagged(tags)
 }
 
+func (s *DebugReply) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func IgnoreDebugReplyFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -869,6 +877,10 @@ func (s *DebugData) ClearTagged(tags map[string]struct{}) {
 			s.Requests[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *DebugData) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreDebugDataFields(taglist string) cmp.Option {

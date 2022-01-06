@@ -477,6 +477,10 @@ func (m *ControllerKey) ValidateEnums() error {
 func (s *ControllerKey) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *ControllerKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *Controller) Matches(o *Controller, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -783,6 +787,10 @@ func (s *ControllerStoreImpl) parseGetData(val []byte, buf *Controller) bool {
 
 func (s *ControllerStoreImpl) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Controller", obj.GetKey())
+
+	// Clear fields that are cached in Redis as they should not be stored in DB
+	obj.ClearRedisCachedFields()
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Controller json marshal failed", "obj", obj, "err", err)
@@ -1205,6 +1213,10 @@ func (s *Controller) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.Hostname = ""
 	}
+}
+
+func (s *Controller) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreControllerFields(taglist string) cmp.Option {

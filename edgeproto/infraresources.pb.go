@@ -1081,6 +1081,10 @@ func (m *ContainerInfo) ValidateEnums() error {
 func (s *ContainerInfo) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *ContainerInfo) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *IpAddr) CopyInFields(src *IpAddr) int {
 	changed := 0
 	if m.ExternalIp != src.ExternalIp {
@@ -1105,6 +1109,10 @@ func (m *IpAddr) ValidateEnums() error {
 }
 
 func (s *IpAddr) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *IpAddr) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *VmInfo) CopyInFields(src *VmInfo) int {
@@ -1195,6 +1203,10 @@ func (s *VmInfo) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
+func (s *VmInfo) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *InfraResource) CopyInFields(src *InfraResource) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1244,6 +1256,10 @@ func (m *InfraResource) ValidateEnums() error {
 }
 
 func (s *InfraResource) ClearTagged(tags map[string]struct{}) {
+}
+
+func (s *InfraResource) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *NodeInfo) CopyInFields(src *NodeInfo) int {
@@ -1321,6 +1337,10 @@ func (m *NodeInfo) ValidateEnums() error {
 func (s *NodeInfo) ClearTagged(tags map[string]struct{}) {
 }
 
+func (s *NodeInfo) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *ClusterInstRefKey) CopyInFields(src *ClusterInstRefKey) int {
 	changed := 0
 	if m.ClusterKey.Name != src.ClusterKey.Name {
@@ -1385,6 +1405,10 @@ func (m *ClusterInstRefKey) ValidateEnums() error {
 
 func (s *ClusterInstRefKey) ClearTagged(tags map[string]struct{}) {
 	s.ClusterKey.ClearTagged(tags)
+}
+
+func (s *ClusterInstRefKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppInstRefKey) CopyInFields(src *AppInstRefKey) int {
@@ -1470,6 +1494,10 @@ func (s *AppInstRefKey) ClearTagged(tags map[string]struct{}) {
 	s.ClusterInstKey.ClearTagged(tags)
 }
 
+func (s *AppInstRefKey) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
+}
+
 func (m *InfraResources) CopyInFields(src *InfraResources) int {
 	changed := 0
 	if src.Vms != nil {
@@ -1509,6 +1537,10 @@ func (s *InfraResources) ClearTagged(tags map[string]struct{}) {
 			s.Vms[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *InfraResources) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *InfraResourcesSnapshot) CopyInFields(src *InfraResourcesSnapshot) int {
@@ -1625,6 +1657,10 @@ func (s *InfraResourcesSnapshot) ClearTagged(tags map[string]struct{}) {
 			s.VmAppInsts[ii].ClearTagged(tags)
 		}
 	}
+}
+
+func (s *InfraResourcesSnapshot) ClearRedisCachedFields() {
+	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ContainerInfo) Size() (n int) {
