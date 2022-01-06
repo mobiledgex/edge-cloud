@@ -28,6 +28,7 @@ type streamSend struct {
 	mux       sync.Mutex
 	crmPubSub *redis.PubSub
 	crmMsgCh  <-chan *redis.Message
+	newStream bool
 }
 
 type StreamObjApi struct {
@@ -199,9 +200,11 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		streamSendObj.cb = inCb
 	}
 
+	newStream := false
+
 	out, err := redisClient.Exists(streamKey).Result()
 	if err != nil {
-		return &streamSendObj, nil, err
+		return nil, nil, err
 	}
 	// stream key already exists
 	if out == 1 {
@@ -210,27 +213,24 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		streamMsgs, err := redisClient.XRange(streamKey,
 			rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
 		if err != nil {
-			return &streamSendObj, nil, err
+			return nil, nil, err
 		}
 		if len(streamMsgs) > 0 {
-			streamClear := false
 			for k, _ := range streamMsgs[len(streamMsgs)-1].Values {
 				if k == StreamMsgTypeEOM || k == StreamMsgTypeError {
 					// Since last msg was EOM/Error, reset this stream
 					// as it is for a new API call
 					_, err := redisClient.Del(streamKey).Result()
 					if err != nil {
-						return &streamSendObj, nil, err
+						return nil, nil, err
 					}
-					streamClear = true
+					newStream = true
 					break
 				}
 			}
-			if !streamClear {
-				// continue with existing stream
-				return &streamSendObj, nil, fmt.Errorf("stream already exists")
-			}
 		}
+	} else {
+		newStream = true
 	}
 
 	outCb := &CbWrapper{
@@ -239,6 +239,11 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		streamKey: streamKey,
 	}
 
+	// Flag to figure out if new stream was created or it is
+	// continuation of an existing stream
+	streamSendObj.newStream = newStream
+
+	log.SpanLog(ctx, log.DebugLevelApi, "Started new stream", "key", streamKey, "new stream", streamSendObj.newStream)
 	return &streamSendObj, outCb, nil
 }
 
@@ -249,21 +254,24 @@ func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamS
 	}
 	streamSendObj.mux.Lock()
 	defer streamSendObj.mux.Unlock()
-	if objErr != nil {
-		streamMsg := map[string]interface{}{
-			StreamMsgTypeError: objErr.Error(),
-		}
-		err := addMsgToRedisStream(ctx, streamKey, streamMsg)
-		if err != nil {
-			return err
-		}
-	} else {
-		streamMsg := map[string]interface{}{
-			StreamMsgTypeEOM: "",
-		}
-		err := addMsgToRedisStream(ctx, streamKey, streamMsg)
-		if err != nil {
-			return err
+	// mark the end of stream only if it was a new stream and not an existing one
+	if streamSendObj.newStream {
+		if objErr != nil {
+			streamMsg := map[string]interface{}{
+				StreamMsgTypeError: objErr.Error(),
+			}
+			err := addMsgToRedisStream(ctx, streamKey, streamMsg)
+			if err != nil {
+				return err
+			}
+		} else {
+			streamMsg := map[string]interface{}{
+				StreamMsgTypeEOM: "",
+			}
+			err := addMsgToRedisStream(ctx, streamKey, streamMsg)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	if streamSendObj.crmPubSub != nil {
