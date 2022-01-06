@@ -228,20 +228,22 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 					break
 				}
 			}
+		} else {
+			newStream = true
 		}
 	} else {
 		newStream = true
 	}
+
+	// Flag to figure out if new stream was created or it is
+	// continuation of an existing stream
+	streamSendObj.newStream = newStream
 
 	outCb := &CbWrapper{
 		GenericCb: inCb,
 		ctx:       ctx,
 		streamKey: streamKey,
 	}
-
-	// Flag to figure out if new stream was created or it is
-	// continuation of an existing stream
-	streamSendObj.newStream = newStream
 
 	log.SpanLog(ctx, log.DebugLevelApi, "Started new stream", "key", streamKey, "new stream", streamSendObj.newStream)
 	return &streamSendObj, outCb, nil
@@ -254,24 +256,25 @@ func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamS
 	}
 	streamSendObj.mux.Lock()
 	defer streamSendObj.mux.Unlock()
-	// mark the end of stream only if it was a new stream and not an existing one
-	if streamSendObj.newStream {
-		if objErr != nil {
-			streamMsg := map[string]interface{}{
-				StreamMsgTypeError: objErr.Error(),
-			}
-			err := addMsgToRedisStream(ctx, streamKey, streamMsg)
-			if err != nil {
-				return err
-			}
-		} else {
-			streamMsg := map[string]interface{}{
-				StreamMsgTypeEOM: "",
-			}
-			err := addMsgToRedisStream(ctx, streamKey, streamMsg)
-			if err != nil {
-				return err
-			}
+	if !streamSendObj.newStream {
+		// existing stream, skip closing it as it is handled elsewhere
+		return nil
+	}
+	if objErr != nil {
+		streamMsg := map[string]interface{}{
+			StreamMsgTypeError: objErr.Error(),
+		}
+		err := addMsgToRedisStream(ctx, streamKey, streamMsg)
+		if err != nil {
+			return err
+		}
+	} else {
+		streamMsg := map[string]interface{}{
+			StreamMsgTypeEOM: "",
+		}
+		err := addMsgToRedisStream(ctx, streamKey, streamMsg)
+		if err != nil {
+			return err
 		}
 	}
 	if streamSendObj.crmPubSub != nil {

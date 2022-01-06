@@ -475,13 +475,11 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cloudletKey := in.Key
 	sendObj, cb, err := s.startCloudletStream(ctx, &cloudletKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
-
 	defer func() {
+		s.stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
@@ -877,11 +875,12 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	cloudletKey := in.Key
 	sendObj, cb, err := s.startCloudletStream(ctx, &cloudletKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
+	}()
 
 	updatecb := updateCloudletCallback{in, cb}
 
@@ -1412,13 +1411,11 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	cloudletKey := in.Key
 	sendObj, cb, err := s.startCloudletStream(ctx, &cloudletKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
-
 	defer func() {
+		s.stopCloudletStream(ctx, &cloudletKey, sendObj, reterr)
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}

@@ -446,11 +446,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
 	sendObj, cb, err := s.startAppInstStream(ctx, &appInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
+	}()
 
 	if setClusterOrg {
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
@@ -1344,11 +1345,12 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 
 	// create stream once AppInstKey is formed correctly
 	sendObj, cb, err := s.startAppInstStream(ctx, &key, inCb)
-	if err == nil {
-		defer func() {
-			s.stopAppInstStream(ctx, &key, sendObj, reterr)
-		}()
+	if err != nil {
+		return false, err
 	}
+	defer func() {
+		s.stopAppInstStream(ctx, &key, sendObj, reterr)
+	}()
 
 	var app edgeproto.App
 
@@ -1618,11 +1620,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
 	sendObj, cb, err := s.startAppInstStream(ctx, &appInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
+	}()
 
 	// get appinst info for flavor
 	appInstInfo := edgeproto.AppInst{}

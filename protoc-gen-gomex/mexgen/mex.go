@@ -2300,7 +2300,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	//Generate enum values validation
 	m.generateEnumValidation(message, desc)
 	m.generateClearTagged(desc)
-	m.generateClearRedisStoredFields(desc)
+	m.generateClearRedisCachedFields(desc)
 
 	visited := make([]*generator.Descriptor, 0)
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
@@ -2603,7 +2603,7 @@ func (m *mex) generateClearTaggedFields(srcPkg string, parents []string, desc *g
 	}
 }
 
-func (m *mex) generateClearRedisStoredFields(desc *generator.Descriptor) {
+func (m *mex) generateClearRedisCachedFields(desc *generator.Descriptor) {
 	msgName := strings.Join(desc.TypeName(), "_")
 	m.P("func (s *", msgName, ") ClearRedisCachedFields() {")
 	m.P("// Clear fields so that they are not stored in DB, as they are cached in Redis")

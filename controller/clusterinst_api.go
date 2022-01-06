@@ -734,13 +734,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 
 	clusterInstKey := in.Key
 	sendObj, cb, err := s.startClusterInstStream(ctx, &clusterInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
-
 	defer func() {
+		s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
 		if reterr == nil {
 			s.RecordClusterInstEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
@@ -1054,11 +1052,12 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 
 	clusterInstKey := in.Key
 	sendObj, cb, err := s.startClusterInstStream(ctx, &clusterInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+	}()
 
 	var inbuf edgeproto.ClusterInst
 	var changeCount int
@@ -1244,14 +1243,15 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 
 	clusterInstKey := in.Key
 	sendObj, cb, err := s.startClusterInstStream(ctx, &clusterInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
-			if reterr == nil {
-				s.RecordClusterInstEvent(context.WithValue(ctx, clusterInstKey, *in), &clusterInstKey, cloudcommon.DELETED, cloudcommon.InstanceDown)
-			}
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		if reterr == nil {
+			s.RecordClusterInstEvent(context.WithValue(ctx, clusterInstKey, *in), &clusterInstKey, cloudcommon.DELETED, cloudcommon.InstanceDown)
+		}
+	}()
 
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	var prevState edgeproto.TrackedState

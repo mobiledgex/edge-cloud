@@ -192,11 +192,12 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 
 	gpuDriverKey := in.Key
 	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
-	if err == nil {
-		defer func() {
-			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+	}()
 
 	credsMap := make(map[string]string)
 	for ii, build := range in.Builds {
@@ -294,11 +295,12 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 
 	gpuDriverKey := in.Key
 	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
-	if err == nil {
-		defer func() {
-			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+	}()
 
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
@@ -411,11 +413,12 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 	}
 	gpuDriverKey := in.Key
 	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
-	if err == nil {
-		defer func() {
-			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+	}()
 
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
@@ -530,11 +533,12 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 
 	gpuDriverKey := in.Key
 	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
-	if err == nil {
-		defer func() {
-			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+	}()
 
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false
@@ -644,11 +648,12 @@ func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgep
 
 	gpuDriverKey := in.Key
 	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
-	if err == nil {
-		defer func() {
-			s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+	}()
 
 	ignoreState := in.IgnoreState
 	in.IgnoreState = false

@@ -325,11 +325,12 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 		return nil
 	}
 	sendObj, err := s.startVMPoolStream(ctx, key)
-	if err == nil {
-		defer func() {
-			s.stopVMPoolStream(ctx, key, sendObj, reterr)
-		}()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopVMPoolStream(ctx, key, sendObj, reterr)
+	}()
 	err = s.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY,
 		UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 		s.all.settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(),
