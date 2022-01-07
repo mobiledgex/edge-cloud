@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 	"unicode"
@@ -213,6 +214,7 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importStrconv = true
 	m.importJson = true
+	m.importReflect = true
 	m.importUtil = true
 	if len(args.CommonPrefix) > 0 {
 		m.importStrings = true
@@ -238,45 +240,10 @@ type enumTempl struct {
 }
 
 var enumTemplateIn = `
-func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil { return err }
-	val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
-{{- if .CommonPrefix}}
-	if !ok {
-		// may have omitted common prefix
-		val, ok = {{.Name}}_CamelValue["{{.CommonPrefix}}"+util.CamelCase(str)]
-	}
-{{- end}}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = {{.Name}}_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid {{.Name}} value %q", str)
-	}
-	*e = {{.Name}}(val)
-	return nil
-}
-
-func (e {{.Name}}) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName({{.Name}}_CamelName, int32(e))
-{{- if .CommonPrefix}}
-	str = strings.TrimPrefix(str, "{{.CommonPrefix}}")
-{{- end}}
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func Parse{{.Name}}(data interface{}) ({{.Name}}, error) {
+	if val, ok := data.({{.Name}}); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
 {{- if .CommonPrefix}}
 		if !ok {
@@ -293,22 +260,67 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid {{.Name}} value %q", str)
+			return {{.Name}}(0), fmt.Errorf("Invalid {{.Name}} value %q", str)
 		}
-		*e = {{.Name}}(val)
-		return nil
+		return {{.Name}}(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := {{.Name}}_CamelName[ival]; ok {
+			return {{.Name}}(ival), nil
+		} else {
+			return {{.Name}}(0), fmt.Errorf("Invalid {{.Name}} value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return {{.Name}}(0), fmt.Errorf("Invalid {{.Name}} value %v", data)
+}
+
+func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil { return err }
+	val, err := Parse{{.Name}}(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e {{.Name}}) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName({{.Name}}_CamelName, int32(e))
+{{- if .CommonPrefix}}
+	str = strings.TrimPrefix(str, "{{.CommonPrefix}}")
+{{- end}}
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := {{.Name}}_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid {{.Name}} value %d", val)
+		val, err := Parse{{.Name}}(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type: reflect.TypeOf({{.Name}}(0)),
+			}
 		}
 		*e = {{.Name}}(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid {{.Name}} value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := Parse{{.Name}}(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type: reflect.TypeOf({{.Name}}(0)),
+	}
 }
 
 func (e {{.Name}}) MarshalJSON() ([]byte, error) {
@@ -2645,7 +2657,6 @@ func (m *mex) generateEnumDecodeHook() {
 	m.P("// Allows decoding to handle protobuf enums that are")
 	m.P("// represented as strings.")
 	m.P("func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {")
-	m.P("if from.Kind() != reflect.String { return data, nil }")
 	m.P("switch to {")
 	for _, file := range m.gen.Request.ProtoFile {
 		if !m.support.GenFile(*file.Name) {
@@ -2653,19 +2664,39 @@ func (m *mex) generateEnumDecodeHook() {
 		}
 		for _, en := range file.EnumType {
 			m.P("case reflect.TypeOf(", en.Name, "(0)):")
-			m.P("if en, ok := ", en.Name, "_CamelValue[util.CamelCase(data.(string))]; ok {")
-			m.P("return en, nil")
-			m.P("}")
-			commonPrefix := gensupport.GetEnumCommonPrefix(en)
-			if commonPrefix != "" {
-				m.P("if en, ok := ", en.Name, "_CamelValue[\"", commonPrefix, "\"+util.CamelCase(data.(string))]; ok {")
-				m.P("return en, nil")
-				m.P("}")
-			}
+			m.P("return Parse", en.Name, "(data)")
 		}
 	}
 	m.P("}")
 	m.P("return data, nil")
+	m.P("}")
+	m.P()
+
+	m.P("// GetEnumParseHelp gets end-user specific messages for ")
+	m.P("// enum parse errors.")
+	m.P("// It returns the enum type name, a help message with")
+	m.P("// valid values, and a bool that indicates if a type was matched.")
+	m.P("func GetEnumParseHelp(t reflect.Type) (string, string, bool) {")
+	m.P("switch t {")
+	for _, file := range m.gen.Request.ProtoFile {
+		if !m.support.GenFile(*file.Name) {
+			continue
+		}
+		for _, en := range file.EnumType {
+			commonPrefix := gensupport.GetEnumCommonPrefix(en)
+			validStrs := []string{}
+			validInts := []string{}
+			for _, val := range en.Value {
+				validStrs = append(validStrs, strings.TrimPrefix(util.CamelCase(*val.Name), commonPrefix))
+				validInts = append(validInts, strconv.Itoa(int(*val.Number)))
+			}
+			help := fmt.Sprintf(", valid values are one of %s, or %s", strings.Join(validStrs, ", "), strings.Join(validInts, ", "))
+			m.P("case reflect.TypeOf(", en.Name, "(0)):")
+			m.P("return \"", en.Name, "\", \"", help, "\", true")
+		}
+	}
+	m.P("}")
+	m.P("return \"\", \"\", false")
 	m.P("}")
 	m.P()
 
