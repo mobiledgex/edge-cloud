@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/mitchellh/mapstructure"
+	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -655,6 +657,18 @@ func GetParseHelp(t reflect.Type) (string, string, bool) {
 	}
 	if t == reflect.TypeOf(time.Duration(0)) || t == reflect.TypeOf(edgeproto.Duration(0)) {
 		return "duration", fmt.Sprintf(", valid values are 300ms, 1s, 1.5h, 2h45m, etc"), true
+	}
+	if t == reflect.TypeOf(edgeproto.Udec64{}) {
+		return "unsigned decimal", "", true
+	}
+	if typ, help, ok := edgeproto.GetEnumParseHelp(t); ok {
+		return typ, help, true
+	}
+	if typ, help, ok := dmeproto.GetEnumParseHelp(t); ok {
+		return typ, help, true
+	}
+	if typ, help, ok := log.GetEnumParseHelp(t); ok {
+		return typ, help, true
 	}
 	return t.Kind().String(), GetParseHelpKind(t.Kind()), false
 }

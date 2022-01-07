@@ -13788,43 +13788,10 @@ var PlatformType_CamelValue = map[string]int32{
 	"PlatformTypeFakeVmPool":        17,
 }
 
-func (e *PlatformType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := PlatformType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = PlatformType_CamelValue["PlatformType"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = PlatformType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid PlatformType value %q", str)
-	}
-	*e = PlatformType(val)
-	return nil
-}
-
-func (e PlatformType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(PlatformType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "PlatformType")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *PlatformType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParsePlatformType(data interface{}) (PlatformType, error) {
+	if val, ok := data.(PlatformType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := PlatformType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -13839,22 +13806,67 @@ func (e *PlatformType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid PlatformType value %q", str)
+			return PlatformType(0), fmt.Errorf("Invalid PlatformType value %q", str)
 		}
-		*e = PlatformType(val)
-		return nil
+		return PlatformType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := PlatformType_CamelName[ival]; ok {
+			return PlatformType(ival), nil
+		} else {
+			return PlatformType(0), fmt.Errorf("Invalid PlatformType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return PlatformType(0), fmt.Errorf("Invalid PlatformType value %v", data)
+}
+
+func (e *PlatformType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParsePlatformType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e PlatformType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(PlatformType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "PlatformType")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *PlatformType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := PlatformType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid PlatformType value %d", val)
+		val, err := ParsePlatformType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(PlatformType(0)),
+			}
 		}
 		*e = PlatformType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid PlatformType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParsePlatformType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(PlatformType(0)),
+	}
 }
 
 func (e PlatformType) MarshalJSON() ([]byte, error) {
@@ -13886,25 +13898,44 @@ var InfraApiAccess_CamelValue = map[string]int32{
 	"RestrictedAccess": 1,
 }
 
+func ParseInfraApiAccess(data interface{}) (InfraApiAccess, error) {
+	if val, ok := data.(InfraApiAccess); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := InfraApiAccess_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = InfraApiAccess_CamelName[val]
+			}
+		}
+		if !ok {
+			return InfraApiAccess(0), fmt.Errorf("Invalid InfraApiAccess value %q", str)
+		}
+		return InfraApiAccess(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := InfraApiAccess_CamelName[ival]; ok {
+			return InfraApiAccess(ival), nil
+		} else {
+			return InfraApiAccess(0), fmt.Errorf("Invalid InfraApiAccess value %d", ival)
+		}
+	}
+	return InfraApiAccess(0), fmt.Errorf("Invalid InfraApiAccess value %v", data)
+}
+
 func (e *InfraApiAccess) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := InfraApiAccess_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = InfraApiAccess_CamelName[val]
-		}
+	val, err := ParseInfraApiAccess(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid InfraApiAccess value %q", str)
-	}
-	*e = InfraApiAccess(val)
+	*e = val
 	return nil
 }
 
@@ -13918,32 +13949,29 @@ func (e *InfraApiAccess) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := InfraApiAccess_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = InfraApiAccess_CamelName[val]
+		val, err := ParseInfraApiAccess(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(InfraApiAccess(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid InfraApiAccess value %q", str)
-		}
 		*e = InfraApiAccess(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := InfraApiAccess_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid InfraApiAccess value %d", val)
+		val, err := ParseInfraApiAccess(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = InfraApiAccess(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid InfraApiAccess value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(InfraApiAccess(0)),
+	}
 }
 
 func (e InfraApiAccess) MarshalJSON() ([]byte, error) {
@@ -13977,25 +14005,44 @@ var OSType_CamelValue = map[string]int32{
 	"Others":  20,
 }
 
+func ParseOSType(data interface{}) (OSType, error) {
+	if val, ok := data.(OSType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := OSType_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = OSType_CamelName[val]
+			}
+		}
+		if !ok {
+			return OSType(0), fmt.Errorf("Invalid OSType value %q", str)
+		}
+		return OSType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := OSType_CamelName[ival]; ok {
+			return OSType(ival), nil
+		} else {
+			return OSType(0), fmt.Errorf("Invalid OSType value %d", ival)
+		}
+	}
+	return OSType(0), fmt.Errorf("Invalid OSType value %v", data)
+}
+
 func (e *OSType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := OSType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = OSType_CamelName[val]
-		}
+	val, err := ParseOSType(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid OSType value %q", str)
-	}
-	*e = OSType(val)
+	*e = val
 	return nil
 }
 
@@ -14009,32 +14056,29 @@ func (e *OSType) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := OSType_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = OSType_CamelName[val]
+		val, err := ParseOSType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(OSType(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid OSType value %q", str)
-		}
 		*e = OSType(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := OSType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid OSType value %d", val)
+		val, err := ParseOSType(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = OSType(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid OSType value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(OSType(0)),
+	}
 }
 
 func (e OSType) MarshalJSON() ([]byte, error) {
@@ -14073,25 +14117,44 @@ var ReportSchedule_CamelValue = map[string]int32{
 	"EveryMonth":  3,
 }
 
+func ParseReportSchedule(data interface{}) (ReportSchedule, error) {
+	if val, ok := data.(ReportSchedule); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := ReportSchedule_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = ReportSchedule_CamelName[val]
+			}
+		}
+		if !ok {
+			return ReportSchedule(0), fmt.Errorf("Invalid ReportSchedule value %q", str)
+		}
+		return ReportSchedule(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := ReportSchedule_CamelName[ival]; ok {
+			return ReportSchedule(ival), nil
+		} else {
+			return ReportSchedule(0), fmt.Errorf("Invalid ReportSchedule value %d", ival)
+		}
+	}
+	return ReportSchedule(0), fmt.Errorf("Invalid ReportSchedule value %v", data)
+}
+
 func (e *ReportSchedule) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := ReportSchedule_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ReportSchedule_CamelName[val]
-		}
+	val, err := ParseReportSchedule(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid ReportSchedule value %q", str)
-	}
-	*e = ReportSchedule(val)
+	*e = val
 	return nil
 }
 
@@ -14105,32 +14168,29 @@ func (e *ReportSchedule) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := ReportSchedule_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = ReportSchedule_CamelName[val]
+		val, err := ParseReportSchedule(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(ReportSchedule(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid ReportSchedule value %q", str)
-		}
 		*e = ReportSchedule(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := ReportSchedule_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid ReportSchedule value %d", val)
+		val, err := ParseReportSchedule(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = ReportSchedule(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid ReportSchedule value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(ReportSchedule(0)),
+	}
 }
 
 func (e ReportSchedule) MarshalJSON() ([]byte, error) {
