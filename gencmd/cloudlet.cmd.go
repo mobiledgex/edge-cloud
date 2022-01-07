@@ -1547,8 +1547,8 @@ func FindFlavorMatchs(c *cli.Command, data []edgeproto.FlavorMatch, err *error) 
 
 var ShowFlavorsForCloudletCmd = &cli.Command{
 	Use:          "ShowFlavorsForCloudlet",
-	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
-	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	RequiredArgs: strings.Join(ShowFlavorsForCloudletRequiredArgs, " "),
+	OptionalArgs: strings.Join(ShowFlavorsForCloudletOptionalArgs, " "),
 	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
 	SpecialArgs:  &CloudletKeySpecialArgs,
 	Comments:     CloudletKeyComments,
@@ -3243,4 +3243,10 @@ var GetCloudletResourceUsageRequiredArgs = []string{
 var GetCloudletResourceUsageOptionalArgs = []string{
 	"federated-org",
 	"infrausage",
+}
+var ShowFlavorsForCloudletRequiredArgs = []string{}
+var ShowFlavorsForCloudletOptionalArgs = []string{
+	"cloudlet-org",
+	"cloudlet",
+	"federator-org",
 }
