@@ -731,6 +731,7 @@ service CloudletApi {
     option (protogen.mc2_custom_authz) = true;
     option (protogen.non_standard_show) = true;
     option (protogen.stream_out_incremental) = true;
+    option (protogen.method_not_required) = "Organization,Name,FederatedOrganization";
   }
   // Get organizations of ClusterInsts and AppInsts on cloudlet
   rpc GetOrganizationsOnCloudlet(CloudletKey) returns (stream Organization) {
