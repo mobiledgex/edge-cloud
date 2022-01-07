@@ -18,6 +18,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	reflect "reflect"
 	"strconv"
 )
 
@@ -523,25 +524,44 @@ var NoticeAction_CamelValue = map[string]int32{
 	"SendallEnd": 4,
 }
 
+func ParseNoticeAction(data interface{}) (NoticeAction, error) {
+	if val, ok := data.(NoticeAction); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := NoticeAction_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = NoticeAction_CamelName[val]
+			}
+		}
+		if !ok {
+			return NoticeAction(0), fmt.Errorf("Invalid NoticeAction value %q", str)
+		}
+		return NoticeAction(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := NoticeAction_CamelName[ival]; ok {
+			return NoticeAction(ival), nil
+		} else {
+			return NoticeAction(0), fmt.Errorf("Invalid NoticeAction value %d", ival)
+		}
+	}
+	return NoticeAction(0), fmt.Errorf("Invalid NoticeAction value %v", data)
+}
+
 func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := NoticeAction_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = NoticeAction_CamelName[val]
-		}
+	val, err := ParseNoticeAction(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid NoticeAction value %q", str)
-	}
-	*e = NoticeAction(val)
+	*e = val
 	return nil
 }
 
@@ -555,32 +575,29 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := NoticeAction_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = NoticeAction_CamelName[val]
+		val, err := ParseNoticeAction(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(NoticeAction(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid NoticeAction value %q", str)
-		}
 		*e = NoticeAction(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := NoticeAction_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid NoticeAction value %d", val)
+		val, err := ParseNoticeAction(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = NoticeAction(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid NoticeAction value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(NoticeAction(0)),
+	}
 }
 
 func (e NoticeAction) MarshalJSON() ([]byte, error) {

@@ -5909,25 +5909,44 @@ var PowerState_CamelValue = map[string]int32{
 	"PowerStateError":   10,
 }
 
+func ParsePowerState(data interface{}) (PowerState, error) {
+	if val, ok := data.(PowerState); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := PowerState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = PowerState_CamelName[val]
+			}
+		}
+		if !ok {
+			return PowerState(0), fmt.Errorf("Invalid PowerState value %q", str)
+		}
+		return PowerState(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := PowerState_CamelName[ival]; ok {
+			return PowerState(ival), nil
+		} else {
+			return PowerState(0), fmt.Errorf("Invalid PowerState value %d", ival)
+		}
+	}
+	return PowerState(0), fmt.Errorf("Invalid PowerState value %v", data)
+}
+
 func (e *PowerState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := PowerState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = PowerState_CamelName[val]
-		}
+	val, err := ParsePowerState(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid PowerState value %q", str)
-	}
-	*e = PowerState(val)
+	*e = val
 	return nil
 }
 
@@ -5941,32 +5960,29 @@ func (e *PowerState) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := PowerState_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = PowerState_CamelName[val]
+		val, err := ParsePowerState(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(PowerState(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid PowerState value %q", str)
-		}
 		*e = PowerState(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := PowerState_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid PowerState value %d", val)
+		val, err := ParsePowerState(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = PowerState(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid PowerState value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(PowerState(0)),
+	}
 }
 
 func (e PowerState) MarshalJSON() ([]byte, error) {

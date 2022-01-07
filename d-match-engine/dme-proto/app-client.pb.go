@@ -7504,25 +7504,44 @@ var IDTypes_CamelValue = map[string]int32{
 	"Ipaddr":      3,
 }
 
+func ParseIDTypes(data interface{}) (IDTypes, error) {
+	if val, ok := data.(IDTypes); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := IDTypes_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = IDTypes_CamelName[val]
+			}
+		}
+		if !ok {
+			return IDTypes(0), fmt.Errorf("Invalid IDTypes value %q", str)
+		}
+		return IDTypes(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := IDTypes_CamelName[ival]; ok {
+			return IDTypes(ival), nil
+		} else {
+			return IDTypes(0), fmt.Errorf("Invalid IDTypes value %d", ival)
+		}
+	}
+	return IDTypes(0), fmt.Errorf("Invalid IDTypes value %v", data)
+}
+
 func (e *IDTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := IDTypes_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = IDTypes_CamelName[val]
-		}
+	val, err := ParseIDTypes(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid IDTypes value %q", str)
-	}
-	*e = IDTypes(val)
+	*e = val
 	return nil
 }
 
@@ -7536,32 +7555,29 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := IDTypes_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = IDTypes_CamelName[val]
+		val, err := ParseIDTypes(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(IDTypes(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid IDTypes value %q", str)
-		}
 		*e = IDTypes(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := IDTypes_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid IDTypes value %d", val)
+		val, err := ParseIDTypes(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = IDTypes(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid IDTypes value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(IDTypes(0)),
+	}
 }
 
 func (e IDTypes) MarshalJSON() ([]byte, error) {
@@ -7595,43 +7611,10 @@ var ReplyStatus_CamelValue = map[string]int32{
 	"RsFail":      2,
 }
 
-func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := ReplyStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = ReplyStatus_CamelValue["Rs"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ReplyStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid ReplyStatus value %q", str)
-	}
-	*e = ReplyStatus(val)
-	return nil
-}
-
-func (e ReplyStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Rs")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseReplyStatus(data interface{}) (ReplyStatus, error) {
+	if val, ok := data.(ReplyStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := ReplyStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -7646,22 +7629,67 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid ReplyStatus value %q", str)
+			return ReplyStatus(0), fmt.Errorf("Invalid ReplyStatus value %q", str)
 		}
-		*e = ReplyStatus(val)
-		return nil
+		return ReplyStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := ReplyStatus_CamelName[ival]; ok {
+			return ReplyStatus(ival), nil
+		} else {
+			return ReplyStatus(0), fmt.Errorf("Invalid ReplyStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return ReplyStatus(0), fmt.Errorf("Invalid ReplyStatus value %v", data)
+}
+
+func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseReplyStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e ReplyStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Rs")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := ReplyStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid ReplyStatus value %d", val)
+		val, err := ParseReplyStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(ReplyStatus(0)),
+			}
 		}
 		*e = ReplyStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid ReplyStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseReplyStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(ReplyStatus(0)),
+	}
 }
 
 func (e ReplyStatus) MarshalJSON() ([]byte, error) {
@@ -7698,43 +7726,10 @@ var FindCloudletReply_FindStatus_CamelValue = map[string]int32{
 	"FindNotfound": 2,
 }
 
-func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := FindCloudletReply_FindStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = FindCloudletReply_FindStatus_CamelValue["Find"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = FindCloudletReply_FindStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %q", str)
-	}
-	*e = FindCloudletReply_FindStatus(val)
-	return nil
-}
-
-func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Find")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseFindCloudletReply_FindStatus(data interface{}) (FindCloudletReply_FindStatus, error) {
+	if val, ok := data.(FindCloudletReply_FindStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := FindCloudletReply_FindStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -7749,22 +7744,67 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %q", str)
+			return FindCloudletReply_FindStatus(0), fmt.Errorf("Invalid FindCloudletReply_FindStatus value %q", str)
 		}
-		*e = FindCloudletReply_FindStatus(val)
-		return nil
+		return FindCloudletReply_FindStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := FindCloudletReply_FindStatus_CamelName[ival]; ok {
+			return FindCloudletReply_FindStatus(ival), nil
+		} else {
+			return FindCloudletReply_FindStatus(0), fmt.Errorf("Invalid FindCloudletReply_FindStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return FindCloudletReply_FindStatus(0), fmt.Errorf("Invalid FindCloudletReply_FindStatus value %v", data)
+}
+
+func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseFindCloudletReply_FindStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Find")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := FindCloudletReply_FindStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %d", val)
+		val, err := ParseFindCloudletReply_FindStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(FindCloudletReply_FindStatus(0)),
+			}
 		}
 		*e = FindCloudletReply_FindStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid FindCloudletReply_FindStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseFindCloudletReply_FindStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(FindCloudletReply_FindStatus(0)),
+	}
 }
 
 func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
@@ -7801,25 +7841,44 @@ var VerifyLocationReply_TowerStatus_CamelValue = map[string]int32{
 	"NotConnectedToSpecifiedTower": 2,
 }
 
+func ParseVerifyLocationReply_TowerStatus(data interface{}) (VerifyLocationReply_TowerStatus, error) {
+	if val, ok := data.(VerifyLocationReply_TowerStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := VerifyLocationReply_TowerStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = VerifyLocationReply_TowerStatus_CamelName[val]
+			}
+		}
+		if !ok {
+			return VerifyLocationReply_TowerStatus(0), fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %q", str)
+		}
+		return VerifyLocationReply_TowerStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := VerifyLocationReply_TowerStatus_CamelName[ival]; ok {
+			return VerifyLocationReply_TowerStatus(ival), nil
+		} else {
+			return VerifyLocationReply_TowerStatus(0), fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %d", ival)
+		}
+	}
+	return VerifyLocationReply_TowerStatus(0), fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %v", data)
+}
+
 func (e *VerifyLocationReply_TowerStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := VerifyLocationReply_TowerStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = VerifyLocationReply_TowerStatus_CamelName[val]
-		}
+	val, err := ParseVerifyLocationReply_TowerStatus(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %q", str)
-	}
-	*e = VerifyLocationReply_TowerStatus(val)
+	*e = val
 	return nil
 }
 
@@ -7833,32 +7892,29 @@ func (e *VerifyLocationReply_TowerStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := VerifyLocationReply_TowerStatus_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = VerifyLocationReply_TowerStatus_CamelName[val]
+		val, err := ParseVerifyLocationReply_TowerStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(VerifyLocationReply_TowerStatus(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %q", str)
-		}
 		*e = VerifyLocationReply_TowerStatus(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := VerifyLocationReply_TowerStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %d", val)
+		val, err := ParseVerifyLocationReply_TowerStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = VerifyLocationReply_TowerStatus(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid VerifyLocationReply_TowerStatus value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(VerifyLocationReply_TowerStatus(0)),
+	}
 }
 
 func (e VerifyLocationReply_TowerStatus) MarshalJSON() ([]byte, error) {
@@ -7917,43 +7973,10 @@ var VerifyLocationReply_GPSLocationStatus_CamelValue = map[string]int32{
 	"LocErrorOther":             7,
 }
 
-func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := VerifyLocationReply_GPSLocationStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = VerifyLocationReply_GPSLocationStatus_CamelValue["Loc"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = VerifyLocationReply_GPSLocationStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %q", str)
-	}
-	*e = VerifyLocationReply_GPSLocationStatus(val)
-	return nil
-}
-
-func (e VerifyLocationReply_GPSLocationStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Loc")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseVerifyLocationReply_GPSLocationStatus(data interface{}) (VerifyLocationReply_GPSLocationStatus, error) {
+	if val, ok := data.(VerifyLocationReply_GPSLocationStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := VerifyLocationReply_GPSLocationStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -7968,22 +7991,67 @@ func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %q", str)
+			return VerifyLocationReply_GPSLocationStatus(0), fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %q", str)
 		}
-		*e = VerifyLocationReply_GPSLocationStatus(val)
-		return nil
+		return VerifyLocationReply_GPSLocationStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := VerifyLocationReply_GPSLocationStatus_CamelName[ival]; ok {
+			return VerifyLocationReply_GPSLocationStatus(ival), nil
+		} else {
+			return VerifyLocationReply_GPSLocationStatus(0), fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return VerifyLocationReply_GPSLocationStatus(0), fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %v", data)
+}
+
+func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseVerifyLocationReply_GPSLocationStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e VerifyLocationReply_GPSLocationStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Loc")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := VerifyLocationReply_GPSLocationStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %d", val)
+		val, err := ParseVerifyLocationReply_GPSLocationStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(VerifyLocationReply_GPSLocationStatus(0)),
+			}
 		}
 		*e = VerifyLocationReply_GPSLocationStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid VerifyLocationReply_GPSLocationStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseVerifyLocationReply_GPSLocationStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(VerifyLocationReply_GPSLocationStatus(0)),
+	}
 }
 
 func (e VerifyLocationReply_GPSLocationStatus) MarshalJSON() ([]byte, error) {
@@ -8020,43 +8088,10 @@ var GetLocationReply_LocStatus_CamelValue = map[string]int32{
 	"LocDenied":  2,
 }
 
-func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := GetLocationReply_LocStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = GetLocationReply_LocStatus_CamelValue["Loc"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = GetLocationReply_LocStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid GetLocationReply_LocStatus value %q", str)
-	}
-	*e = GetLocationReply_LocStatus(val)
-	return nil
-}
-
-func (e GetLocationReply_LocStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Loc")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseGetLocationReply_LocStatus(data interface{}) (GetLocationReply_LocStatus, error) {
+	if val, ok := data.(GetLocationReply_LocStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := GetLocationReply_LocStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8071,22 +8106,67 @@ func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid GetLocationReply_LocStatus value %q", str)
+			return GetLocationReply_LocStatus(0), fmt.Errorf("Invalid GetLocationReply_LocStatus value %q", str)
 		}
-		*e = GetLocationReply_LocStatus(val)
-		return nil
+		return GetLocationReply_LocStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := GetLocationReply_LocStatus_CamelName[ival]; ok {
+			return GetLocationReply_LocStatus(ival), nil
+		} else {
+			return GetLocationReply_LocStatus(0), fmt.Errorf("Invalid GetLocationReply_LocStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return GetLocationReply_LocStatus(0), fmt.Errorf("Invalid GetLocationReply_LocStatus value %v", data)
+}
+
+func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseGetLocationReply_LocStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e GetLocationReply_LocStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Loc")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := GetLocationReply_LocStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid GetLocationReply_LocStatus value %d", val)
+		val, err := ParseGetLocationReply_LocStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(GetLocationReply_LocStatus(0)),
+			}
 		}
 		*e = GetLocationReply_LocStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid GetLocationReply_LocStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseGetLocationReply_LocStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(GetLocationReply_LocStatus(0)),
+	}
 }
 
 func (e GetLocationReply_LocStatus) MarshalJSON() ([]byte, error) {
@@ -8123,43 +8203,10 @@ var AppInstListReply_AIStatus_CamelValue = map[string]int32{
 	"AiFail":      2,
 }
 
-func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := AppInstListReply_AIStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = AppInstListReply_AIStatus_CamelValue["Ai"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = AppInstListReply_AIStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid AppInstListReply_AIStatus value %q", str)
-	}
-	*e = AppInstListReply_AIStatus(val)
-	return nil
-}
-
-func (e AppInstListReply_AIStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Ai")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseAppInstListReply_AIStatus(data interface{}) (AppInstListReply_AIStatus, error) {
+	if val, ok := data.(AppInstListReply_AIStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := AppInstListReply_AIStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8174,22 +8221,67 @@ func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid AppInstListReply_AIStatus value %q", str)
+			return AppInstListReply_AIStatus(0), fmt.Errorf("Invalid AppInstListReply_AIStatus value %q", str)
 		}
-		*e = AppInstListReply_AIStatus(val)
-		return nil
+		return AppInstListReply_AIStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := AppInstListReply_AIStatus_CamelName[ival]; ok {
+			return AppInstListReply_AIStatus(ival), nil
+		} else {
+			return AppInstListReply_AIStatus(0), fmt.Errorf("Invalid AppInstListReply_AIStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return AppInstListReply_AIStatus(0), fmt.Errorf("Invalid AppInstListReply_AIStatus value %v", data)
+}
+
+func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseAppInstListReply_AIStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e AppInstListReply_AIStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Ai")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := AppInstListReply_AIStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid AppInstListReply_AIStatus value %d", val)
+		val, err := ParseAppInstListReply_AIStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(AppInstListReply_AIStatus(0)),
+			}
 		}
 		*e = AppInstListReply_AIStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid AppInstListReply_AIStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseAppInstListReply_AIStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(AppInstListReply_AIStatus(0)),
+	}
 }
 
 func (e AppInstListReply_AIStatus) MarshalJSON() ([]byte, error) {
@@ -8226,43 +8318,10 @@ var FqdnListReply_FLStatus_CamelValue = map[string]int32{
 	"FlFail":      2,
 }
 
-func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := FqdnListReply_FLStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = FqdnListReply_FLStatus_CamelValue["Fl"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = FqdnListReply_FLStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid FqdnListReply_FLStatus value %q", str)
-	}
-	*e = FqdnListReply_FLStatus(val)
-	return nil
-}
-
-func (e FqdnListReply_FLStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Fl")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseFqdnListReply_FLStatus(data interface{}) (FqdnListReply_FLStatus, error) {
+	if val, ok := data.(FqdnListReply_FLStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := FqdnListReply_FLStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8277,22 +8336,67 @@ func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid FqdnListReply_FLStatus value %q", str)
+			return FqdnListReply_FLStatus(0), fmt.Errorf("Invalid FqdnListReply_FLStatus value %q", str)
 		}
-		*e = FqdnListReply_FLStatus(val)
-		return nil
+		return FqdnListReply_FLStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := FqdnListReply_FLStatus_CamelName[ival]; ok {
+			return FqdnListReply_FLStatus(ival), nil
+		} else {
+			return FqdnListReply_FLStatus(0), fmt.Errorf("Invalid FqdnListReply_FLStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return FqdnListReply_FLStatus(0), fmt.Errorf("Invalid FqdnListReply_FLStatus value %v", data)
+}
+
+func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseFqdnListReply_FLStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e FqdnListReply_FLStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Fl")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := FqdnListReply_FLStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid FqdnListReply_FLStatus value %d", val)
+		val, err := ParseFqdnListReply_FLStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(FqdnListReply_FLStatus(0)),
+			}
 		}
 		*e = FqdnListReply_FLStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid FqdnListReply_FLStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseFqdnListReply_FLStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(FqdnListReply_FLStatus(0)),
+	}
 }
 
 func (e FqdnListReply_FLStatus) MarshalJSON() ([]byte, error) {
@@ -8329,43 +8433,10 @@ var AppOfficialFqdnReply_AOFStatus_CamelValue = map[string]int32{
 	"AofFail":      2,
 }
 
-func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := AppOfficialFqdnReply_AOFStatus_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = AppOfficialFqdnReply_AOFStatus_CamelValue["Aof"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = AppOfficialFqdnReply_AOFStatus_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %q", str)
-	}
-	*e = AppOfficialFqdnReply_AOFStatus(val)
-	return nil
-}
-
-func (e AppOfficialFqdnReply_AOFStatus) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Aof")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseAppOfficialFqdnReply_AOFStatus(data interface{}) (AppOfficialFqdnReply_AOFStatus, error) {
+	if val, ok := data.(AppOfficialFqdnReply_AOFStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := AppOfficialFqdnReply_AOFStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8380,22 +8451,67 @@ func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %q", str)
+			return AppOfficialFqdnReply_AOFStatus(0), fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %q", str)
 		}
-		*e = AppOfficialFqdnReply_AOFStatus(val)
-		return nil
+		return AppOfficialFqdnReply_AOFStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := AppOfficialFqdnReply_AOFStatus_CamelName[ival]; ok {
+			return AppOfficialFqdnReply_AOFStatus(ival), nil
+		} else {
+			return AppOfficialFqdnReply_AOFStatus(0), fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return AppOfficialFqdnReply_AOFStatus(0), fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %v", data)
+}
+
+func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseAppOfficialFqdnReply_AOFStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e AppOfficialFqdnReply_AOFStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(AppOfficialFqdnReply_AOFStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Aof")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *AppOfficialFqdnReply_AOFStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := AppOfficialFqdnReply_AOFStatus_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %d", val)
+		val, err := ParseAppOfficialFqdnReply_AOFStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(AppOfficialFqdnReply_AOFStatus(0)),
+			}
 		}
 		*e = AppOfficialFqdnReply_AOFStatus(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid AppOfficialFqdnReply_AOFStatus value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseAppOfficialFqdnReply_AOFStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(AppOfficialFqdnReply_AOFStatus(0)),
+	}
 }
 
 func (e AppOfficialFqdnReply_AOFStatus) MarshalJSON() ([]byte, error) {
@@ -8432,43 +8548,10 @@ var DynamicLocGroupRequest_DlgCommType_CamelValue = map[string]int32{
 	"DlgOpen":      2,
 }
 
-func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := DynamicLocGroupRequest_DlgCommType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = DynamicLocGroupRequest_DlgCommType_CamelValue["Dlg"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = DynamicLocGroupRequest_DlgCommType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %q", str)
-	}
-	*e = DynamicLocGroupRequest_DlgCommType(val)
-	return nil
-}
-
-func (e DynamicLocGroupRequest_DlgCommType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Dlg")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseDynamicLocGroupRequest_DlgCommType(data interface{}) (DynamicLocGroupRequest_DlgCommType, error) {
+	if val, ok := data.(DynamicLocGroupRequest_DlgCommType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := DynamicLocGroupRequest_DlgCommType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8483,22 +8566,67 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %q", str)
+			return DynamicLocGroupRequest_DlgCommType(0), fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %q", str)
 		}
-		*e = DynamicLocGroupRequest_DlgCommType(val)
-		return nil
+		return DynamicLocGroupRequest_DlgCommType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := DynamicLocGroupRequest_DlgCommType_CamelName[ival]; ok {
+			return DynamicLocGroupRequest_DlgCommType(ival), nil
+		} else {
+			return DynamicLocGroupRequest_DlgCommType(0), fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return DynamicLocGroupRequest_DlgCommType(0), fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %v", data)
+}
+
+func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseDynamicLocGroupRequest_DlgCommType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e DynamicLocGroupRequest_DlgCommType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Dlg")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := DynamicLocGroupRequest_DlgCommType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %d", val)
+		val, err := ParseDynamicLocGroupRequest_DlgCommType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(DynamicLocGroupRequest_DlgCommType(0)),
+			}
 		}
 		*e = DynamicLocGroupRequest_DlgCommType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid DynamicLocGroupRequest_DlgCommType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseDynamicLocGroupRequest_DlgCommType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(DynamicLocGroupRequest_DlgCommType(0)),
+	}
 }
 
 func (e DynamicLocGroupRequest_DlgCommType) MarshalJSON() ([]byte, error) {
@@ -8550,43 +8678,10 @@ var ClientEdgeEvent_ClientEventType_CamelValue = map[string]int32{
 	"EventCustomEvent":         5,
 }
 
-func (e *ClientEdgeEvent_ClientEventType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := ClientEdgeEvent_ClientEventType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = ClientEdgeEvent_ClientEventType_CamelValue["Event"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ClientEdgeEvent_ClientEventType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %q", str)
-	}
-	*e = ClientEdgeEvent_ClientEventType(val)
-	return nil
-}
-
-func (e ClientEdgeEvent_ClientEventType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Event")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseClientEdgeEvent_ClientEventType(data interface{}) (ClientEdgeEvent_ClientEventType, error) {
+	if val, ok := data.(ClientEdgeEvent_ClientEventType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := ClientEdgeEvent_ClientEventType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8601,22 +8696,67 @@ func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %q", str)
+			return ClientEdgeEvent_ClientEventType(0), fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %q", str)
 		}
-		*e = ClientEdgeEvent_ClientEventType(val)
-		return nil
+		return ClientEdgeEvent_ClientEventType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := ClientEdgeEvent_ClientEventType_CamelName[ival]; ok {
+			return ClientEdgeEvent_ClientEventType(ival), nil
+		} else {
+			return ClientEdgeEvent_ClientEventType(0), fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return ClientEdgeEvent_ClientEventType(0), fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %v", data)
+}
+
+func (e *ClientEdgeEvent_ClientEventType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseClientEdgeEvent_ClientEventType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e ClientEdgeEvent_ClientEventType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(ClientEdgeEvent_ClientEventType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Event")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *ClientEdgeEvent_ClientEventType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := ClientEdgeEvent_ClientEventType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %d", val)
+		val, err := ParseClientEdgeEvent_ClientEventType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(ClientEdgeEvent_ClientEventType(0)),
+			}
 		}
 		*e = ClientEdgeEvent_ClientEventType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid ClientEdgeEvent_ClientEventType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseClientEdgeEvent_ClientEventType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(ClientEdgeEvent_ClientEventType(0)),
+	}
 }
 
 func (e ClientEdgeEvent_ClientEventType) MarshalJSON() ([]byte, error) {
@@ -8683,43 +8823,10 @@ var ServerEdgeEvent_ServerEventType_CamelValue = map[string]int32{
 	"EventError":               8,
 }
 
-func (e *ServerEdgeEvent_ServerEventType) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := ServerEdgeEvent_ServerEventType_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = ServerEdgeEvent_ServerEventType_CamelValue["Event"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = ServerEdgeEvent_ServerEventType_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %q", str)
-	}
-	*e = ServerEdgeEvent_ServerEventType(val)
-	return nil
-}
-
-func (e ServerEdgeEvent_ServerEventType) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Event")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseServerEdgeEvent_ServerEventType(data interface{}) (ServerEdgeEvent_ServerEventType, error) {
+	if val, ok := data.(ServerEdgeEvent_ServerEventType); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := ServerEdgeEvent_ServerEventType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -8734,22 +8841,67 @@ func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %q", str)
+			return ServerEdgeEvent_ServerEventType(0), fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %q", str)
 		}
-		*e = ServerEdgeEvent_ServerEventType(val)
-		return nil
+		return ServerEdgeEvent_ServerEventType(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := ServerEdgeEvent_ServerEventType_CamelName[ival]; ok {
+			return ServerEdgeEvent_ServerEventType(ival), nil
+		} else {
+			return ServerEdgeEvent_ServerEventType(0), fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return ServerEdgeEvent_ServerEventType(0), fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %v", data)
+}
+
+func (e *ServerEdgeEvent_ServerEventType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseServerEdgeEvent_ServerEventType(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e ServerEdgeEvent_ServerEventType) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(ServerEdgeEvent_ServerEventType_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Event")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *ServerEdgeEvent_ServerEventType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := ServerEdgeEvent_ServerEventType_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %d", val)
+		val, err := ParseServerEdgeEvent_ServerEventType(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(ServerEdgeEvent_ServerEventType(0)),
+			}
 		}
 		*e = ServerEdgeEvent_ServerEventType(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid ServerEdgeEvent_ServerEventType value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseServerEdgeEvent_ServerEventType(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(ServerEdgeEvent_ServerEventType(0)),
+	}
 }
 
 func (e ServerEdgeEvent_ServerEventType) MarshalJSON() ([]byte, error) {
@@ -8844,48 +8996,43 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 // Allows decoding to handle protobuf enums that are
 // represented as strings.
 func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
-	if from.Kind() != reflect.String {
-		return data, nil
-	}
 	switch to {
 	case reflect.TypeOf(LProto(0)):
-		if en, ok := LProto_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := LProto_CamelValue["LProto"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseLProto(data)
 	case reflect.TypeOf(HealthCheck(0)):
-		if en, ok := HealthCheck_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := HealthCheck_CamelValue["HealthCheck"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseHealthCheck(data)
 	case reflect.TypeOf(CloudletState(0)):
-		if en, ok := CloudletState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := CloudletState_CamelValue["CloudletState"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseCloudletState(data)
 	case reflect.TypeOf(MaintenanceState(0)):
-		if en, ok := MaintenanceState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseMaintenanceState(data)
 	case reflect.TypeOf(IDTypes(0)):
-		if en, ok := IDTypes_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseIDTypes(data)
 	case reflect.TypeOf(ReplyStatus(0)):
-		if en, ok := ReplyStatus_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := ReplyStatus_CamelValue["Rs"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseReplyStatus(data)
 	}
 	return data, nil
+}
+
+// GetEnumParseHelp gets end-user specific messages for
+// enum parse errors.
+// It returns the enum type name, a help message with
+// valid values, and a bool that indicates if a type was matched.
+func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
+	switch t {
+	case reflect.TypeOf(LProto(0)):
+		return "LProto", ", valid values are one of Unknown, Tcp, Udp, or 0, 1, 2", true
+	case reflect.TypeOf(HealthCheck(0)):
+		return "HealthCheck", ", valid values are one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline, or 0, 1, 2, 3, 4", true
+	case reflect.TypeOf(CloudletState(0)):
+		return "CloudletState", ", valid values are one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync, or 0, 1, 2, 3, 4, 5, 6, 7", true
+	case reflect.TypeOf(MaintenanceState(0)):
+		return "MaintenanceState", ", valid values are one of NormalOperation, MaintenanceStart, FailoverRequested, FailoverDone, FailoverError, MaintenanceStartNoFailover, CrmRequested, CrmUnderMaintenance, CrmError, NormalOperationInit, UnderMaintenance, or 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 31", true
+	case reflect.TypeOf(IDTypes(0)):
+		return "IDTypes", ", valid values are one of IdUndefined, Imei, Msisdn, Ipaddr, or 0, 1, 2, 3", true
+	case reflect.TypeOf(ReplyStatus(0)):
+		return "ReplyStatus", ", valid values are one of Undefined, Success, Fail, or 0, 1, 2", true
+	}
+	return "", "", false
 }
 
 var ShowMethodNames = map[string]struct{}{}
