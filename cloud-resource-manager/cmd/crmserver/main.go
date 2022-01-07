@@ -227,6 +227,7 @@ func main() {
 			ClusterInstInfoCache:      &controllerData.ClusterInstInfoCache,
 			AppCache:                  &controllerData.AppCache,
 			AppInstCache:              &controllerData.AppInstCache,
+			AppInstInfoCache:          &controllerData.AppInstInfoCache,
 			ResTagTableCache:          &controllerData.ResTagTableCache,
 			CloudletCache:             controllerData.CloudletCache,
 			CloudletInternalCache:     &controllerData.CloudletInternalCache,

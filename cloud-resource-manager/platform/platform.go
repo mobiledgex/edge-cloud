@@ -48,6 +48,7 @@ type Caches struct {
 	ClusterInstCache          *edgeproto.ClusterInstCache
 	ClusterInstInfoCache      *edgeproto.ClusterInstInfoCache
 	AppInstCache              *edgeproto.AppInstCache
+	AppInstInfoCache          *edgeproto.AppInstInfoCache
 	AppCache                  *edgeproto.AppCache
 	ResTagTableCache          *edgeproto.ResTagTableCache
 	CloudletCache             *edgeproto.CloudletCache
