@@ -13,6 +13,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	reflect "reflect"
 	"strconv"
 	strings "strings"
 )
@@ -767,43 +768,10 @@ var LProto_CamelValue = map[string]int32{
 	"LProtoUdp":     2,
 }
 
-func (e *LProto) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := LProto_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = LProto_CamelValue["LProto"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = LProto_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid LProto value %q", str)
-	}
-	*e = LProto(val)
-	return nil
-}
-
-func (e LProto) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(LProto_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "LProto")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *LProto) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseLProto(data interface{}) (LProto, error) {
+	if val, ok := data.(LProto); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := LProto_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -818,22 +786,67 @@ func (e *LProto) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid LProto value %q", str)
+			return LProto(0), fmt.Errorf("Invalid LProto value %q", str)
 		}
-		*e = LProto(val)
-		return nil
+		return LProto(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := LProto_CamelName[ival]; ok {
+			return LProto(ival), nil
+		} else {
+			return LProto(0), fmt.Errorf("Invalid LProto value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return LProto(0), fmt.Errorf("Invalid LProto value %v", data)
+}
+
+func (e *LProto) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseLProto(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e LProto) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(LProto_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "LProto")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *LProto) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := LProto_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid LProto value %d", val)
+		val, err := ParseLProto(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(LProto(0)),
+			}
 		}
 		*e = LProto(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid LProto value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseLProto(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(LProto(0)),
+	}
 }
 
 func (e LProto) MarshalJSON() ([]byte, error) {
@@ -880,43 +893,10 @@ var HealthCheck_CamelValue = map[string]int32{
 	"HealthCheckCloudletOffline":   4,
 }
 
-func (e *HealthCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = HealthCheck_CamelValue["HealthCheck"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = HealthCheck_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid HealthCheck value %q", str)
-	}
-	*e = HealthCheck(val)
-	return nil
-}
-
-func (e HealthCheck) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(HealthCheck_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "HealthCheck")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *HealthCheck) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseHealthCheck(data interface{}) (HealthCheck, error) {
+	if val, ok := data.(HealthCheck); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := HealthCheck_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -931,22 +911,67 @@ func (e *HealthCheck) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid HealthCheck value %q", str)
+			return HealthCheck(0), fmt.Errorf("Invalid HealthCheck value %q", str)
 		}
-		*e = HealthCheck(val)
-		return nil
+		return HealthCheck(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := HealthCheck_CamelName[ival]; ok {
+			return HealthCheck(ival), nil
+		} else {
+			return HealthCheck(0), fmt.Errorf("Invalid HealthCheck value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return HealthCheck(0), fmt.Errorf("Invalid HealthCheck value %v", data)
+}
+
+func (e *HealthCheck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseHealthCheck(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e HealthCheck) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(HealthCheck_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "HealthCheck")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *HealthCheck) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := HealthCheck_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid HealthCheck value %d", val)
+		val, err := ParseHealthCheck(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(HealthCheck(0)),
+			}
 		}
 		*e = HealthCheck(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid HealthCheck value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseHealthCheck(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(HealthCheck(0)),
+	}
 }
 
 func (e HealthCheck) MarshalJSON() ([]byte, error) {
@@ -1008,43 +1033,10 @@ var CloudletState_CamelValue = map[string]int32{
 	"CloudletStateNeedSync":   7,
 }
 
-func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := CloudletState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = CloudletState_CamelValue["CloudletState"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = CloudletState_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid CloudletState value %q", str)
-	}
-	*e = CloudletState(val)
-	return nil
-}
-
-func (e CloudletState) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(CloudletState_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "CloudletState")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *CloudletState) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseCloudletState(data interface{}) (CloudletState, error) {
+	if val, ok := data.(CloudletState); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := CloudletState_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -1059,22 +1051,67 @@ func (e *CloudletState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid CloudletState value %q", str)
+			return CloudletState(0), fmt.Errorf("Invalid CloudletState value %q", str)
 		}
-		*e = CloudletState(val)
-		return nil
+		return CloudletState(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := CloudletState_CamelName[ival]; ok {
+			return CloudletState(ival), nil
+		} else {
+			return CloudletState(0), fmt.Errorf("Invalid CloudletState value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return CloudletState(0), fmt.Errorf("Invalid CloudletState value %v", data)
+}
+
+func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseCloudletState(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e CloudletState) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(CloudletState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "CloudletState")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *CloudletState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := CloudletState_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid CloudletState value %d", val)
+		val, err := ParseCloudletState(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(CloudletState(0)),
+			}
 		}
 		*e = CloudletState(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid CloudletState value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseCloudletState(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(CloudletState(0)),
+	}
 }
 
 func (e CloudletState) MarshalJSON() ([]byte, error) {
@@ -1151,25 +1188,44 @@ var MaintenanceState_CamelValue = map[string]int32{
 	"UnderMaintenance":           31,
 }
 
+func ParseMaintenanceState(data interface{}) (MaintenanceState, error) {
+	if val, ok := data.(MaintenanceState); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = MaintenanceState_CamelName[val]
+			}
+		}
+		if !ok {
+			return MaintenanceState(0), fmt.Errorf("Invalid MaintenanceState value %q", str)
+		}
+		return MaintenanceState(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := MaintenanceState_CamelName[ival]; ok {
+			return MaintenanceState(ival), nil
+		} else {
+			return MaintenanceState(0), fmt.Errorf("Invalid MaintenanceState value %d", ival)
+		}
+	}
+	return MaintenanceState(0), fmt.Errorf("Invalid MaintenanceState value %v", data)
+}
+
 func (e *MaintenanceState) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = MaintenanceState_CamelName[val]
-		}
+	val, err := ParseMaintenanceState(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid MaintenanceState value %q", str)
-	}
-	*e = MaintenanceState(val)
+	*e = val
 	return nil
 }
 
@@ -1183,32 +1239,29 @@ func (e *MaintenanceState) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := MaintenanceState_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = MaintenanceState_CamelName[val]
+		val, err := ParseMaintenanceState(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(MaintenanceState(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid MaintenanceState value %q", str)
-		}
 		*e = MaintenanceState(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := MaintenanceState_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid MaintenanceState value %d", val)
+		val, err := ParseMaintenanceState(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = MaintenanceState(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid MaintenanceState value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(MaintenanceState(0)),
+	}
 }
 
 func (e MaintenanceState) MarshalJSON() ([]byte, error) {

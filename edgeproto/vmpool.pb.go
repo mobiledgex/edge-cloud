@@ -4185,43 +4185,10 @@ var VMState_CamelValue = map[string]int32{
 	"VmForceFree":  6,
 }
 
-func (e *VMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := VMState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = VMState_CamelValue["Vm"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = VMState_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid VMState value %q", str)
-	}
-	*e = VMState(val)
-	return nil
-}
-
-func (e VMState) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(VMState_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Vm")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *VMState) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseVMState(data interface{}) (VMState, error) {
+	if val, ok := data.(VMState); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := VMState_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -4236,22 +4203,67 @@ func (e *VMState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid VMState value %q", str)
+			return VMState(0), fmt.Errorf("Invalid VMState value %q", str)
 		}
-		*e = VMState(val)
-		return nil
+		return VMState(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := VMState_CamelName[ival]; ok {
+			return VMState(ival), nil
+		} else {
+			return VMState(0), fmt.Errorf("Invalid VMState value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return VMState(0), fmt.Errorf("Invalid VMState value %v", data)
+}
+
+func (e *VMState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseVMState(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e VMState) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(VMState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Vm")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *VMState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := VMState_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid VMState value %d", val)
+		val, err := ParseVMState(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(VMState(0)),
+			}
 		}
 		*e = VMState(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid VMState value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseVMState(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(VMState(0)),
+	}
 }
 
 func (e VMState) MarshalJSON() ([]byte, error) {
@@ -4288,43 +4300,10 @@ var VMAction_CamelValue = map[string]int32{
 	"VmActionRelease":  2,
 }
 
-func (e *VMAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := VMAction_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = VMAction_CamelValue["VmAction"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = VMAction_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid VMAction value %q", str)
-	}
-	*e = VMAction(val)
-	return nil
-}
-
-func (e VMAction) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(VMAction_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "VmAction")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *VMAction) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseVMAction(data interface{}) (VMAction, error) {
+	if val, ok := data.(VMAction); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := VMAction_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -4339,22 +4318,67 @@ func (e *VMAction) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid VMAction value %q", str)
+			return VMAction(0), fmt.Errorf("Invalid VMAction value %q", str)
 		}
-		*e = VMAction(val)
-		return nil
+		return VMAction(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := VMAction_CamelName[ival]; ok {
+			return VMAction(ival), nil
+		} else {
+			return VMAction(0), fmt.Errorf("Invalid VMAction value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return VMAction(0), fmt.Errorf("Invalid VMAction value %v", data)
+}
+
+func (e *VMAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseVMAction(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e VMAction) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(VMAction_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "VmAction")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *VMAction) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := VMAction_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid VMAction value %d", val)
+		val, err := ParseVMAction(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(VMAction(0)),
+			}
 		}
 		*e = VMAction(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid VMAction value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseVMAction(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(VMAction(0)),
+	}
 }
 
 func (e VMAction) MarshalJSON() ([]byte, error) {
