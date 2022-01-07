@@ -1270,7 +1270,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if cur.DeletePrepare {
+		if !ignoreCRMTransient(cctx) && cur.DeletePrepare {
 			return in.Key.BeingDeletedError()
 		}
 		if err := s.all.cloudletInfoApi.checkCloudletReady(cctx, stm, &in.Key.CloudletKey, cloudcommon.Delete); err != nil {
@@ -1499,6 +1499,14 @@ func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
 
 func ignoreCRM(cctx *CallContext) bool {
 	if (cctx.Undo && !cctx.CRMUndo) || cctx.Override == edgeproto.CRMOverride_IGNORE_CRM ||
+		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
+		return true
+	}
+	return false
+}
+
+func ignoreCRMTransient(cctx *CallContext) bool {
+	if cctx.Override == edgeproto.CRMOverride_IGNORE_TRANSIENT_STATE ||
 		cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
 		return true
 	}
