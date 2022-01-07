@@ -1446,7 +1446,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
 		}
-		if in.DeletePrepare {
+		if !ignoreCRMTransient(cctx) && in.DeletePrepare {
 			return in.Key.BeingDeletedError()
 		}
 		features, err = GetCloudletFeatures(ctx, in.PlatformType)
