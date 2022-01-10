@@ -638,6 +638,10 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				return err
 			}
 		}
+		if !cur.AllowServerless {
+			// clear serverless config
+			cur.ServerlessConfig = nil
+		}
 		// for update, trigger regenerating deployment manifest
 		if cur.DeploymentGenerator != "" {
 			cur.DeploymentManifest = ""
