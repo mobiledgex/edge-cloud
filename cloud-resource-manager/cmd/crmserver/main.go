@@ -77,11 +77,6 @@ func main() {
 	nodeMgr.AccessKeyClient.InitFlags()
 	highAvailabilityManager.InitFlags()
 	flag.Parse()
-
-	if strings.Contains(*debugLevels, "mexos") {
-		log.WarnLog("mexos log level is obsolete, please use infra")
-		*debugLevels = strings.ReplaceAll(*debugLevels, "mexos", "infra")
-	}
 	log.SetDebugLevelStrs(*debugLevels)
 
 	sigChan = make(chan os.Signal, 1)
@@ -90,7 +85,6 @@ func main() {
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudletInfo.Key)
 	myCloudletInfo.CompatibilityVersion = cloudcommon.GetCRMCompatibilityVersion()
-
 	nodeType := node.NodeTypeCRM
 	nodeOps := []node.NodeOp{
 		node.WithName(*hostname),
@@ -99,8 +93,11 @@ func main() {
 		node.WithRegion(*region),
 		node.WithParentSpan(*parentSpan),
 	}
+
 	if highAvailabilityManager.HARole == string(process.HARoleSecondary) {
 		nodeOps = append(nodeOps, node.WithHARole(process.HARoleSecondary))
+	} else {
+		nodeOps = append(nodeOps, node.WithHARole(process.HARolePrimary))
 	}
 	ctx, span, err := nodeMgr.Init(nodeType, node.CertIssuerRegionalCloudlet, nodeOps...)
 	if err != nil {

@@ -219,3 +219,7 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 		time.Sleep(s.activePollInterval)
 	}
 }
+
+func (s *HighAvailabilityManager) DumpActive(ctx context.Context, req *edgeproto.DebugRequest) string {
+	return fmt.Sprintf("PlatformActive: %t", s.PlatformInstanceActive)
+}
