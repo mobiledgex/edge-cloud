@@ -108,7 +108,10 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	// test that TPE update with non-existent AppKey Organization, fails
 	tpeData.Fields = []string{
 		edgeproto.TrustPolicyExceptionFieldKeyAppKey,
-		edgeproto.TrustPolicyExceptionFieldKeyAppKeyOrganization}
+		edgeproto.TrustPolicyExceptionFieldKeyAppKeyOrganization,
+		edgeproto.TrustPolicyExceptionFieldOutboundSecurityRules,
+		edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesRemoteCidr}
+	tpeData.OutboundSecurityRules[0].RemoteCidr = "1.1.0.0/16"
 	tpeData.Key.AppKey.Organization = "MarsAppOrg"
 	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
 	require.NotNil(t, err)
