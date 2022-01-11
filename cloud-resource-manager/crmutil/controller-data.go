@@ -1287,7 +1287,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 	if old != nil && old.TrustPolicyState != new.TrustPolicyState {
 		switch new.TrustPolicyState {
 		case edgeproto.TrackedState_UPDATE_REQUESTED:
-			log.SpanLog(ctx, log.DebugLevelInfra, "Updating Trust Policy")
+			log.SpanLog(ctx, log.DebugLevelInfra, "Updating Trust Policy", "new state", new.TrustPolicyState)
 			if new.State != edgeproto.TrackedState_READY {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Update policy cannot be done until cloudlet is ready")
 				cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATE_ERROR
@@ -1295,6 +1295,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 			} else {
 				cloudletInfo.TrustPolicyState = edgeproto.TrackedState_UPDATING
 				cd.UpdateCloudletInfo(ctx, &cloudletInfo)
+				cd.updateTrustPolicyKeyworkers.NeedsWork(ctx, new.Key)
 			}
 		}
 	}
