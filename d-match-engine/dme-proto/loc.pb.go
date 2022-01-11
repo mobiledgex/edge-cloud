@@ -595,7 +595,9 @@ func (m *Loc) CopyInFields(src *Loc) int {
 		changed++
 	}
 	if src.Timestamp != nil {
-		m.Timestamp = &Timestamp{}
+		if m.Timestamp == nil {
+			m.Timestamp = &Timestamp{}
+		}
 		if m.Timestamp.Seconds != src.Timestamp.Seconds {
 			m.Timestamp.Seconds = src.Timestamp.Seconds
 			changed++
@@ -651,7 +653,9 @@ func (m *Sample) CopyInFields(src *Sample) int {
 		changed++
 	}
 	if src.Timestamp != nil {
-		m.Timestamp = &Timestamp{}
+		if m.Timestamp == nil {
+			m.Timestamp = &Timestamp{}
+		}
 		if m.Timestamp.Seconds != src.Timestamp.Seconds {
 			m.Timestamp.Seconds = src.Timestamp.Seconds
 			changed++
@@ -739,7 +743,9 @@ func (m *Statistics) CopyInFields(src *Statistics) int {
 		changed++
 	}
 	if src.Timestamp != nil {
-		m.Timestamp = &Timestamp{}
+		if m.Timestamp == nil {
+			m.Timestamp = &Timestamp{}
+		}
 		if m.Timestamp.Seconds != src.Timestamp.Seconds {
 			m.Timestamp.Seconds = src.Timestamp.Seconds
 			changed++
