@@ -3252,7 +3252,9 @@ func (m *AppInst) CopyInFields(src *AppInst) int {
 		}
 		if _, set := fmap["3.8"]; set {
 			if src.CloudletLoc.Timestamp != nil {
-				m.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
+				if m.CloudletLoc.Timestamp == nil {
+					m.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
+				}
 				if _, set := fmap["3.8.1"]; set {
 					if m.CloudletLoc.Timestamp.Seconds != src.CloudletLoc.Timestamp.Seconds {
 						m.CloudletLoc.Timestamp.Seconds = src.CloudletLoc.Timestamp.Seconds

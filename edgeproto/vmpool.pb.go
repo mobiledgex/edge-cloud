@@ -1410,7 +1410,9 @@ func (m *VM) CopyInFields(src *VM) int {
 		changed++
 	}
 	if src.Flavor != nil {
-		m.Flavor = &FlavorInfo{}
+		if m.Flavor == nil {
+			m.Flavor = &FlavorInfo{}
+		}
 		if m.Flavor.Name != src.Flavor.Name {
 			m.Flavor.Name = src.Flavor.Name
 			changed++
@@ -2883,7 +2885,9 @@ func (m *VMPoolMember) CopyInFields(src *VMPoolMember) int {
 		changed++
 	}
 	if src.Vm.Flavor != nil {
-		m.Vm.Flavor = &FlavorInfo{}
+		if m.Vm.Flavor == nil {
+			m.Vm.Flavor = &FlavorInfo{}
+		}
 		if m.Vm.Flavor.Name != src.Vm.Flavor.Name {
 			m.Vm.Flavor.Name = src.Vm.Flavor.Name
 			changed++

@@ -230,6 +230,24 @@ func TestAppApi(t *testing.T) {
 	}
 	_, err = apis.appApi.UpdateApp(ctx, &app)
 	require.Nil(t, err)
+	// update vcpus, only specifying vcpus field, and not subfields
+	app.ServerlessConfig.Vcpus = *edgeproto.NewUdec64(6, 0)
+	app.ServerlessConfig.Ram = 0
+	app.ServerlessConfig.MinReplicas = 0
+	app.Fields = []string{
+		edgeproto.AppFieldAllowServerless,
+		edgeproto.AppFieldServerlessConfig,
+		edgeproto.AppFieldServerlessConfigVcpus,
+	}
+	_, err = apis.appApi.UpdateApp(ctx, &app)
+	require.Nil(t, err)
+	storedApp = edgeproto.App{}
+	found = apis.appApi.Get(app.GetKey(), &storedApp)
+	require.True(t, found)
+	require.Equal(t, app.ServerlessConfig.Vcpus, storedApp.ServerlessConfig.Vcpus)
+	// check that other fields were not changed
+	require.Equal(t, uint64(24), storedApp.ServerlessConfig.Ram)
+	require.Equal(t, uint32(1), storedApp.ServerlessConfig.MinReplicas)
 	// disable serverless config
 	app.AllowServerless = false
 	app.Fields = []string{

@@ -20,4 +20,5 @@ message Udec64 {
   // Decimal value in nanos
   uint32 nanos = 2;
   option (protogen.custom_yaml_json_marshalers) = true;
+  option (protogen.copy_in_all_fields) = true;
 }

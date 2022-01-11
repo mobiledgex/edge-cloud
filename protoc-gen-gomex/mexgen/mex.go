@@ -927,9 +927,16 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 				subDesc = gensupport.GetDesc(m.gen, mapType.ValField.GetTypeName())
 			} else if gogoproto.IsNullable(field) {
 				typ := m.support.FQTypeName(m.gen, subDesc)
+				m.P("if m.", hierName, idx, " == nil {")
 				m.P("m.", hierName, idx, " = &", typ, "{}")
+				m.P("}")
 			}
-			m.generateCopyIn(append(parents, name+idx), append(nums, num), subDesc, append(visited, desc), hasGrpcFields)
+			subHasGrpcFields := hasGrpcFields
+			if GetCopyInAllFields(subDesc.DescriptorProto) {
+				// copy in all subdata, do so by ignoring fields checks
+				subHasGrpcFields = false
+			}
+			m.generateCopyIn(append(parents, name+idx), append(nums, num), subDesc, append(visited, desc), subHasGrpcFields)
 		case descriptor.FieldDescriptorProto_TYPE_GROUP:
 			// deprecated in proto3
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
@@ -2919,6 +2926,10 @@ func GetObjKey(message *descriptor.DescriptorProto) bool {
 
 func GetUsesOrg(message *descriptor.DescriptorProto) string {
 	return gensupport.GetStringExtension(message.Options, protogen.E_UsesOrg, "")
+}
+
+func GetCopyInAllFields(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_CopyInAllFields, false)
 }
 
 func GetBackend(field *descriptor.FieldDescriptorProto) bool {
