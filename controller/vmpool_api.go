@@ -91,12 +91,14 @@ func (s *VMPoolApi) UpdateVMPool(ctx context.Context, in *edgeproto.VMPool) (*ed
 }
 
 func (s *VMPoolApi) DeleteVMPool(ctx context.Context, in *edgeproto.VMPool) (res *edgeproto.Result, reterr error) {
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		if cur.DeletePrepare {
+		if !ignoreCRMTransient(cctx) && cur.DeletePrepare {
 			return in.Key.BeingDeletedError()
 		}
 		cur.DeletePrepare = true
