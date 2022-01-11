@@ -564,7 +564,7 @@ func (m *Timestamp) ValidateEnums() error {
 func (s *Timestamp) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *Timestamp) ClearRedisCachedFields() {
+func (s *Timestamp) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -648,7 +648,7 @@ func (s *Loc) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Loc) ClearRedisCachedFields() {
+func (s *Loc) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -720,7 +720,7 @@ func (s *Sample) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Sample) ClearRedisCachedFields() {
+func (s *Sample) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -799,7 +799,7 @@ func (s *Statistics) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Statistics) ClearRedisCachedFields() {
+func (s *Statistics) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

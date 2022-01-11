@@ -965,7 +965,7 @@ func (m *IssueCertRequest) ValidateEnums() error {
 func (s *IssueCertRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *IssueCertRequest) ClearRedisCachedFields() {
+func (s *IssueCertRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -995,7 +995,7 @@ func (m *IssueCertReply) ValidateEnums() error {
 func (s *IssueCertReply) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *IssueCertReply) ClearRedisCachedFields() {
+func (s *IssueCertReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1020,7 +1020,7 @@ func (m *GetCasRequest) ValidateEnums() error {
 func (s *GetCasRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *GetCasRequest) ClearRedisCachedFields() {
+func (s *GetCasRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1045,7 +1045,7 @@ func (m *GetCasReply) ValidateEnums() error {
 func (s *GetCasReply) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *GetCasReply) ClearRedisCachedFields() {
+func (s *GetCasReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1080,7 +1080,7 @@ func (m *UpgradeAccessKeyClientMsg) ValidateEnums() error {
 func (s *UpgradeAccessKeyClientMsg) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *UpgradeAccessKeyClientMsg) ClearRedisCachedFields() {
+func (s *UpgradeAccessKeyClientMsg) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1110,7 +1110,7 @@ func (m *UpgradeAccessKeyServerMsg) ValidateEnums() error {
 func (s *UpgradeAccessKeyServerMsg) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *UpgradeAccessKeyServerMsg) ClearRedisCachedFields() {
+func (s *UpgradeAccessKeyServerMsg) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1140,7 +1140,7 @@ func (m *AccessDataRequest) ValidateEnums() error {
 func (s *AccessDataRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AccessDataRequest) ClearRedisCachedFields() {
+func (s *AccessDataRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1165,7 +1165,7 @@ func (m *AccessDataReply) ValidateEnums() error {
 func (s *AccessDataReply) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AccessDataReply) ClearRedisCachedFields() {
+func (s *AccessDataReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

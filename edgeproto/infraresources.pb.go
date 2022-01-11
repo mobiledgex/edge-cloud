@@ -1081,7 +1081,7 @@ func (m *ContainerInfo) ValidateEnums() error {
 func (s *ContainerInfo) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ContainerInfo) ClearRedisCachedFields() {
+func (s *ContainerInfo) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1111,7 +1111,7 @@ func (m *IpAddr) ValidateEnums() error {
 func (s *IpAddr) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *IpAddr) ClearRedisCachedFields() {
+func (s *IpAddr) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1203,7 +1203,7 @@ func (s *VmInfo) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *VmInfo) ClearRedisCachedFields() {
+func (s *VmInfo) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1258,7 +1258,7 @@ func (m *InfraResource) ValidateEnums() error {
 func (s *InfraResource) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *InfraResource) ClearRedisCachedFields() {
+func (s *InfraResource) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1337,7 +1337,7 @@ func (m *NodeInfo) ValidateEnums() error {
 func (s *NodeInfo) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *NodeInfo) ClearRedisCachedFields() {
+func (s *NodeInfo) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1407,7 +1407,7 @@ func (s *ClusterInstRefKey) ClearTagged(tags map[string]struct{}) {
 	s.ClusterKey.ClearTagged(tags)
 }
 
-func (s *ClusterInstRefKey) ClearRedisCachedFields() {
+func (s *ClusterInstRefKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1494,7 +1494,7 @@ func (s *AppInstRefKey) ClearTagged(tags map[string]struct{}) {
 	s.ClusterInstKey.ClearTagged(tags)
 }
 
-func (s *AppInstRefKey) ClearRedisCachedFields() {
+func (s *AppInstRefKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1539,7 +1539,7 @@ func (s *InfraResources) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *InfraResources) ClearRedisCachedFields() {
+func (s *InfraResources) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1659,7 +1659,7 @@ func (s *InfraResourcesSnapshot) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *InfraResourcesSnapshot) ClearRedisCachedFields() {
+func (s *InfraResourcesSnapshot) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

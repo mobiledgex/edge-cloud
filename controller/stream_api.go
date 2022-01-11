@@ -28,7 +28,6 @@ type streamSend struct {
 	mux       sync.Mutex
 	crmPubSub *redis.PubSub
 	crmMsgCh  <-chan *redis.Message
-	newStream bool
 }
 
 type StreamObjApi struct {
@@ -102,7 +101,7 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 	}
 	if out == 0 {
 		// stream key does not exist
-		return nil
+		return fmt.Errorf("Stream %s does not exist", streamKey)
 	}
 
 	streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
@@ -181,7 +180,7 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 	}
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
+func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
 
 	// Start subscription to redis channel identified by stream key.
@@ -235,9 +234,18 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		newStream = true
 	}
 
-	// Flag to figure out if new stream was created or it is
-	// continuation of an existing stream
-	streamSendObj.newStream = newStream
+	// Stream in progress check
+	// ========================
+	// If crm override is specified, then ignore the check.
+	// This is required in case there are some stale unterminated streams
+	if !ignoreCRM(cctx) && !newStream {
+		// * If undo was set from the same object, then ignore the check
+		// * Else if undo was set from different object (in case of autocluster),
+		//   then perform the check
+		if !cctx.AutoCluster && !cctx.Undo {
+			return nil, nil, fmt.Errorf("An action is already in progress for the object %s", streamKey)
+		}
+	}
 
 	outCb := &CbWrapper{
 		GenericCb: inCb,
@@ -245,21 +253,25 @@ func (s *StreamObjApi) startStream(ctx context.Context, streamKey string, inCb G
 		streamKey: streamKey,
 	}
 
-	log.SpanLog(ctx, log.DebugLevelApi, "Started new stream", "key", streamKey, "new stream", streamSendObj.newStream)
+	log.SpanLog(ctx, log.DebugLevelApi, "Started new stream", "key", streamKey, "new stream", newStream)
 	return &streamSendObj, outCb, nil
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, streamKey string, streamSendObj *streamSend, objErr error) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", streamKey, "err", objErr)
+func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", streamKey, "cctx", cctx, "err", objErr)
 	if streamSendObj == nil {
 		return nil
 	}
-	streamSendObj.mux.Lock()
-	defer streamSendObj.mux.Unlock()
-	if !streamSendObj.newStream {
-		// existing stream, skip closing it as it is handled elsewhere
+
+	// * If called as part of autocluster undo, then proceed as it was called
+	//   from the context of appInst action
+	// * Else, don't proceed because caller will perform the same operation
+	if !cctx.AutoCluster && cctx.Undo {
 		return nil
 	}
+
+	streamSendObj.mux.Lock()
+	defer streamSendObj.mux.Unlock()
 	if objErr != nil {
 		streamMsg := map[string]interface{}{
 			StreamMsgTypeError: objErr.Error(),

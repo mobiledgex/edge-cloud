@@ -1875,9 +1875,6 @@ func (s *SettingsStoreImpl) parseGetData(val []byte, buf *Settings) bool {
 func (s *SettingsStoreImpl) STMPut(stm concurrency.STM, obj *Settings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Settings", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Settings json marshal failed", "obj", obj, "err", err)
@@ -2276,7 +2273,7 @@ func (s *Settings) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Settings) ClearRedisCachedFields() {
+func (s *Settings) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2306,7 +2303,7 @@ func (m *CollectionInterval) ValidateEnums() error {
 func (s *CollectionInterval) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *CollectionInterval) ClearRedisCachedFields() {
+func (s *CollectionInterval) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

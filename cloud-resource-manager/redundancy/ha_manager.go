@@ -67,7 +67,7 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	if err != nil {
 		return err
 	}
-	if err := rediscache.IsServerReady(s.redisClient); err != nil {
+	if err := rediscache.IsServerReady(s.redisClient, rediscache.MaxRedisWait); err != nil {
 		return err
 	}
 

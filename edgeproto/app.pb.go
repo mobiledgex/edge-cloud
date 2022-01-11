@@ -1974,7 +1974,7 @@ func (m *AppKey) ValidateEnums() error {
 func (s *AppKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AppKey) ClearRedisCachedFields() {
+func (s *AppKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2004,7 +2004,7 @@ func (m *ConfigFile) ValidateEnums() error {
 func (s *ConfigFile) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ConfigFile) ClearRedisCachedFields() {
+func (s *ConfigFile) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3230,9 +3230,6 @@ func (s *AppStoreImpl) parseGetData(val []byte, buf *App) bool {
 func (s *AppStoreImpl) STMPut(stm concurrency.STM, obj *App, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("App", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("App json marshal failed", "obj", obj, "err", err)
@@ -3815,7 +3812,7 @@ func (s *App) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *App) ClearRedisCachedFields() {
+func (s *App) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3876,7 +3873,7 @@ func (s *ServerlessConfig) ClearTagged(tags map[string]struct{}) {
 	s.Vcpus.ClearTagged(tags)
 }
 
-func (s *ServerlessConfig) ClearRedisCachedFields() {
+func (s *ServerlessConfig) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3918,7 +3915,7 @@ func (s *AppAutoProvPolicy) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
 }
 
-func (s *AppAutoProvPolicy) ClearRedisCachedFields() {
+func (s *AppAutoProvPolicy) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3960,7 +3957,7 @@ func (s *AppAlertPolicy) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
 }
 
-func (s *AppAlertPolicy) ClearRedisCachedFields() {
+func (s *AppAlertPolicy) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -4197,7 +4194,7 @@ func (s *DeploymentCloudletRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *DeploymentCloudletRequest) ClearRedisCachedFields() {
+func (s *DeploymentCloudletRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

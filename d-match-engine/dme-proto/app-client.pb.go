@@ -4959,7 +4959,7 @@ func (m *RegisterClientRequest) ValidateEnums() error {
 func (s *RegisterClientRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *RegisterClientRequest) ClearRedisCachedFields() {
+func (s *RegisterClientRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5030,7 +5030,7 @@ func (m *RegisterClientReply) ValidateEnums() error {
 func (s *RegisterClientReply) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *RegisterClientReply) ClearRedisCachedFields() {
+func (s *RegisterClientReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5146,7 +5146,7 @@ func (s *FindCloudletRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *FindCloudletRequest) ClearRedisCachedFields() {
+func (s *FindCloudletRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5204,7 +5204,7 @@ func (m *PlatformFindCloudletRequest) ValidateEnums() error {
 func (s *PlatformFindCloudletRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *PlatformFindCloudletRequest) ClearRedisCachedFields() {
+func (s *PlatformFindCloudletRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5355,7 +5355,7 @@ func (s *FindCloudletReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *FindCloudletReply) ClearRedisCachedFields() {
+func (s *FindCloudletReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5476,7 +5476,7 @@ func (s *VerifyLocationRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *VerifyLocationRequest) ClearRedisCachedFields() {
+func (s *VerifyLocationRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5540,7 +5540,7 @@ func (m *VerifyLocationReply) ValidateEnums() error {
 func (s *VerifyLocationReply) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *VerifyLocationReply) ClearRedisCachedFields() {
+func (s *VerifyLocationReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5593,7 +5593,7 @@ func (m *GetLocationRequest) ValidateEnums() error {
 func (s *GetLocationRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *GetLocationRequest) ClearRedisCachedFields() {
+func (s *GetLocationRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5717,7 +5717,7 @@ func (s *GetLocationReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *GetLocationReply) ClearRedisCachedFields() {
+func (s *GetLocationReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5838,7 +5838,7 @@ func (s *AppInstListRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AppInstListRequest) ClearRedisCachedFields() {
+func (s *AppInstListRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -5910,7 +5910,7 @@ func (s *Appinstance) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Appinstance) ClearRedisCachedFields() {
+func (s *Appinstance) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6035,7 +6035,7 @@ func (s *CloudletLocation) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *CloudletLocation) ClearRedisCachedFields() {
+func (s *CloudletLocation) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6113,7 +6113,7 @@ func (s *AppInstListReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AppInstListReply) ClearRedisCachedFields() {
+func (s *AppInstListReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6161,7 +6161,7 @@ func (m *FqdnListRequest) ValidateEnums() error {
 func (s *FqdnListRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *FqdnListRequest) ClearRedisCachedFields() {
+func (s *FqdnListRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6216,7 +6216,7 @@ func (m *AppFqdn) ValidateEnums() error {
 func (s *AppFqdn) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AppFqdn) ClearRedisCachedFields() {
+func (s *AppFqdn) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6294,7 +6294,7 @@ func (s *FqdnListReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *FqdnListReply) ClearRedisCachedFields() {
+func (s *FqdnListReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6405,7 +6405,7 @@ func (s *AppOfficialFqdnRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AppOfficialFqdnRequest) ClearRedisCachedFields() {
+func (s *AppOfficialFqdnRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6493,7 +6493,7 @@ func (s *AppOfficialFqdnReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AppOfficialFqdnReply) ClearRedisCachedFields() {
+func (s *AppOfficialFqdnReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6559,7 +6559,7 @@ func (m *DynamicLocGroupRequest) ValidateEnums() error {
 func (s *DynamicLocGroupRequest) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *DynamicLocGroupRequest) ClearRedisCachedFields() {
+func (s *DynamicLocGroupRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6620,7 +6620,7 @@ func (m *DynamicLocGroupReply) ValidateEnums() error {
 func (s *DynamicLocGroupReply) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *DynamicLocGroupReply) ClearRedisCachedFields() {
+func (s *DynamicLocGroupReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6708,7 +6708,7 @@ func (s *QosPosition) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *QosPosition) ClearRedisCachedFields() {
+func (s *QosPosition) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6788,7 +6788,7 @@ func (m *BandSelection) ValidateEnums() error {
 func (s *BandSelection) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *BandSelection) ClearRedisCachedFields() {
+func (s *BandSelection) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -6917,7 +6917,7 @@ func (s *QosPositionRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *QosPositionRequest) ClearRedisCachedFields() {
+func (s *QosPositionRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -7050,7 +7050,7 @@ func (s *QosPositionKpiResult) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *QosPositionKpiResult) ClearRedisCachedFields() {
+func (s *QosPositionKpiResult) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -7128,7 +7128,7 @@ func (s *QosPositionKpiReply) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *QosPositionKpiReply) ClearRedisCachedFields() {
+func (s *QosPositionKpiReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -7341,7 +7341,7 @@ func (s *ClientEdgeEvent) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *ClientEdgeEvent) ClearRedisCachedFields() {
+func (s *ClientEdgeEvent) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -7577,7 +7577,7 @@ func (s *ServerEdgeEvent) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *ServerEdgeEvent) ClearRedisCachedFields() {
+func (s *ServerEdgeEvent) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

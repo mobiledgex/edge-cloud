@@ -75,6 +75,13 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				changedToOnline = true
 			}
 		}
+		// Clear fields that are cached in Redis as they should not be stored in DB
+		in.ClearRedisOnlyFields()
+		changeCount := info.CopyInFields(in)
+		if changeCount == 0 {
+			// nothing changed
+			return nil
+		}
 		s.store.STMPut(stm, in)
 		return nil
 	})

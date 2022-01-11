@@ -885,7 +885,7 @@ func (m *CloudletMgmtNode) ValidateEnums() error {
 func (s *CloudletMgmtNode) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *CloudletMgmtNode) ClearRedisCachedFields() {
+func (s *CloudletMgmtNode) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -939,7 +939,7 @@ func (s *RunCmd) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *RunCmd) ClearRedisCachedFields() {
+func (s *RunCmd) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -967,7 +967,7 @@ func (s *RunVMConsole) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *RunVMConsole) ClearRedisCachedFields() {
+func (s *RunVMConsole) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1019,7 +1019,7 @@ func (m *ShowLog) ValidateEnums() error {
 func (s *ShowLog) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ShowLog) ClearRedisCachedFields() {
+func (s *ShowLog) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1218,7 +1218,7 @@ func (s *ExecRequest) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *ExecRequest) ClearRedisCachedFields() {
+func (s *ExecRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

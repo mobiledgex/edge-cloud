@@ -1643,7 +1643,7 @@ func (m *FlowSettings) ValidateEnums() error {
 func (s *FlowSettings) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *FlowSettings) ClearRedisCachedFields() {
+func (s *FlowSettings) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1743,7 +1743,7 @@ func (s *FlowRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 	s.RateLimitKey.ClearTagged(tags)
 }
 
-func (s *FlowRateLimitSettingsKey) ClearRedisCachedFields() {
+func (s *FlowRateLimitSettingsKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2066,9 +2066,6 @@ func (s *FlowRateLimitSettingsStoreImpl) parseGetData(val []byte, buf *FlowRateL
 
 func (s *FlowRateLimitSettingsStoreImpl) STMPut(stm concurrency.STM, obj *FlowRateLimitSettings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("FlowRateLimitSettings", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -2486,7 +2483,7 @@ func (s *FlowRateLimitSettings) ClearTagged(tags map[string]struct{}) {
 	s.Settings.ClearTagged(tags)
 }
 
-func (s *FlowRateLimitSettings) ClearRedisCachedFields() {
+func (s *FlowRateLimitSettings) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2551,7 +2548,7 @@ func (m *MaxReqsSettings) ValidateEnums() error {
 func (s *MaxReqsSettings) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *MaxReqsSettings) ClearRedisCachedFields() {
+func (s *MaxReqsSettings) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2651,7 +2648,7 @@ func (s *MaxReqsRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 	s.RateLimitKey.ClearTagged(tags)
 }
 
-func (s *MaxReqsRateLimitSettingsKey) ClearRedisCachedFields() {
+func (s *MaxReqsRateLimitSettingsKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2974,9 +2971,6 @@ func (s *MaxReqsRateLimitSettingsStoreImpl) parseGetData(val []byte, buf *MaxReq
 
 func (s *MaxReqsRateLimitSettingsStoreImpl) STMPut(stm concurrency.STM, obj *MaxReqsRateLimitSettings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("MaxReqsRateLimitSettings", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -3394,7 +3388,7 @@ func (s *MaxReqsRateLimitSettings) ClearTagged(tags map[string]struct{}) {
 	s.Settings.ClearTagged(tags)
 }
 
-func (s *MaxReqsRateLimitSettings) ClearRedisCachedFields() {
+func (s *MaxReqsRateLimitSettings) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3501,7 +3495,7 @@ func (m *RateLimitSettingsKey) ValidateEnums() error {
 func (s *RateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *RateLimitSettingsKey) ClearRedisCachedFields() {
+func (s *RateLimitSettingsKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3789,9 +3783,6 @@ func (s *RateLimitSettingsStoreImpl) parseGetData(val []byte, buf *RateLimitSett
 func (s *RateLimitSettingsStoreImpl) STMPut(stm concurrency.STM, obj *RateLimitSettings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("RateLimitSettings", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("RateLimitSettings json marshal failed", "obj", obj, "err", err)
@@ -3837,7 +3828,7 @@ func (s *RateLimitSettings) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *RateLimitSettings) ClearRedisCachedFields() {
+func (s *RateLimitSettings) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3870,7 +3861,7 @@ func (s *RateLimitSettingsData) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *RateLimitSettingsData) ClearRedisCachedFields() {
+func (s *RateLimitSettingsData) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

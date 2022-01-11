@@ -10,6 +10,7 @@ type ClusterInstInfoApi struct {
 	all   *AllApis
 	sync  *Sync
 	store edgeproto.ClusterInstInfoStore
+	cache edgeproto.ClusterInstInfoCache
 }
 
 func NewClusterInstInfoApi(sync *Sync, all *AllApis) *ClusterInstInfoApi {
@@ -17,6 +18,7 @@ func NewClusterInstInfoApi(sync *Sync, all *AllApis) *ClusterInstInfoApi {
 	clusterInstInfoApi.all = all
 	clusterInstInfoApi.sync = sync
 	clusterInstInfoApi.store = edgeproto.NewClusterInstInfoStore(sync.store)
+	edgeproto.InitClusterInstInfoCache(&clusterInstInfoApi.cache)
 	return &clusterInstInfoApi
 }
 

@@ -1089,7 +1089,7 @@ func (c *ClusterInstCache) UsesOrg(org string) bool {
 	return false
 }
 
-func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState dme.CloudletState, timeout time.Duration) error {
+func (c *CloudletInfoCache) WaitForCloudletState(ctx context.Context, key *CloudletKey, targetState dme.CloudletState, timeout time.Duration) error {
 	curState := dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 	done := make(chan bool, 1)
 

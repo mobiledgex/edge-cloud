@@ -763,7 +763,7 @@ func (s *DebugRequest) ClearTagged(tags map[string]struct{}) {
 	s.Node.ClearTagged(tags)
 }
 
-func (s *DebugRequest) ClearRedisCachedFields() {
+func (s *DebugRequest) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -834,7 +834,7 @@ func (s *DebugReply) ClearTagged(tags map[string]struct{}) {
 	s.Node.ClearTagged(tags)
 }
 
-func (s *DebugReply) ClearRedisCachedFields() {
+func (s *DebugReply) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -879,7 +879,7 @@ func (s *DebugData) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *DebugData) ClearRedisCachedFields() {
+func (s *DebugData) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

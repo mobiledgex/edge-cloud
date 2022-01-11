@@ -814,7 +814,7 @@ func (m *ResTagTableKey) ValidateEnums() error {
 func (s *ResTagTableKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ResTagTableKey) ClearRedisCachedFields() {
+func (s *ResTagTableKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1189,9 +1189,6 @@ func (s *ResTagTableStoreImpl) parseGetData(val []byte, buf *ResTagTable) bool {
 
 func (s *ResTagTableStoreImpl) STMPut(stm concurrency.STM, obj *ResTagTable, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ResTagTable", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -1612,7 +1609,7 @@ func (s *ResTagTable) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *ResTagTable) ClearRedisCachedFields() {
+func (s *ResTagTable) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

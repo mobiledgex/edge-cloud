@@ -101,7 +101,7 @@ func TestController(t *testing.T) {
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 	for ii, _ := range testutil.CloudletInfoData {
-		err := apis.cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
+		err := apis.cloudletInfoApi.cache.WaitForCloudletState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
 		require.Nil(t, err)
 	}
 

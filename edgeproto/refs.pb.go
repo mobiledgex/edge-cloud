@@ -1111,7 +1111,7 @@ func (s *VMResource) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *VMResource) ClearRedisCachedFields() {
+func (s *VMResource) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1466,9 +1466,6 @@ func (s *CloudletRefsStoreImpl) parseGetData(val []byte, buf *CloudletRefs) bool
 
 func (s *CloudletRefsStoreImpl) STMPut(stm concurrency.STM, obj *CloudletRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletRefs", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -1901,7 +1898,7 @@ func (s *CloudletRefs) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *CloudletRefs) ClearRedisCachedFields() {
+func (s *CloudletRefs) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2001,7 +1998,7 @@ func (s *ClusterRefsAppInstKey) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
 }
 
-func (s *ClusterRefsAppInstKey) ClearRedisCachedFields() {
+func (s *ClusterRefsAppInstKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2242,9 +2239,6 @@ func (s *ClusterRefsStoreImpl) parseGetData(val []byte, buf *ClusterRefs) bool {
 
 func (s *ClusterRefsStoreImpl) STMPut(stm concurrency.STM, obj *ClusterRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterRefs", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -2667,7 +2661,7 @@ func (s *ClusterRefs) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *ClusterRefs) ClearRedisCachedFields() {
+func (s *ClusterRefs) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2928,9 +2922,6 @@ func (s *AppInstRefsStoreImpl) parseGetData(val []byte, buf *AppInstRefs) bool {
 
 func (s *AppInstRefsStoreImpl) STMPut(stm concurrency.STM, obj *AppInstRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstRefs", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -3343,7 +3334,7 @@ func (s *AppInstRefs) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *AppInstRefs) ClearRedisCachedFields() {
+func (s *AppInstRefs) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

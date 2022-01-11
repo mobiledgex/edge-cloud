@@ -174,4 +174,5 @@ func testinit() {
 
 func testfinish() {
 	services = Services{}
+	redisClient = nil
 }

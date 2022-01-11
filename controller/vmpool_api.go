@@ -254,8 +254,8 @@ func validateVMNetInfo(vmCur, vmNew *edgeproto.VM) error {
 	return nil
 }
 
-func (s *VMPoolApi) startVMPoolStream(ctx context.Context, key *edgeproto.VMPoolKey) (*streamSend, error) {
-	streamSendObj, _, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), nil)
+func (s *VMPoolApi) startVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey) (*streamSend, error) {
+	streamSendObj, _, err := s.all.streamObjApi.startStream(ctx, cctx, key.StreamKey(), nil)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start VMPool stream", "err", err)
 		return nil, err
@@ -263,8 +263,8 @@ func (s *VMPoolApi) startVMPoolStream(ctx context.Context, key *edgeproto.VMPool
 	return streamSendObj, nil
 }
 
-func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop VMPool stream", "err", err)
 	}
 }
@@ -324,14 +324,14 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	sendObj, err := s.startVMPoolStream(ctx, key)
+	sendObj, err := s.startVMPoolStream(ctx, cctx, key)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopVMPoolStream(ctx, key, sendObj, reterr)
+		s.stopVMPoolStream(ctx, cctx, key, sendObj, reterr)
 	}()
-	err = s.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY,
+	err = s.all.vmPoolInfoApi.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY,
 		UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 		s.all.settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(),
 		"Updated VM Pool Successfully", nil,

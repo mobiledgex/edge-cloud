@@ -223,7 +223,7 @@ func startServices() error {
 	if err != nil {
 		return err
 	}
-	if err := rediscache.IsServerReady(redisClient); err != nil {
+	if err := rediscache.IsServerReady(redisClient, rediscache.MaxRedisWait); err != nil {
 		return err
 	}
 

@@ -649,9 +649,6 @@ func (s *AlertStoreImpl) parseGetData(val []byte, buf *Alert) bool {
 func (s *AlertStoreImpl) STMPut(stm concurrency.STM, obj *Alert, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Alert", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Alert json marshal failed", "obj", obj, "err", err)
@@ -1078,7 +1075,7 @@ func (s *Alert) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Alert) ClearRedisCachedFields() {
+func (s *Alert) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

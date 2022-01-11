@@ -499,7 +499,7 @@ func (m *MetricTag) ValidateEnums() error {
 func (s *MetricTag) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *MetricTag) ClearRedisCachedFields() {
+func (s *MetricTag) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -524,7 +524,7 @@ func (m *MetricVal) ValidateEnums() error {
 func (s *MetricVal) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *MetricVal) ClearRedisCachedFields() {
+func (s *MetricVal) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -612,7 +612,7 @@ func (s *Metric) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Metric) ClearRedisCachedFields() {
+func (s *Metric) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

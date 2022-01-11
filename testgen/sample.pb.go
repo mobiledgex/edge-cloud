@@ -1163,7 +1163,7 @@ func (m *NestedMessage) ValidateEnums() error {
 func (s *NestedMessage) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *NestedMessage) ClearRedisCachedFields() {
+func (s *NestedMessage) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1218,7 +1218,7 @@ func (s *IncludeMessage) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *IncludeMessage) ClearRedisCachedFields() {
+func (s *IncludeMessage) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1243,7 +1243,7 @@ func (m *IncludeFields) ValidateEnums() error {
 func (s *IncludeFields) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *IncludeFields) ClearRedisCachedFields() {
+func (s *IncludeFields) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3150,7 +3150,7 @@ func (s *TestGen) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *TestGen) ClearRedisCachedFields() {
+func (s *TestGen) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -3192,7 +3192,7 @@ func (m *TestGen_InnerMessage) ValidateEnums() error {
 func (s *TestGen_InnerMessage) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *TestGen_InnerMessage) ClearRedisCachedFields() {
+func (s *TestGen_InnerMessage) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

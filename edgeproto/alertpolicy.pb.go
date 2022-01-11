@@ -712,7 +712,7 @@ func (m *AlertPolicyKey) ValidateEnums() error {
 func (s *AlertPolicyKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AlertPolicyKey) ClearRedisCachedFields() {
+func (s *AlertPolicyKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1276,9 +1276,6 @@ func (s *AlertPolicyStoreImpl) parseGetData(val []byte, buf *AlertPolicy) bool {
 func (s *AlertPolicyStoreImpl) STMPut(stm concurrency.STM, obj *AlertPolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AlertPolicy", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AlertPolicy json marshal failed", "obj", obj, "err", err)
@@ -1701,7 +1698,7 @@ func (s *AlertPolicy) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AlertPolicy) ClearRedisCachedFields() {
+func (s *AlertPolicy) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

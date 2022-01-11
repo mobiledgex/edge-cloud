@@ -316,7 +316,7 @@ func (m *Organization) ValidateEnums() error {
 func (s *Organization) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *Organization) ClearRedisCachedFields() {
+func (s *Organization) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -349,7 +349,7 @@ func (s *OrganizationData) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *OrganizationData) ClearRedisCachedFields() {
+func (s *OrganizationData) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

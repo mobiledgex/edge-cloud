@@ -477,7 +477,7 @@ func (m *ControllerKey) ValidateEnums() error {
 func (s *ControllerKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ControllerKey) ClearRedisCachedFields() {
+func (s *ControllerKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -787,9 +787,6 @@ func (s *ControllerStoreImpl) parseGetData(val []byte, buf *Controller) bool {
 
 func (s *ControllerStoreImpl) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Controller", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -1215,7 +1212,7 @@ func (s *Controller) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Controller) ClearRedisCachedFields() {
+func (s *Controller) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

@@ -10,6 +10,7 @@ type AppInstInfoApi struct {
 	all   *AllApis
 	sync  *Sync
 	store edgeproto.AppInstInfoStore
+	cache edgeproto.AppInstInfoCache
 }
 
 func NewAppInstInfoApi(sync *Sync, all *AllApis) *AppInstInfoApi {
@@ -17,6 +18,7 @@ func NewAppInstInfoApi(sync *Sync, all *AllApis) *AppInstInfoApi {
 	appInstInfoApi.all = all
 	appInstInfoApi.sync = sync
 	appInstInfoApi.store = edgeproto.NewAppInstInfoStore(sync.store)
+	edgeproto.InitAppInstInfoCache(&appInstInfoApi.cache)
 	return &appInstInfoApi
 }
 

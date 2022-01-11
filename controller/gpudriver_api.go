@@ -161,8 +161,8 @@ func (s *GPUDriverApi) undoStateChange(ctx context.Context, key *edgeproto.GPUDr
 	}
 }
 
-func (s *GPUDriverApi) startGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, inCb edgeproto.GPUDriverApi_CreateGPUDriverServer) (*streamSend, edgeproto.GPUDriverApi_CreateGPUDriverServer, error) {
-	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
+func (s *GPUDriverApi) startGPUDriverStream(ctx context.Context, cctx *CallContext, key *edgeproto.GPUDriverKey, inCb edgeproto.GPUDriverApi_CreateGPUDriverServer) (*streamSend, edgeproto.GPUDriverApi_CreateGPUDriverServer, error) {
+	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, cctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start GPU driver stream", "err", err)
 		return nil, inCb, err
@@ -170,8 +170,8 @@ func (s *GPUDriverApi) startGPUDriverStream(ctx context.Context, key *edgeproto.
 	return streamSendObj, outCb, err
 }
 
-func (s *GPUDriverApi) stopGPUDriverStream(ctx context.Context, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *GPUDriverApi) stopGPUDriverStream(ctx context.Context, cctx *CallContext, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop GPU driver stream", "err", err)
 	}
 }
@@ -181,6 +181,7 @@ func (s *StreamObjApi) StreamGPUDriver(key *edgeproto.GPUDriverKey, cb edgeproto
 }
 
 func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_CreateGPUDriverServer) (reterr error) {
+	cctx := DefCallContext()
 	ctx := cb.Context()
 	if err := in.Validate(edgeproto.GPUDriverAllFieldsMap); err != nil {
 		return err
@@ -191,12 +192,12 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, cctx, &gpuDriverKey, cb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
 	}()
 
 	credsMap := make(map[string]string)
@@ -283,6 +284,7 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 }
 
 func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDriverApi_UpdateGPUDriverServer) (reterr error) {
+	cctx := DefCallContext()
 	ctx := cb.Context()
 	err := in.ValidateUpdateFields()
 	if err != nil {
@@ -294,12 +296,12 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, cctx, &gpuDriverKey, cb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
 	}()
 
 	ignoreState := in.IgnoreState
@@ -412,12 +414,12 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		return err
 	}
 	gpuDriverKey := in.Key
-	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, cctx, &gpuDriverKey, cb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
 	}()
 
 	ignoreState := in.IgnoreState
@@ -526,18 +528,19 @@ func (s *GPUDriverApi) ShowGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPUDr
 }
 
 func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb edgeproto.GPUDriverApi_AddGPUDriverBuildServer) (reterr error) {
+	cctx := DefCallContext()
 	ctx := cb.Context()
 	if err := in.Validate(); err != nil {
 		return err
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, cctx, &gpuDriverKey, cb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
 	}()
 
 	ignoreState := in.IgnoreState
@@ -647,12 +650,12 @@ func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgep
 	}
 
 	gpuDriverKey := in.Key
-	sendObj, cb, err := s.startGPUDriverStream(ctx, &gpuDriverKey, cb)
+	sendObj, cb, err := s.startGPUDriverStream(ctx, cctx, &gpuDriverKey, cb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
 	}()
 
 	ignoreState := in.IgnoreState

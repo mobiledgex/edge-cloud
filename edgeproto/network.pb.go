@@ -781,7 +781,7 @@ func (m *Route) ValidateEnums() error {
 func (s *Route) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *Route) ClearRedisCachedFields() {
+func (s *Route) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -881,7 +881,7 @@ func (s *NetworkKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
-func (s *NetworkKey) ClearRedisCachedFields() {
+func (s *NetworkKey) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -1274,9 +1274,6 @@ func (s *NetworkStoreImpl) parseGetData(val []byte, buf *Network) bool {
 
 func (s *NetworkStoreImpl) STMPut(stm concurrency.STM, obj *Network, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Network", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -1683,9 +1680,6 @@ func (m *Network) SetKey(key *NetworkKey) {
 func CmpSortNetwork(a Network, b Network) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
-func (m *NetworkKey) StreamKey() string {
-	return fmt.Sprintf("NetworkStreamKey: %s", m.String())
-}
 
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
@@ -1713,7 +1707,7 @@ func (s *Network) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Network) ClearRedisCachedFields() {
+func (s *Network) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

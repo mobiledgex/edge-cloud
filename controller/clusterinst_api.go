@@ -204,8 +204,8 @@ func validateNumNodesForKubernetes(ctx context.Context, platformType edgeproto.P
 	return nil
 }
 
-func (s *ClusterInstApi) startClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
-	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, key.StreamKey(), inCb)
+func (s *ClusterInstApi) startClusterInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.ClusterInstKey, inCb edgeproto.ClusterInstApi_CreateClusterInstServer) (*streamSend, edgeproto.ClusterInstApi_CreateClusterInstServer, error) {
+	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, cctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start ClusterInst stream", "err", err)
 		return nil, inCb, err
@@ -213,8 +213,8 @@ func (s *ClusterInstApi) startClusterInstStream(ctx context.Context, key *edgepr
 	return streamSendObj, outCb, err
 }
 
-func (s *ClusterInstApi) stopClusterInstStream(ctx context.Context, key *edgeproto.ClusterInstKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *ClusterInstApi) stopClusterInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.ClusterInstKey, streamSendObj *streamSend, objErr error) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop ClusterInst stream", "err", err)
 	}
 }
@@ -733,12 +733,12 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	ctx := inCb.Context()
 
 	clusterInstKey := in.Key
-	sendObj, cb, err := s.startClusterInstStream(ctx, &clusterInstKey, inCb)
+	sendObj, cb, err := s.startClusterInstStream(ctx, cctx, &clusterInstKey, inCb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		s.stopClusterInstStream(ctx, cctx, &clusterInstKey, sendObj, reterr)
 		if reterr == nil {
 			s.RecordClusterInstEvent(cb.Context(), &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
@@ -1001,7 +1001,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = s.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions,
+	err = s.all.clusterInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions,
 		edgeproto.TrackedState_CREATE_ERROR, s.all.settingsApi.Get().CreateClusterInstTimeout.TimeDuration(),
 		"Created ClusterInst successfully", cb.Send,
 		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
@@ -1051,12 +1051,12 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	cctx.SetOverride(&in.CrmOverride)
 
 	clusterInstKey := in.Key
-	sendObj, cb, err := s.startClusterInstStream(ctx, &clusterInstKey, inCb)
+	sendObj, cb, err := s.startClusterInstStream(ctx, cctx, &clusterInstKey, inCb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		s.stopClusterInstStream(ctx, cctx, &clusterInstKey, sendObj, reterr)
 	}()
 
 	var inbuf edgeproto.ClusterInst
@@ -1165,7 +1165,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = s.all.clusterInstApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
+	err = s.all.clusterInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
 		UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 		s.all.settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(),
 		"Updated ClusterInst successfully", cb.Send,
@@ -1242,12 +1242,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	ctx := inCb.Context()
 
 	clusterInstKey := in.Key
-	sendObj, cb, err := s.startClusterInstStream(ctx, &clusterInstKey, inCb)
+	sendObj, cb, err := s.startClusterInstStream(ctx, cctx, &clusterInstKey, inCb)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		s.stopClusterInstStream(ctx, &clusterInstKey, sendObj, reterr)
+		s.stopClusterInstStream(ctx, cctx, &clusterInstKey, sendObj, reterr)
 		if reterr == nil {
 			s.RecordClusterInstEvent(context.WithValue(ctx, clusterInstKey, *in), &clusterInstKey, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
@@ -1404,7 +1404,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		s.all.alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
 		return nil
 	}
-	err = s.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
+	err = s.all.clusterInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
 		DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 		s.all.settingsApi.Get().DeleteClusterInstTimeout.TimeDuration(),
 		"Deleted ClusterInst successfully", cb.Send,
@@ -1491,7 +1491,7 @@ func ignoreCRM(cctx *CallContext) bool {
 }
 
 func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.ClusterInstInfo) {
-	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "state", in.State, "status", in.Status, "resources", in.Resources)
+	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "key", in.Key, "state", in.State, "status", in.Status, "resources", in.Resources)
 
 	// publish the received info object on redis
 	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())

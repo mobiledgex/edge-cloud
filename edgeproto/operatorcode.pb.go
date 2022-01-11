@@ -536,9 +536,6 @@ func (s *OperatorCodeStoreImpl) parseGetData(val []byte, buf *OperatorCode) bool
 func (s *OperatorCodeStoreImpl) STMPut(stm concurrency.STM, obj *OperatorCode, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("OperatorCode", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("OperatorCode json marshal failed", "obj", obj, "err", err)
@@ -933,7 +930,7 @@ func (m *OperatorCode) ValidateEnums() error {
 func (s *OperatorCode) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *OperatorCode) ClearRedisCachedFields() {
+func (s *OperatorCode) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

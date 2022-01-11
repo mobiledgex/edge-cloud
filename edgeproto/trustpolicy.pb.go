@@ -641,7 +641,7 @@ func (m *SecurityRule) ValidateEnums() error {
 func (s *SecurityRule) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *SecurityRule) ClearRedisCachedFields() {
+func (s *SecurityRule) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -998,9 +998,6 @@ func (s *TrustPolicyStoreImpl) parseGetData(val []byte, buf *TrustPolicy) bool {
 
 func (s *TrustPolicyStoreImpl) STMPut(stm concurrency.STM, obj *TrustPolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("TrustPolicy", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -1407,9 +1404,6 @@ func (m *TrustPolicy) SetKey(key *PolicyKey) {
 func CmpSortTrustPolicy(a TrustPolicy, b TrustPolicy) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
-func (m *PolicyKey) StreamKey() string {
-	return fmt.Sprintf("TrustPolicyStreamKey: %s", m.String())
-}
 
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
@@ -1434,7 +1428,7 @@ func (s *TrustPolicy) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *TrustPolicy) ClearRedisCachedFields() {
+func (s *TrustPolicy) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 

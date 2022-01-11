@@ -24,7 +24,7 @@ func NewClient(redisAddr string) (*redis.Client, error) {
 	return client, nil
 }
 
-func IsServerReady(client *redis.Client) error {
+func IsServerReady(client *redis.Client, timeout time.Duration) error {
 	start := time.Now()
 	var err error
 	for {
@@ -33,7 +33,7 @@ func IsServerReady(client *redis.Client) error {
 			return nil
 		}
 		elapsed := time.Since(start)
-		if elapsed >= (MaxRedisWait) {
+		if elapsed >= (timeout) {
 			break
 		}
 		time.Sleep(200 * time.Millisecond)

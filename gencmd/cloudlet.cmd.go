@@ -67,9 +67,6 @@ func CloudletHideTags(in *edgeproto.Cloudlet) {
 		in.Errors = nil
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Status = edgeproto.StatusInfo{}
-	}
-	if _, found := tags["nocmp"]; found {
 		in.NotifySrvAddr = ""
 	}
 	if _, found := tags["nocmp"]; found {
@@ -2641,7 +2638,6 @@ var CloudletSpecialArgs = map[string]string{
 	"errors":               "StringArray",
 	"fields":               "StringArray",
 	"gpuconfig.properties": "StringToString",
-	"status.msgs":          "StringArray",
 }
 var FlavorMatchRequiredArgs = []string{
 	"cloudlet-org",

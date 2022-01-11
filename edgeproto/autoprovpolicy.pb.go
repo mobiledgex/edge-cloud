@@ -1675,9 +1675,6 @@ func (s *AutoProvPolicyStoreImpl) parseGetData(val []byte, buf *AutoProvPolicy) 
 func (s *AutoProvPolicyStoreImpl) STMPut(stm concurrency.STM, obj *AutoProvPolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoProvPolicy", obj.GetKey())
 
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
-
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AutoProvPolicy json marshal failed", "obj", obj, "err", err)
@@ -2214,7 +2211,7 @@ func (s *AutoProvPolicy) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AutoProvPolicy) ClearRedisCachedFields() {
+func (s *AutoProvPolicy) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2314,7 +2311,7 @@ func (s *AutoProvCloudlet) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *AutoProvCloudlet) ClearRedisCachedFields() {
+func (s *AutoProvCloudlet) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2403,7 +2400,7 @@ func (s *AutoProvCount) ClearTagged(tags map[string]struct{}) {
 	s.DeployNowKey.ClearTagged(tags)
 }
 
-func (s *AutoProvCount) ClearRedisCachedFields() {
+func (s *AutoProvCount) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2464,7 +2461,7 @@ func (s *AutoProvCounts) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AutoProvCounts) ClearRedisCachedFields() {
+func (s *AutoProvCounts) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2534,7 +2531,7 @@ func (s *AutoProvPolicyCloudlet) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
-func (s *AutoProvPolicyCloudlet) ClearRedisCachedFields() {
+func (s *AutoProvPolicyCloudlet) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
@@ -2930,9 +2927,6 @@ func (s *AutoProvInfoStoreImpl) parseGetData(val []byte, buf *AutoProvInfo) bool
 
 func (s *AutoProvInfoStoreImpl) STMPut(stm concurrency.STM, obj *AutoProvInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoProvInfo", obj.GetKey())
-
-	// Clear fields that are cached in Redis as they should not be stored in DB
-	obj.ClearRedisCachedFields()
 
 	val, err := json.Marshal(obj)
 	if err != nil {
@@ -3382,7 +3376,7 @@ func (s *AutoProvInfo) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AutoProvInfo) ClearRedisCachedFields() {
+func (s *AutoProvInfo) ClearRedisOnlyFields() {
 	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
