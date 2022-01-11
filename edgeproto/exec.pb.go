@@ -892,7 +892,9 @@ func (m *RunCmd) CopyInFields(src *RunCmd) int {
 		changed++
 	}
 	if src.CloudletMgmtNode != nil {
-		m.CloudletMgmtNode = &CloudletMgmtNode{}
+		if m.CloudletMgmtNode == nil {
+			m.CloudletMgmtNode = &CloudletMgmtNode{}
+		}
 		if m.CloudletMgmtNode.Type != src.CloudletMgmtNode.Type {
 			m.CloudletMgmtNode.Type = src.CloudletMgmtNode.Type
 			changed++
@@ -1058,13 +1060,17 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		changed++
 	}
 	if src.Cmd != nil {
-		m.Cmd = &RunCmd{}
+		if m.Cmd == nil {
+			m.Cmd = &RunCmd{}
+		}
 		if m.Cmd.Command != src.Cmd.Command {
 			m.Cmd.Command = src.Cmd.Command
 			changed++
 		}
 		if src.Cmd.CloudletMgmtNode != nil {
-			m.Cmd.CloudletMgmtNode = &CloudletMgmtNode{}
+			if m.Cmd.CloudletMgmtNode == nil {
+				m.Cmd.CloudletMgmtNode = &CloudletMgmtNode{}
+			}
 			if m.Cmd.CloudletMgmtNode.Type != src.Cmd.CloudletMgmtNode.Type {
 				m.Cmd.CloudletMgmtNode.Type = src.Cmd.CloudletMgmtNode.Type
 				changed++
@@ -1082,7 +1088,9 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		changed++
 	}
 	if src.Log != nil {
-		m.Log = &ShowLog{}
+		if m.Log == nil {
+			m.Log = &ShowLog{}
+		}
 		if m.Log.Since != src.Log.Since {
 			m.Log.Since = src.Log.Since
 			changed++
@@ -1104,7 +1112,9 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
 		changed++
 	}
 	if src.Console != nil {
-		m.Console = &RunVMConsole{}
+		if m.Console == nil {
+			m.Console = &RunVMConsole{}
+		}
 		if m.Console.Url != src.Console.Url {
 			m.Console.Url = src.Console.Url
 			changed++

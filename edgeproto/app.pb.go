@@ -2922,19 +2922,17 @@ func (m *App) CopyInFields(src *App) int {
 	}
 	if _, set := fmap["40"]; set {
 		if src.ServerlessConfig != nil {
-			m.ServerlessConfig = &ServerlessConfig{}
+			if m.ServerlessConfig == nil {
+				m.ServerlessConfig = &ServerlessConfig{}
+			}
 			if _, set := fmap["40.1"]; set {
-				if _, set := fmap["40.1.1"]; set {
-					if m.ServerlessConfig.Vcpus.Whole != src.ServerlessConfig.Vcpus.Whole {
-						m.ServerlessConfig.Vcpus.Whole = src.ServerlessConfig.Vcpus.Whole
-						changed++
-					}
+				if m.ServerlessConfig.Vcpus.Whole != src.ServerlessConfig.Vcpus.Whole {
+					m.ServerlessConfig.Vcpus.Whole = src.ServerlessConfig.Vcpus.Whole
+					changed++
 				}
-				if _, set := fmap["40.1.2"]; set {
-					if m.ServerlessConfig.Vcpus.Nanos != src.ServerlessConfig.Vcpus.Nanos {
-						m.ServerlessConfig.Vcpus.Nanos = src.ServerlessConfig.Vcpus.Nanos
-						changed++
-					}
+				if m.ServerlessConfig.Vcpus.Nanos != src.ServerlessConfig.Vcpus.Nanos {
+					m.ServerlessConfig.Vcpus.Nanos = src.ServerlessConfig.Vcpus.Nanos
+					changed++
 				}
 			}
 			if _, set := fmap["40.2"]; set {
@@ -3939,7 +3937,9 @@ func (s *AppAlertPolicy) ClearTagged(tags map[string]struct{}) {
 func (m *DeploymentCloudletRequest) CopyInFields(src *DeploymentCloudletRequest) int {
 	changed := 0
 	if src.App != nil {
-		m.App = &App{}
+		if m.App == nil {
+			m.App = &App{}
+		}
 		if m.App.Key.Organization != src.App.Key.Organization {
 			m.App.Key.Organization = src.App.Key.Organization
 			changed++
@@ -4086,7 +4086,9 @@ func (m *DeploymentCloudletRequest) CopyInFields(src *DeploymentCloudletRequest)
 			changed++
 		}
 		if src.App.ServerlessConfig != nil {
-			m.App.ServerlessConfig = &ServerlessConfig{}
+			if m.App.ServerlessConfig == nil {
+				m.App.ServerlessConfig = &ServerlessConfig{}
+			}
 			if m.App.ServerlessConfig.Vcpus.Whole != src.App.ServerlessConfig.Vcpus.Whole {
 				m.App.ServerlessConfig.Vcpus.Whole = src.App.ServerlessConfig.Vcpus.Whole
 				changed++
