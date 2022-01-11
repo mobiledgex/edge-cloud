@@ -102,6 +102,8 @@ extend google.protobuf.MessageOptions {
   bool tracks_refers_to = 51055;
   // controller api struct name
   string controller_api_struct = 51056;
+  // copy all member fields for update
+  bool copy_in_all_fields = 51058;
 }
 
 extend google.protobuf.EnumOptions {

@@ -5041,7 +5041,9 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -5071,7 +5073,9 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -5214,7 +5218,9 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		changed++
 	}
 	if src.CloudletLocation != nil {
-		m.CloudletLocation = &Loc{}
+		if m.CloudletLocation == nil {
+			m.CloudletLocation = &Loc{}
+		}
 		if m.CloudletLocation.Latitude != src.CloudletLocation.Latitude {
 			m.CloudletLocation.Latitude = src.CloudletLocation.Latitude
 			changed++
@@ -5244,7 +5250,9 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 			changed++
 		}
 		if src.CloudletLocation.Timestamp != nil {
-			m.CloudletLocation.Timestamp = &Timestamp{}
+			if m.CloudletLocation.Timestamp == nil {
+				m.CloudletLocation.Timestamp = &Timestamp{}
+			}
 			if m.CloudletLocation.Timestamp.Seconds != src.CloudletLocation.Timestamp.Seconds {
 				m.CloudletLocation.Timestamp.Seconds = src.CloudletLocation.Timestamp.Seconds
 				changed++
@@ -5354,7 +5362,9 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -5384,7 +5394,9 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -5584,7 +5596,9 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 		changed++
 	}
 	if src.NetworkLocation != nil {
-		m.NetworkLocation = &Loc{}
+		if m.NetworkLocation == nil {
+			m.NetworkLocation = &Loc{}
+		}
 		if m.NetworkLocation.Latitude != src.NetworkLocation.Latitude {
 			m.NetworkLocation.Latitude = src.NetworkLocation.Latitude
 			changed++
@@ -5614,7 +5628,9 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) int {
 			changed++
 		}
 		if src.NetworkLocation.Timestamp != nil {
-			m.NetworkLocation.Timestamp = &Timestamp{}
+			if m.NetworkLocation.Timestamp == nil {
+				m.NetworkLocation.Timestamp = &Timestamp{}
+			}
 			if m.NetworkLocation.Timestamp.Seconds != src.NetworkLocation.Timestamp.Seconds {
 				m.NetworkLocation.Timestamp.Seconds = src.NetworkLocation.Timestamp.Seconds
 				changed++
@@ -5700,7 +5716,9 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -5730,7 +5748,9 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -5881,7 +5901,9 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -5911,7 +5933,9 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -6245,7 +6269,9 @@ func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -6275,7 +6301,9 @@ func (m *AppOfficialFqdnRequest) CopyInFields(src *AppOfficialFqdnRequest) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -6551,7 +6579,9 @@ func (m *QosPosition) CopyInFields(src *QosPosition) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -6581,7 +6611,9 @@ func (m *QosPosition) CopyInFields(src *QosPosition) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -6726,7 +6758,9 @@ func (m *QosPositionRequest) CopyInFields(src *QosPositionRequest) int {
 		changed++
 	}
 	if src.BandSelection != nil {
-		m.BandSelection = &BandSelection{}
+		if m.BandSelection == nil {
+			m.BandSelection = &BandSelection{}
+		}
 		if src.BandSelection.Rat_2G != nil {
 			m.BandSelection.Rat_2G = src.BandSelection.Rat_2G
 			changed++
@@ -6836,7 +6870,9 @@ func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -6866,7 +6902,9 @@ func (m *QosPositionKpiResult) CopyInFields(src *QosPositionKpiResult) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -7047,7 +7085,9 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 		changed++
 	}
 	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
+		if m.GpsLocation == nil {
+			m.GpsLocation = &Loc{}
+		}
 		if m.GpsLocation.Latitude != src.GpsLocation.Latitude {
 			m.GpsLocation.Latitude = src.GpsLocation.Latitude
 			changed++
@@ -7077,7 +7117,9 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 			changed++
 		}
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
+			if m.GpsLocation.Timestamp == nil {
+				m.GpsLocation.Timestamp = &Timestamp{}
+			}
 			if m.GpsLocation.Timestamp.Seconds != src.GpsLocation.Timestamp.Seconds {
 				m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 				changed++
@@ -7102,7 +7144,9 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 		changed++
 	}
 	if src.DeviceInfoStatic != nil {
-		m.DeviceInfoStatic = &DeviceInfoStatic{}
+		if m.DeviceInfoStatic == nil {
+			m.DeviceInfoStatic = &DeviceInfoStatic{}
+		}
 		if m.DeviceInfoStatic.DeviceOs != src.DeviceInfoStatic.DeviceOs {
 			m.DeviceInfoStatic.DeviceOs = src.DeviceInfoStatic.DeviceOs
 			changed++
@@ -7116,7 +7160,9 @@ func (m *ClientEdgeEvent) CopyInFields(src *ClientEdgeEvent) int {
 		changed++
 	}
 	if src.DeviceInfoDynamic != nil {
-		m.DeviceInfoDynamic = &DeviceInfoDynamic{}
+		if m.DeviceInfoDynamic == nil {
+			m.DeviceInfoDynamic = &DeviceInfoDynamic{}
+		}
 		if m.DeviceInfoDynamic.DataNetworkType != src.DeviceInfoDynamic.DataNetworkType {
 			m.DeviceInfoDynamic.DataNetworkType = src.DeviceInfoDynamic.DataNetworkType
 			changed++
@@ -7260,7 +7306,9 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 		changed++
 	}
 	if src.Statistics != nil {
-		m.Statistics = &Statistics{}
+		if m.Statistics == nil {
+			m.Statistics = &Statistics{}
+		}
 		if m.Statistics.Avg != src.Statistics.Avg {
 			m.Statistics.Avg = src.Statistics.Avg
 			changed++
@@ -7286,7 +7334,9 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 			changed++
 		}
 		if src.Statistics.Timestamp != nil {
-			m.Statistics.Timestamp = &Timestamp{}
+			if m.Statistics.Timestamp == nil {
+				m.Statistics.Timestamp = &Timestamp{}
+			}
 			if m.Statistics.Timestamp.Seconds != src.Statistics.Timestamp.Seconds {
 				m.Statistics.Timestamp.Seconds = src.Statistics.Timestamp.Seconds
 				changed++
@@ -7304,7 +7354,9 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 		changed++
 	}
 	if src.NewCloudlet != nil {
-		m.NewCloudlet = &FindCloudletReply{}
+		if m.NewCloudlet == nil {
+			m.NewCloudlet = &FindCloudletReply{}
+		}
 		if m.NewCloudlet.Ver != src.NewCloudlet.Ver {
 			m.NewCloudlet.Ver = src.NewCloudlet.Ver
 			changed++
@@ -7325,7 +7377,9 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 			changed++
 		}
 		if src.NewCloudlet.CloudletLocation != nil {
-			m.NewCloudlet.CloudletLocation = &Loc{}
+			if m.NewCloudlet.CloudletLocation == nil {
+				m.NewCloudlet.CloudletLocation = &Loc{}
+			}
 			if m.NewCloudlet.CloudletLocation.Latitude != src.NewCloudlet.CloudletLocation.Latitude {
 				m.NewCloudlet.CloudletLocation.Latitude = src.NewCloudlet.CloudletLocation.Latitude
 				changed++
@@ -7355,7 +7409,9 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 				changed++
 			}
 			if src.NewCloudlet.CloudletLocation.Timestamp != nil {
-				m.NewCloudlet.CloudletLocation.Timestamp = &Timestamp{}
+				if m.NewCloudlet.CloudletLocation.Timestamp == nil {
+					m.NewCloudlet.CloudletLocation.Timestamp = &Timestamp{}
+				}
 				if m.NewCloudlet.CloudletLocation.Timestamp.Seconds != src.NewCloudlet.CloudletLocation.Timestamp.Seconds {
 					m.NewCloudlet.CloudletLocation.Timestamp.Seconds = src.NewCloudlet.CloudletLocation.Timestamp.Seconds
 					changed++
