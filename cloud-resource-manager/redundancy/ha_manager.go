@@ -175,9 +175,9 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			newActive := s.tryActive(ctx)
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
-				s.PlatformInstanceActive = true
 				timeLastBumpActive = time.Now()
 				s.haWatcher.ActiveChanged(ctx, true)
+				s.PlatformInstanceActive = true
 				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
 			}
 		} else {
@@ -200,9 +200,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				stillActive := s.CheckActive(ctx)
 				if !stillActive {
 					// somehow we lost activity, this is a big problem
-					log.SpanLog(ctx, log.DebugLevelInfo, "ERROR!: Lost activity")
-					s.PlatformInstanceActive = false
-					s.haWatcher.ActiveChanged(ctx, false)
+					log.SpanLog(ctx, log.DebugLevelInfra, "Activity Lost Unexpectedly")
+					log.FatalLog("ERROR!: Lost activity")
 				}
 				timeLastCheckActive = time.Now()
 			}

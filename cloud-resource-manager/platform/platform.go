@@ -161,7 +161,7 @@ type Platform interface {
 	GetRootLBClients(ctx context.Context) (map[string]ssh.Client, error)
 	// Get RootLB Flavor
 	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
-	// Called when the platform instance switches activity
+	// Called when the platform instance switches activity. Currently only transition from Standby to Active is allowed.
 	ActiveChanged(ctx context.Context, platformActive bool)
 }
 
