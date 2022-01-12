@@ -156,8 +156,13 @@ func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error)
 	cmd := s.redisClient.Get(s.nodeGroupKey)
 	v, err := cmd.Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
-		return false, err
+		if err == redis.Nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive returns nil -- neither unit is active")
+			return false, nil
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+			return false, err
+		}
 	}
 	isActive := v == s.HARole
 	return isActive, nil
