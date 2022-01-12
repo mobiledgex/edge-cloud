@@ -21,20 +21,23 @@ const MaxRedisWait = time.Second * 30
 const CheckActiveLogInterval = time.Second * 10
 
 type HAWatcher interface {
-	ActiveChanged(ctx context.Context, platformActive bool) error
+	ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error  // actions before setting PlatformInstanceActive
+	ActiveChangedPostSwitch(ctx context.Context, platformActive bool) error // actions after setting PlatformInstanceActive
 }
 
 type HighAvailabilityManager struct {
-	redisAddr              string
-	nodeGroupKey           string
-	redisClient            *redis.Client
-	HARole                 string
-	HAEnabled              bool
-	activeDuration         time.Duration
-	activePollInterval     time.Duration
-	PlatformInstanceActive bool
-	haWatcher              HAWatcher
-	nodeMgr                *node.NodeMgr
+	redisAddr                  string
+	nodeGroupKey               string
+	redisClient                *redis.Client
+	HARole                     string
+	HAEnabled                  bool
+	activeDuration             time.Duration
+	activePollInterval         time.Duration
+	PlatformInstanceActive     bool
+	ActiveTransitionInProgress bool // active from a redis standpoint but still doing switchover actions
+
+	haWatcher HAWatcher
+	nodeMgr   *node.NodeMgr
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
@@ -110,7 +113,7 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 // TryActive is called on startup
 func (s *HighAvailabilityManager) tryActive(ctx context.Context) bool {
 
-	if s.PlatformInstanceActive {
+	if s.PlatformInstanceActive || s.ActiveTransitionInProgress {
 		// this should not happen. Only 1 thread should be doing tryActive
 		log.FatalLog("Platform already active")
 	}
@@ -119,7 +122,6 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) bool {
 	alreadyActive := s.CheckActive(ctx)
 	if alreadyActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "Platform already active", "key", s.nodeGroupKey)
-		s.PlatformInstanceActive = true
 		// bump the active timer in case it is close to expiry
 		s.BumpActiveExpire(ctx)
 		return true
@@ -167,7 +169,7 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 		elapsedSinceBumpActive := time.Since(timeLastBumpActive)
 		elapsedSinceCheckActive := time.Since(timeLastCheckActive)
 
-		if !s.PlatformInstanceActive {
+		if !s.PlatformInstanceActive && !s.ActiveTransitionInProgress {
 			if elapsedSinceLog >= CheckActiveLogInterval {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform inactive, doing TryActive")
 				timeLastLog = time.Now()
@@ -176,13 +178,25 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active")
 				timeLastBumpActive = time.Now()
-				s.haWatcher.ActiveChanged(ctx, true)
-				s.PlatformInstanceActive = true
-				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
+				// switchover is handled in a separate thread so we do not miss polling redis
+				s.ActiveTransitionInProgress = true
+				go func() {
+					err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
+					if err != nil {
+						log.FatalLog("ActiveChangedPreSwitch failed - %v", err)
+					}
+					s.PlatformInstanceActive = true
+					s.ActiveTransitionInProgress = false
+					s.haWatcher.ActiveChangedPostSwitch(ctx, true)
+					if err != nil {
+						log.FatalLog("ActiveChangedPostSwitch failed - %v", err)
+					}
+					s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
+				}()
 			}
 		} else {
 			if elapsedSinceLog >= CheckActiveLogInterval {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Platform active, doing BumpActiveExpire")
+				log.SpanLog(ctx, log.DebugLevelInfra, "Doing BumpActiveExpire", "ActiveTransitionInProgress", s.ActiveTransitionInProgress, "PlatformInstanceActive", s.PlatformInstanceActive)
 				timeLastLog = time.Now()
 			}
 			checkStillActive := false
