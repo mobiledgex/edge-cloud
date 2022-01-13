@@ -1035,6 +1035,7 @@ func (cd *ControllerData) getClusterInstsFromTrustPolicyExceptionKeyHelper(ctx c
 	appInsts := []edgeproto.AppInst{}
 	cd.AppInstCache.Show(&appInstFilter, func(appInst *edgeproto.AppInst) error {
 		if appInst.State != edgeproto.TrackedState_READY {
+			log.SpanLog(ctx, log.DebugLevelInfra, "found appInst", "appInst", appInst, "skipping because state", appInst.State)
 			return nil
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "found appInst in TrackedState_READY", "appInst", appInst)
@@ -1056,7 +1057,9 @@ func (cd *ControllerData) getClusterInstsFromTrustPolicyExceptionKeyHelper(ctx c
 		cloudletKey := appInst.Key.ClusterInstKey.CloudletKey
 		if cloudletKeyIn != nil {
 			// Check only for specified cloudletKey
+			log.SpanLog(ctx, log.DebugLevelInfra, "Checking only for specified cloudletKey", "cloudletKeyIn", cloudletKeyIn)
 			if !cloudletKeyIn.Matches(&cloudletKey) {
+				log.SpanLog(ctx, log.DebugLevelInfra, "Not matching", "cloudletKey", cloudletKey)
 				continue
 			}
 		}
@@ -1709,35 +1712,54 @@ func (cd *ControllerData) HandleTrustPolicyException(ctx context.Context, k inte
 	log.SetContextTags(ctx, tpeKey.GetTags())
 	log.SpanLog(ctx, log.DebugLevelInfra, "HandleTrustPolicyException", "TrustPolicyExceptionKey", tpeKey, "clusterInstKey", clusterInstKey)
 
-	found, TrustPolicyException := cd.GetTrustPolicyExceptionFromKey(&tpeKey)
-	if !found {
+	tpeArray := cd.GetTrustPolicyExceptionsFromKey(ctx, &tpeKey)
+
+	if len(tpeArray) == 0 {
 		log.SpanLog(ctx, log.DebugLevelInfra, "TrustPolicyExceptionCache.Get , key not found, calling DeleteTrustPolicyException", "key", tpeKey)
 		err := cd.platform.DeleteTrustPolicyException(ctx, &tpeKey, &clusterInstKey)
 		log.SpanLog(ctx, log.DebugLevelInfra, "platform DeleteTrustPolicyException Done", "err", err)
 		return
 	}
 
-	if TrustPolicyException.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-		// Handle removal of trust policy exception rules
-		err := cd.platform.DeleteTrustPolicyException(ctx, &tpeKey, &clusterInstKey)
-		log.SpanLog(ctx, log.DebugLevelInfra, "platform DeleteTrustPolicyException Done", "err", err)
-		return
-	}
+	for _, TrustPolicyException := range tpeArray {
 
-	if TrustPolicyException.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-		// Handle addition of trust policy exception rules
-		err := cd.platform.UpdateTrustPolicyException(ctx, TrustPolicyException, &clusterInstKey)
-		log.SpanLog(ctx, log.DebugLevelInfra, "platform UpdateTrustPolicyException Done", "err", err)
-		return
-	}
+		if TrustPolicyException.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
+			// Handle removal of trust policy exception rules
+			err := cd.platform.DeleteTrustPolicyException(ctx, &tpeKey, &clusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelInfra, "platform DeleteTrustPolicyException Done", "err", err)
+			return
+		}
 
-	log.SpanLog(ctx, log.DebugLevelInfra, "HandleTrustPolicyException ignoring for tpe State", "key", tpeKey, "state", TrustPolicyException.State.String())
+		if TrustPolicyException.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+			// Handle addition of trust policy exception rules
+			err := cd.platform.UpdateTrustPolicyException(ctx, TrustPolicyException, &clusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelInfra, "platform UpdateTrustPolicyException Done", "err", err)
+			return
+		}
+
+		log.SpanLog(ctx, log.DebugLevelInfra, "HandleTrustPolicyException ignoring for tpe State", "key", tpeKey, "state", TrustPolicyException.State.String())
+	}
 }
 
-func (cd *ControllerData) GetTrustPolicyExceptionFromKey(tpeKey *edgeproto.TrustPolicyExceptionKey) (bool, *edgeproto.TrustPolicyException) {
-	var TrustPolicyException edgeproto.TrustPolicyException
-	ret := cd.TrustPolicyExceptionCache.Get(tpeKey, &TrustPolicyException)
-	return ret, &TrustPolicyException
+func (cd *ControllerData) GetTrustPolicyExceptionsFromKey(ctx context.Context, tpeKey *edgeproto.TrustPolicyExceptionKey) []*edgeproto.TrustPolicyException {
+
+	tpeArray := []*edgeproto.TrustPolicyException{}
+	// Find tpe based on Key, irrespective of the tpe name.
+	filter := edgeproto.TrustPolicyException{
+		Key: *tpeKey,
+	}
+
+	cd.TrustPolicyExceptionCache.Show(&filter, func(tpe *edgeproto.TrustPolicyException) error {
+		log.SpanLog(ctx, log.DebugLevelInfra, "In GetTrustPolicyExceptionsFromKey()", "adding tpe:", tpe)
+		// The tpe passed in from Show is what's in memory in the cache.
+		// To access it outside the cache lock,  need to make a copy.
+		tpeCopy := edgeproto.TrustPolicyException{}
+		tpeCopy.DeepCopyIn(tpe)
+		tpeArray = append(tpeArray, &tpeCopy)
+		return nil
+	})
+
+	return tpeArray
 }
 
 func (cd *ControllerData) RefreshAppInstRuntime(ctx context.Context) {
