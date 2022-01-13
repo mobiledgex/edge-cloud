@@ -72,8 +72,6 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 		}
 		return err
 	}
-	// prior to the first active check, give the other unit an opportunity to gain activity in case this is a restart case
-	time.Sleep(s.activePollInterval)
 	s.PlatformInstanceActive, err = s.tryActive(ctx)
 	return err
 }
@@ -198,7 +196,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 			}
 			newActive, err := s.tryActive(ctx)
 			if err != nil {
-				log.FatalLog("Error in tryActive - %v", err)
+				// we are not active here, so even if this is primary, quit now
+				log.FatalLog("Error in tryActive", "err", err)
 			}
 			if newActive {
 				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active", "role", s.HARole)
@@ -208,13 +207,13 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				go func() {
 					err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
 					if err != nil {
-						log.FatalLog("ActiveChangedPreSwitch failed - %v", err)
+						log.FatalLog("ActiveChangedPreSwitch failed", "err", err)
 					}
 					s.PlatformInstanceActive = true
 					s.ActiveTransitionInProgress = false
 					s.haWatcher.ActiveChangedPostSwitch(ctx, true)
 					if err != nil {
-						log.FatalLog("ActiveChangedPostSwitch failed - %v", err)
+						log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
 					}
 					s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
 				}()
