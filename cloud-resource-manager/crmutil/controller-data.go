@@ -1751,7 +1751,11 @@ func (cd *ControllerData) GetTrustPolicyExceptionsFromKey(ctx context.Context, t
 
 	cd.TrustPolicyExceptionCache.Show(&filter, func(tpe *edgeproto.TrustPolicyException) error {
 		log.SpanLog(ctx, log.DebugLevelInfra, "In GetTrustPolicyExceptionsFromKey()", "adding tpe:", tpe)
-		tpeArray = append(tpeArray, tpe)
+		// The tpe passed in from Show is what's in memory in the cache.
+		// To access it outside the cache lock,  need to make a copy.
+		tpeCopy := edgeproto.TrustPolicyException{}
+		tpeCopy.DeepCopyIn(tpe)
+		tpeArray = append(tpeArray, &tpeCopy)
 		return nil
 	})
 
