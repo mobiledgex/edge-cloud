@@ -762,7 +762,9 @@ func (m *DeviceReport) CopyInFields(src *DeviceReport) int {
 		changed++
 	}
 	if src.Begin != nil {
-		m.Begin = &google_protobuf.Timestamp{}
+		if m.Begin == nil {
+			m.Begin = &google_protobuf.Timestamp{}
+		}
 		if m.Begin.Seconds != src.Begin.Seconds {
 			m.Begin.Seconds = src.Begin.Seconds
 			changed++
@@ -776,7 +778,9 @@ func (m *DeviceReport) CopyInFields(src *DeviceReport) int {
 		changed++
 	}
 	if src.End != nil {
-		m.End = &google_protobuf.Timestamp{}
+		if m.End == nil {
+			m.End = &google_protobuf.Timestamp{}
+		}
 		if m.End.Seconds != src.End.Seconds {
 			m.End.Seconds = src.End.Seconds
 			changed++
@@ -1231,7 +1235,9 @@ func (m *Device) CopyInFields(src *Device) int {
 	}
 	if _, set := fmap["3"]; set {
 		if src.FirstSeen != nil {
-			m.FirstSeen = &google_protobuf.Timestamp{}
+			if m.FirstSeen == nil {
+				m.FirstSeen = &google_protobuf.Timestamp{}
+			}
 			if _, set := fmap["3.1"]; set {
 				if m.FirstSeen.Seconds != src.FirstSeen.Seconds {
 					m.FirstSeen.Seconds = src.FirstSeen.Seconds
@@ -1251,7 +1257,9 @@ func (m *Device) CopyInFields(src *Device) int {
 	}
 	if _, set := fmap["4"]; set {
 		if src.LastSeen != nil {
-			m.LastSeen = &google_protobuf.Timestamp{}
+			if m.LastSeen == nil {
+				m.LastSeen = &google_protobuf.Timestamp{}
+			}
 			if _, set := fmap["4.1"]; set {
 				if m.LastSeen.Seconds != src.LastSeen.Seconds {
 					m.LastSeen.Seconds = src.LastSeen.Seconds

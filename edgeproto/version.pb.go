@@ -11,6 +11,7 @@ import (
 	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/mobiledgex/edge-cloud/util"
 	math "math"
+	reflect "reflect"
 	"strconv"
 	strings "strings"
 )
@@ -385,43 +386,10 @@ var VersionHash_CamelValue = map[string]int32{
 	"Hash2Dfdb2Ed2Cf52241B2B3Db1D39E11Bc6": 38,
 }
 
-func (e *VersionHash) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := VersionHash_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = VersionHash_CamelValue["Hash"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = VersionHash_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid VersionHash value %q", str)
-	}
-	*e = VersionHash(val)
-	return nil
-}
-
-func (e VersionHash) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(VersionHash_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Hash")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *VersionHash) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseVersionHash(data interface{}) (VersionHash, error) {
+	if val, ok := data.(VersionHash); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := VersionHash_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -436,22 +404,67 @@ func (e *VersionHash) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid VersionHash value %q", str)
+			return VersionHash(0), fmt.Errorf("Invalid VersionHash value %q", str)
 		}
-		*e = VersionHash(val)
-		return nil
+		return VersionHash(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := VersionHash_CamelName[ival]; ok {
+			return VersionHash(ival), nil
+		} else {
+			return VersionHash(0), fmt.Errorf("Invalid VersionHash value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return VersionHash(0), fmt.Errorf("Invalid VersionHash value %v", data)
+}
+
+func (e *VersionHash) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseVersionHash(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e VersionHash) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(VersionHash_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Hash")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *VersionHash) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := VersionHash_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid VersionHash value %d", val)
+		val, err := ParseVersionHash(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(VersionHash(0)),
+			}
 		}
 		*e = VersionHash(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid VersionHash value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseVersionHash(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(VersionHash(0)),
+	}
 }
 
 func (e VersionHash) MarshalJSON() ([]byte, error) {

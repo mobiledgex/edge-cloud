@@ -1174,7 +1174,9 @@ func (m *IncludeMessage) CopyInFields(src *IncludeMessage) int {
 		changed++
 	}
 	if src.NestedMsg != nil {
-		m.NestedMsg = &NestedMessage{}
+		if m.NestedMsg == nil {
+			m.NestedMsg = &NestedMessage{}
+		}
 		if m.NestedMsg.Name != src.NestedMsg.Name {
 			m.NestedMsg.Name = src.NestedMsg.Name
 			changed++
@@ -2499,7 +2501,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["18"]; set {
 		if src.InnerMsg != nil {
-			m.InnerMsg = &TestGen_InnerMessage{}
+			if m.InnerMsg == nil {
+				m.InnerMsg = &TestGen_InnerMessage{}
+			}
 			if _, set := fmap["18.1"]; set {
 				if m.InnerMsg.Url != src.InnerMsg.Url {
 					m.InnerMsg.Url = src.InnerMsg.Url
@@ -2533,7 +2537,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["20"]; set {
 		if src.IncludeMsg != nil {
-			m.IncludeMsg = &IncludeMessage{}
+			if m.IncludeMsg == nil {
+				m.IncludeMsg = &IncludeMessage{}
+			}
 			if _, set := fmap["20.1"]; set {
 				if m.IncludeMsg.Name != src.IncludeMsg.Name {
 					m.IncludeMsg.Name = src.IncludeMsg.Name
@@ -2548,7 +2554,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 			if _, set := fmap["20.3"]; set {
 				if src.IncludeMsg.NestedMsg != nil {
-					m.IncludeMsg.NestedMsg = &NestedMessage{}
+					if m.IncludeMsg.NestedMsg == nil {
+						m.IncludeMsg.NestedMsg = &NestedMessage{}
+					}
 					if _, set := fmap["20.3.1"]; set {
 						if m.IncludeMsg.NestedMsg.Name != src.IncludeMsg.NestedMsg.Name {
 							m.IncludeMsg.NestedMsg.Name = src.IncludeMsg.NestedMsg.Name
@@ -2580,7 +2588,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 		if _, set := fmap["21.3"]; set {
 			if src.IncludeMsgNonnull.NestedMsg != nil {
-				m.IncludeMsgNonnull.NestedMsg = &NestedMessage{}
+				if m.IncludeMsgNonnull.NestedMsg == nil {
+					m.IncludeMsgNonnull.NestedMsg = &NestedMessage{}
+				}
 				if _, set := fmap["21.3.1"]; set {
 					if m.IncludeMsgNonnull.NestedMsg.Name != src.IncludeMsgNonnull.NestedMsg.Name {
 						m.IncludeMsgNonnull.NestedMsg.Name = src.IncludeMsgNonnull.NestedMsg.Name
@@ -2595,7 +2605,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["22"]; set {
 		if src.IncludeFields != nil {
-			m.IncludeFields = &IncludeFields{}
+			if m.IncludeFields == nil {
+				m.IncludeFields = &IncludeFields{}
+			}
 			if _, set := fmap["22.2"]; set {
 				if m.IncludeFields.Name != src.IncludeFields.Name {
 					m.IncludeFields.Name = src.IncludeFields.Name
@@ -2617,7 +2629,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["24"]; set {
 		if src.Loc != nil {
-			m.Loc = &distributed_match_engine.Loc{}
+			if m.Loc == nil {
+				m.Loc = &distributed_match_engine.Loc{}
+			}
 			if _, set := fmap["24.1"]; set {
 				if m.Loc.Latitude != src.Loc.Latitude {
 					m.Loc.Latitude = src.Loc.Latitude
@@ -2662,7 +2676,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 			if _, set := fmap["24.8"]; set {
 				if src.Loc.Timestamp != nil {
-					m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+					if m.Loc.Timestamp == nil {
+						m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+					}
 					if _, set := fmap["24.8.1"]; set {
 						if m.Loc.Timestamp.Seconds != src.Loc.Timestamp.Seconds {
 							m.Loc.Timestamp.Seconds = src.Loc.Timestamp.Seconds
@@ -2730,7 +2746,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 		if _, set := fmap["25.8"]; set {
 			if src.LocNonnull.Timestamp != nil {
-				m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
+				if m.LocNonnull.Timestamp == nil {
+					m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
+				}
 				if _, set := fmap["25.8.1"]; set {
 					if m.LocNonnull.Timestamp.Seconds != src.LocNonnull.Timestamp.Seconds {
 						m.LocNonnull.Timestamp.Seconds = src.LocNonnull.Timestamp.Seconds
@@ -3207,43 +3225,10 @@ var OuterEnum_CamelValue = map[string]int32{
 	"Outer3": 3,
 }
 
-func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := OuterEnum_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = OuterEnum_CamelValue["Outer"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = OuterEnum_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid OuterEnum value %q", str)
-	}
-	*e = OuterEnum(val)
-	return nil
-}
-
-func (e OuterEnum) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(OuterEnum_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Outer")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *OuterEnum) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseOuterEnum(data interface{}) (OuterEnum, error) {
+	if val, ok := data.(OuterEnum); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := OuterEnum_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -3258,22 +3243,67 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid OuterEnum value %q", str)
+			return OuterEnum(0), fmt.Errorf("Invalid OuterEnum value %q", str)
 		}
-		*e = OuterEnum(val)
-		return nil
+		return OuterEnum(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := OuterEnum_CamelName[ival]; ok {
+			return OuterEnum(ival), nil
+		} else {
+			return OuterEnum(0), fmt.Errorf("Invalid OuterEnum value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return OuterEnum(0), fmt.Errorf("Invalid OuterEnum value %v", data)
+}
+
+func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseOuterEnum(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e OuterEnum) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(OuterEnum_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Outer")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *OuterEnum) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := OuterEnum_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid OuterEnum value %d", val)
+		val, err := ParseOuterEnum(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(OuterEnum(0)),
+			}
 		}
 		*e = OuterEnum(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid OuterEnum value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseOuterEnum(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(OuterEnum(0)),
+	}
 }
 
 func (e OuterEnum) MarshalJSON() ([]byte, error) {
@@ -3315,43 +3345,10 @@ var TestGen_InnerEnum_CamelValue = map[string]int32{
 	"Inner3": 3,
 }
 
-func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := TestGen_InnerEnum_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = TestGen_InnerEnum_CamelValue["Inner"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = TestGen_InnerEnum_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid TestGen_InnerEnum value %q", str)
-	}
-	*e = TestGen_InnerEnum(val)
-	return nil
-}
-
-func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Inner")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseTestGen_InnerEnum(data interface{}) (TestGen_InnerEnum, error) {
+	if val, ok := data.(TestGen_InnerEnum); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := TestGen_InnerEnum_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -3366,22 +3363,67 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid TestGen_InnerEnum value %q", str)
+			return TestGen_InnerEnum(0), fmt.Errorf("Invalid TestGen_InnerEnum value %q", str)
 		}
-		*e = TestGen_InnerEnum(val)
-		return nil
+		return TestGen_InnerEnum(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := TestGen_InnerEnum_CamelName[ival]; ok {
+			return TestGen_InnerEnum(ival), nil
+		} else {
+			return TestGen_InnerEnum(0), fmt.Errorf("Invalid TestGen_InnerEnum value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return TestGen_InnerEnum(0), fmt.Errorf("Invalid TestGen_InnerEnum value %v", data)
+}
+
+func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseTestGen_InnerEnum(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Inner")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := TestGen_InnerEnum_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid TestGen_InnerEnum value %d", val)
+		val, err := ParseTestGen_InnerEnum(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(TestGen_InnerEnum(0)),
+			}
 		}
 		*e = TestGen_InnerEnum(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid TestGen_InnerEnum value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseTestGen_InnerEnum(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(TestGen_InnerEnum(0)),
+	}
 }
 
 func (e TestGen_InnerEnum) MarshalJSON() ([]byte, error) {
@@ -3436,19 +3478,23 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 // Allows decoding to handle protobuf enums that are
 // represented as strings.
 func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
-	if from.Kind() != reflect.String {
-		return data, nil
-	}
 	switch to {
 	case reflect.TypeOf(OuterEnum(0)):
-		if en, ok := OuterEnum_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := OuterEnum_CamelValue["Outer"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseOuterEnum(data)
 	}
 	return data, nil
+}
+
+// GetEnumParseHelp gets end-user specific messages for
+// enum parse errors.
+// It returns the enum type name, a help message with
+// valid values, and a bool that indicates if a type was matched.
+func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
+	switch t {
+	case reflect.TypeOf(OuterEnum(0)):
+		return "OuterEnum", ", valid values are one of 0, 1, 2, 3, or 0, 1, 2, 3", true
+	}
+	return "", "", false
 }
 
 var ShowMethodNames = map[string]struct{}{}

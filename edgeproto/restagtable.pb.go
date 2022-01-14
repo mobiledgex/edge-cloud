@@ -1630,25 +1630,44 @@ var OptResNames_CamelValue = map[string]int32{
 	"Nic": 2,
 }
 
+func ParseOptResNames(data interface{}) (OptResNames, error) {
+	if val, ok := data.(OptResNames); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := OptResNames_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = OptResNames_CamelName[val]
+			}
+		}
+		if !ok {
+			return OptResNames(0), fmt.Errorf("Invalid OptResNames value %q", str)
+		}
+		return OptResNames(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := OptResNames_CamelName[ival]; ok {
+			return OptResNames(ival), nil
+		} else {
+			return OptResNames(0), fmt.Errorf("Invalid OptResNames value %d", ival)
+		}
+	}
+	return OptResNames(0), fmt.Errorf("Invalid OptResNames value %v", data)
+}
+
 func (e *OptResNames) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := OptResNames_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = OptResNames_CamelName[val]
-		}
+	val, err := ParseOptResNames(str)
+	if err != nil {
+		return err
 	}
-	if !ok {
-		return fmt.Errorf("Invalid OptResNames value %q", str)
-	}
-	*e = OptResNames(val)
+	*e = val
 	return nil
 }
 
@@ -1662,32 +1681,29 @@ func (e *OptResNames) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := OptResNames_CamelValue[util.CamelCase(str)]
-		if !ok {
-			// may be int value instead of enum name
-			ival, err := strconv.Atoi(str)
-			val = int32(ival)
-			if err == nil {
-				_, ok = OptResNames_CamelName[val]
+		val, err := ParseOptResNames(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(OptResNames(0)),
 			}
 		}
-		if !ok {
-			return fmt.Errorf("Invalid OptResNames value %q", str)
-		}
 		*e = OptResNames(val)
 		return nil
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
 	if err == nil {
-		_, ok := OptResNames_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid OptResNames value %d", val)
+		val, err := ParseOptResNames(ival)
+		if err == nil {
+			*e = val
+			return nil
 		}
-		*e = OptResNames(val)
-		return nil
 	}
-	return fmt.Errorf("Invalid OptResNames value %v", b)
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(OptResNames(0)),
+	}
 }
 
 func (e OptResNames) MarshalJSON() ([]byte, error) {

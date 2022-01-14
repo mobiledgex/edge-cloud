@@ -21,6 +21,7 @@ import (
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	reflect "reflect"
 	"strconv"
 	strings "strings"
 )
@@ -1271,43 +1272,10 @@ var StreamState_CamelValue = map[string]int32{
 	"StreamError":   3,
 }
 
-func (e *StreamState) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := StreamState_CamelValue[util.CamelCase(str)]
-	if !ok {
-		// may have omitted common prefix
-		val, ok = StreamState_CamelValue["Stream"+util.CamelCase(str)]
-	}
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = StreamState_CamelName[val]
-		}
-	}
-	if !ok {
-		return fmt.Errorf("Invalid StreamState value %q", str)
-	}
-	*e = StreamState(val)
-	return nil
-}
-
-func (e StreamState) MarshalYAML() (interface{}, error) {
-	str := proto.EnumName(StreamState_CamelName, int32(e))
-	str = strings.TrimPrefix(str, "Stream")
-	return str, nil
-}
-
-// custom JSON encoding/decoding
-func (e *StreamState) UnmarshalJSON(b []byte) error {
-	var str string
-	err := json.Unmarshal(b, &str)
-	if err == nil {
+func ParseStreamState(data interface{}) (StreamState, error) {
+	if val, ok := data.(StreamState); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
 		val, ok := StreamState_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may have omitted common prefix
@@ -1322,22 +1290,67 @@ func (e *StreamState) UnmarshalJSON(b []byte) error {
 			}
 		}
 		if !ok {
-			return fmt.Errorf("Invalid StreamState value %q", str)
+			return StreamState(0), fmt.Errorf("Invalid StreamState value %q", str)
 		}
-		*e = StreamState(val)
-		return nil
+		return StreamState(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := StreamState_CamelName[ival]; ok {
+			return StreamState(ival), nil
+		} else {
+			return StreamState(0), fmt.Errorf("Invalid StreamState value %d", ival)
+		}
 	}
-	var val int32
-	err = json.Unmarshal(b, &val)
+	return StreamState(0), fmt.Errorf("Invalid StreamState value %v", data)
+}
+
+func (e *StreamState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseStreamState(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e StreamState) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(StreamState_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Stream")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *StreamState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
 	if err == nil {
-		_, ok := StreamState_CamelName[val]
-		if !ok {
-			return fmt.Errorf("Invalid StreamState value %d", val)
+		val, err := ParseStreamState(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(StreamState(0)),
+			}
 		}
 		*e = StreamState(val)
 		return nil
 	}
-	return fmt.Errorf("Invalid StreamState value %v", b)
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseStreamState(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(StreamState(0)),
+	}
 }
 
 func (e StreamState) MarshalJSON() ([]byte, error) {
