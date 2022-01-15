@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -51,6 +49,7 @@ func main() {
 	}
 
 	depMap := map[string]*PkgDep{}
+	licenseMatcher := NewLicenseMatcher()
 
 	failed := false
 	for _, binDir := range binDirs {
@@ -96,6 +95,7 @@ func main() {
 					fmt.Printf("Cannot find license file in %s\n", pkgDir)
 					failed = true
 				}
+				licType, _ := getLicType(licenseMatcher, lic)
 
 				pkgDep = &PkgDep{
 					repo:     pkgRepo,
@@ -104,7 +104,7 @@ func main() {
 					binaries: map[string]struct{}{},
 					version:  version,
 					license:  lic,
-					licType:  getLicType(lic),
+					licType:  licType,
 				}
 				depMap[pkgRepo] = pkgDep
 			}
@@ -193,8 +193,7 @@ var reGithubBlobVer = regexp.MustCompile("/blob/v.+/")
 // gopkg.in includes a .v# suffix which must be removed for the actual url
 var rePkgInVer = regexp.MustCompile("\\.v[0-9]+@")
 
-//var reGoPkgVers := regexp.MustCompile(".v
-
+// These sites are all aliases for pkg.go.dev
 var pkgGoDevSites = []string{
 	"go.mongodb.org",
 	"go.opencensus.io",
@@ -205,7 +204,9 @@ var pkgGoDevSites = []string{
 	"cloud.google.com",
 }
 
-// Weird path translations, not sure how these are set up
+// Weird path translations, not sure how these are set up.
+// These translate from local go/pkg/mod directory paths to
+// online web repository paths.
 var pathXlat = map[string]string{
 	"github.com/hashicorp/vault/api": "github.com/hashicorp/vault",
 	"github.com/hashicorp/vault/sdk": "github.com/hashicorp/vault",
@@ -325,21 +326,11 @@ func httpGetRetry(link string) (*http.Response, error) {
 	return resp, err
 }
 
-func getLicType(licFile string) string {
+func getLicType(matcher *LicenseMatcher, licFile string) (string, float32) {
 	contents, err := ioutil.ReadFile(licFile)
 	if err != nil {
 		fmt.Printf("Failed to read %s, %s\n", licFile, err)
 		log.Fatal(err.Error())
 	}
-	scanner := bufio.NewScanner(bytes.NewBuffer(contents))
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if strings.Contains(strings.ToLower(line), "license") {
-			return line
-		}
-		if strings.Contains(strings.ToLower(line), "copyright") {
-			return line
-		}
-	}
-	return "Unknown"
+	return matcher.Match(string(contents))
 }
