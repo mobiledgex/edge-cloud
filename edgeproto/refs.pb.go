@@ -1013,7 +1013,9 @@ func (m *VMResource) CopyInFields(src *VMResource) int {
 		changed++
 	}
 	if src.VmFlavor != nil {
-		m.VmFlavor = &FlavorInfo{}
+		if m.VmFlavor == nil {
+			m.VmFlavor = &FlavorInfo{}
+		}
 		if m.VmFlavor.Name != src.VmFlavor.Name {
 			m.VmFlavor.Name = src.VmFlavor.Name
 			changed++

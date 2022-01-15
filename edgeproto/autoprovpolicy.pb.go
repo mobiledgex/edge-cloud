@@ -2254,7 +2254,9 @@ func (m *AutoProvCloudlet) CopyInFields(src *AutoProvCloudlet) int {
 		changed++
 	}
 	if src.Loc.Timestamp != nil {
-		m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+		if m.Loc.Timestamp == nil {
+			m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+		}
 		if m.Loc.Timestamp.Seconds != src.Loc.Timestamp.Seconds {
 			m.Loc.Timestamp.Seconds = src.Loc.Timestamp.Seconds
 			changed++

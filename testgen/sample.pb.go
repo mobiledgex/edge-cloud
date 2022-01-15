@@ -1174,7 +1174,9 @@ func (m *IncludeMessage) CopyInFields(src *IncludeMessage) int {
 		changed++
 	}
 	if src.NestedMsg != nil {
-		m.NestedMsg = &NestedMessage{}
+		if m.NestedMsg == nil {
+			m.NestedMsg = &NestedMessage{}
+		}
 		if m.NestedMsg.Name != src.NestedMsg.Name {
 			m.NestedMsg.Name = src.NestedMsg.Name
 			changed++
@@ -2499,7 +2501,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["18"]; set {
 		if src.InnerMsg != nil {
-			m.InnerMsg = &TestGen_InnerMessage{}
+			if m.InnerMsg == nil {
+				m.InnerMsg = &TestGen_InnerMessage{}
+			}
 			if _, set := fmap["18.1"]; set {
 				if m.InnerMsg.Url != src.InnerMsg.Url {
 					m.InnerMsg.Url = src.InnerMsg.Url
@@ -2533,7 +2537,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["20"]; set {
 		if src.IncludeMsg != nil {
-			m.IncludeMsg = &IncludeMessage{}
+			if m.IncludeMsg == nil {
+				m.IncludeMsg = &IncludeMessage{}
+			}
 			if _, set := fmap["20.1"]; set {
 				if m.IncludeMsg.Name != src.IncludeMsg.Name {
 					m.IncludeMsg.Name = src.IncludeMsg.Name
@@ -2548,7 +2554,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 			if _, set := fmap["20.3"]; set {
 				if src.IncludeMsg.NestedMsg != nil {
-					m.IncludeMsg.NestedMsg = &NestedMessage{}
+					if m.IncludeMsg.NestedMsg == nil {
+						m.IncludeMsg.NestedMsg = &NestedMessage{}
+					}
 					if _, set := fmap["20.3.1"]; set {
 						if m.IncludeMsg.NestedMsg.Name != src.IncludeMsg.NestedMsg.Name {
 							m.IncludeMsg.NestedMsg.Name = src.IncludeMsg.NestedMsg.Name
@@ -2580,7 +2588,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 		if _, set := fmap["21.3"]; set {
 			if src.IncludeMsgNonnull.NestedMsg != nil {
-				m.IncludeMsgNonnull.NestedMsg = &NestedMessage{}
+				if m.IncludeMsgNonnull.NestedMsg == nil {
+					m.IncludeMsgNonnull.NestedMsg = &NestedMessage{}
+				}
 				if _, set := fmap["21.3.1"]; set {
 					if m.IncludeMsgNonnull.NestedMsg.Name != src.IncludeMsgNonnull.NestedMsg.Name {
 						m.IncludeMsgNonnull.NestedMsg.Name = src.IncludeMsgNonnull.NestedMsg.Name
@@ -2595,7 +2605,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["22"]; set {
 		if src.IncludeFields != nil {
-			m.IncludeFields = &IncludeFields{}
+			if m.IncludeFields == nil {
+				m.IncludeFields = &IncludeFields{}
+			}
 			if _, set := fmap["22.2"]; set {
 				if m.IncludeFields.Name != src.IncludeFields.Name {
 					m.IncludeFields.Name = src.IncludeFields.Name
@@ -2617,7 +2629,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 	}
 	if _, set := fmap["24"]; set {
 		if src.Loc != nil {
-			m.Loc = &distributed_match_engine.Loc{}
+			if m.Loc == nil {
+				m.Loc = &distributed_match_engine.Loc{}
+			}
 			if _, set := fmap["24.1"]; set {
 				if m.Loc.Latitude != src.Loc.Latitude {
 					m.Loc.Latitude = src.Loc.Latitude
@@ -2662,7 +2676,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 			}
 			if _, set := fmap["24.8"]; set {
 				if src.Loc.Timestamp != nil {
-					m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+					if m.Loc.Timestamp == nil {
+						m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
+					}
 					if _, set := fmap["24.8.1"]; set {
 						if m.Loc.Timestamp.Seconds != src.Loc.Timestamp.Seconds {
 							m.Loc.Timestamp.Seconds = src.Loc.Timestamp.Seconds
@@ -2730,7 +2746,9 @@ func (m *TestGen) CopyInFields(src *TestGen) int {
 		}
 		if _, set := fmap["25.8"]; set {
 			if src.LocNonnull.Timestamp != nil {
-				m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
+				if m.LocNonnull.Timestamp == nil {
+					m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
+				}
 				if _, set := fmap["25.8.1"]; set {
 					if m.LocNonnull.Timestamp.Seconds != src.LocNonnull.Timestamp.Seconds {
 						m.LocNonnull.Timestamp.Seconds = src.LocNonnull.Timestamp.Seconds
