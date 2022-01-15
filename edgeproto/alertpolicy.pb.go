@@ -712,10 +712,6 @@ func (m *AlertPolicyKey) ValidateEnums() error {
 func (s *AlertPolicyKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AlertPolicyKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AlertPolicy) Matches(o *AlertPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1696,10 +1692,6 @@ func (s *AlertPolicy) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.DeletePrepare = false
 	}
-}
-
-func (s *AlertPolicy) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreAlertPolicyFields(taglist string) cmp.Option {

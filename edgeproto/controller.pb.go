@@ -477,10 +477,6 @@ func (m *ControllerKey) ValidateEnums() error {
 func (s *ControllerKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ControllerKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *Controller) Matches(o *Controller, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1210,10 +1206,6 @@ func (s *Controller) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.Hostname = ""
 	}
-}
-
-func (s *Controller) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreControllerFields(taglist string) cmp.Option {

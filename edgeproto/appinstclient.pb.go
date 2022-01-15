@@ -1178,10 +1178,6 @@ func (s *AppInstClientKey) ClearTagged(tags map[string]struct{}) {
 	s.AppInstKey.ClearTagged(tags)
 }
 
-func (s *AppInstClientKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 const AppInstClientFieldClientKey = "2"
 const AppInstClientFieldClientKeyAppInstKey = "2.1"
 const AppInstClientFieldClientKeyAppInstKeyAppKey = "2.1.1"
@@ -1564,10 +1560,6 @@ func (s *AppInstClient) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.NotifyId = 0
 	}
-}
-
-func (s *AppInstClient) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreAppInstClientFields(taglist string) cmp.Option {

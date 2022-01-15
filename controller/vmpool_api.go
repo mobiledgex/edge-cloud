@@ -333,7 +333,7 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 	defer func() {
 		s.stopVMPoolStream(ctx, cctx, key, sendObj, reterr)
 	}()
-	err = s.all.vmPoolInfoApi.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY,
+	err = edgeproto.WaitForVMPoolInfo(ctx, key, edgeproto.TrackedState_READY,
 		UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 		s.all.settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(),
 		"Updated VM Pool Successfully", nil,

@@ -885,10 +885,6 @@ func (m *CloudletMgmtNode) ValidateEnums() error {
 func (s *CloudletMgmtNode) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *CloudletMgmtNode) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *RunCmd) CopyInFields(src *RunCmd) int {
 	changed := 0
 	if m.Command != src.Command {
@@ -939,10 +935,6 @@ func (s *RunCmd) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *RunCmd) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *RunVMConsole) CopyInFields(src *RunVMConsole) int {
 	changed := 0
 	if m.Url != src.Url {
@@ -965,10 +957,6 @@ func (s *RunVMConsole) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.Url = ""
 	}
-}
-
-func (s *RunVMConsole) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreRunVMConsoleFields(taglist string) cmp.Option {
@@ -1017,10 +1005,6 @@ func (m *ShowLog) ValidateEnums() error {
 }
 
 func (s *ShowLog) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *ShowLog) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ExecRequest) CopyInFields(src *ExecRequest) int {
@@ -1216,10 +1200,6 @@ func (s *ExecRequest) ClearTagged(tags map[string]struct{}) {
 	if s.Console != nil {
 		s.Console.ClearTagged(tags)
 	}
-}
-
-func (s *ExecRequest) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreExecRequestFields(taglist string) cmp.Option {

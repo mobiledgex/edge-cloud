@@ -814,10 +814,6 @@ func (m *ResTagTableKey) ValidateEnums() error {
 func (s *ResTagTableKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *ResTagTableKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *ResTagTable) Matches(o *ResTagTable, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1607,10 +1603,6 @@ func (m *ResTagTable) ValidateEnums() error {
 
 func (s *ResTagTable) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
-}
-
-func (s *ResTagTable) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var OptResNamesStrings = []string{

@@ -564,10 +564,6 @@ func (m *Timestamp) ValidateEnums() error {
 func (s *Timestamp) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *Timestamp) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *Loc) CopyInFields(src *Loc) int {
 	changed := 0
 	if m.Latitude != src.Latitude {
@@ -648,10 +644,6 @@ func (s *Loc) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Loc) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *Sample) CopyInFields(src *Sample) int {
 	changed := 0
 	if m.Value != src.Value {
@@ -718,10 +710,6 @@ func (s *Sample) ClearTagged(tags map[string]struct{}) {
 	if s.Timestamp != nil {
 		s.Timestamp.ClearTagged(tags)
 	}
-}
-
-func (s *Sample) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Statistics) CopyInFields(src *Statistics) int {
@@ -797,10 +785,6 @@ func (s *Statistics) ClearTagged(tags map[string]struct{}) {
 	if s.Timestamp != nil {
 		s.Timestamp.ClearTagged(tags)
 	}
-}
-
-func (s *Statistics) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Timestamp) Size() (n int) {

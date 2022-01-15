@@ -1005,10 +1005,6 @@ func (s *DeviceReport) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *DeviceReport) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *DeviceKey) Matches(o *DeviceKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1092,10 +1088,6 @@ func (m *DeviceKey) ValidateEnums() error {
 }
 
 func (s *DeviceKey) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *DeviceKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Device) Matches(o *Device, fopts ...MatchOpt) bool {
@@ -1921,10 +1913,6 @@ func (s *Device) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Device) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreDeviceFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1970,10 +1958,6 @@ func (s *DeviceData) ClearTagged(tags map[string]struct{}) {
 			s.Devices[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *DeviceData) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreDeviceDataFields(taglist string) cmp.Option {

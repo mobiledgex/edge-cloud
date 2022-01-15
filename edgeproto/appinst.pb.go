@@ -2216,10 +2216,6 @@ func (s *VirtualClusterInstKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
-func (s *VirtualClusterInstKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AppInstKey) Matches(o *AppInstKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2336,10 +2332,6 @@ func (m *AppInstKey) ValidateEnums() error {
 func (s *AppInstKey) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
 	s.ClusterInstKey.ClearTagged(tags)
-}
-
-func (s *AppInstKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
@@ -4107,10 +4099,6 @@ func (s *AppInst) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AppInst) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreAppInstFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -4164,10 +4152,6 @@ func (m *AppInstRuntime) ValidateEnums() error {
 }
 
 func (s *AppInstRuntime) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *AppInstRuntime) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
@@ -5180,7 +5164,7 @@ func (c *AppInstInfoCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *AppInstInfoCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+func WaitForAppInstInfo(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	var lastMsgCnt int
 	var err error
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
@@ -5302,10 +5286,6 @@ func (s *AppInstInfo) ClearTagged(tags map[string]struct{}) {
 	s.Status.ClearTagged(tags)
 }
 
-func (s *AppInstInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreAppInstInfoFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -5337,10 +5317,6 @@ func (m *AppInstMetrics) ValidateEnums() error {
 }
 
 func (s *AppInstMetrics) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *AppInstMetrics) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppInstLookup) CopyInFields(src *AppInstLookup) int {
@@ -5476,10 +5452,6 @@ func (m *AppInstLookup) ValidateEnums() error {
 func (s *AppInstLookup) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 	s.PolicyKey.ClearTagged(tags)
-}
-
-func (s *AppInstLookup) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppInstLookup2) CopyInFields(src *AppInstLookup2) int {
@@ -5621,10 +5593,6 @@ func (s *AppInstLookup2) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
-func (s *AppInstLookup2) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AppInstLatency) CopyInFields(src *AppInstLatency) int {
 	changed := 0
 	if m.Key.AppKey.Organization != src.Key.AppKey.Organization {
@@ -5701,10 +5669,6 @@ func (m *AppInstLatency) ValidateEnums() error {
 
 func (s *AppInstLatency) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
-}
-
-func (s *AppInstLatency) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var PowerStateStrings = []string{

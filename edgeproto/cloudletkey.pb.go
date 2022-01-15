@@ -272,10 +272,6 @@ func (m *CloudletKey) ValidateEnums() error {
 func (s *CloudletKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *CloudletKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletKey) Size() (n int) {
 	if m == nil {
 		return 0

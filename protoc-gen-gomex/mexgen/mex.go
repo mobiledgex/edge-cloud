@@ -1692,9 +1692,9 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 
 {{if ne (.WaitForState) ("")}}
 {{if eq (.WaitForState) ("TrackedState")}}
-func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+func WaitFor{{.Name}}(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 {{- else}}
-func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState dme_proto.{{.WaitForState}}, transitionStates map[dme_proto.{{.WaitForState}}]struct{}, errorState dme_proto.{{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+func WaitFor{{.Name}}(ctx context.Context, key *{{.KeyType}}, targetState dme_proto.{{.WaitForState}}, transitionStates map[dme_proto.{{.WaitForState}}]struct{}, errorState dme_proto.{{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 {{- end}}
 	var lastMsgCnt int
 	var err error
@@ -2614,10 +2614,23 @@ func (m *mex) generateClearTaggedFields(srcPkg string, parents []string, desc *g
 
 func (m *mex) generateClearRedisOnlyFields(desc *generator.Descriptor) {
 	msgName := strings.Join(desc.TypeName(), "_")
+	msg := desc.DescriptorProto
+	redisOnlyFieldExists := false
+	for _, field := range msg.Field {
+		RedisOnly := GetRedisOnly(field)
+		if RedisOnly {
+			redisOnlyFieldExists = true
+			break
+		}
+	}
+
+	if !redisOnlyFieldExists {
+		return
+	}
+
 	m.P("func (s *", msgName, ") ClearRedisOnlyFields() {")
 	m.P("// Clear fields so that they are not stored in DB, as they are cached in Redis")
 
-	msg := desc.DescriptorProto
 	for _, field := range msg.Field {
 		RedisOnly := GetRedisOnly(field)
 		if !RedisOnly {

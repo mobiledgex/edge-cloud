@@ -1111,10 +1111,6 @@ func (s *VMResource) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *VMResource) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletRefs) Matches(o *CloudletRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1898,10 +1894,6 @@ func (s *CloudletRefs) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *CloudletRefs) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *ClusterRefsAppInstKey) Matches(o *ClusterRefsAppInstKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1996,10 +1988,6 @@ func (m *ClusterRefsAppInstKey) ValidateEnums() error {
 
 func (s *ClusterRefsAppInstKey) ClearTagged(tags map[string]struct{}) {
 	s.AppKey.ClearTagged(tags)
-}
-
-func (s *ClusterRefsAppInstKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
@@ -2659,10 +2647,6 @@ func (s *ClusterRefs) ClearTagged(tags map[string]struct{}) {
 			s.Apps[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *ClusterRefs) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AppInstRefs) Matches(o *AppInstRefs, fopts ...MatchOpt) bool {
@@ -3332,10 +3316,6 @@ func (m *AppInstRefs) ValidateEnums() error {
 
 func (s *AppInstRefs) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
-}
-
-func (s *AppInstRefs) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *VMResource) Size() (n int) {

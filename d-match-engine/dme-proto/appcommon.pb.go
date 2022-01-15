@@ -685,10 +685,6 @@ func (m *AppPort) ValidateEnums() error {
 func (s *AppPort) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *AppPort) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *DeviceInfoStatic) CopyInFields(src *DeviceInfoStatic) int {
 	changed := 0
 	if m.DeviceOs != src.DeviceOs {
@@ -713,10 +709,6 @@ func (m *DeviceInfoStatic) ValidateEnums() error {
 }
 
 func (s *DeviceInfoStatic) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *DeviceInfoStatic) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *DeviceInfoDynamic) CopyInFields(src *DeviceInfoDynamic) int {
@@ -748,10 +740,6 @@ func (m *DeviceInfoDynamic) ValidateEnums() error {
 }
 
 func (s *DeviceInfoDynamic) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *DeviceInfoDynamic) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var LProtoStrings = []string{

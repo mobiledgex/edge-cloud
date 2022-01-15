@@ -2273,10 +2273,6 @@ func (s *Settings) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Settings) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CollectionInterval) CopyInFields(src *CollectionInterval) int {
 	changed := 0
 	if m.Interval != src.Interval {
@@ -2301,10 +2297,6 @@ func (m *CollectionInterval) ValidateEnums() error {
 }
 
 func (s *CollectionInterval) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *CollectionInterval) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Settings) IsValidArgsForUpdateSettings() error {

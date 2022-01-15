@@ -1001,7 +1001,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = s.all.clusterInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions,
+	err = edgeproto.WaitForClusterInstInfo(ctx, &in.Key, edgeproto.TrackedState_READY, CreateClusterInstTransitions,
 		edgeproto.TrackedState_CREATE_ERROR, s.all.settingsApi.Get().CreateClusterInstTimeout.TimeDuration(),
 		"Created ClusterInst successfully", cb.Send,
 		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
@@ -1165,7 +1165,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = s.all.clusterInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
+	err = edgeproto.WaitForClusterInstInfo(ctx, &in.Key, edgeproto.TrackedState_READY,
 		UpdateClusterInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 		s.all.settingsApi.Get().UpdateClusterInstTimeout.TimeDuration(),
 		"Updated ClusterInst successfully", cb.Send,
@@ -1404,7 +1404,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		s.all.alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
 		return nil
 	}
-	err = s.all.clusterInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
+	err = edgeproto.WaitForClusterInstInfo(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
 		DeleteClusterInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 		s.all.settingsApi.Get().DeleteClusterInstTimeout.TimeDuration(),
 		"Deleted ClusterInst successfully", cb.Send,

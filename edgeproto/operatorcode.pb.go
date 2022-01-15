@@ -930,10 +930,6 @@ func (m *OperatorCode) ValidateEnums() error {
 func (s *OperatorCode) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *OperatorCode) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *OperatorCode) IsValidArgsForCreateOperatorCode() error {
 	return nil
 }

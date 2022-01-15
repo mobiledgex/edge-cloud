@@ -1363,10 +1363,6 @@ func (m *VMNetInfo) ValidateEnums() error {
 func (s *VMNetInfo) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *VMNetInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *VM) CopyInFields(src *VM) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -1478,10 +1474,6 @@ func (s *VM) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *VM) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreVMFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1577,10 +1569,6 @@ func (m *VMPoolKey) ValidateEnums() error {
 }
 
 func (s *VMPoolKey) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *VMPoolKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *VMPool) Matches(o *VMPool, fopts ...MatchOpt) bool {
@@ -2603,10 +2591,6 @@ func (s *VMPool) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *VMPool) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreVMPoolFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -2748,10 +2732,6 @@ func (s *VMPoolMember) ClearTagged(tags map[string]struct{}) {
 	s.Vm.ClearTagged(tags)
 }
 
-func (s *VMPoolMember) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreVMPoolMemberFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -2828,10 +2808,6 @@ func (m *VMSpec) ValidateEnums() error {
 
 func (s *VMSpec) ClearTagged(tags map[string]struct{}) {
 	s.Flavor.ClearTagged(tags)
-}
-
-func (s *VMSpec) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *VMPoolInfo) Matches(o *VMPoolInfo, fopts ...MatchOpt) bool {
@@ -3852,7 +3828,7 @@ func (c *VMPoolInfoCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *VMPoolInfoCache) WaitForState(ctx context.Context, key *VMPoolKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+func WaitForVMPoolInfo(ctx context.Context, key *VMPoolKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	var lastMsgCnt int
 	var err error
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
@@ -3978,10 +3954,6 @@ func (s *VMPoolInfo) ClearTagged(tags map[string]struct{}) {
 		s.Errors = nil
 	}
 	s.Status.ClearTagged(tags)
-}
-
-func (s *VMPoolInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreVMPoolInfoFields(taglist string) cmp.Option {

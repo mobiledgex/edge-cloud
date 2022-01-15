@@ -1075,10 +1075,6 @@ func (s *Alert) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Alert) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreAlertFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})

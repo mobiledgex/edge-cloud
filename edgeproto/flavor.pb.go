@@ -705,10 +705,6 @@ func (m *FlavorKey) ValidateEnums() error {
 func (s *FlavorKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *FlavorKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *Flavor) Matches(o *Flavor, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1517,10 +1513,6 @@ func (m *Flavor) ValidateEnums() error {
 
 func (s *Flavor) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
-}
-
-func (s *Flavor) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Flavor) IsValidArgsForCreateFlavor() error {

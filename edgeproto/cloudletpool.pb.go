@@ -812,10 +812,6 @@ func (m *CloudletPoolKey) ValidateEnums() error {
 func (s *CloudletPoolKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *CloudletPoolKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletPool) Matches(o *CloudletPool, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1753,10 +1749,6 @@ func (s *CloudletPool) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *CloudletPool) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreCloudletPoolFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1824,10 +1816,6 @@ func (m *CloudletPoolMember) ValidateEnums() error {
 
 func (s *CloudletPoolMember) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
-}
-
-func (s *CloudletPoolMember) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *CloudletPool) IsValidArgsForCreateCloudletPool() error {

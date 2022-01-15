@@ -316,10 +316,6 @@ func (m *Organization) ValidateEnums() error {
 func (s *Organization) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *Organization) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *OrganizationData) DeepCopyIn(src *OrganizationData) {
 	if src.Orgs != nil {
 		m.Orgs = make([]Organization, len(src.Orgs), len(src.Orgs))
@@ -347,10 +343,6 @@ func (s *OrganizationData) ClearTagged(tags map[string]struct{}) {
 			s.Orgs[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *OrganizationData) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Organization) IsValidArgsForOrganizationInUse() error {

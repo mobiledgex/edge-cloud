@@ -5859,10 +5859,6 @@ func (m *OperationTimeLimits) ValidateEnums() error {
 func (s *OperationTimeLimits) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *OperationTimeLimits) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletInternal) Matches(o *CloudletInternal, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -6599,10 +6595,6 @@ func (s *CloudletInternal) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *CloudletInternal) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *PlatformConfig) CopyInFields(src *PlatformConfig) int {
 	changed := 0
 	if m.ContainerRegistryPath != src.ContainerRegistryPath {
@@ -6760,10 +6752,6 @@ func (s *PlatformConfig) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *PlatformConfig) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnorePlatformConfigFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -6862,10 +6850,6 @@ func (s *CloudletResMap) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *CloudletResMap) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *InfraConfig) CopyInFields(src *InfraConfig) int {
 	changed := 0
 	if m.ExternalNetworkName != src.ExternalNetworkName {
@@ -6890,10 +6874,6 @@ func (m *InfraConfig) ValidateEnums() error {
 }
 
 func (s *InfraConfig) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *InfraConfig) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ResourceQuota) CopyInFields(src *ResourceQuota) int {
@@ -6925,10 +6905,6 @@ func (m *ResourceQuota) ValidateEnums() error {
 }
 
 func (s *ResourceQuota) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *ResourceQuota) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *GPUDriverKey) Matches(o *GPUDriverKey, fopts ...MatchOpt) bool {
@@ -7016,10 +6992,6 @@ func (m *GPUDriverKey) ValidateEnums() error {
 func (s *GPUDriverKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *GPUDriverKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *GPUDriverBuild) CopyInFields(src *GPUDriverBuild) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -7072,10 +7044,6 @@ func (m *GPUDriverBuild) ValidateEnums() error {
 }
 
 func (s *GPUDriverBuild) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *GPUDriverBuild) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *GPUDriverBuildMember) CopyInFields(src *GPUDriverBuildMember) int {
@@ -7165,10 +7133,6 @@ func (s *GPUDriverBuildMember) ClearTagged(tags map[string]struct{}) {
 	s.Build.ClearTagged(tags)
 }
 
-func (s *GPUDriverBuildMember) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *GPUDriverBuildURL) CopyInFields(src *GPUDriverBuildURL) int {
 	changed := 0
 	if m.BuildUrlPath != src.BuildUrlPath {
@@ -7193,10 +7157,6 @@ func (m *GPUDriverBuildURL) ValidateEnums() error {
 }
 
 func (s *GPUDriverBuildURL) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *GPUDriverBuildURL) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *GPUDriver) Matches(o *GPUDriver, fopts ...MatchOpt) bool {
@@ -8149,10 +8109,6 @@ func (s *GPUDriver) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *GPUDriver) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *GPUConfig) CopyInFields(src *GPUConfig) int {
 	changed := 0
 	if m.Driver.Name != src.Driver.Name {
@@ -8208,10 +8164,6 @@ func (m *GPUConfig) ValidateEnums() error {
 
 func (s *GPUConfig) ClearTagged(tags map[string]struct{}) {
 	s.Driver.ClearTagged(tags)
-}
-
-func (s *GPUConfig) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
@@ -10967,10 +10919,6 @@ func (s *Cloudlet) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Cloudlet) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreCloudletFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -11085,10 +11033,6 @@ func (s *FlavorMatch) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *FlavorMatch) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletManifest) CopyInFields(src *CloudletManifest) int {
 	changed := 0
 	if m.Manifest != src.Manifest {
@@ -11108,10 +11052,6 @@ func (m *CloudletManifest) ValidateEnums() error {
 }
 
 func (s *CloudletManifest) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *CloudletManifest) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *PropertyInfo) CopyInFields(src *PropertyInfo) int {
@@ -11158,10 +11098,6 @@ func (m *PropertyInfo) ValidateEnums() error {
 }
 
 func (s *PropertyInfo) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *PropertyInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *CloudletProps) CopyInFields(src *CloudletProps) int {
@@ -11236,10 +11172,6 @@ func (m *CloudletProps) ValidateEnums() error {
 func (s *CloudletProps) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *CloudletProps) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletResourceQuotaProps) CopyInFields(src *CloudletResourceQuotaProps) int {
 	changed := 0
 	if m.PlatformType != src.PlatformType {
@@ -11292,10 +11224,6 @@ func (s *CloudletResourceQuotaProps) ClearTagged(tags map[string]struct{}) {
 			s.Properties[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *CloudletResourceQuotaProps) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *CloudletResourceUsage) CopyInFields(src *CloudletResourceUsage) int {
@@ -11381,10 +11309,6 @@ func (s *CloudletResourceUsage) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *CloudletResourceUsage) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *CloudletAllianceOrg) CopyInFields(src *CloudletAllianceOrg) int {
 	changed := 0
 	if m.Key.Organization != src.Key.Organization {
@@ -11443,10 +11367,6 @@ func (s *CloudletAllianceOrg) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *CloudletAllianceOrg) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *FlavorInfo) CopyInFields(src *FlavorInfo) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -11501,10 +11421,6 @@ func (m *FlavorInfo) ValidateEnums() error {
 func (s *FlavorInfo) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *FlavorInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *OSAZone) CopyInFields(src *OSAZone) int {
 	changed := 0
 	if m.Name != src.Name {
@@ -11529,10 +11445,6 @@ func (m *OSAZone) ValidateEnums() error {
 }
 
 func (s *OSAZone) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *OSAZone) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *OSImage) CopyInFields(src *OSImage) int {
@@ -11569,10 +11481,6 @@ func (m *OSImage) ValidateEnums() error {
 }
 
 func (s *OSImage) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *OSImage) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
@@ -13400,7 +13308,7 @@ func (c *CloudletInfoCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState dme_proto.CloudletState, transitionStates map[dme_proto.CloudletState]struct{}, errorState dme_proto.CloudletState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+func WaitForCloudletInfo(ctx context.Context, key *CloudletKey, targetState dme_proto.CloudletState, transitionStates map[dme_proto.CloudletState]struct{}, errorState dme_proto.CloudletState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	var lastMsgCnt int
 	var err error
 	curState := dme_proto.CloudletState_CLOUDLET_STATE_UNKNOWN
@@ -13615,10 +13523,6 @@ func (m *CloudletMetrics) ValidateEnums() error {
 }
 
 func (s *CloudletMetrics) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *CloudletMetrics) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var PlatformTypeStrings = []string{

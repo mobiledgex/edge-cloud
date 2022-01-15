@@ -751,7 +751,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 				log.SpanLog(ctx, log.DebugLevelApi, "failed to cleanup crm service", "err", err)
 			}
 		}()
-		err = s.all.cloudletInfoApi.cache.WaitForState(
+		err = edgeproto.WaitForCloudletInfo(
 			ctx, &in.Key,
 			dme.CloudletState_CLOUDLET_STATE_READY,
 			CreateCloudletTransitions, dme.CloudletState_CLOUDLET_STATE_ERRORS,
@@ -1188,7 +1188,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	if crmUpdateReqd && !ignoreCRM(cctx) {
 		// Wait for cloudlet to finish upgrading
-		err = s.all.cloudletInfoApi.cache.WaitForState(
+		err = edgeproto.WaitForCloudletInfo(
 			ctx, &in.Key,
 			dme.CloudletState_CLOUDLET_STATE_READY,
 			UpdateCloudletTransitions, dme.CloudletState_CLOUDLET_STATE_ERRORS,

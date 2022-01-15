@@ -1471,10 +1471,6 @@ func (s *ClusterInstKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
-func (s *ClusterInstKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *ClusterInst) Matches(o *ClusterInst, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -3111,10 +3107,6 @@ func (s *ClusterInst) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *ClusterInst) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreClusterInstFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -3158,10 +3150,6 @@ func (m *IdleReservableClusterInsts) ValidateEnums() error {
 }
 
 func (s *IdleReservableClusterInsts) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *IdleReservableClusterInsts) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
@@ -4202,7 +4190,7 @@ func (c *ClusterInstInfoCache) SyncListEnd(ctx context.Context) {
 	}
 }
 
-func (c *ClusterInstInfoCache) WaitForState(ctx context.Context, key *ClusterInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+func WaitForClusterInstInfo(ctx context.Context, key *ClusterInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
 	var lastMsgCnt int
 	var err error
 	curState := TrackedState_TRACKED_STATE_UNKNOWN
@@ -4319,10 +4307,6 @@ func (s *ClusterInstInfo) ClearTagged(tags map[string]struct{}) {
 	}
 	s.Status.ClearTagged(tags)
 	s.Resources.ClearTagged(tags)
-}
-
-func (s *ClusterInstInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreClusterInstInfoFields(taglist string) cmp.Option {

@@ -674,10 +674,6 @@ func (m *PolicyKey) ValidateEnums() error {
 func (s *PolicyKey) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *PolicyKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AutoScalePolicy) Matches(o *AutoScalePolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1559,10 +1555,6 @@ func (m *AutoScalePolicy) ValidateEnums() error {
 
 func (s *AutoScalePolicy) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
-}
-
-func (s *AutoScalePolicy) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AutoScalePolicy) IsValidArgsForCreateAutoScalePolicy() error {

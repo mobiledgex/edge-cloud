@@ -2211,10 +2211,6 @@ func (s *AutoProvPolicy) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *AutoProvPolicy) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AutoProvCloudlet) CopyInFields(src *AutoProvCloudlet) int {
 	changed := 0
 	if m.Key.Organization != src.Key.Organization {
@@ -2311,10 +2307,6 @@ func (s *AutoProvCloudlet) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *AutoProvCloudlet) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AutoProvCount) CopyInFields(src *AutoProvCount) int {
 	changed := 0
 	if m.AppKey.Organization != src.AppKey.Organization {
@@ -2400,10 +2392,6 @@ func (s *AutoProvCount) ClearTagged(tags map[string]struct{}) {
 	s.DeployNowKey.ClearTagged(tags)
 }
 
-func (s *AutoProvCount) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *AutoProvCounts) CopyInFields(src *AutoProvCounts) int {
 	changed := 0
 	if m.DmeNodeName != src.DmeNodeName {
@@ -2459,10 +2447,6 @@ func (s *AutoProvCounts) ClearTagged(tags map[string]struct{}) {
 			s.Counts[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *AutoProvCounts) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AutoProvPolicyCloudlet) CopyInFields(src *AutoProvPolicyCloudlet) int {
@@ -2529,10 +2513,6 @@ func (m *AutoProvPolicyCloudlet) ValidateEnums() error {
 func (s *AutoProvPolicyCloudlet) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 	s.CloudletKey.ClearTagged(tags)
-}
-
-func (s *AutoProvPolicyCloudlet) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *AutoProvInfo) Matches(o *AutoProvInfo, fopts ...MatchOpt) bool {
@@ -3374,10 +3354,6 @@ func (s *AutoProvInfo) ClearTagged(tags map[string]struct{}) {
 	if _, found := tags["nocmp"]; found {
 		s.NotifyId = 0
 	}
-}
-
-func (s *AutoProvInfo) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreAutoProvInfoFields(taglist string) cmp.Option {

@@ -1643,10 +1643,6 @@ func (m *FlowSettings) ValidateEnums() error {
 func (s *FlowSettings) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *FlowSettings) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *FlowRateLimitSettingsKey) Matches(o *FlowRateLimitSettingsKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1741,10 +1737,6 @@ func (m *FlowRateLimitSettingsKey) ValidateEnums() error {
 
 func (s *FlowRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 	s.RateLimitKey.ClearTagged(tags)
-}
-
-func (s *FlowRateLimitSettingsKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *FlowRateLimitSettings) Matches(o *FlowRateLimitSettings, fopts ...MatchOpt) bool {
@@ -2483,10 +2475,6 @@ func (s *FlowRateLimitSettings) ClearTagged(tags map[string]struct{}) {
 	s.Settings.ClearTagged(tags)
 }
 
-func (s *FlowRateLimitSettings) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *MaxReqsSettings) Matches(o *MaxReqsSettings, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2546,10 +2534,6 @@ func (m *MaxReqsSettings) ValidateEnums() error {
 }
 
 func (s *MaxReqsSettings) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *MaxReqsSettings) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *MaxReqsRateLimitSettingsKey) Matches(o *MaxReqsRateLimitSettingsKey, fopts ...MatchOpt) bool {
@@ -2646,10 +2630,6 @@ func (m *MaxReqsRateLimitSettingsKey) ValidateEnums() error {
 
 func (s *MaxReqsRateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
 	s.RateLimitKey.ClearTagged(tags)
-}
-
-func (s *MaxReqsRateLimitSettingsKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *MaxReqsRateLimitSettings) Matches(o *MaxReqsRateLimitSettings, fopts ...MatchOpt) bool {
@@ -3388,10 +3368,6 @@ func (s *MaxReqsRateLimitSettings) ClearTagged(tags map[string]struct{}) {
 	s.Settings.ClearTagged(tags)
 }
 
-func (s *MaxReqsRateLimitSettings) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *RateLimitSettingsKey) Matches(o *RateLimitSettingsKey, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -3493,10 +3469,6 @@ func (m *RateLimitSettingsKey) ValidateEnums() error {
 }
 
 func (s *RateLimitSettingsKey) ClearTagged(tags map[string]struct{}) {
-}
-
-func (s *RateLimitSettingsKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *RateLimitSettings) Matches(o *RateLimitSettings, fopts ...MatchOpt) bool {
@@ -3828,10 +3800,6 @@ func (s *RateLimitSettings) ClearTagged(tags map[string]struct{}) {
 	s.Key.ClearTagged(tags)
 }
 
-func (s *RateLimitSettings) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *RateLimitSettingsData) DeepCopyIn(src *RateLimitSettingsData) {
 	if src.Settings != nil {
 		m.Settings = make([]RateLimitSettings, len(src.Settings), len(src.Settings))
@@ -3859,10 +3827,6 @@ func (s *RateLimitSettingsData) ClearTagged(tags map[string]struct{}) {
 			s.Settings[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *RateLimitSettingsData) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var ApiEndpointTypeStrings = []string{

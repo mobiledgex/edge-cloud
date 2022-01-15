@@ -707,10 +707,6 @@ func (s *TrustPolicyExceptionKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletPoolKey.ClearTagged(tags)
 }
 
-func (s *TrustPolicyExceptionKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *TrustPolicyException) Matches(o *TrustPolicyException, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1561,10 +1557,6 @@ func (s *TrustPolicyException) ClearTagged(tags map[string]struct{}) {
 			s.OutboundSecurityRules[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *TrustPolicyException) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 var TrustPolicyExceptionStateStrings = []string{

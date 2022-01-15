@@ -1222,7 +1222,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		return nil
 	}
-	err = s.all.appInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
+	err = edgeproto.WaitForAppInstInfo(ctx, &in.Key, edgeproto.TrackedState_READY,
 		CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR,
 		s.all.settingsApi.Get().CreateAppInstTimeout.TimeDuration(),
 		"Created AppInst successfully", cb.Send,
@@ -1402,7 +1402,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 				s.RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
 			}
 		}()
-		err = s.all.appInstInfoApi.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY,
+		err = edgeproto.WaitForAppInstInfo(cb.Context(), &key, edgeproto.TrackedState_READY,
 			UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateAppInstTimeout.TimeDuration(),
 			"", cb.Send,
@@ -1774,7 +1774,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 	} else {
-		err = s.all.appInstInfoApi.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
+		err = edgeproto.WaitForAppInstInfo(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
 			DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 			s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration(),
 			"Deleted AppInst successfully", cb.Send,

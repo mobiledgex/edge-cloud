@@ -77,12 +77,11 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		}
 		// Clear fields that are cached in Redis as they should not be stored in DB
 		in.ClearRedisOnlyFields()
-		changeCount := info.CopyInFields(in)
-		if changeCount == 0 {
-			// nothing changed
-			return nil
+		fields := make(map[string]struct{})
+		info.DiffFields(in, fields)
+		if len(fields) > 0 {
+			s.store.STMPut(stm, in)
 		}
-		s.store.STMPut(stm, in)
 		return nil
 	})
 

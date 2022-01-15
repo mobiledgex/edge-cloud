@@ -641,10 +641,6 @@ func (m *SecurityRule) ValidateEnums() error {
 func (s *SecurityRule) ClearTagged(tags map[string]struct{}) {
 }
 
-func (s *SecurityRule) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func (m *TrustPolicy) Matches(o *TrustPolicy, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1426,10 +1422,6 @@ func (s *TrustPolicy) ClearTagged(tags map[string]struct{}) {
 			s.OutboundSecurityRules[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *TrustPolicy) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func (m *TrustPolicy) IsValidArgsForCreateTrustPolicy() error {

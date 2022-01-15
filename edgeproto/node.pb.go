@@ -713,10 +713,6 @@ func (s *NodeKey) ClearTagged(tags map[string]struct{}) {
 	s.CloudletKey.ClearTagged(tags)
 }
 
-func (s *NodeKey) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreNodeKeyFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1722,10 +1718,6 @@ func (s *Node) ClearTagged(tags map[string]struct{}) {
 	}
 }
 
-func (s *Node) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
-}
-
 func IgnoreNodeFields(taglist string) cmp.Option {
 	names := []string{}
 	tags := make(map[string]struct{})
@@ -1783,10 +1775,6 @@ func (s *NodeData) ClearTagged(tags map[string]struct{}) {
 			s.Nodes[ii].ClearTagged(tags)
 		}
 	}
-}
-
-func (s *NodeData) ClearRedisOnlyFields() {
-	// Clear fields so that they are not stored in DB, as they are cached in Redis
 }
 
 func IgnoreNodeDataFields(taglist string) cmp.Option {
