@@ -270,7 +270,6 @@ func genRef(dep *PkgDep) {
 				validLink = try
 				break
 			}
-			//fmt.Printf("response is %v\n", resp)
 		}
 	} else {
 		validLink = "https://" + links[0]
