@@ -19,6 +19,7 @@ const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 
 const MaxRedisWait = time.Second * 30
 const CheckActiveLogInterval = time.Second * 10
+const MaxRedisUnreachableRetries = 3
 
 type HAWatcher interface {
 	ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error  // actions before setting PlatformInstanceActive
@@ -45,8 +46,7 @@ func (s *HighAvailabilityManager) InitFlags() {
 	flag.StringVar(&s.HARole, "HARole", string(process.HARolePrimary), string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
-func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haWatcher HAWatcher) error {
-	ctx := log.ContextWithSpan(context.Background(), log.NoTracingSpan())
+func (s *HighAvailabilityManager) Init(ctx context.Context, nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haWatcher HAWatcher) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
 	s.activeDuration = activeDuration.TimeDuration()
 	s.activePollInterval = activePollInterval.TimeDuration()
@@ -63,25 +63,28 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	s.HAEnabled = true
 	err := s.connectRedis(ctx)
 	if err != nil {
+		s.updateRedisFailed(ctx, true, err)
 		log.SpanLog(ctx, log.DebugLevelInfo, "connectRedis failed", "err", err)
 		if s.HARole == string(process.HARolePrimary) {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Assuming active status for primary node due to redis failure")
 			s.PlatformInstanceActive = true
-			s.RedisConnectionFailed = true
 			return nil
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Assuming inactive status for secondary node due to redis failure")
 		}
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfo, "redis is online, do tryActive")
+		s.PlatformInstanceActive, err = s.tryActive(ctx)
 		return err
 	}
-	s.PlatformInstanceActive, err = s.tryActive(ctx)
-	return err
+	return nil
 }
 
-func (s *HighAvailabilityManager) pingRedis(ctx context.Context) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis")
-
+func (s *HighAvailabilityManager) pingRedis(ctx context.Context, genLog bool) error {
 	pong, err := s.redisClient.Ping().Result()
-	log.SpanLog(ctx, log.DebugLevelInfra, "redis ping done", "pong", pong, "err", err)
-
+	if genLog {
+		log.SpanLog(ctx, log.DebugLevelInfra, "redis ping done", "pong", pong, "err", err)
+	}
 	if err != nil {
 		return fmt.Errorf("%s - %v", RedisPingFail, err)
 	}
@@ -102,7 +105,7 @@ func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 	start := time.Now()
 	var err error
 	for {
-		err = s.pingRedis(ctx)
+		err = s.pingRedis(ctx, true)
 		if err == nil {
 			return nil
 		}
@@ -155,7 +158,7 @@ func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error)
 	v, err := cmd.Result()
 	if err != nil {
 		if err == redis.Nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive returns nil -- neither unit is active")
+			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive - key does not exist -- neither unit is active")
 			return false, nil
 		} else {
 			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
@@ -179,8 +182,23 @@ func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
 	return nil
 }
 
+func (s *HighAvailabilityManager) updateRedisFailed(ctx context.Context, newRedisFailed bool, err error) {
+	if newRedisFailed == s.RedisConnectionFailed {
+		// no change
+		return
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "updateRedisFailed state changed", "current RedisConnectionFailed", s.RedisConnectionFailed, "newRedisFailed", newRedisFailed, "err", err)
+	// generate an event if the state changed
+	s.RedisConnectionFailed = newRedisFailed
+	if newRedisFailed {
+		s.nodeMgr.Event(ctx, "Redis online", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
+	} else {
+		s.nodeMgr.Event(ctx, "Redis offline", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
+	}
+}
+
 func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "CheckActiveLoop", "activePollInterval", s.activePollInterval, "activeDuration", s.activeDuration)
+	log.SpanLog(ctx, log.DebugLevelInfra, "Enter CheckActiveLoop", "activePollInterval", s.activePollInterval, "activeDuration", s.activeDuration)
 	timeLastLog := time.Now() // log only once every X seconds in this loop
 	timeLastBumpActive := time.Now()
 	timeLastCheckActive := time.Now()
@@ -188,19 +206,63 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 		elapsedSinceLog := time.Since(timeLastLog)
 		elapsedSinceBumpActive := time.Since(timeLastBumpActive)
 		elapsedSinceCheckActive := time.Since(timeLastCheckActive)
-
-		if !s.PlatformInstanceActive && !s.ActiveTransitionInProgress {
-			if elapsedSinceLog >= CheckActiveLogInterval {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Platform inactive, doing TryActive")
-				timeLastLog = time.Now()
+		periodicLog := elapsedSinceLog >= CheckActiveLogInterval
+		isActive := s.PlatformInstanceActive || s.ActiveTransitionInProgress // either of these states indicate active from a redis standpoint
+		if periodicLog {
+			timeLastLog = time.Now()
+			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActiveLoop", "role", s.HARole, "isActive", isActive, "RedisConnectionFailed", s.RedisConnectionFailed, "ActiveTransitionInProgress", s.ActiveTransitionInProgress, "PlatformInstanceActive", s.PlatformInstanceActive)
+		}
+		if !isActive {
+			var err error
+			transitionToActive := false
+			if s.RedisConnectionFailed && s.HARole == string(process.HARoleSecondary) {
+				// redis is already known to be down on this pass
+				if periodicLog {
+					log.SpanLog(ctx, log.DebugLevelInfra, "redis unreachable, ping to see if it came back")
+				}
+				// rather than tryActive which will seize activity, just ping redis to see if it came back. We don't want
+				// to take activity from the primary when redis comes back online
+				err = s.pingRedis(ctx, periodicLog)
+				if err == nil {
+					s.updateRedisFailed(ctx, false, err)
+					// this secondary is currently standby and redis just came back online, so the primary should be active.
+					// Sleep two intervals and wait until the next pass before doing tryActive again to give
+					// the primary the chance to retain activity
+					log.SpanLog(ctx, log.DebugLevelInfra, "redis reachable again, wait and then tryActive")
+					time.Sleep(s.activePollInterval * 2)
+				}
+				continue
 			}
-			newActive, err := s.tryActive(ctx)
-			if err != nil {
-				// we are not active here, so even if this is primary, quit now
-				log.FatalLog("Error in tryActive", "err", err)
+			for retry := 0; retry < MaxRedisUnreachableRetries; retry++ {
+				transitionToActive, err = s.tryActive(ctx)
+				if err == nil {
+					break
+				}
+				if periodicLog {
+					log.SpanLog(ctx, log.DebugLevelInfra, "redis unreachable, sleep and retry tryActive", "retry", retry)
+				}
+				time.Sleep(s.activePollInterval)
 			}
-			if newActive {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Platform became active", "role", s.HARole)
+			if err == nil {
+				s.updateRedisFailed(ctx, false, nil)
+			} else {
+				s.updateRedisFailed(ctx, true, err)
+				// Redis unreachable. Assume if it is a network or redis outage, it affects both primary and secondary.
+				// If Redis itself is down, both primary and secondary will fail to reach it.
+				// In this case, primary should go active, and secondary should go standby.
+				// We are already not active here.
+				if s.HARole == string(process.HARolePrimary) {
+					// go active
+					log.SpanLog(ctx, log.DebugLevelInfra, "Primary platform became active due to redis failure", "role", s.HARole)
+					transitionToActive = true
+				} else {
+					if periodicLog {
+						log.SpanLog(ctx, log.DebugLevelInfra, "Secondary remains inactive", "role", s.HARole)
+					}
+				}
+			}
+			if transitionToActive {
+				log.SpanLog(ctx, log.DebugLevelInfra, "Platform becoming active", "role", s.HARole, "RedisConnectionFailed", s.RedisConnectionFailed)
 				timeLastBumpActive = time.Now()
 				// switchover is handled in a separate thread so we do not miss polling redis
 				s.ActiveTransitionInProgress = true
@@ -215,28 +277,30 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					if err != nil {
 						log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
 					}
-					s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "Newly Active Instance", s.HARole)
+					s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
 				}()
+			} else {
+				time.Sleep(s.activePollInterval)
+				continue
 			}
-		} else {
-			if elapsedSinceLog >= CheckActiveLogInterval {
-				log.SpanLog(ctx, log.DebugLevelInfra, "Unit is active", "ActiveTransitionInProgress", s.ActiveTransitionInProgress, "PlatformInstanceActive", s.PlatformInstanceActive, "RedisConnectionFailed", s.RedisConnectionFailed, "role", s.HARole)
-				timeLastLog = time.Now()
-			}
+		} else { // platform active case
 			if s.RedisConnectionFailed {
 				// redis went down at some point, we cannot bump the active state, try to regain it
 				active, err := s.tryActive(ctx)
 				if err == nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "redis connection re-established", "active", active)
+					s.updateRedisFailed(ctx, false, nil)
 					if !active {
-						// activity was stolen when redis came back. This is possible as the secondary will restart
-						log.FatalLog("activity lost when redis connection re-established")
+						// activity was stolen when redis came back. This is possible but unlikely as the secondary should give the primary time to remain active
+						log.SpanLog(ctx, log.DebugLevelInfra, "activity lost when redis connection re-established", "role", s.HARole)
+						s.PlatformInstanceActive = false
+						continue
 					}
 					elapsedSinceBumpActive = time.Since(time.Now())
-					s.RedisConnectionFailed = false
-				}
-				if err != nil && elapsedSinceLog >= CheckActiveLogInterval {
-					log.SpanLog(ctx, log.DebugLevelInfra, "error in tryActive", "err", err)
+				} else {
+					if periodicLog {
+						log.SpanLog(ctx, log.DebugLevelInfra, "error in tryActive", "err", err)
+					}
 				}
 			}
 			if !s.RedisConnectionFailed {
@@ -256,36 +320,41 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					if !stillActive {
 						// somehow we lost activity
 						if err != nil {
+							s.updateRedisFailed(ctx, true, err)
 							if s.HARole == string(process.HARolePrimary) {
 								log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
-								s.RedisConnectionFailed = true
-								s.nodeMgr.Event(ctx, "Redis error", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HA Role", s.HARole, "Redis Addr", s.redisAddr)
-								continue
 							} else {
-								log.FatalLog("secondary unit lost activity due to redis error")
+								s.PlatformInstanceActive = false
+								log.SpanLog(ctx, log.DebugLevelInfra, "secondary unit lost activity due to redis error")
 							}
+							continue // bypass bumpActive this pass since redis is down
 						} else {
 							// this is unexpected
 							log.SpanLog(ctx, log.DebugLevelInfra, "Activity Lost Unexpectedly")
+							s.PlatformInstanceActive = false
 						}
 					}
 					timeLastCheckActive = time.Now()
 				}
-				err := s.BumpActiveExpire(ctx)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire failed, retry", "err", err)
+				var err error
+				for retry := 0; retry < MaxRedisUnreachableRetries; retry++ {
 					err = s.BumpActiveExpire(ctx)
-					if err != nil {
-						if s.HARole == string(process.HARolePrimary) {
-							log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
-							s.RedisConnectionFailed = true
-							s.nodeMgr.Event(ctx, "Redis error", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HA Role", s.HARole, "Redis Addr", s.redisAddr)
-						} else {
-							log.FatalLog("BumpActiveExpire failed!", "err", err)
-						}
+					if err == nil {
+						timeLastBumpActive = time.Now()
+						break
+					}
+					log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire failed", "retry", retry, "err", err)
+				}
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire failed, retries exhausted", "err", err)
+					s.updateRedisFailed(ctx, true, err)
+					if s.HARole == string(process.HARolePrimary) {
+						log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
+					} else {
+						s.PlatformInstanceActive = false
+						log.SpanLog(ctx, log.DebugLevelInfra, "Standby going inactive due to redis error", "err", err)
 					}
 				}
-				timeLastBumpActive = time.Now()
 			}
 		}
 		time.Sleep(s.activePollInterval)
