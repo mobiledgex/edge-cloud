@@ -120,6 +120,13 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 					break
 				}
 			}
+			if asAddr == "" && os.Getenv("E2ETEST_QOS_SIM") == "true" {
+				// If running e2e-test, the sessions-srv-sim will be used where the asAddr is ignored.
+				// FQDN lookup above failed, so just set it to any known good IP (in this case, localhost).
+				asAddr = "127.0.0.1"
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Running e2e-test. Setting asAddr to localhost", "asAddr", asAddr)
+			}
+
 			ueAddr := req.Tags["ip_user_equipment"]
 			// Use the first port
 			port := app.Ports[0]

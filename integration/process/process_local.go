@@ -1738,6 +1738,24 @@ func (p *TokSrvSim) LookupArgs() string {
 	return fmt.Sprintf("-port %d", p.Port)
 }
 
+//DT QOS Sessions API server simulator
+func (p *QosSesSrvSim) StartLocal(logfile string, opts ...StartOp) error {
+	args := []string{"-port", fmt.Sprintf("%d", p.Port)}
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
+	return err
+}
+
+func (p *QosSesSrvSim) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *QosSesSrvSim) GetExeName() string { return "sessions-srv-sim" }
+
+func (p *QosSesSrvSim) LookupArgs() string {
+	return fmt.Sprintf("-port %d", p.Port)
+}
+
 //Generic sample app for use in test
 
 func (p *SampleApp) StartLocal(logfile string, opts ...StartOp) error {

@@ -112,6 +112,7 @@ type DeploymentData struct {
 	DockerNetworks []*process.DockerNetwork `yaml:"dockernetworks"`
 	Locsims        []*process.LocApiSim     `yaml:"locsims"`
 	Toksims        []*process.TokSrvSim     `yaml:"toksims"`
+	Qossessims     []*process.QosSesSrvSim  `yaml:"qossessims"`
 	Vaults         []*process.Vault         `yaml:"vaults"`
 	Etcds          []*process.Etcd          `yaml:"etcds"`
 	Controllers    []*process.Controller    `yaml:"controllers"`
@@ -645,6 +646,9 @@ func FilterCloudletInfoNocmp(data *edgeproto.AllData) {
 
 func FilterFindCloudletReply(reply *dmeproto.FindCloudletReply) {
 	reply.EdgeEventsCookie = ""
+
+	// Delete this tag because it is different for every new priority session.
+	delete(reply.Tags, "priority_session_id")
 }
 
 func FilterAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
