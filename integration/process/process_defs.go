@@ -104,11 +104,6 @@ type TokSrvSim struct {
 	Token  string
 	cmd    *exec.Cmd
 }
-type QosSesSrvSim struct {
-	Common  `yaml:",inline"`
-	Port    int
-	cmd     *exec.Cmd
-}
 type SampleApp struct {
 	Common       `yaml:",inline"`
 	Exename      string

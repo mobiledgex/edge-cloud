@@ -614,11 +614,6 @@ func StartProcesses(processName string, args []string, outputDir string) bool {
 			return false
 		}
 	}
-	for _, p := range util.Deployment.Qossessims {
-		if !StartLocal(processName, outputDir, p, opts...) {
-			return false
-		}
-	}
 	for _, p := range util.Deployment.SampleApps {
 		if !StartLocal(processName, outputDir, p, opts...) {
 			return false

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -420,13 +421,13 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 						err = util.ReadYamlFile(filename, &replyPrev)
 						if err == nil {
 							log.Printf("Previous findcloudletreply: %v", replyPrev)
-							log.Printf("old: %s, %s. new: %s, %s", replyPrev.Tags["qos_profile_name"],
-								replyPrev.Tags["priority_session_id"], reply.Tags["qos_profile_name"],
-								reply.Tags["priority_session_id"])
-							if replyPrev.Tags["qos_profile_name"] == reply.Tags["qos_profile_name"] {
+							log.Printf("old: %s, %s. new: %s, %s", replyPrev.Tags[cloudcommon.TagQosProfileName],
+								replyPrev.Tags[cloudcommon.TagPrioritySessionId], reply.Tags[cloudcommon.TagQosProfileName],
+								reply.Tags[cloudcommon.TagPrioritySessionId])
+							if replyPrev.Tags[cloudcommon.TagQosProfileName] == reply.Tags[cloudcommon.TagQosProfileName] {
 								// If the same profile name is received, the session ID should
 								// also be the same, as it is reused by the DME.
-								if replyPrev.Tags["priority_session_id"] == reply.Tags["priority_session_id"] {
+								if replyPrev.Tags[cloudcommon.TagPrioritySessionId] == reply.Tags[cloudcommon.TagPrioritySessionId] {
 									log.Printf("priority_session_id verified same as previous run")
 								} else {
 									log.Printf("FAIL: priority_session_id has changed and should not have")
@@ -435,8 +436,8 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 							} else {
 								// If the profile name has changed, the session ID should
 								// also be a new value, as a new session was created by the DME.
-								log.Printf("New qos_profile_name: %s", reply.Tags["qos_profile_name"])
-								if replyPrev.Tags["priority_session_id"] != reply.Tags["priority_session_id"] {
+								log.Printf("New qos_profile_name: %s", reply.Tags[cloudcommon.TagQosProfileName])
+								if replyPrev.Tags[cloudcommon.TagPrioritySessionId] != reply.Tags[cloudcommon.TagPrioritySessionId] {
 									log.Printf("Verified new priority_session_id")
 								} else {
 									log.Printf("FAIL: priority_session_id was not updated for new profile")
