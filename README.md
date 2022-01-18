@@ -14,17 +14,17 @@ The Edge-Cloud Platform is a set of services that allow for distributed and secu
 
 - The **EdgeTurn** service is much like a TURN server, providing secure console and shell access to virtual machines and containers deployed on cloudlets.
 
-# Checking Out Code and Building
+## Checking Out Code and Building
 
 Please see [Getting Started](https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/22478869/Getting+Started).
 
-# Running unit tests
+## Running unit tests
 
 ``` shell
 make unit-test
 ```
 
-# Running e2e (end-to-end) tests
+## Running e2e (end-to-end) tests
 
 Make sure you have installed required third party services as noted in the getting started guide. This runs the above services, and any required third party services locally, and stimuates the platform via the public APIs to do end-to-end testing.
 
@@ -37,7 +37,7 @@ or, to stop on error:
 make test-debug
 ```
 
-# Running local KIND test
+## Running local KIND test
 
 This is similar to the e2e test above, except instead of fake cloudlet platforms, it uses a KIND (Kubernetes IN Docker) cluster to simulate a cloudlet with a single Kubernetes cluster locally. There are two commands, one to start the local processes, and one to stop.
 
