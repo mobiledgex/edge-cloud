@@ -137,6 +137,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 
 	// debug functions
 	nodeMgr.Debug.AddDebugFunc(GetEnvoyVersionCmd, cd.GetClusterEnvoyVersion)
+	nodeMgr.Debug.AddDebugFunc("show-platform-active", haMgr.DumpActive)
 
 	return cd
 }
@@ -1804,6 +1805,10 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
 				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
 				ctx := log.ContextWithSpan(context.Background(), span)
+				if !cd.highAvailabilityManager.PlatformInstanceActive {
+					log.SpanLog(ctx, log.DebugLevelInfra, "skipping resource snapshot as platform not active")
+					continue
+				}
 				// Cloudlet creates can take many minutes, don't try and interrogate resources before platform is ready.
 				if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
 					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread", "cloudlet not yet ready", cloudletInfo.Key, "curState", cloudletInfo.State)
@@ -1833,7 +1838,7 @@ func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.H
 	haCrm := CrmHAProcess{
 		controllerData: cd,
 	}
-	err := haMgr.Init(haKey, cd.NodeMgr, cd.settings.PlatformHaInstanceActiveExpireTime, cd.settings.PlatformHaInstancePollInterval, &haCrm)
+	err := haMgr.Init(ctx, haKey, cd.NodeMgr, cd.settings.PlatformHaInstanceActiveExpireTime, cd.settings.PlatformHaInstancePollInterval, &haCrm)
 	if err == nil {
 		haEnabled = true
 	} else if strings.Contains(err.Error(), redundancy.HighAvailabilityManagerDisabled) {
