@@ -40,6 +40,13 @@ requests:
       type: crm
       cloudletkey:
         organization: dmuus
+        name: dmuus-cloud-1
+      region: local
+    output: api,notify,infra,metrics,upgrade,info,sampled
+  - node:
+      type: crm
+      cloudletkey:
+        organization: dmuus
         name: dmuus-cloud-2
       region: local
     output: api,notify,infra,metrics,upgrade,info,sampled
