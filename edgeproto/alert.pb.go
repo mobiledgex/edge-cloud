@@ -1132,159 +1132,127 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 // Allows decoding to handle protobuf enums that are
 // represented as strings.
 func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
-	if from.Kind() != reflect.String {
-		return data, nil
-	}
 	switch to {
 	case reflect.TypeOf(OptResNames(0)):
-		if en, ok := OptResNames_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseOptResNames(data)
 	case reflect.TypeOf(Liveness(0)):
-		if en, ok := Liveness_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := Liveness_CamelValue["Liveness"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseLiveness(data)
 	case reflect.TypeOf(IpSupport(0)):
-		if en, ok := IpSupport_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := IpSupport_CamelValue["IpSupport"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseIpSupport(data)
 	case reflect.TypeOf(IpAccess(0)):
-		if en, ok := IpAccess_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := IpAccess_CamelValue["IpAccess"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseIpAccess(data)
 	case reflect.TypeOf(TrackedState(0)):
-		if en, ok := TrackedState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseTrackedState(data)
 	case reflect.TypeOf(CRMOverride(0)):
-		if en, ok := CRMOverride_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseCRMOverride(data)
 	case reflect.TypeOf(ImageType(0)):
-		if en, ok := ImageType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := ImageType_CamelValue["ImageType"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseImageType(data)
 	case reflect.TypeOf(QosSessionProfile(0)):
-		if en, ok := QosSessionProfile_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := QosSessionProfile_CamelValue["Qos"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseQosSessionProfile(data)
 	case reflect.TypeOf(VmAppOsType(0)):
-		if en, ok := VmAppOsType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := VmAppOsType_CamelValue["VmAppOs"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseVmAppOsType(data)
 	case reflect.TypeOf(DeleteType(0)):
-		if en, ok := DeleteType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseDeleteType(data)
 	case reflect.TypeOf(AccessType(0)):
-		if en, ok := AccessType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := AccessType_CamelValue["AccessType"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseAccessType(data)
 	case reflect.TypeOf(PlatformType(0)):
-		if en, ok := PlatformType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := PlatformType_CamelValue["PlatformType"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParsePlatformType(data)
 	case reflect.TypeOf(InfraApiAccess(0)):
-		if en, ok := InfraApiAccess_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseInfraApiAccess(data)
 	case reflect.TypeOf(OSType(0)):
-		if en, ok := OSType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseOSType(data)
 	case reflect.TypeOf(ReportSchedule(0)):
-		if en, ok := ReportSchedule_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseReportSchedule(data)
 	case reflect.TypeOf(VMState(0)):
-		if en, ok := VMState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := VMState_CamelValue["Vm"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseVMState(data)
 	case reflect.TypeOf(VMAction(0)):
-		if en, ok := VMAction_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := VMAction_CamelValue["VmAction"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseVMAction(data)
 	case reflect.TypeOf(TrustPolicyExceptionState(0)):
-		if en, ok := TrustPolicyExceptionState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := TrustPolicyExceptionState_CamelValue["TrustPolicyExceptionState"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseTrustPolicyExceptionState(data)
 	case reflect.TypeOf(NetworkConnectionType(0)):
-		if en, ok := NetworkConnectionType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseNetworkConnectionType(data)
 	case reflect.TypeOf(PowerState(0)):
-		if en, ok := PowerState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParsePowerState(data)
 	case reflect.TypeOf(ApiEndpointType(0)):
-		if en, ok := ApiEndpointType_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseApiEndpointType(data)
 	case reflect.TypeOf(RateLimitTarget(0)):
-		if en, ok := RateLimitTarget_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseRateLimitTarget(data)
 	case reflect.TypeOf(FlowRateLimitAlgorithm(0)):
-		if en, ok := FlowRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseFlowRateLimitAlgorithm(data)
 	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
-		if en, ok := MaxReqsRateLimitAlgorithm_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseMaxReqsRateLimitAlgorithm(data)
 	case reflect.TypeOf(NoticeAction(0)):
-		if en, ok := NoticeAction_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseNoticeAction(data)
 	case reflect.TypeOf(StreamState(0)):
-		if en, ok := StreamState_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := StreamState_CamelValue["Stream"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseStreamState(data)
 	case reflect.TypeOf(VersionHash(0)):
-		if en, ok := VersionHash_CamelValue[util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
-		if en, ok := VersionHash_CamelValue["Hash"+util.CamelCase(data.(string))]; ok {
-			return en, nil
-		}
+		return ParseVersionHash(data)
 	}
 	return data, nil
+}
+
+// GetEnumParseHelp gets end-user specific messages for
+// enum parse errors.
+// It returns the enum type name, a help message with
+// valid values, and a bool that indicates if a type was matched.
+func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
+	switch t {
+	case reflect.TypeOf(OptResNames(0)):
+		return "OptResNames", ", valid values are one of Gpu, Nas, Nic, or 0, 1, 2", true
+	case reflect.TypeOf(Liveness(0)):
+		return "Liveness", ", valid values are one of Unknown, Static, Dynamic, Autoprov, or 0, 1, 2, 3", true
+	case reflect.TypeOf(IpSupport(0)):
+		return "IpSupport", ", valid values are one of Unknown, Static, Dynamic, or 0, 1, 2", true
+	case reflect.TypeOf(IpAccess(0)):
+		return "IpAccess", ", valid values are one of Unknown, Dedicated, Shared, or 0, 1, 3", true
+	case reflect.TypeOf(TrackedState(0)):
+		return "TrackedState", ", valid values are one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone, or 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15", true
+	case reflect.TypeOf(CRMOverride(0)):
+		return "CRMOverride", ", valid values are one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState, or 0, 1, 2, 3, 4", true
+	case reflect.TypeOf(ImageType(0)):
+		return "ImageType", ", valid values are one of Unknown, Docker, Qcow, Helm, Ovf, or 0, 1, 2, 3, 4", true
+	case reflect.TypeOf(QosSessionProfile(0)):
+		return "QosSessionProfile", ", valid values are one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL, or 0, 1, 2, 3, 4", true
+	case reflect.TypeOf(VmAppOsType(0)):
+		return "VmAppOsType", ", valid values are one of Unknown, Linux, Windows10, Windows2012, Windows2016, Windows2019, or 0, 1, 2, 3, 4, 5", true
+	case reflect.TypeOf(DeleteType(0)):
+		return "DeleteType", ", valid values are one of NoAutoDelete, AutoDelete, or 0, 1", true
+	case reflect.TypeOf(AccessType(0)):
+		return "AccessType", ", valid values are one of DefaultForDeployment, Direct, LoadBalancer, or 0, 1, 2", true
+	case reflect.TypeOf(PlatformType(0)):
+		return "PlatformType", ", valid values are one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool, or 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17", true
+	case reflect.TypeOf(InfraApiAccess(0)):
+		return "InfraApiAccess", ", valid values are one of DirectAccess, RestrictedAccess, or 0, 1", true
+	case reflect.TypeOf(OSType(0)):
+		return "OSType", ", valid values are one of Linux, Windows, Others, or 0, 1, 20", true
+	case reflect.TypeOf(ReportSchedule(0)):
+		return "ReportSchedule", ", valid values are one of EveryWeek, Every15Days, Every30Days, EveryMonth, or 0, 1, 2, 3", true
+	case reflect.TypeOf(VMState(0)):
+		return "VMState", ", valid values are one of Free, InProgress, InUse, Add, Remove, Update, ForceFree, or 0, 1, 2, 3, 4, 5, 6", true
+	case reflect.TypeOf(VMAction(0)):
+		return "VMAction", ", valid values are one of Done, Allocate, Release, or 0, 1, 2", true
+	case reflect.TypeOf(TrustPolicyExceptionState(0)):
+		return "TrustPolicyExceptionState", ", valid values are one of Unknown, ApprovalRequested, Active, Rejected, or 0, 1, 2, 3", true
+	case reflect.TypeOf(NetworkConnectionType(0)):
+		return "NetworkConnectionType", ", valid values are one of Undefined, ConnectToLoadBalancer, ConnectToClusterNodes, ConnectToAll, or 0, 1, 2, 3", true
+	case reflect.TypeOf(PowerState(0)):
+		return "PowerState", ", valid values are one of PowerStateUnknown, PowerOnRequested, PoweringOn, PowerOn, PowerOffRequested, PoweringOff, PowerOff, RebootRequested, Rebooting, Reboot, PowerStateError, or 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10", true
+	case reflect.TypeOf(ApiEndpointType(0)):
+		return "ApiEndpointType", ", valid values are one of UnknownApiEndpointType, Dme, or 0, 1", true
+	case reflect.TypeOf(RateLimitTarget(0)):
+		return "RateLimitTarget", ", valid values are one of UnknownTarget, AllRequests, PerIp, PerUser, or 0, 1, 2, 3", true
+	case reflect.TypeOf(FlowRateLimitAlgorithm(0)):
+		return "FlowRateLimitAlgorithm", ", valid values are one of UnknownFlowAlgorithm, TokenBucketAlgorithm, LeakyBucketAlgorithm, or 0, 1, 2", true
+	case reflect.TypeOf(MaxReqsRateLimitAlgorithm(0)):
+		return "MaxReqsRateLimitAlgorithm", ", valid values are one of UnknownMaxReqsAlgorithm, FixedWindowAlgorithm, or 0, 1", true
+	case reflect.TypeOf(NoticeAction(0)):
+		return "NoticeAction", ", valid values are one of None, Update, Delete, Version, SendallEnd, or 0, 1, 2, 3, 4", true
+	case reflect.TypeOf(StreamState(0)):
+		return "StreamState", ", valid values are one of Unknown, Start, Stop, Error, or 0, 1, 2, 3", true
+	case reflect.TypeOf(VersionHash(0)):
+		return "VersionHash", ", valid values are one of D41D8Cd98F00B204E9800998Ecf8427E, D4Ca5418A77D22D968Ce7A2Afc549Dfe, 7848D42E3A2Eaf36E53Bbd3Af581B13A, F31B7A9D7E06F72107E0Ab13C708704E, 03Fad51F0343D41F617329151F474D2B, 7D32A983Fafc3Da768E045B1Dc4D5F50, 747C14Bdfe2043F09D251568E4A722C6, C7Fb20F545A5Bc9869B00Bb770753C31, 83Cd5C44B5C7387Ebf7D055E7345Ab42, D8A4E697D0D693479Cfd9C1C523D7E06, E8360Aa30F234Ecefdfdb9Fb2Dc79C20, C53C7840D242Efc7209549A36Fcf9E04, 1A57396698C4Ade15F0579C9F5714Cd6, 71C580746Ee2A6B7D1A4182B3A54407A, A18636Af1F4272C38Ca72881B2A8Bcea, Efbddcee4Ba444E3656F64E430A5E3Be, C2C322505017054033953F6104002Bf5, Facc3C3C9C76463C8D8B3C874Ce43487, 8Ba950479A03Ab77Edfad426Ea53C173, F4Eb139F7A8373A484Ab9749Eadc31F5, 09Fae4D440Aa06Acb9664167D2E1F036, 8C5A9C29Caff4Ace0A23A9Dab9A15Bf7, B7C6A74Ce2F30B3Bda179E00617459Cf, 911D86A4Eb2Bbfbff1173Ffbdd197A8C, 99349A696D0B5872542F81B4B0B4788E, 264850A5C1F7A054B4De1A87E5D28Dcc, 748B47Eaf414B0F2C15E4C6A9298B5F1, 1480647750F7638Ff5494C0E715Bb98C, 208A22352E46F6Bbe34F3B72Aaf99Ee5, 6F8F268D3945699608651E1A8Bb38E5E, 2Dfdb2Ed2Cf52241B2B3Db1D39E11Bc6, or 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38", true
+	}
+	return "", "", false
 }
 
 var ShowMethodNames = map[string]struct{}{

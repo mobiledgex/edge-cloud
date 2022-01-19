@@ -1508,7 +1508,9 @@ func (m *AppInstClient) CopyInFields(src *AppInstClient) int {
 		}
 		if _, set := fmap["3.8"]; set {
 			if src.Location.Timestamp != nil {
-				m.Location.Timestamp = &distributed_match_engine.Timestamp{}
+				if m.Location.Timestamp == nil {
+					m.Location.Timestamp = &distributed_match_engine.Timestamp{}
+				}
 				if _, set := fmap["3.8.1"]; set {
 					if m.Location.Timestamp.Seconds != src.Location.Timestamp.Seconds {
 						m.Location.Timestamp.Seconds = src.Location.Timestamp.Seconds

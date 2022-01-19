@@ -211,6 +211,54 @@ func TestAppApi(t *testing.T) {
 	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.NotNil(t, err, "Create app with maxpktsize fails")
 
+	// update app with serverless config
+	app.Deployment = "kubernetes"
+	app.AccessPorts = "tcp:888"
+	_, err = apis.appApi.CreateApp(ctx, &app)
+	require.Nil(t, err)
+	app.AllowServerless = true
+	app.ServerlessConfig = &edgeproto.ServerlessConfig{}
+	app.ServerlessConfig.Vcpus = *edgeproto.NewUdec64(5, 0)
+	app.ServerlessConfig.Ram = 24
+	app.ServerlessConfig.MinReplicas = 1
+	app.Fields = []string{
+		edgeproto.AppFieldAllowServerless,
+		edgeproto.AppFieldServerlessConfig,
+		edgeproto.AppFieldServerlessConfigVcpus,
+		edgeproto.AppFieldServerlessConfigRam,
+		edgeproto.AppFieldServerlessConfigMinReplicas,
+	}
+	_, err = apis.appApi.UpdateApp(ctx, &app)
+	require.Nil(t, err)
+	// update vcpus, only specifying vcpus field, and not subfields
+	app.ServerlessConfig.Vcpus = *edgeproto.NewUdec64(6, 0)
+	app.ServerlessConfig.Ram = 0
+	app.ServerlessConfig.MinReplicas = 0
+	app.Fields = []string{
+		edgeproto.AppFieldAllowServerless,
+		edgeproto.AppFieldServerlessConfig,
+		edgeproto.AppFieldServerlessConfigVcpus,
+	}
+	_, err = apis.appApi.UpdateApp(ctx, &app)
+	require.Nil(t, err)
+	storedApp = edgeproto.App{}
+	found = apis.appApi.Get(app.GetKey(), &storedApp)
+	require.True(t, found)
+	require.Equal(t, app.ServerlessConfig.Vcpus, storedApp.ServerlessConfig.Vcpus)
+	// check that other fields were not changed
+	require.Equal(t, uint64(24), storedApp.ServerlessConfig.Ram)
+	require.Equal(t, uint32(1), storedApp.ServerlessConfig.MinReplicas)
+	// disable serverless config
+	app.AllowServerless = false
+	app.Fields = []string{
+		edgeproto.AppFieldAllowServerless,
+	}
+	_, err = apis.appApi.UpdateApp(ctx, &app)
+	require.Nil(t, err)
+	// clean up app
+	_, err = apis.appApi.DeleteApp(ctx, &app)
+	require.Nil(t, err)
+
 	// test updating app with a list of alertpolicies
 	alertPolicyApp := testutil.AppData[1]
 	alertPolicyApp.Deployment = cloudcommon.DeploymentTypeKubernetes
