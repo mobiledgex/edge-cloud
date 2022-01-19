@@ -55,6 +55,14 @@ nodes:
     type: crm
     cloudletkey:
       organization: dmuus
+      name: dmuus-cloud-1
+    region: local
+  containerversion: "2019-10-24"
+  internalpki: from-file,useAccessKey,UseVaultPki
+- key:
+    type: crm
+    cloudletkey:
+      organization: dmuus
       name: dmuus-cloud-2
     region: local
   containerversion: "2019-10-24"
