@@ -100,6 +100,7 @@ var AppData = []edgeproto.App{
 			Vcpus: *edgeproto.NewUdec64(0, 500*edgeproto.DecMillis),
 			Ram:   20,
 		},
+		Trusted: true, // This is a Trusted App.
 	},
 	edgeproto.App{ // 1
 		Key: edgeproto.AppKey{
