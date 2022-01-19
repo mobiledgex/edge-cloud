@@ -82,7 +82,7 @@ apps:
   defaultflavor:
     name: x1.small
   accessports: "tcp:90"
-
+  trusted: true
 appinstances:
 - key:
     appkey:

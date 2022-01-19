@@ -637,6 +637,11 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				}
 				return err
 			}
+			if TrustedSpecified && !in.Trusted {
+				if tpeKey := s.all.trustPolicyExceptionApi.TrustPolicyExceptionForAppKeyExists(&in.Key); tpeKey != nil {
+					return fmt.Errorf("Application in use by Trust Policy Exception %s", tpeKey.GetKeyString())
+				}
+			}
 		}
 		if !cur.AllowServerless {
 			// clear serverless config
