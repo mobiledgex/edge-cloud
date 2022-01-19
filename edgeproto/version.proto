@@ -43,6 +43,7 @@ enum VersionHash {
   HASH_1480647750f7638ff5494c0e715bb98c = 35;
   HASH_208a22352e46f6bbe34f3b72aaf99ee5 = 36 [(protogen.upgrade_func) = "AddAppInstUniqueId"];
   HASH_6f8f268d3945699608651e1a8bb38e5e = 37;
+  HASH_2dfdb2ed2cf52241b2b3db1d39e11bc6 = 38 [(protogen.upgrade_func) = "AddDnsLabels"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "2";
+  option (protogen.version_hash_salt) = "1";
 }

@@ -103,6 +103,10 @@ message ClusterInst {
   repeated string networks = 33 [(protogen.refers_to) = "Network"];
   // Preparing to be deleted
   bool delete_prepare = 34 [(protogen.backend) = true]; 
+  // DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts
+  string dns_label = 35 [(protogen.backend) = true];
+  // FQDN is a globally unique DNS id for the ClusterInst
+  string fqdn = 36 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -111,7 +115,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt,DeletePrepare";
+  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt,DeletePrepare,DnsLabel,Fqdn";
   option (protogen.not_required) = "Key.CloudletKey.FederatedOrganization";
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,federated-org=Key.CloudletKey.FederatedOrganization,cluster-org=Key.Organization,flavor=Flavor.Name";

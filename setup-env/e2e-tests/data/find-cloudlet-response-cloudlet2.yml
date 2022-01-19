@@ -1,5 +1,5 @@
 status: Found
-fqdn: reservablecluster2.tmus-cloud-2.tmus.localtest.net
+fqdn: reservablecluster2-mobiledgex.tmus-cloud-2-tmus.local.localtest.net
 ports:
 - proto: Tcp
   internalport: 80

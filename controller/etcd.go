@@ -254,6 +254,9 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				watchRev = rev
 				return nil
 			})
+			if err != nil {
+				log.SpanLog(spctx, log.DebugLevelEtcd, "list data error", "key", string(key), "err", err)
+			}
 			data.Action = objstore.SyncListEnd
 			data.Key = nil
 			data.Value = nil

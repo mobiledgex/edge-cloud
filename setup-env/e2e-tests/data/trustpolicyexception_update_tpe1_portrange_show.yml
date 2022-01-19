@@ -73,6 +73,8 @@ cloudlets:
   deployment: docker
   trustpolicystate: NotPresent
   defaultresourcealertthreshold: 80
+  dnslabel: cloudlet2-tmus
+  rootlbfqdn: shared.cloudlet2-tmus.local.localtest.net
 cloudletinfos:
 - key:
     organization: tmus
@@ -150,6 +152,10 @@ clusterinsts:
   masternodeflavor: x1.small
   resources:
     vms:
+    - name: 1000realities-cluster-22-1000realities.cloudlet2-tmus.local.localtest.net
+      type: rootlb
+      status: ACTIVE
+      infraflavor: x1.small
     - name: fake-master-1-cloudlet2-1000realities-cluster-22-1000realities
       type: cluster-master
       status: ACTIVE
@@ -158,10 +164,8 @@ clusterinsts:
       type: cluster-k8s-node
       status: ACTIVE
       infraflavor: x1.small
-    - name: 1000realities-cluster-22.cloudlet2.tmus.fake.net
-      type: rootlb
-      status: ACTIVE
-      infraflavor: x1.small
+  dnslabel: 1000realities-cluster-22-1000realities
+  fqdn: 1000realities-cluster-22-1000realities.cloudlet2-tmus.local.localtest.net
 apps:
 - key:
     organization: 1000realities
@@ -217,6 +221,7 @@ apps:
               protocol: TCP
   deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
+  trusted: true
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName
@@ -290,7 +295,7 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: 1000realities-cluster-22.cloudlet2.tmus.localtest.net
+  uri: 1000realities-cluster-22-1000realities.cloudlet2-tmus.local.localtest.net
   liveness: Dynamic
   mappedports:
   - proto: Tcp
@@ -306,6 +311,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: 1000realitiesvrmax100-1000realities-cluster-22-cloudlet2-tmus
+  dnslabel: vrmax100-1000realities
 - key:
     appkey:
       organization: MobiledgeX
@@ -333,6 +339,7 @@ appinstances:
   powerstate: PowerOn
   vmflavor: x1.small
   uniqueid: mobiledgexmexprometheusappname10-1000realities-cluster-22-cloudlet2-tmus
+  dnslabel: mexprometheusappname10-mobiledgex
 appinstrefs:
 - key:
     organization: 1000realities
