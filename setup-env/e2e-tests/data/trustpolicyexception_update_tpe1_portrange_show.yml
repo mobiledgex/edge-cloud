@@ -221,6 +221,7 @@ apps:
               protocol: TCP
   deploymentgenerator: kubernetes-basic
   accesstype: LoadBalancer
+  trusted: true
 - key:
     organization: MobiledgeX
     name: MEXPrometheusAppName

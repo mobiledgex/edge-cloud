@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -39,6 +40,9 @@ func (s *TrustPolicyExceptionApi) fixupPortRangeMax(ctx context.Context, in *edg
 func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 
 	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
+	if len(in.OutboundSecurityRules) == 0 {
+		return nil, fmt.Errorf("Security rules must be specified")
+	}
 	s.fixupPortRangeMax(ctx, in)
 	if err := in.Validate(nil); err != nil {
 		return nil, err
@@ -56,6 +60,9 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 		}
 		if app.DeletePrepare {
 			return in.Key.AppKey.BeingDeletedError()
+		}
+		if !app.Trusted {
+			return fmt.Errorf("Non trusted app: %s not compatible with trust policy: %s", strings.TrimSpace(app.Key.String()), in.Key.String())
 		}
 		cloudletPool := edgeproto.CloudletPool{}
 		if !s.all.cloudletPoolApi.store.STMGet(stm, &in.Key.CloudletPoolKey, &cloudletPool) {

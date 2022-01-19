@@ -50,6 +50,54 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), " already exists")
 
+	// This is an app for which Trusted is not set
+	tpeDataFail := edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: testutil.DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.1",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: testutil.OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "someapp-tpe2",
+		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
+		OutboundSecurityRules: []edgeproto.SecurityRule{
+			edgeproto.SecurityRule{
+				Protocol:     "tcp",
+				RemoteCidr:   "10.1.0.0/16",
+				PortRangeMin: 201,
+				PortRangeMax: 210,
+			},
+		},
+	}
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeDataFail)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Non trusted app")
+
+	// Without any security rules
+	tpeDataFail2 := edgeproto.TrustPolicyException{
+		Key: edgeproto.TrustPolicyExceptionKey{
+			AppKey: edgeproto.AppKey{
+				Organization: testutil.DevData[0],
+				Name:         "Pillimo Go!",
+				Version:      "1.0.0",
+			},
+			CloudletPoolKey: edgeproto.CloudletPoolKey{
+				Organization: testutil.OperatorData[2],
+				Name:         "test-and-dev",
+			},
+			Name: "someapp-tpe2",
+		},
+		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
+	}
+	_, err = apis.trustPolicyExceptionApi.CreateTrustPolicyException(ctx, &tpeDataFail2)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Security rules must be specified")
+
 	tpeData := edgeproto.TrustPolicyException{
 		Key: edgeproto.TrustPolicyExceptionKey{
 			AppKey: edgeproto.AppKey{
