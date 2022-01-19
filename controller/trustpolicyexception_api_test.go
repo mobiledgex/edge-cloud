@@ -37,9 +37,7 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 	testutil.InternalAutoProvPolicyCreate(t, apis.autoProvPolicyApi, testutil.AutoProvPolicyData)
 	testutil.InternalAutoScalePolicyCreate(t, apis.autoScalePolicyApi, testutil.AutoScalePolicyData)
-	testutil.AppData[0].Trusted = true
 	testutil.InternalAppCreate(t, apis.appApi, testutil.AppData)
-	testutil.AppData[0].Trusted = false
 	testutil.InternalClusterInstCreate(t, apis.clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalAppInstCreate(t, apis.appInstApi, testutil.AppInstData)
 	testutil.InternalCloudletPoolTest(t, "cud", apis.cloudletPoolApi, testutil.CloudletPoolData)
