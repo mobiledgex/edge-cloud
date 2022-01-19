@@ -229,8 +229,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					// Sleep two intervals and wait until the next pass before doing tryActive again to give
 					// the primary the chance to retain activity
 					log.SpanLog(ctx, log.DebugLevelInfra, "redis reachable again, wait and then tryActive")
-					time.Sleep(s.activePollInterval * 2)
 				}
+				time.Sleep(s.activePollInterval * 2)
 				continue
 			}
 			for retry := 0; retry < MaxRedisUnreachableRetries; retry++ {
@@ -327,6 +327,7 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 								s.PlatformInstanceActive = false
 								log.SpanLog(ctx, log.DebugLevelInfra, "secondary unit lost activity due to redis error")
 							}
+							time.Sleep(s.activePollInterval)
 							continue // bypass bumpActive this pass since redis is down
 						} else {
 							// this is unexpected
