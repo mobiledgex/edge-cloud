@@ -93,7 +93,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, err
 	}
 
-	log.SpanLog(ctx, log.DebugLevelDmereq, "req tags", "req.Tags")
+	log.SpanLog(ctx, log.DebugLevelDmereq, "req tags", "req.Tags", req.Tags)
 	err, app = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
 
 	// Only attempt to create a QOS priority session if qosSesAddr is populated.
@@ -153,7 +153,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
 				}
-				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id", id, "sesErr", sesErr)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id received", (len(id) > 0), "sesErr", sesErr)
 				// Let the client know the session ID.
 				reply.Tags = make(map[string]string)
 				if id != "" {
