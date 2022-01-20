@@ -1,25 +1,79 @@
 package rediscache
 
 import (
+	"flag"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis"
 )
 
-const MaxRedisWait = time.Second * 30
+const (
+	MaxRedisWait = time.Second * 30
 
-// Special IDs in the streams API
-const RedisSmallestId = "-"
-const RedisGreatestId = "+"
-const RedisLastId = "$"
+	// Special IDs in the streams API
+	RedisSmallestId = "-"
+	RedisGreatestId = "+"
+	RedisLastId     = "$"
 
-func NewClient(redisAddr string) (*redis.Client, error) {
-	if redisAddr == "" {
-		return nil, fmt.Errorf("Missing redis addr")
+	DefaultRedisMasterName    = "redismaster"
+	DefaultRedisSentinelAddrs = "127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"
+)
+
+type RedisConfig struct {
+	MasterName     string
+	SentinelAddrs  string
+	StandaloneAddr string
+}
+
+func (r *RedisConfig) InitFlags() {
+	flag.StringVar(&r.MasterName, "redisMasterName", "", "Name of the redis master node as specified in sentinel config")
+	flag.StringVar(&r.SentinelAddrs, "redisSentinelAddrs", "", "comma separated list of redis sentinel addresses")
+	flag.StringVar(&r.StandaloneAddr, "redisStandaloneAddr", "", "Redis standalone server address")
+}
+
+func (r *RedisConfig) AddrSpecified() bool {
+	if r.SentinelAddrs != "" {
+		return true
 	}
-	client := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
+	if r.StandaloneAddr != "" {
+		return true
+	}
+	return false
+}
+
+func (r *RedisConfig) SetSentinelDefaults() {
+	if r.SentinelAddrs == "" {
+		r.SentinelAddrs = DefaultRedisSentinelAddrs
+	}
+	if r.MasterName == "" {
+		r.MasterName = DefaultRedisMasterName
+	}
+}
+
+// Supports both modes of redis server deployment:
+// 1. Standalone server
+// 2. Redis Sentinels (for HA)
+func NewClient(cfg *RedisConfig) (*redis.Client, error) {
+	if cfg.StandaloneAddr != "" {
+		client := redis.NewClient(&redis.Options{
+			Addr: cfg.StandaloneAddr,
+		})
+		return client, nil
+	}
+
+	sentinelAddrs := strings.Split(cfg.SentinelAddrs, ",")
+	if len(sentinelAddrs) == 0 {
+		return nil, fmt.Errorf("At least one redis sentinel address is required")
+	}
+	masterName := cfg.MasterName
+	if masterName == "" {
+		masterName = DefaultRedisMasterName
+	}
+	client := redis.NewFailoverClient(&redis.FailoverOptions{
+		MasterName:    masterName,
+		SentinelAddrs: sentinelAddrs,
 	})
 	return client, nil
 }

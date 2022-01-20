@@ -13,8 +13,8 @@ import (
 
 func TestFlavorApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())

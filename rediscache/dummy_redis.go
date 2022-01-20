@@ -1,25 +1,52 @@
 package rediscache
 
 import (
+	"time"
+
+	"github.com/Bose/minisentinel"
 	"github.com/alicebob/miniredis/v2"
-	"github.com/go-redis/redis"
 )
 
-func MockRedisServer() (*miniredis.Miniredis, error) {
-	serv, err := miniredis.Run()
-	if err != nil {
-		return nil, err
-	}
-	return serv, nil
+type DummyRedis struct {
+	redisSrv    *miniredis.Miniredis
+	sentinelSrv *minisentinel.Sentinel
 }
 
-func NewDummyRedisClient() (*redis.Client, error) {
-	redisServer, err := MockRedisServer()
+func NewMockRedisServer() (*DummyRedis, error) {
+	redisSrv, err := miniredis.Run()
 	if err != nil {
 		return nil, err
 	}
-	client := redis.NewClient(&redis.Options{
-		Addr: redisServer.Addr(),
-	})
-	return client, nil
+
+	sentinelSrv := minisentinel.NewSentinel(
+		redisSrv,
+		minisentinel.WithReplica(redisSrv),
+		minisentinel.WithMasterName("redismaster"),
+	)
+	err = sentinelSrv.Start()
+	if err != nil {
+		return nil, err
+	}
+	dummyRedis := DummyRedis{
+		redisSrv:    redisSrv,
+		sentinelSrv: sentinelSrv,
+	}
+	return &dummyRedis, nil
+}
+
+func (r *DummyRedis) GetStandaloneAddr() string {
+	return r.redisSrv.Addr()
+}
+
+func (r *DummyRedis) GetSentinelAddr() string {
+	return r.sentinelSrv.Addr()
+}
+
+func (r *DummyRedis) FastForward(d time.Duration) {
+	r.redisSrv.FastForward(d)
+}
+
+func (r *DummyRedis) Close() {
+	r.sentinelSrv.Close()
+	r.redisSrv.Close()
 }

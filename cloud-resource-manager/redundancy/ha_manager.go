@@ -10,9 +10,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/rediscache"
-
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 )
 
 const RedisPingFail string = "Redis Ping Fail"
@@ -25,7 +24,7 @@ type HAWatcher interface {
 }
 
 type HighAvailabilityManager struct {
-	redisAddr              string
+	redisCfg               rediscache.RedisConfig
 	nodeGroupKey           string
 	redisClient            *redis.Client
 	HARole                 string
@@ -38,7 +37,7 @@ type HighAvailabilityManager struct {
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
-	flag.StringVar(&s.redisAddr, "redisAddr", "", "redis address")
+	s.redisCfg.InitFlags()
 	flag.StringVar(&s.HARole, "HARole", string(process.HARolePrimary), string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
@@ -52,7 +51,7 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid HA Role type")
 	}
-	if s.redisAddr == "" {
+	if !s.redisCfg.AddrSpecified() {
 		s.PlatformInstanceActive = true
 		return fmt.Errorf("%s Redis Addr for HA not specified", HighAvailabilityManagerDisabled)
 	}
@@ -63,7 +62,7 @@ func (s *HighAvailabilityManager) Init(nodeGroupKey string, nodeMgr *node.NodeMg
 	s.HAEnabled = true
 
 	var err error
-	s.redisClient, err = rediscache.NewClient(s.redisAddr)
+	s.redisClient, err = rediscache.NewClient(&s.redisCfg)
 	if err != nil {
 		return err
 	}

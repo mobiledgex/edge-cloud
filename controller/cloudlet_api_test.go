@@ -127,8 +127,8 @@ func TestCloudletApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -325,7 +325,7 @@ func testCloudletStates(t *testing.T, ctx context.Context, apis *AllApis) {
 		require.Nil(t, err, "stream cloudlet")
 	}()
 
-	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, process.HARolePrimary, "")
+	err = cloudcommon.StartCRMService(ctx, &cloudlet, pfConfig, process.HARolePrimary, nil)
 	require.Nil(t, err, "start cloudlet")
 	defer func() {
 		// Delete CRM
@@ -928,8 +928,8 @@ func testAllianceOrgs(t *testing.T, ctx context.Context, apis *AllApis) {
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())

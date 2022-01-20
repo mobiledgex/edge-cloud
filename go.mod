@@ -5,6 +5,7 @@ go 1.15
 require (
 	cloud.google.com/go v0.39.0
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/Bose/minisentinel v0.0.0-20200130220412-917c5a9223bb
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect

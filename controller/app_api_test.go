@@ -16,8 +16,8 @@ func TestAppApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 	cplookup := &node.CloudletPoolCache{}
 	cplookup.Init()
 	nodeMgr.CloudletPoolLookup = cplookup

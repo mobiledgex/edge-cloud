@@ -18,7 +18,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/assert"
@@ -41,12 +40,11 @@ func TestController(t *testing.T) {
 	*localEtcd = true
 	*initLocalEtcd = true
 
-	dummyRedisSrv, err := rediscache.MockRedisServer()
-	require.Nil(t, err, "start mock redis server")
-	*redisAddr = dummyRedisSrv.Addr()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 
-	testinit()
-	defer testfinish()
+	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
+
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
 
@@ -56,7 +54,7 @@ func TestController(t *testing.T) {
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
 
-	err = startServices()
+	err := startServices()
 	defer stopServices()
 	require.Nil(t, err, "start")
 	apis := services.allApis
@@ -212,22 +210,20 @@ func TestEdgeCloudBug26(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
 
 	*localEtcd = true
 	*initLocalEtcd = true
 
-	dummyRedisSrv, err := rediscache.MockRedisServer()
-	require.Nil(t, err, "start mock redis server")
-	*redisAddr = dummyRedisSrv.Addr()
+	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
 
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
 
-	err = startServices()
+	err := startServices()
 	defer stopServices()
 	require.Nil(t, err, "start")
 	apis := services.allApis
@@ -411,8 +407,8 @@ func TestControllerRace(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(t)
+	defer testfinish(testSvcs)
 
 	etcdLocal, err := StartLocalEtcdServer(process.WithCleanStartup())
 	require.Nil(t, err)
