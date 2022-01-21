@@ -41,9 +41,6 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	if _, found := tags["nocmp"]; found {
 		in.AllocatedIp = ""
 	}
-	if _, found := tags["nocmp"]; found {
-		in.Status = edgeproto.StatusInfo{}
-	}
 	for i1 := 0; i1 < len(in.Resources.Vms); i1++ {
 		for i2 := 0; i2 < len(in.Resources.Vms[i1].Ipaddresses); i2++ {
 		}
@@ -643,10 +640,9 @@ var ClusterInstComments = map[string]string{
 	"fqdn":                                   "FQDN is a globally unique DNS id for the ClusterInst",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors":      "StringArray",
-	"fields":      "StringArray",
-	"networks":    "StringArray",
-	"status.msgs": "StringArray",
+	"errors":   "StringArray",
+	"fields":   "StringArray",
+	"networks": "StringArray",
 }
 var IdleReservableClusterInstsRequiredArgs = []string{}
 var IdleReservableClusterInstsOptionalArgs = []string{

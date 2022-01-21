@@ -1216,6 +1216,7 @@ func (s *CloudletPoolStoreImpl) parseGetData(val []byte, buf *CloudletPool) bool
 
 func (s *CloudletPoolStoreImpl) STMPut(stm concurrency.STM, obj *CloudletPool, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletPool", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("CloudletPool json marshal failed", "obj", obj, "err", err)

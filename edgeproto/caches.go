@@ -161,7 +161,6 @@ func (s *ClusterInstInfoCache) RefreshObj(ctx context.Context, obj *ClusterInst)
 	info.Key = obj.Key
 	info.State = obj.State
 	info.Errors = obj.Errors
-	info.Status = obj.Status
 	info.Resources = obj.Resources
 	s.Update(ctx, &info, 0)
 }
@@ -417,7 +416,6 @@ func (s *AppInstInfoCache) RefreshObj(ctx context.Context, obj *AppInst) {
 	info.State = obj.State
 	info.Errors = obj.Errors
 	info.RuntimeInfo = obj.RuntimeInfo
-	info.Status = obj.Status
 	info.PowerState = obj.PowerState
 	info.Uri = obj.Uri
 	s.Update(ctx, &info, 0)

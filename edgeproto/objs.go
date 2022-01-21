@@ -9,6 +9,7 @@ import (
 	strings "strings"
 	"time"
 
+	"github.com/go-redis/redis"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -43,16 +44,14 @@ var ReservedPlatformPorts = map[string]string{
 }
 
 type WaitStateSpec struct {
-	StreamCache *StreamObjCache
-	StreamKey   *AppInstKey
+	CrmMsgCh <-chan *redis.Message
 }
 
 type WaitStateOps func(wSpec *WaitStateSpec) error
 
-func WithStreamObj(streamCache *StreamObjCache, streamKey *AppInstKey) WaitStateOps {
+func WithCrmMsgCh(crmCh <-chan *redis.Message) WaitStateOps {
 	return func(wSpec *WaitStateSpec) error {
-		wSpec.StreamCache = streamCache
-		wSpec.StreamKey = streamKey
+		wSpec.CrmMsgCh = crmCh
 		return nil
 	}
 }
@@ -1090,7 +1089,7 @@ func (c *ClusterInstCache) UsesOrg(org string) bool {
 	return false
 }
 
-func (c *CloudletInfoCache) WaitForState(ctx context.Context, key *CloudletKey, targetState dme.CloudletState, timeout time.Duration) error {
+func (c *CloudletInfoCache) WaitForCloudletState(ctx context.Context, key *CloudletKey, targetState dme.CloudletState, timeout time.Duration) error {
 	curState := dme.CloudletState_CLOUDLET_STATE_UNKNOWN
 	done := make(chan bool, 1)
 
@@ -1250,39 +1249,6 @@ func (s *AppInstKey) FromClusterRefsAppInstKey(key *ClusterRefsAppInstKey, cKey 
 	s.ClusterInstKey.ClusterKey.Name = key.VClusterName
 	s.ClusterInstKey.Organization = cKey.Organization
 	s.ClusterInstKey.CloudletKey = cKey.CloudletKey
-}
-
-func (s *StreamObj) Validate(fields map[string]struct{}) error {
-	if err := s.GetKey().ValidateKey(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func GetStreamKeyFromClusterInstKey(key *VirtualClusterInstKey) AppInstKey {
-	return AppInstKey{
-		ClusterInstKey: *key,
-	}
-}
-
-func GetStreamKeyFromCloudletKey(key *CloudletKey) AppInstKey {
-	return AppInstKey{
-		ClusterInstKey: VirtualClusterInstKey{
-			CloudletKey: *key,
-		},
-	}
-}
-
-// Temporary way to get unique stream key for GPU driver object
-// This will be fixed as part of 3rd-party in-memory DB changes
-func GetStreamKeyFromGPUDriverKey(key *GPUDriverKey) AppInstKey {
-	return AppInstKey{
-		ClusterInstKey: VirtualClusterInstKey{
-			CloudletKey: CloudletKey{
-				Name: key.Name + "_" + key.Organization,
-			},
-		},
-	}
 }
 
 func (r *InfraResources) UpdateResources(inRes *InfraResources) (updated bool) {

@@ -722,6 +722,7 @@ func (s *AppInstClientKeyStoreImpl) parseGetData(val []byte, buf *AppInstClientK
 
 func (s *AppInstClientKeyStoreImpl) STMPut(stm concurrency.STM, obj *AppInstClientKey, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstClientKey", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AppInstClientKey json marshal failed", "obj", obj, "err", err)

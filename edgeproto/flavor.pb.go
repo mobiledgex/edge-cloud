@@ -1102,6 +1102,7 @@ func (s *FlavorStoreImpl) parseGetData(val []byte, buf *Flavor) bool {
 
 func (s *FlavorStoreImpl) STMPut(stm concurrency.STM, obj *Flavor, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Flavor", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Flavor json marshal failed", "obj", obj, "err", err)

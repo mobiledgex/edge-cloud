@@ -63,7 +63,6 @@ message FlowRateLimitSettings {
   FlowSettings settings = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.uses_org) = "none";
@@ -100,7 +99,6 @@ message MaxReqsRateLimitSettings {
   MaxReqsSettings settings = 3 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.uses_org) = "none";
@@ -127,7 +125,6 @@ message RateLimitSettings {
   // Map of MaxReqsSettings (key: MaxReqsSettingsName, value: MaxReqsSettings)
   map<string, MaxReqsSettings> max_reqs_settings = 3;
   option (protogen.generate_cud) = true;
-  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_matches) = true;
   option (protogen.alias) = "apiendpointtype=Key.ApiEndpointType,ratelimittarget=Key.RateLimitTarget,apiname=Key.ApiName";
   option (protogen.noconfig) = "FlowSettings,MaxReqsSettings";

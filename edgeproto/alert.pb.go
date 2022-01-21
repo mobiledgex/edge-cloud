@@ -648,6 +648,7 @@ func (s *AlertStoreImpl) parseGetData(val []byte, buf *Alert) bool {
 
 func (s *AlertStoreImpl) STMPut(stm concurrency.STM, obj *Alert, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Alert", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Alert json marshal failed", "obj", obj, "err", err)
