@@ -54,6 +54,9 @@ func EscapeJson(jsoninput string) string {
 }
 
 func CapitalizeMessage(msg string) string {
+	if len(msg) == 0 {
+		return msg
+	}
 	c := msg[0]
 	// Return msg if already capitalized
 	if !isASCIILower(c) {

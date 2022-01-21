@@ -15,6 +15,7 @@ import (
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util/tasks"
@@ -767,7 +768,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		return fmt.Errorf("Only %s ClusterInsts may be reservable", cloudcommon.OrganizationMobiledgeX)
 	}
 	if in.Reservable {
-		in.ReservationEndedAt = cloudcommon.TimeToTimestamp(time.Now())
+		in.ReservationEndedAt = dme.TimeToTimestamp(time.Now())
 	}
 	if in.MultiTenant && in.Key.Organization != cloudcommon.OrganizationMobiledgeX {
 		return fmt.Errorf("Only %s ClusterInsts may be multi-tenant", cloudcommon.OrganizationMobiledgeX)
@@ -991,7 +992,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		in.Fqdn = getClusterInstFQDN(in, &cloudlet)
 
-		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		in.CreatedAt = dme.TimeToTimestamp(time.Now())
 
 		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_READY
@@ -1150,7 +1151,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		if !ignoreCRM(cctx) {
 			inbuf.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
-		inbuf.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		inbuf.UpdatedAt = dme.TimeToTimestamp(time.Now())
 		inbuf.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &inbuf)
 		return nil
@@ -1658,7 +1659,7 @@ func (s *ClusterInstApi) cleanupIdleReservableAutoClusters(ctx context.Context, 
 	defer s.cache.Mux.Unlock()
 	for _, data := range s.cache.Objs {
 		cinst := data.Obj
-		if cinst.Auto && cinst.Reservable && cinst.ReservedBy == "" && time.Since(cloudcommon.TimestampToTime(cinst.ReservationEndedAt)) > idletime {
+		if cinst.Auto && cinst.Reservable && cinst.ReservedBy == "" && time.Since(dme.TimestampToTime(cinst.ReservationEndedAt)) > idletime {
 			// spawn worker for cleanupClusterInst
 			s.cleanupWorkers.NeedsWork(ctx, cinst.Key)
 		}

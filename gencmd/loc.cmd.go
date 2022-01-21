@@ -32,8 +32,7 @@ var LocOptionalArgs = []string{
 	"altitude",
 	"course",
 	"speed",
-	"timestamp.seconds",
-	"timestamp.nanos",
+	"timestamp",
 }
 var LocAliasArgs = []string{}
 var LocComments = map[string]string{
@@ -44,19 +43,20 @@ var LocComments = map[string]string{
 	"altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"timestamp":          "Timestamp",
 }
 var LocSpecialArgs = map[string]string{}
 var SampleRequiredArgs = []string{}
 var SampleOptionalArgs = []string{
 	"value",
-	"timestamp.seconds",
-	"timestamp.nanos",
+	"timestamp",
 	"tags",
 }
 var SampleAliasArgs = []string{}
 var SampleComments = map[string]string{
-	"value": "Latency value",
-	"tags":  "_(optional)_ Vendor specific data",
+	"value":     "Latency value",
+	"timestamp": "Timestamp",
+	"tags":      "_(optional)_ Vendor specific data",
 }
 var SampleSpecialArgs = map[string]string{
 	"tags": "StringToString",
@@ -69,8 +69,7 @@ var StatisticsOptionalArgs = []string{
 	"stddev",
 	"variance",
 	"numsamples",
-	"timestamp.seconds",
-	"timestamp.nanos",
+	"timestamp",
 }
 var StatisticsAliasArgs = []string{}
 var StatisticsComments = map[string]string{
@@ -80,5 +79,6 @@ var StatisticsComments = map[string]string{
 	"stddev":     "Square root of unbiased variance",
 	"variance":   "Unbiased variance",
 	"numsamples": "Number of samples to create stats",
+	"timestamp":  "Timestamp",
 }
 var StatisticsSpecialArgs = map[string]string{}
