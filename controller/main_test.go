@@ -40,7 +40,7 @@ func TestController(t *testing.T) {
 	*localEtcd = true
 	*initLocalEtcd = true
 
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 
 	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
@@ -210,7 +210,7 @@ func TestEdgeCloudBug26(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
@@ -407,7 +407,7 @@ func TestControllerRace(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 
 	etcdLocal, err := StartLocalEtcdServer(process.WithCleanStartup())

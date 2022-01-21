@@ -16,7 +16,9 @@ func TestAppApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
-	testSvcs := testinit(t)
+	ctx := log.StartTestSpan(context.Background())
+
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 	cplookup := &node.CloudletPoolCache{}
 	cplookup.Init()
@@ -31,7 +33,6 @@ func TestAppApi(t *testing.T) {
 	defer sync.Done()
 
 	// cannot create apps without developer
-	ctx := log.StartTestSpan(context.Background())
 	for _, obj := range testutil.AppData {
 		_, err := apis.appApi.CreateApp(ctx, &obj)
 		require.NotNil(t, err, "Create app without developer")

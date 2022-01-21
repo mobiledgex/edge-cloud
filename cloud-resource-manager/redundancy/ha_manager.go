@@ -97,7 +97,7 @@ func (s *HighAvailabilityManager) pingRedis(ctx context.Context, genLog bool) er
 func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "connectRedis")
 	var err error
-	s.redisClient, err = rediscache.NewClient(&s.redisCfg)
+	s.redisClient, err = rediscache.NewClient(ctx, &s.redisCfg)
 	if err != nil {
 		return err
 	}

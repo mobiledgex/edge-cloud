@@ -189,9 +189,9 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	crmProc.AccessKeyFile = accessKeyFile
 	crmProc.HARole = haRole
 	if redisCfg != nil {
-		crmProc.MasterName = redisCfg.MasterName
-		crmProc.SentinelAddrs = redisCfg.SentinelAddrs
-		crmProc.StandaloneAddr = redisCfg.StandaloneAddr
+		crmProc.RedisMasterName = redisCfg.MasterName
+		crmProc.RedisSentinelAddrs = redisCfg.SentinelAddrs
+		crmProc.RedisStandaloneAddr = redisCfg.StandaloneAddr
 	}
 	filePrefix := cloudlet.Key.Name + string(haRole)
 

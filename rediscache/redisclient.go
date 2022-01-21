@@ -1,12 +1,14 @@
 package rediscache
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 const (
@@ -64,8 +66,10 @@ func (r *RedisConfig) AddrSpecified() bool {
 // Supports both modes of redis server deployment:
 // 1. Standalone server
 // 2. Redis Sentinels (for HA)
-func NewClient(cfg *RedisConfig) (*redis.Client, error) {
+func NewClient(ctx context.Context, cfg *RedisConfig) (*redis.Client, error) {
 	if cfg.StandaloneAddr != "" {
+		log.SpanLog(ctx, log.DebugLevelInfo, "init redis client for standalone server",
+			"addr", cfg.StandaloneAddr)
 		client := redis.NewClient(&redis.Options{
 			Addr: cfg.StandaloneAddr,
 		})
@@ -84,6 +88,8 @@ func NewClient(cfg *RedisConfig) (*redis.Client, error) {
 		MasterName:    masterName,
 		SentinelAddrs: sentinelAddrs,
 	})
+	log.SpanLog(ctx, log.DebugLevelInfo, "init redis client for HA server",
+		"addr", cfg.SentinelAddrs, "mastername", cfg.MasterName)
 	return client, nil
 }
 

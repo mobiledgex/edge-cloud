@@ -220,7 +220,7 @@ func startServices() error {
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
 	}
 
-	redisClient, err = rediscache.NewClient(&redisCfg)
+	redisClient, err = rediscache.NewClient(ctx, &redisCfg)
 	if err != nil {
 		return err
 	}

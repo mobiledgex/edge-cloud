@@ -1,28 +1,35 @@
 package rediscache
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDummyRedisServer(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelInfo | log.DebugLevelApi)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
 	redisServer, err := NewMockRedisServer()
 	require.Nil(t, err)
 	defer redisServer.Close()
 
 	// Test redis standalone server
-	client, err := NewClient(&RedisConfig{
+	client, err := NewClient(ctx, &RedisConfig{
 		StandaloneAddr: redisServer.GetStandaloneAddr(),
 	})
 	require.Nil(t, err)
 	testDummyRedisServer(t, client, redisServer)
 
 	// Test redis server with sentinels (HA)
-	client, err = NewClient(&RedisConfig{
+	client, err = NewClient(ctx, &RedisConfig{
 		SentinelAddrs: redisServer.GetSentinelAddr(),
 	})
 	require.Nil(t, err)

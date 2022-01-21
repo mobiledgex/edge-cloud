@@ -15,7 +15,7 @@ func TestNetworkApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 	dummy := dummyEtcd{}
 	dummy.Start()

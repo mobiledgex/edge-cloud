@@ -24,7 +24,7 @@ func TestAlertApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
@@ -88,7 +88,7 @@ func TestAppInstDownAlert(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
@@ -156,7 +156,7 @@ type testServices struct {
 }
 
 // Set up globals for API unit tests
-func testinit(t *testing.T) *testServices {
+func testinit(ctx context.Context, t *testing.T) *testServices {
 	svcs := &testServices{}
 	objstore.InitRegion(1)
 	tMode := true
@@ -177,7 +177,7 @@ func testinit(t *testing.T) *testServices {
 	redisServer, err := rediscache.NewMockRedisServer()
 	require.Nil(t, err, "start mock redis server")
 	svcs.DummyRedisSrv = redisServer
-	redisClient, err = rediscache.NewClient(&rediscache.RedisConfig{
+	redisClient, err = rediscache.NewClient(ctx, &rediscache.RedisConfig{
 		SentinelAddrs: redisServer.GetSentinelAddr(),
 	})
 	require.Nil(t, err, "setup redis client")

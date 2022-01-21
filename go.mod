@@ -14,7 +14,7 @@ require (
 	github.com/Shopify/sarama v1.22.2-0.20190604114437-cd910a683f9f
 	github.com/Sirupsen/logrus v1.6.0 // indirect
 	github.com/agnivade/levenshtein v1.0.1
-	github.com/alicebob/miniredis/v2 v2.11.1
+	github.com/alicebob/miniredis/v2 v2.18.0
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect

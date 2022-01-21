@@ -127,7 +127,8 @@ func TestCloudletApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testSvcs := testinit(t)
+
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
@@ -928,11 +929,12 @@ func testAllianceOrgs(t *testing.T, ctx context.Context, apis *AllApis) {
 
 func TestShowCloudletsAppDeploy(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	testSvcs := testinit(t)
-	defer testfinish(testSvcs)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
+
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()

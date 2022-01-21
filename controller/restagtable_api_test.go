@@ -17,7 +17,7 @@ func TestResTagTableApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	objstore.InitRegion(1)
-	testSvcs := testinit(t)
+	testSvcs := testinit(ctx, t)
 	defer testfinish(testSvcs)
 
 	tMode := true

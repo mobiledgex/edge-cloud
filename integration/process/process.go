@@ -99,21 +99,21 @@ func (p *NodeCommon) GetNodeMgrArgs() []string {
 
 // Common args for all redis clients
 type RedisClientCommon struct {
-	MasterName     string
-	SentinelAddrs  string
-	StandaloneAddr string
+	RedisMasterName     string
+	RedisSentinelAddrs  string
+	RedisStandaloneAddr string
 }
 
 func (p *RedisClientCommon) GetRedisClientArgs() []string {
 	args := []string{}
-	if p.MasterName != "" {
-		args = append(args, "--redisMasterName", p.MasterName)
+	if p.RedisMasterName != "" {
+		args = append(args, "--redisMasterName", p.RedisMasterName)
 	}
-	if p.SentinelAddrs != "" {
-		args = append(args, "--redisSentinelAddrs", p.SentinelAddrs)
+	if p.RedisSentinelAddrs != "" {
+		args = append(args, "--redisSentinelAddrs", p.RedisSentinelAddrs)
 	}
-	if p.StandaloneAddr != "" {
-		args = append(args, "--redisStandaloneAddr", p.StandaloneAddr)
+	if p.RedisStandaloneAddr != "" {
+		args = append(args, "--redisStandaloneAddr", p.RedisStandaloneAddr)
 	}
 	return args
 }
