@@ -13,9 +13,8 @@ require (
 	github.com/SermoDigital/jose v0.9.1 // indirect
 	github.com/Shopify/sarama v1.22.2-0.20190604114437-cd910a683f9f
 	github.com/Sirupsen/logrus v1.6.0 // indirect
-	github.com/alicebob/gopher-json v0.0.0-20200520072559-a9ecdc9d1d3a // indirect
-	github.com/alicebob/miniredis v2.5.0+incompatible
-	github.com/alicebob/miniredis/v2 v2.17.0
+	github.com/agnivade/levenshtein v1.0.1
+	github.com/alicebob/miniredis/v2 v2.11.1
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20200428143746-21a406dcc535 // indirect
@@ -100,6 +99,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
+	github.com/test-go/testify v1.1.4
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/uber-go/atomic v1.4.0 // indirect
 	github.com/uber/jaeger-client-go v2.23.1+incompatible
@@ -114,6 +114,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
+	golang.org/x/tools v0.0.0-20200603131246-cc40288be839
 	google.golang.org/api v0.14.0
 	google.golang.org/genproto v0.0.0-20200305110556-506484158171 // indirect
 	google.golang.org/grpc v1.29.1

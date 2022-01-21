@@ -61,15 +61,6 @@ func (r *RedisConfig) AddrSpecified() bool {
 	return false
 }
 
-func (r *RedisConfig) SetSentinelDefaults() {
-	if r.SentinelAddrs == "" {
-		r.SentinelAddrs = DefaultRedisSentinelAddrs
-	}
-	if r.MasterName == "" {
-		r.MasterName = DefaultRedisMasterName
-	}
-}
-
 // Supports both modes of redis server deployment:
 // 1. Standalone server
 // 2. Redis Sentinels (for HA)
@@ -106,6 +97,7 @@ func IsServerReady(client *redis.Client, timeout time.Duration) error {
 		}
 		elapsed := time.Since(start)
 		if elapsed >= (timeout) {
+			err = fmt.Errorf("timed out")
 			break
 		}
 		time.Sleep(200 * time.Millisecond)

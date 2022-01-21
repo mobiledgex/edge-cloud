@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -371,6 +372,87 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				} else {
 					log.Printf("fcreq %v\n", apiRequest.Fcreq)
 					reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)
+				}
+				if reply != nil && filterOutput {
+					sort.Slice(reply.Ports, func(i, j int) bool {
+						return reply.Ports[i].InternalPort < reply.Ports[j].InternalPort
+					})
+					util.FilterFindCloudletReply(reply)
+				}
+				dmereply = reply
+				dmeerror = err
+				if err == nil {
+					_, ok := ctx.Value("edgeevents").(bool)
+					if ok {
+						dmereply = &findcloudlet{
+							Req:   apiRequest.Fcreq,
+							Reply: *reply,
+							At:    time.Now(),
+						}
+					}
+				}
+			}
+		}
+	case "findcloudletandverifyqos":
+		apiRequest.Fcreq.SessionCookie = sessionCookie
+		for ii := 0; ii < apiRequest.Repeat; ii++ {
+			if apiRequest.RunAtIntervalSec != 0 {
+				dur := edgeutil.GetWaitTime(time.Now(), apiRequest.RunAtIntervalSec, apiRequest.RunAtOffsetSec)
+				time.Sleep(dur)
+			}
+			if apiRequest.Repeat != 1 {
+				log.Printf("repeat interval %d of %d\n", ii+1, apiRequest.Repeat)
+			}
+			for jj := 0; jj < apiRequest.CountPerInterval; jj++ {
+				if apiRequest.CountPerInterval != 1 {
+					log.Printf("repeat interval %d count %d of %d\n", ii+1, jj+1, apiRequest.CountPerInterval)
+				}
+				var reply *dmeproto.FindCloudletReply
+				var err error
+				log.Printf("fcreq %v\n", apiRequest.Fcreq)
+				reply, err = client.FindCloudlet(ctx, &apiRequest.Fcreq)
+				if reply != nil {
+					// Before any filtering, check for existance of previous session data.
+					filename := outputDir + "/" + api + "unfiltered.yml"
+					_, err := os.Stat(filename)
+					if err == nil && reply.Tags != nil {
+						// It exists, so read in values from previous run.
+						var replyPrev *dmeproto.FindCloudletReply
+						err = util.ReadYamlFile(filename, &replyPrev)
+						if err == nil {
+							log.Printf("Previous findcloudletreply: %v", replyPrev)
+							log.Printf("old: %s, %s. new: %s, %s", replyPrev.Tags[cloudcommon.TagQosProfileName],
+								replyPrev.Tags[cloudcommon.TagPrioritySessionId], reply.Tags[cloudcommon.TagQosProfileName],
+								reply.Tags[cloudcommon.TagPrioritySessionId])
+							if replyPrev.Tags[cloudcommon.TagQosProfileName] == reply.Tags[cloudcommon.TagQosProfileName] {
+								// If the same profile name is received, the session ID should
+								// also be the same, as it is reused by the DME.
+								if replyPrev.Tags[cloudcommon.TagPrioritySessionId] == reply.Tags[cloudcommon.TagPrioritySessionId] {
+									log.Printf("priority_session_id verified same as previous run")
+								} else {
+									log.Printf("FAIL: priority_session_id has changed and should not have")
+									return false, nil
+								}
+							} else {
+								// If the profile name has changed, the session ID should
+								// also be a new value, as a new session was created by the DME.
+								log.Printf("New qos_profile_name: %s", reply.Tags[cloudcommon.TagQosProfileName])
+								if replyPrev.Tags[cloudcommon.TagPrioritySessionId] != reply.Tags[cloudcommon.TagPrioritySessionId] {
+									log.Printf("Verified new priority_session_id")
+								} else {
+									log.Printf("FAIL: priority_session_id was not updated for new profile")
+									return false, nil
+								}
+							}
+						} else {
+							log.Printf("Could not read yml file. err=%v", err)
+							return false, nil
+						}
+					} else {
+						log.Printf("%s doesn't exist. First run.", filename)
+					}
+					// Whether first or subsequent run, save unfiltered output to be checked against on next run.
+					util.PrintToYamlFile(api+"unfiltered.yml", outputDir, reply, true)
 				}
 				if reply != nil && filterOutput {
 					sort.Slice(reply.Ports, func(i, j int) bool {

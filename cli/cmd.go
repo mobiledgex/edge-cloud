@@ -10,6 +10,7 @@ import (
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -163,6 +164,7 @@ func (c *Command) argsHelp(pad int, args []string) string {
 		comment := ""
 		if c.Comments != nil {
 			comment = c.Comments[str]
+			comment = util.CapitalizeMessage(comment)
 		}
 		fmt.Fprintf(&buf, "  %-*s%s\n", pad, str, comment)
 	}
