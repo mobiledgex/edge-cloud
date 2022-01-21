@@ -15,8 +15,8 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -198,8 +198,10 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[0], "cannot be higher than max")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[1], "invalid CIDR")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[2], "Invalid min port")
-	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3], testutil.TrustPolicyExceptionErrorData[3].Key.AppKey.NotFoundError().Error())
-	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4], testutil.TrustPolicyExceptionErrorData[4].Key.CloudletPoolKey.NotFoundError().Error())
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3],
+		testutil.TrustPolicyExceptionErrorData[3].Key.AppKey.NotFoundError().Error())
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4],
+		testutil.TrustPolicyExceptionErrorData[4].Key.CloudletPoolKey.NotFoundError().Error())
 
 	dummy.Stop()
 }

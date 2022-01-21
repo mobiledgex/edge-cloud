@@ -1266,6 +1266,7 @@ func (s *{{.Name}}StoreImpl) parseGetData(val []byte, buf *{{.Name}}) bool {
 
 func (s *{{.Name}}StoreImpl) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("{{.Name}} json marshal failed", "obj", obj, "err", err)
@@ -1290,6 +1291,7 @@ type cacheTemplateArgs struct {
 	WaitForState  string
 	ObjAndKey     bool
 	CustomKeyType string
+	StreamOut     bool
 }
 
 var cacheTemplateIn = `
@@ -1696,12 +1698,19 @@ func (c *{{.Name}}Cache) SyncListEnd(ctx context.Context) {
 {{- end}}
 
 {{if ne (.WaitForState) ("")}}
-func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
-	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
-	done := make(chan string, 1)
-	failed := make(chan bool, 1)
+{{if eq (.WaitForState) ("TrackedState")}}
+func WaitFor{{.Name}}(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+{{- else}}
+func WaitFor{{.Name}}(ctx context.Context, key *{{.KeyType}}, targetState dme_proto.{{.WaitForState}}, transitionStates map[dme_proto.{{.WaitForState}}]struct{}, errorState dme_proto.{{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error, opts ...WaitStateOps) error {
+{{- end}}
 	var lastMsgCnt int
 	var err error
+
+	{{- if eq (.WaitForState) ("TrackedState")}}
+	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
+	{{- else}}
+	curState := dme_proto.{{.WaitForState}}_CLOUDLET_STATE_UNKNOWN
+	{{- end}}
 
 	var wSpec WaitStateSpec
 	for _, op := range opts {
@@ -1710,111 +1719,71 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	}
 
-	var streamCancel context.CancelFunc
-        if wSpec.StreamCache != nil {
-		checkStreamMsg := func() {
-			streamObj := StreamObj{}
-			if !wSpec.StreamCache.Get(wSpec.StreamKey, &streamObj) {
-				return
+        if wSpec.CrmMsgCh == nil {
+		return nil
+	}
+
+	for {
+		select {
+		case chObj := <-wSpec.CrmMsgCh:
+			info := {{.Name}}{}
+			err = json.Unmarshal([]byte(chObj.Payload), &info)
+			if err != nil {
+				return err
 			}
-			if len(streamObj.Status.Msgs) > 0 || streamObj.Status.MsgCount > 0 {
-				if lastMsgCnt < int(streamObj.Status.MsgCount) {
-					for ii := 0; ii < len(streamObj.Status.Msgs); ii++ {
-						send(&Result{Message: streamObj.Status.Msgs[ii]})
-						lastMsgCnt++
-					}
-				}
-			}
-		}
-
-                streamCancel = wSpec.StreamCache.WatchKey(wSpec.StreamKey, func(ctx context.Context) {
-			checkStreamMsg()
-                })
-
-		// After setting up watch, check if any status messages were received in the meantime
-		checkStreamMsg()
-        }
-
-	cancel := c.WatchKey(key, func(ctx context.Context) {
-		info := {{.Name}}{}
-		if c.Get(key, &info) {
 			curState = info.State
-		} else {
-			curState = {{.WaitForState}}_NOT_PRESENT
-		}
-		log.SpanLog(ctx, log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)])
-		if curState == errorState {
-			failed <- true
-		} else if curState == targetState {
-			msg := ""
-			if curState == {{.WaitForState}}_NOT_PRESENT {
-				msg = {{.WaitForState}}_CamelName[int32(curState)]
-			}
-			done <- msg
-		}
-	})
-	// After setting up watch, check current state,
-	// as it may have already changed to target state
-	info := {{.Name}}{}
-	if c.Get(key, &info) {
-		curState = info.State
-	} else {
-		curState = {{.WaitForState}}_NOT_PRESENT
-	}
-	if curState == targetState {
-		msg := ""
-		if curState == {{.WaitForState}}_NOT_PRESENT {
-			msg = {{.WaitForState}}_CamelName[int32(curState)]
-		}
-		done <- msg
-	}
-
-	select {
-	case doneMsg := <-done:
-		if doneMsg != "" {
-			send(&Result{Message: doneMsg})
-		}
-		err = nil
-		if successMsg != "" && send != nil {
-			send(&Result{Message: successMsg})
-		}
-	case <-failed:
-		if c.Get(key, &info) {
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else {
-			// this shouldn't happen, since only way to get here
-			// is if info state is set to Error
-			err = errors.New("Unknown failure")
-		}
-	case <-time.After(timeout):
-		hasInfo := c.Get(key, &info)
-		if hasInfo && info.State == errorState {
-			// error may have been sent back before watch started
-			errs := strings.Join(info.Errors, ", ")
-			err = fmt.Errorf("Encountered failures: %s", errs)
-		} else if _, found := transitionStates[info.State]; hasInfo && found {
-			// no success response, but state is a valid transition
-			// state. That means work is still in progress.
-			// Notify user that this is not an error.
-			// Do not undo since CRM is still busy.
+			log.SpanLog(ctx, log.DebugLevelApi, "Received crm update for {{.Name}}", "key", key, "obj", info)
 			if send != nil {
-				msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(info.State)])
-				send(&Result{Message: msg})
+				for ii := lastMsgCnt; ii < len(info.Status.Msgs); ii++ {
+					send(&Result{Message: info.Status.Msgs[ii]})
+				}
+				lastMsgCnt = len(info.Status.Msgs)
 			}
-			err = nil
-		} else {
-			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				{{.WaitForState}}_CamelName[int32(targetState)],
-				{{.WaitForState}}_CamelName[int32(curState)])
+
+			switch info.State {
+			case errorState:
+				errs := strings.Join(info.Errors, ", ")
+				err = fmt.Errorf("Encountered failures: %s", errs)
+				return err
+			case targetState:
+				{{- if eq (.WaitForState) ("TrackedState")}}
+				if targetState == TrackedState_NOT_PRESENT {
+					send(&Result{Message: {{.WaitForState}}_CamelName[int32(targetState)]})
+				}
+				{{- end}}
+				if successMsg != "" && send != nil {
+					send(&Result{Message: successMsg})
+				}
+				return nil
+			}
+		case <-time.After(timeout):
+			if _, found := transitionStates[curState]; found {
+				// no success response, but state is a valid transition
+				// state. That means work is still in progress.
+				// Notify user that this is not an error.
+				// Do not undo since CRM is still busy.
+				if send != nil {
+					{{- if eq (.WaitForState) ("TrackedState")}}
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(curState)])
+					{{- else}}
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", dme_proto.{{.WaitForState}}_CamelName[int32(curState)])
+					{{- end}}
+					send(&Result{Message: msg})
+				}
+				err = nil
+			} else {
+				err = fmt.Errorf("Timed out; expected state %s but is %s",
+					{{- if eq (.WaitForState) ("TrackedState")}}
+					{{.WaitForState}}_CamelName[int32(targetState)],
+					{{.WaitForState}}_CamelName[int32(curState)])
+					{{- else}}
+					dme_proto.{{.WaitForState}}_CamelName[int32(targetState)],
+					dme_proto.{{.WaitForState}}_CamelName[int32(curState)])
+					{{- end}}
+			}
+			return err
 		}
 	}
-	cancel()
-	if streamCancel != nil {
-		streamCancel()
-	}
-	// note: do not close done/failed, garbage collector will deal with it.
-	return err
 }
 {{- end}}
 
@@ -1998,9 +1967,11 @@ func (s *{{.Name}}By{{.LookupName}}) Find(lookup {{.LookupType}}) []{{.KeyType}}
 `
 
 type keysTemplateArgs struct {
-	Name      string
-	KeyType   string
-	ObjAndKey bool
+	Name         string
+	KeyType      string
+	ObjAndKey    bool
+	StreamKey    bool
+	WaitForState string
 }
 
 var keysTemplateIn = `
@@ -2039,6 +2010,12 @@ func CmpSort{{.Name}}(a {{.Name}}, b {{.Name}}) bool {
 	return a.Key.GetKeyString() < b.Key.GetKeyString()
 {{- end}}
 }
+
+{{- if .StreamKey}}
+func (m *{{.KeyType}}) StreamKey() string {
+	return fmt.Sprintf("{{.Name}}StreamKey: %s", m.String())
+}
+{{- end}}
 
 
 `
@@ -2197,6 +2174,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			ObjAndKey:     gensupport.GetObjAndKey(message),
 			CustomKeyType: gensupport.GetCustomKeyType(message),
 			KeyType:       keyType,
+			StreamOut:     gensupport.GetGenerateCudStreamout(message),
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
@@ -2318,6 +2296,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.importJson = true
 		m.importLog = true
 	}
+
 	if gensupport.GetMessageKey(message) != nil || gensupport.GetObjAndKey(message) {
 		// this is an object that has a key field
 		keyType, err := m.support.GetMessageKeyType(m.gen, desc)
@@ -2325,9 +2304,11 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			m.gen.Fail(err.Error())
 		}
 		args := keysTemplateArgs{
-			Name:      *message.Name,
-			KeyType:   keyType,
-			ObjAndKey: gensupport.GetObjAndKey(message),
+			Name:         *message.Name,
+			KeyType:      keyType,
+			ObjAndKey:    gensupport.GetObjAndKey(message),
+			WaitForState: GetGenerateWaitForState(message),
+			StreamKey:    GetGenerateStreamKey(message),
 		}
 		m.keysTemplate.Execute(m.gen.Buffer, args)
 	}
@@ -2335,6 +2316,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	//Generate enum values validation
 	m.generateEnumValidation(message, desc)
 	m.generateClearTagged(desc)
+	m.generateClearRedisOnlyFields(desc)
 
 	visited := make([]*generator.Descriptor, 0)
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
@@ -2637,6 +2619,58 @@ func (m *mex) generateClearTaggedFields(srcPkg string, parents []string, desc *g
 	}
 }
 
+func (m *mex) generateClearRedisOnlyFields(desc *generator.Descriptor) {
+	msgName := strings.Join(desc.TypeName(), "_")
+	msg := desc.DescriptorProto
+	redisOnlyFieldExists := false
+	for _, field := range msg.Field {
+		RedisOnly := GetRedisOnly(field)
+		if RedisOnly {
+			redisOnlyFieldExists = true
+			break
+		}
+	}
+
+	if !redisOnlyFieldExists {
+		return
+	}
+
+	m.P("func (s *", msgName, ") ClearRedisOnlyFields() {")
+	m.P("// Clear fields so that they are not stored in DB, as they are cached in Redis")
+
+	for _, field := range msg.Field {
+		RedisOnly := GetRedisOnly(field)
+		if !RedisOnly {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		mapType := m.support.GetMapType(m.gen, field)
+		repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
+		// clear field
+		nilval := "0"
+		if repeated || mapType != nil {
+			nilval = "nil"
+		} else {
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+				if gogoproto.IsNullable(field) {
+					nilval = "nil"
+				} else {
+					subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+					nilval = m.support.FQTypeName(m.gen, subDesc) + "{}"
+				}
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				nilval = "\"\""
+			case descriptor.FieldDescriptorProto_TYPE_BOOL:
+				nilval = "false"
+			}
+		}
+		m.P("s.", name, " = ", nilval)
+	}
+	m.P("}")
+	m.P()
+}
+
 func (m *mex) setKeyTags(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
 	for _, field := range desc.DescriptorProto.Field {
 		if field.Type == nil || field.OneofIndex != nil {
@@ -2924,6 +2958,10 @@ func GetObjKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjKey, false)
 }
 
+func GetGenerateStreamKey(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateStreamKey, false)
+}
+
 func GetUsesOrg(message *descriptor.DescriptorProto) string {
 	return gensupport.GetStringExtension(message.Options, protogen.E_UsesOrg, "")
 }
@@ -2958,4 +2996,8 @@ func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 
 func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
 	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
+}
+
+func GetRedisOnly(field *descriptor.FieldDescriptorProto) bool {
+	return proto.GetBoolExtension(field.Options, protogen.E_RedisOnly, false)
 }

@@ -1185,6 +1185,7 @@ func (s *ResTagTableStoreImpl) parseGetData(val []byte, buf *ResTagTable) bool {
 
 func (s *ResTagTableStoreImpl) STMPut(stm concurrency.STM, obj *ResTagTable, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ResTagTable", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("ResTagTable json marshal failed", "obj", obj, "err", err)

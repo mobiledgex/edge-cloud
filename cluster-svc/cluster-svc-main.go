@@ -161,6 +161,7 @@ storageClass:
 `
 
 var isUpgradingErrorString = "is upgrading"
+var isInProgressErrorString = "action is already in progress"
 
 type retryMapKey struct {
 	createTypeStr string
@@ -555,6 +556,11 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 		if strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
 			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
 			updateExistingAppInst(ctx, apiClient, &platformAppInst)
+			err = nil
+		} else if strings.Contains(err.Error(), isInProgressErrorString) {
+			// If multiple cluster-svcs' are running in HA cluster, then creation might
+			// have already been started by another instance and hence ignore such appinst errors
+			log.SpanLog(ctx, log.DebugLevelApi, "an action is already in progress for appinst", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
 			err = nil
 		} else if strings.Contains(err.Error(), "not found") {
 			log.SpanLog(ctx, log.DebugLevelApi, "app doesn't exist, create it first", "app", platformApp.String())

@@ -47,6 +47,12 @@ etcds:
   initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
+rediscaches:
+- name: redis1
+  type: master
+  port: 6379
+  hostname: "127.0.0.1"
+
 controllers:
 - name: ctrl1
   etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
@@ -55,6 +61,7 @@ controllers:
   notifyaddr: "127.0.0.1:37001"
   influxaddr: "https://127.0.0.1:8086"
   vaultaddr: "http://127.0.0.1:8200"
+  redisstandaloneaddr: "127.0.0.1:6379"
   usevaultcerts: true
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"

@@ -1266,6 +1266,7 @@ func (s *NetworkStoreImpl) parseGetData(val []byte, buf *Network) bool {
 
 func (s *NetworkStoreImpl) STMPut(stm concurrency.STM, obj *Network, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Network", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Network json marshal failed", "obj", obj, "err", err)

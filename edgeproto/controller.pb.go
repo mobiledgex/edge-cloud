@@ -783,6 +783,7 @@ func (s *ControllerStoreImpl) parseGetData(val []byte, buf *Controller) bool {
 
 func (s *ControllerStoreImpl) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Controller", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Controller json marshal failed", "obj", obj, "err", err)

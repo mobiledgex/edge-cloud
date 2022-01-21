@@ -31,6 +31,7 @@ type Etcd struct {
 type Controller struct {
 	Common               `yaml:",inline"`
 	NodeCommon           `yaml:",inline"`
+	RedisClientCommon    `yaml:",inline"`
 	EtcdAddrs            string
 	ApiAddr              string
 	HttpAddr             string
@@ -70,6 +71,7 @@ type Dme struct {
 type Crm struct {
 	Common              `yaml:",inline"`
 	NodeCommon          `yaml:",inline"`
+	RedisClientCommon   `yaml:",inline"`
 	NotifyAddrs         string
 	NotifySrvAddr       string
 	CloudletKey         string
@@ -87,7 +89,6 @@ type Crm struct {
 	AppDNSRoot          string
 	ChefServerPath      string
 	CacheDir            string
-	RedisAddr           string
 	HARole              HARole
 }
 type LocApiSim struct {
@@ -170,8 +171,11 @@ type Traefik struct {
 }
 
 type RedisCache struct {
-	DockerGeneric `yaml:",inline"`
-	cmd           *exec.Cmd
+	Common     `yaml:",inline"`
+	cmd        *exec.Cmd
+	Type       string
+	Port       string
+	MasterPort string
 }
 
 type NotifyRoot struct {
