@@ -47,9 +47,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.Cloudlets[i0].Errors = nil
 		}
 		if _, found := tags["nocmp"]; found {
-			in.Cloudlets[i0].Status = edgeproto.StatusInfo{}
-		}
-		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].NotifySrvAddr = ""
 		}
 		if _, found := tags["nocmp"]; found {
@@ -152,9 +149,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		if _, found := tags["nocmp"]; found {
 			in.ClusterInsts[i0].AllocatedIp = ""
 		}
-		if _, found := tags["nocmp"]; found {
-			in.ClusterInsts[i0].Status = edgeproto.StatusInfo{}
-		}
 		for i2 := 0; i2 < len(in.ClusterInsts[i0].Resources.Vms); i2++ {
 			for i3 := 0; i3 < len(in.ClusterInsts[i0].Resources.Vms[i2].Ipaddresses); i3++ {
 			}
@@ -191,9 +185,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 		if _, found := tags["timestamp"]; found {
 			in.AppInstances[i0].CreatedAt = distributed_match_engine.Timestamp{}
-		}
-		if _, found := tags["nocmp"]; found {
-			in.AppInstances[i0].Status = edgeproto.StatusInfo{}
 		}
 		if _, found := tags["nocmp"]; found {
 			in.AppInstances[i0].Revision = ""
@@ -335,12 +326,6 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.timelimits.updateappinsttimeout",
 	"cloudlets:#.timelimits.deleteappinsttimeout",
 	"cloudlets:#.errors",
-	"cloudlets:#.status.tasknumber",
-	"cloudlets:#.status.maxtasks",
-	"cloudlets:#.status.taskname",
-	"cloudlets:#.status.stepname",
-	"cloudlets:#.status.msgcount",
-	"cloudlets:#.status.msgs",
 	"cloudlets:#.state",
 	"cloudlets:#.crmoverride",
 	"cloudlets:#.deploymentlocal",
@@ -559,12 +544,6 @@ var AllDataOptionalArgs = []string{
 	"clusterinsts:#.deployment",
 	"clusterinsts:#.nummasters",
 	"clusterinsts:#.numnodes",
-	"clusterinsts:#.status.tasknumber",
-	"clusterinsts:#.status.maxtasks",
-	"clusterinsts:#.status.taskname",
-	"clusterinsts:#.status.stepname",
-	"clusterinsts:#.status.msgcount",
-	"clusterinsts:#.status.msgs",
 	"clusterinsts:#.externalvolumesize",
 	"clusterinsts:#.autoscalepolicy",
 	"clusterinsts:#.availabilityzone",
@@ -679,12 +658,6 @@ var AllDataOptionalArgs = []string{
 	"appinstances:#.createdat.seconds",
 	"appinstances:#.createdat.nanos",
 	"appinstances:#.autoclusteripaccess",
-	"appinstances:#.status.tasknumber",
-	"appinstances:#.status.maxtasks",
-	"appinstances:#.status.taskname",
-	"appinstances:#.status.stepname",
-	"appinstances:#.status.msgcount",
-	"appinstances:#.status.msgs",
 	"appinstances:#.revision",
 	"appinstances:#.forceupdate",
 	"appinstances:#.updatemultiple",
@@ -737,12 +710,6 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.vms:#.flavor.propmap",
 	"vmpools:#.state",
 	"vmpools:#.errors",
-	"vmpools:#.status.tasknumber",
-	"vmpools:#.status.maxtasks",
-	"vmpools:#.status.taskname",
-	"vmpools:#.status.stepname",
-	"vmpools:#.status.msgcount",
-	"vmpools:#.status.msgs",
 	"vmpools:#.crmoverride",
 	"vmpools:#.deleteprepare",
 	"gpudrivers:#.fields",
@@ -1294,7 +1261,6 @@ var AllDataSpecialArgs = map[string]string{
 	"appinstances:#.fields":                   "StringArray",
 	"appinstances:#.internalporttolbip":       "StringToString",
 	"appinstances:#.runtimeinfo.containerids": "StringArray",
-	"appinstances:#.status.msgs":              "StringArray",
 	"apps:#.alertpolicies":                    "StringArray",
 	"apps:#.autoprovpolicies":                 "StringArray",
 	"apps:#.fields":                           "StringArray",
@@ -1315,11 +1281,9 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudlets:#.errors":                      "StringArray",
 	"cloudlets:#.fields":                      "StringArray",
 	"cloudlets:#.gpuconfig.properties":        "StringToString",
-	"cloudlets:#.status.msgs":                 "StringArray",
 	"clusterinsts:#.errors":                   "StringArray",
 	"clusterinsts:#.fields":                   "StringArray",
 	"clusterinsts:#.networks":                 "StringArray",
-	"clusterinsts:#.status.msgs":              "StringArray",
 	"flavors:#.fields":                        "StringArray",
 	"flavors:#.optresmap":                     "StringToString",
 	"flowratelimitsettings:#.fields":          "StringArray",
@@ -1334,6 +1298,5 @@ var AllDataSpecialArgs = map[string]string{
 	"trustpolicyexceptions:#.fields":          "StringArray",
 	"vmpools:#.errors":                        "StringArray",
 	"vmpools:#.fields":                        "StringArray",
-	"vmpools:#.status.msgs":                   "StringArray",
 	"vmpools:#.vms:#.flavor.propmap":          "StringToString",
 }

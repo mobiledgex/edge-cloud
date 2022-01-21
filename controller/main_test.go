@@ -39,8 +39,12 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
-	testinit()
-	defer testfinish()
+
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
+
+	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
+
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
 
@@ -95,7 +99,7 @@ func TestController(t *testing.T) {
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 	for ii, _ := range testutil.CloudletInfoData {
-		err := apis.cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
+		err := apis.cloudletInfoApi.cache.WaitForCloudletState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
 		require.Nil(t, err)
 	}
 
@@ -206,13 +210,15 @@ func TestEdgeCloudBug26(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
 
 	*localEtcd = true
 	*initLocalEtcd = true
+
+	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
 
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
@@ -401,8 +407,8 @@ func TestControllerRace(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	etcdLocal, err := StartLocalEtcdServer(process.WithCleanStartup())
 	require.Nil(t, err)
