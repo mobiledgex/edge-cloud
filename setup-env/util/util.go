@@ -24,6 +24,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	influxclient "github.com/influxdata/influxdb/client/v2"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -645,6 +646,9 @@ func FilterCloudletInfoNocmp(data *edgeproto.AllData) {
 
 func FilterFindCloudletReply(reply *dmeproto.FindCloudletReply) {
 	reply.EdgeEventsCookie = ""
+
+	// Delete this tag because it is different for every new priority session.
+	delete(reply.Tags, cloudcommon.TagPrioritySessionId)
 }
 
 func FilterAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
