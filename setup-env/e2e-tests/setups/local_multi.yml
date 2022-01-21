@@ -8,8 +8,6 @@ tlscerts:
 dockernetworks:
 - name: e2e-logging
   hostname: "127.0.0.1"
-- name: redis-net
-  hostname: "127.0.0.1"
 
 vaults:
 - name: vault
@@ -200,8 +198,34 @@ jaegers:
     ES_SERVER_URLS: http://elasticsearch-e2e:9200
 
 rediscaches:
-- name: redis-e2e
-  dockernetwork: redis-net
+- name: redis1
+  type: master
+  port: 6379
+  hostname: "127.0.0.1"
+- name: redis2
+  type: slave
+  masterport: 6379
+  port: 6380
+  hostname: "127.0.0.1"
+- name: redis3
+  type: slave
+  masterport: 6379
+  port: 6381
+  hostname: "127.0.0.1"
+- name: redis-sentinel1
+  type: sentinel
+  masterport: 6379
+  port: 26379
+  hostname: "127.0.0.1"
+- name: redis-sentinel2
+  type: sentinel
+  masterport: 6379
+  port: 26380
+  hostname: "127.0.0.1"
+- name: redis-sentinel3
+  type: sentinel
+  masterport: 6379
+  port: 26381
   hostname: "127.0.0.1"
 
 notifyroots:

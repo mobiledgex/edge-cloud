@@ -41,9 +41,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Status = edgeproto.StatusInfo{}
-	}
-	if _, found := tags["nocmp"]; found {
 		in.Revision = ""
 	}
 	if _, found := tags["nocmp"]; found {
@@ -843,7 +840,6 @@ var AppInstSpecialArgs = map[string]string{
 	"fields":                   "StringArray",
 	"internalporttolbip":       "StringToString",
 	"runtimeinfo.containerids": "StringArray",
-	"status.msgs":              "StringArray",
 }
 var AppInstRuntimeRequiredArgs = []string{}
 var AppInstRuntimeOptionalArgs = []string{

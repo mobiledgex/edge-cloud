@@ -671,6 +671,10 @@ func GetNonStandardShow(method *descriptor.MethodDescriptorProto) bool {
 	return proto.GetBoolExtension(method.Options, protogen.E_NonStandardShow, false)
 }
 
+func GetGenerateCudStreamout(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudStreamout, false)
+}
+
 const (
 	PrefixCreate = "Create"
 	PrefixDelete = "Delete"

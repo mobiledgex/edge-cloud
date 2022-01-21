@@ -566,7 +566,6 @@ var VMPoolComments = map[string]string{
 var VMPoolSpecialArgs = map[string]string{
 	"errors":               "StringArray",
 	"fields":               "StringArray",
-	"status.msgs":          "StringArray",
 	"vms:#.flavor.propmap": "StringToString",
 }
 var VMPoolMemberRequiredArgs = []string{

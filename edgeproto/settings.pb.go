@@ -1874,6 +1874,7 @@ func (s *SettingsStoreImpl) parseGetData(val []byte, buf *Settings) bool {
 
 func (s *SettingsStoreImpl) STMPut(stm concurrency.STM, obj *Settings, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Settings", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Settings json marshal failed", "obj", obj, "err", err)

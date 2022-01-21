@@ -11,10 +11,12 @@ import (
 
 func TestOperatorCodeApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
-	testinit()
-	defer testfinish()
 	log.InitTracer(nil)
 	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -24,8 +26,6 @@ func TestOperatorCodeApi(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-
-	ctx := log.StartTestSpan(context.Background())
 
 	testutil.InternalOperatorCodeTest(t, "cud", apis.operatorCodeApi, testutil.OperatorCodeData)
 	// create duplicate key should fail

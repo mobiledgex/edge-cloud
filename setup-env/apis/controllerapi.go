@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	uutil "github.com/mobiledgex/edge-cloud/util"
@@ -350,17 +351,17 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		for k, v := range ctrl.Common.EnvVars {
 			pfConfig.EnvVar[k] = v
 		}
-		redisAddr := ""
+		redisCfg := rediscache.RedisConfig{}
 		if c.PlatformHighAvailability {
-			redisAddr = process.LocalRedisAddr
+			redisCfg.StandaloneAddr = rediscache.DefaultRedisStandaloneAddr
 		}
-		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary, redisAddr); err != nil {
+		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary, &redisCfg); err != nil {
 			return err
 		}
 		if c.PlatformHighAvailability {
 			// wait briefly before starting the secondary for unit test consistency
 			time.Sleep(time.Second * 1)
-			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleSecondary, redisAddr); err != nil {
+			if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARoleSecondary, &redisCfg); err != nil {
 				return err
 			}
 		}
