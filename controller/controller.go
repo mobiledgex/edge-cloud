@@ -109,7 +109,7 @@ type Services struct {
 
 func main() {
 	nodeMgr.InitFlags()
-	redisCfg.InitFlags()
+	redisCfg.InitFlags(rediscache.DefaultCfgRedisHA)
 	flag.Parse()
 
 	services.listeners = make([]net.Listener, 0)
@@ -220,7 +220,6 @@ func startServices() error {
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
 	}
 
-	redisCfg.SetSentinelDefaults()
 	redisClient, err = rediscache.NewClient(&redisCfg)
 	if err != nil {
 		return err

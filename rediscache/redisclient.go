@@ -17,8 +17,13 @@ const (
 	RedisGreatestId = "+"
 	RedisLastId     = "$"
 
-	DefaultRedisMasterName    = "redismaster"
-	DefaultRedisSentinelAddrs = "127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"
+	DefaultCfgRedisOptional int = iota
+	DefaultCfgRedisStandalone
+	DefaultCfgRedisHA
+
+	DefaultRedisStandaloneAddr = "127.0.0.1:6379"
+	DefaultRedisMasterName     = "redismaster"
+	DefaultRedisSentinelAddrs  = "127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"
 )
 
 type RedisConfig struct {
@@ -27,10 +32,23 @@ type RedisConfig struct {
 	StandaloneAddr string
 }
 
-func (r *RedisConfig) InitFlags() {
-	flag.StringVar(&r.MasterName, "redisMasterName", "", "Name of the redis master node as specified in sentinel config")
-	flag.StringVar(&r.SentinelAddrs, "redisSentinelAddrs", "", "comma separated list of redis sentinel addresses")
-	flag.StringVar(&r.StandaloneAddr, "redisStandaloneAddr", "", "Redis standalone server address")
+func (r *RedisConfig) InitFlags(defaultCfgType int) {
+	defaultMasterName := ""
+	defaultSentinelAddrs := ""
+	defaultStandaloneAddr := ""
+	switch defaultCfgType {
+	case DefaultCfgRedisOptional:
+		// defaults set to empty
+	case DefaultCfgRedisStandalone:
+		defaultStandaloneAddr = DefaultRedisStandaloneAddr
+	case DefaultCfgRedisHA:
+		defaultMasterName = DefaultRedisMasterName
+		defaultSentinelAddrs = DefaultRedisSentinelAddrs
+	}
+
+	flag.StringVar(&r.MasterName, "redisMasterName", defaultMasterName, "Name of the redis master node as specified in sentinel config")
+	flag.StringVar(&r.SentinelAddrs, "redisSentinelAddrs", defaultSentinelAddrs, "comma separated list of redis sentinel addresses")
+	flag.StringVar(&r.StandaloneAddr, "redisStandaloneAddr", defaultStandaloneAddr, "Redis standalone server address")
 }
 
 func (r *RedisConfig) AddrSpecified() bool {

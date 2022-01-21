@@ -353,7 +353,7 @@ func StartCrmsLocal(ctx context.Context, physicalName string, ctrlName string, a
 		}
 		redisCfg := rediscache.RedisConfig{}
 		if c.PlatformHighAvailability {
-			redisCfg.SentinelAddrs = rediscache.DefaultRedisSentinelAddrs
+			redisCfg.StandaloneAddr = rediscache.DefaultRedisStandaloneAddr
 		}
 		if err := cloudcommon.StartCRMService(ctx, &c, &pfConfig, process.HARolePrimary, &redisCfg); err != nil {
 			return err

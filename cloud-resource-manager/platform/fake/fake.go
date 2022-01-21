@@ -558,7 +558,7 @@ func (s *Platform) CreateCloudlet(ctx context.Context, cloudlet *edgeproto.Cloud
 	updateCallback(edgeproto.UpdateTask, "Starting CRMServer")
 	var redisCfg rediscache.RedisConfig
 	if cloudlet.PlatformHighAvailability {
-		redisCfg.SentinelAddrs = rediscache.DefaultRedisSentinelAddrs
+		redisCfg.StandaloneAddr = rediscache.DefaultRedisStandaloneAddr
 	}
 	err := cloudcommon.StartCRMService(ctx, cloudlet, pfConfig, process.HARolePrimary, &redisCfg)
 	if err != nil {

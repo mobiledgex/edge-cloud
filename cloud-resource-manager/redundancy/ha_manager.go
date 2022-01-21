@@ -37,7 +37,7 @@ type HighAvailabilityManager struct {
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
-	s.redisCfg.InitFlags()
+	s.redisCfg.InitFlags(rediscache.DefaultCfgRedisOptional)
 	flag.StringVar(&s.HARole, "HARole", string(process.HARolePrimary), string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
