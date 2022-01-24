@@ -3219,6 +3219,7 @@ func (s *AppStoreImpl) parseGetData(val []byte, buf *App) bool {
 
 func (s *AppStoreImpl) STMPut(stm concurrency.STM, obj *App, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("App", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("App json marshal failed", "obj", obj, "err", err)

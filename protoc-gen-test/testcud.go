@@ -608,7 +608,7 @@ func (t *TestCud) generateCudTest(desc *generator.Descriptor) {
 		Name:      *message.Name,
 		KeyName:   keystr,
 		ShowOnly:  GetGenerateShowTest(message),
-		Streamout: GetGenerateCudStreamout(message),
+		Streamout: gensupport.GetGenerateCudStreamout(message),
 		HasUpdate: GetGenerateCudTestUpdate(message),
 		ObjAndKey: gensupport.GetObjAndKey(message),
 	}
@@ -1223,10 +1223,6 @@ func GetGenerateCudTest(message *descriptor.DescriptorProto) bool {
 
 func GetGenerateCudTestUpdate(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudTestUpdate, true)
-}
-
-func GetGenerateCudStreamout(message *descriptor.DescriptorProto) bool {
-	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudStreamout, false)
 }
 
 func GetGenerateShowTest(message *descriptor.DescriptorProto) bool {

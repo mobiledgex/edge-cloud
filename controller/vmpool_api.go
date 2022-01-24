@@ -256,7 +256,22 @@ func validateVMNetInfo(vmCur, vmNew *edgeproto.VM) error {
 	return nil
 }
 
-func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context, key *edgeproto.VMPoolKey, vms map[string]edgeproto.VM) error {
+func (s *VMPoolApi) startVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey) (*streamSend, error) {
+	streamSendObj, _, err := s.all.streamObjApi.startStream(ctx, cctx, key.StreamKey(), nil)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to start VMPool stream", "err", err)
+		return nil, err
+	}
+	return streamSendObj, nil
+}
+
+func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop VMPool stream", "err", err)
+	}
+}
+
+func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context, key *edgeproto.VMPoolKey, vms map[string]edgeproto.VM) (reterr error) {
 	if len(vms) == 0 {
 		return fmt.Errorf("no VMs specified")
 	}
@@ -311,7 +326,18 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = s.cache.WaitForState(ctx, key, edgeproto.TrackedState_READY, UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR, s.all.settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(), "Updated VM Pool Successfully", nil)
+	sendObj, err := s.startVMPoolStream(ctx, cctx, key)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		s.stopVMPoolStream(ctx, cctx, key, sendObj, reterr)
+	}()
+	err = edgeproto.WaitForVMPoolInfo(ctx, key, edgeproto.TrackedState_READY,
+		UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR,
+		s.all.settingsApi.Get().UpdateVmPoolTimeout.TimeDuration(),
+		"Updated VM Pool Successfully", nil,
+		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
 	// State state back to Unknown & Error to nil, as user is notified about the error, if any
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		cur := edgeproto.VMPool{}
