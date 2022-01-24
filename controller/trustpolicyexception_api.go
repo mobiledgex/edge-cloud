@@ -78,6 +78,9 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 }
 
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "policy", in)
+
 	cur := edgeproto.TrustPolicyException{}
 
 	fields := edgeproto.MakeFieldMap(in.Fields)
@@ -102,12 +105,15 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state", in.State.String(), "cur state", cur.State.String())
 
-		if _, found := fields[edgeproto.TrustPolicyExceptionFieldState]; found {
+		_, found := fields[edgeproto.TrustPolicyExceptionFieldState]
+		if found {
 			// caller specified state change
 			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 				return fmt.Errorf("New state must be either Active or Rejected")
 			}
+		} else if !rulesSpecified {
+			return fmt.Errorf("Security rules must be specified")
 		}
 		if rulesSpecified && cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
 			return fmt.Errorf("Can update security rules only when trust policy exception is still in approval requested state")
