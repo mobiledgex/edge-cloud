@@ -307,20 +307,17 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 	return protos & (^protocolToRemove)
 }
 
-func (s *AppInstApi) startAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
-	streamSendObj, err := s.all.streamObjApi.startStream(ctx, key, inCb)
+func (s *AppInstApi) startAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
+	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, cctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
 		return nil, inCb, err
 	}
-	return streamSendObj, &CbWrapper{
-		streamSendObj: streamSendObj,
-		GenericCb:     inCb,
-	}, nil
+	return streamSendObj, outCb, err
 }
 
-func (s *AppInstApi) stopAppInstStream(ctx context.Context, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, key, streamSendObj, objErr); err != nil {
+func (s *AppInstApi) stopAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
 }
@@ -328,7 +325,7 @@ func (s *AppInstApi) stopAppInstStream(ctx context.Context, key *edgeproto.AppIn
 func (s *StreamObjApi) StreamAppInst(key *edgeproto.AppInstKey, cb edgeproto.StreamObjApi_StreamAppInstServer) error {
 	// populate the clusterinst developer from the app developer if not already present
 	cloudcommon.SetAppInstKeyDefaults(key)
-	return s.StreamMsgs(key, cb)
+	return s.StreamMsgs(key.StreamKey(), cb)
 }
 
 func (s *AppInstApi) checkForAppinstCollisions(ctx context.Context, key *edgeproto.AppInstKey) error {
@@ -396,6 +393,7 @@ func (s *AppInstApi) checkPortOverlapDedicatedLB(appPorts []dme.AppPort, cluster
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 	var clusterInst edgeproto.ClusterInst
 	ctx := inCb.Context()
+	cctx.SetOverride(&in.CrmOverride)
 
 	// To accommodate automatically created reservable ClusterInsts that can
 	// have different names than the user's desired Cluster name, the
@@ -448,12 +446,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	setClusterOrg, setClusterName := cloudcommon.SetAppInstKeyDefaults(&in.Key)
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
-	sendObj, cb, err := s.startAppInstStream(ctx, &appInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
-		}()
+	sendObj, cb, err := s.startAppInstStream(ctx, cctx, &appInstKey, inCb)
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr)
+	}()
 
 	if setClusterOrg {
 		cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
@@ -468,7 +467,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Liveness == edgeproto.Liveness_LIVENESS_UNKNOWN {
 		in.Liveness = edgeproto.Liveness_LIVENESS_STATIC
 	}
-	cctx.SetOverride(&in.CrmOverride)
 
 	autocluster := false
 	autoClusterType := NoAutoCluster
@@ -896,7 +894,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// Set new state to show autocluster clusterinst progress as part of
 		// appinst progress
 		in.State = edgeproto.TrackedState_CREATING_DEPENDENCIES
-		in.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, in)
 		s.idStore.STMPut(stm, in.UniqueId)
 		s.dnsLabelStore.STMPut(stm, &in.Key.ClusterInstKey.CloudletKey, in.DnsLabel)
@@ -1225,11 +1222,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
 		return nil
 	}
-	err = s.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_READY,
+	err = edgeproto.WaitForAppInstInfo(ctx, &in.Key, edgeproto.TrackedState_READY,
 		CreateAppInstTransitions, edgeproto.TrackedState_CREATE_ERROR,
 		s.all.settingsApi.Get().CreateAppInstTimeout.TimeDuration(),
 		"Created AppInst successfully", cb.Send,
-		edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &in.Key),
+		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 	)
 	if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
@@ -1347,12 +1344,13 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 	}
 
 	// create stream once AppInstKey is formed correctly
-	sendObj, cb, err := s.startAppInstStream(ctx, &key, inCb)
-	if err == nil {
-		defer func() {
-			s.stopAppInstStream(ctx, &key, sendObj, reterr)
-		}()
+	sendObj, cb, err := s.startAppInstStream(ctx, cctx, &key, inCb)
+	if err != nil {
+		return false, err
 	}
+	defer func() {
+		s.stopAppInstStream(ctx, cctx, &key, sendObj, reterr)
+	}()
 
 	var app edgeproto.App
 
@@ -1387,7 +1385,6 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 			}
 			curr.State = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
-		curr.Status = edgeproto.StatusInfo{}
 		s.store.STMPut(stm, &curr)
 		return nil
 	})
@@ -1405,11 +1402,11 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 				s.RecordAppInstEvent(ctx, &key, cloudcommon.UPDATE_ERROR, cloudcommon.InstanceDown)
 			}
 		}()
-		err = s.cache.WaitForState(cb.Context(), &key, edgeproto.TrackedState_READY,
+		err = edgeproto.WaitForAppInstInfo(cb.Context(), &key, edgeproto.TrackedState_READY,
 			UpdateAppInstTransitions, edgeproto.TrackedState_UPDATE_ERROR,
 			s.all.settingsApi.Get().UpdateAppInstTimeout.TimeDuration(),
 			"", cb.Send,
-			edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &key),
+			edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 		)
 	}
 	if err != nil {
@@ -1622,12 +1619,13 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	appInstKey := in.Key
 	// create stream once AppInstKey is formed correctly
-	sendObj, cb, err := s.startAppInstStream(ctx, &appInstKey, inCb)
-	if err == nil {
-		defer func() {
-			s.stopAppInstStream(ctx, &appInstKey, sendObj, reterr)
-		}()
+	sendObj, cb, err := s.startAppInstStream(ctx, cctx, &appInstKey, inCb)
+	if err != nil {
+		return err
 	}
+	defer func() {
+		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr)
+	}()
 
 	// get appinst info for flavor
 	appInstInfo := edgeproto.AppInst{}
@@ -1758,11 +1756,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if cloudcommon.IsClusterInstReqd(&app) {
 				s.all.clusterRefsApi.removeRef(stm, in)
 			}
-			// delete associated streamobj as well
-			s.all.streamObjApi.store.STMDel(stm, &in.Key)
 		} else {
 			in.State = edgeproto.TrackedState_DELETE_REQUESTED
-			in.Status = edgeproto.StatusInfo{}
 			s.store.STMPut(stm, in)
 			s.all.appInstRefsApi.addDeleteRequestedRef(stm, &in.Key)
 		}
@@ -1779,11 +1774,11 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if ignoreCRM(cctx) {
 		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 	} else {
-		err = s.cache.WaitForState(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
+		err = edgeproto.WaitForAppInstInfo(ctx, &in.Key, edgeproto.TrackedState_NOT_PRESENT,
 			DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR,
 			s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration(),
 			"Deleted AppInst successfully", cb.Send,
-			edgeproto.WithStreamObj(&s.all.streamObjApi.cache, &in.Key),
+			edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 		)
 		if err != nil && cctx.Override == edgeproto.CRMOverride_IGNORE_CRM_ERRORS {
 			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
@@ -1822,7 +1817,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.AppInst) error {
-		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})
@@ -1861,8 +1855,8 @@ func (s *AppInstApi) HealthCheckUpdate(ctx context.Context, in *edgeproto.AppIns
 func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstInfo) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
-	// update only diff of status msgs
-	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, &in.Key)
+	// publish the received info object on redis
+	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		applyUpdate := false
@@ -1924,6 +1918,9 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 	})
 	if in.State == edgeproto.TrackedState_DELETE_DONE {
 		s.DeleteFromInfo(ctx, in)
+		// update stream message about deletion of main object
+		in.State = edgeproto.TrackedState_NOT_PRESENT
+		s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
 	}
 }
 
@@ -1948,9 +1945,6 @@ func (s *AppInstApi) DeleteFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		s.dnsLabelStore.STMDel(stm, &in.Key.ClusterInstKey.CloudletKey, inst.DnsLabel)
 		s.all.appInstRefsApi.removeRef(stm, &in.Key)
 		s.all.clusterRefsApi.removeRef(stm, &inst)
-
-		// delete associated streamobj as well
-		s.all.streamObjApi.store.STMDel(stm, &in.Key)
 		return nil
 	})
 }

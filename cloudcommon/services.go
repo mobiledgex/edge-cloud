@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -140,8 +141,8 @@ func GetCRMCmdArgs(cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformCon
 	return crmProc.GetArgs(opts...), &crmProc.Common.EnvVars, nil
 }
 
-func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole, redisAddr string) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key, "haRole", haRole)
+func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, haRole process.HARole, redisCfg *rediscache.RedisConfig) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "start crmserver", "cloudlet", cloudlet.Key, "haRole", haRole, "rediscfg", redisCfg)
 
 	// Get non-conflicting port for NotifySrvAddr if actual port is 0
 	var newAddr string
@@ -187,7 +188,11 @@ func StartCRMService(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig
 	}
 	crmProc.AccessKeyFile = accessKeyFile
 	crmProc.HARole = haRole
-	crmProc.RedisAddr = redisAddr
+	if redisCfg != nil {
+		crmProc.RedisMasterName = redisCfg.MasterName
+		crmProc.RedisSentinelAddrs = redisCfg.SentinelAddrs
+		crmProc.RedisStandaloneAddr = redisCfg.StandaloneAddr
+	}
 	filePrefix := cloudlet.Key.Name + string(haRole)
 
 	err = crmProc.StartLocal(GetCloudletLogFile(filePrefix), opts...)

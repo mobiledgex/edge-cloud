@@ -80,7 +80,9 @@ func (q *InfluxQ) Stop() {
 	q.done = true
 	q.DoPush() // wake up thread
 	q.wg.Wait()
-	q.client.Close()
+	if q.client != nil {
+		q.client.Close()
+	}
 }
 
 func (q *InfluxQ) initDB() error {

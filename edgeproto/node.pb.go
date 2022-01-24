@@ -1257,6 +1257,7 @@ func (s *NodeStoreImpl) parseGetData(val []byte, buf *Node) bool {
 
 func (s *NodeStoreImpl) STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Node", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Node json marshal failed", "obj", obj, "err", err)

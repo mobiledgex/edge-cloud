@@ -1137,6 +1137,7 @@ func (s *AutoScalePolicyStoreImpl) parseGetData(val []byte, buf *AutoScalePolicy
 
 func (s *AutoScalePolicyStoreImpl) STMPut(stm concurrency.STM, obj *AutoScalePolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoScalePolicy", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AutoScalePolicy json marshal failed", "obj", obj, "err", err)

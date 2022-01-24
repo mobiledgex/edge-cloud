@@ -174,6 +174,7 @@ func CleanupEtcdRamDisk() error {
 func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--etcdUrls", p.EtcdAddrs, "--notifyAddr", p.NotifyAddr}
 	args = append(args, p.GetNodeMgrArgs()...)
+	args = append(args, p.GetRedisClientArgs()...)
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
@@ -515,11 +516,6 @@ func (p *Crm) GetArgs(opts ...StartOp) []string {
 	args = append(args, "--HARole")
 	args = append(args, string(p.HARole))
 
-	if p.RedisAddr != "" {
-		args = append(args, "--redisAddr")
-		args = append(args, p.RedisAddr)
-	}
-
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -536,6 +532,7 @@ func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
 
 	args := p.GetArgs(opts...)
+	args = append(args, p.GetRedisClientArgs()...)
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	return err
 }
@@ -1280,13 +1277,80 @@ func (p *Jaeger) StartLocalNoTraefik(logfile string, opts ...StartOp) error {
 	return err
 }
 
+var redisServerConfig = `
+port {{.Port}}
+{{- if .MasterPort}}
+slaveof {{.Hostname}} {{.MasterPort}}
+{{- end}}
+`
+
+var redisSentinelConfig = `
+port {{.Port}}
+sentinel monitor redismaster {{.Hostname}} {{.MasterPort}} 2
+sentinel down-after-milliseconds redismaster 8000
+sentinel failover-timeout redismaster 8000
+sentinel parallel-syncs redismaster 1
+`
+
 func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
-	args := p.GetRunArgs()
-	redisPort := LocalRedisPort
-	args = append(args,
-		"-p", redisPort+":"+redisPort,
-		"redis",
-	)
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.CleanStartup {
+		if err := p.ResetData(logfile); err != nil {
+			return err
+		}
+	}
+
+	cfgFile := fmt.Sprintf("%s/%s.conf", path.Dir(logfile), p.Name)
+
+	args := []string{cfgFile}
+
+	switch p.Type {
+	case "master":
+		fallthrough
+	case "slave":
+		if p.Port == "" {
+			p.Port = LocalRedisPort
+		}
+		tmpl := template.Must(template.New(p.Name).Parse(redisServerConfig))
+		f, err := os.Create(cfgFile)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		wr := bufio.NewWriter(f)
+		err = tmpl.Execute(wr, p)
+		if err != nil {
+			return err
+		}
+		wr.Flush()
+	case "sentinel":
+		if p.Port == "" {
+			p.Port = LocalRedisSentinelPort
+		}
+		if p.MasterPort == "" {
+			p.MasterPort = LocalRedisPort
+		}
+		tmpl := template.Must(template.New(p.Name).Parse(redisSentinelConfig))
+		f, err := os.Create(cfgFile)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		wr := bufio.NewWriter(f)
+		err = tmpl.Execute(wr, p)
+		if err != nil {
+			return err
+		}
+		wr.Flush()
+		args = append(args, "--sentinel")
+	default:
+		return fmt.Errorf("Invalid type %s specified, "+
+			"valid types are master, slave, sentinel", p.Type)
+	}
+
 	var err error
 	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, p.GetEnv(), logfile)
 	if err != nil {
@@ -1296,7 +1360,7 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 	maxRedisWait := 20 * time.Second
 	start := time.Now()
 	for {
-		conn, err := net.Dial("tcp", LocalRedisAddr)
+		conn, err := net.Dial("tcp", p.Hostname+":"+p.Port)
 		if err == nil {
 			conn.Close()
 			break
@@ -1307,6 +1371,22 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
+	return nil
+}
+
+func (p *RedisCache) StopLocal() {
+	StopLocal(p.cmd)
+}
+
+func (p *RedisCache) GetExeName() string { return "redis-server" }
+
+func (p *RedisCache) LookupArgs() string {
+	return ":" + p.Port
+}
+
+func (p *RedisCache) ResetData(logfile string) error {
+	cfgFile := fmt.Sprintf("%s/%s.conf", path.Dir(logfile), p.Name)
+	os.Remove(cfgFile)
 	return nil
 }
 

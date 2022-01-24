@@ -49,8 +49,7 @@ var HARolePrimary HARole = "primary"
 var HARoleSecondary HARole = "secondary"
 
 var LocalRedisPort = "6379"
-var LocalRedisAddr = "127.0.0.1:" + LocalRedisPort
-var NoRedisAddr = ""
+var LocalRedisSentinelPort = "26379"
 
 func (c *Common) GetName() string {
 	return c.Name
@@ -96,6 +95,27 @@ func (p *NodeCommon) GetNodeMgrArgs() []string {
 		args = append(args, "--accessKeyFile", p.AccessKeyFile)
 	}
 	return p.TLS.AddInternalPkiArgs(args)
+}
+
+// Common args for all redis clients
+type RedisClientCommon struct {
+	RedisMasterName     string
+	RedisSentinelAddrs  string
+	RedisStandaloneAddr string
+}
+
+func (p *RedisClientCommon) GetRedisClientArgs() []string {
+	args := []string{}
+	if p.RedisMasterName != "" {
+		args = append(args, "--redisMasterName", p.RedisMasterName)
+	}
+	if p.RedisSentinelAddrs != "" {
+		args = append(args, "--redisSentinelAddrs", p.RedisSentinelAddrs)
+	}
+	if p.RedisStandaloneAddr != "" {
+		args = append(args, "--redisStandaloneAddr", p.RedisStandaloneAddr)
+	}
+	return args
 }
 
 // options
