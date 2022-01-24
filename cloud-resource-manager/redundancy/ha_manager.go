@@ -191,9 +191,9 @@ func (s *HighAvailabilityManager) updateRedisFailed(ctx context.Context, newRedi
 	// generate an event if the state changed
 	s.RedisConnectionFailed = newRedisFailed
 	if newRedisFailed {
-		s.nodeMgr.Event(ctx, "Redis online", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
-	} else {
 		s.nodeMgr.Event(ctx, "Redis offline", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
+	} else {
+		s.nodeMgr.Event(ctx, "Redis online", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), err, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
 	}
 }
 
