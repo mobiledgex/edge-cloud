@@ -1464,6 +1464,7 @@ func (s *CloudletRefsStoreImpl) parseGetData(val []byte, buf *CloudletRefs) bool
 
 func (s *CloudletRefsStoreImpl) STMPut(stm concurrency.STM, obj *CloudletRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletRefs", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("CloudletRefs json marshal failed", "obj", obj, "err", err)
@@ -2228,6 +2229,7 @@ func (s *ClusterRefsStoreImpl) parseGetData(val []byte, buf *ClusterRefs) bool {
 
 func (s *ClusterRefsStoreImpl) STMPut(stm concurrency.STM, obj *ClusterRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterRefs", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("ClusterRefs json marshal failed", "obj", obj, "err", err)
@@ -2906,6 +2908,7 @@ func (s *AppInstRefsStoreImpl) parseGetData(val []byte, buf *AppInstRefs) bool {
 
 func (s *AppInstRefsStoreImpl) STMPut(stm concurrency.STM, obj *AppInstRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstRefs", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AppInstRefs json marshal failed", "obj", obj, "err", err)

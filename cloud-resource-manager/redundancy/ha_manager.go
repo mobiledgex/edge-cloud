@@ -10,14 +10,13 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 )
 
 const RedisPingFail string = "Redis Ping Fail"
 const HighAvailabilityManagerDisabled = "HighAvailabilityManagerDisabled"
 
-const MaxRedisWait = time.Second * 30
 const CheckActiveLogInterval = time.Second * 10
 const MaxRedisUnreachableRetries = 3
 
@@ -27,7 +26,7 @@ type HAWatcher interface {
 }
 
 type HighAvailabilityManager struct {
-	redisAddr                  string
+	redisCfg                   rediscache.RedisConfig
 	nodeGroupKey               string
 	redisClient                *redis.Client
 	HARole                     string
@@ -42,7 +41,7 @@ type HighAvailabilityManager struct {
 }
 
 func (s *HighAvailabilityManager) InitFlags() {
-	flag.StringVar(&s.redisAddr, "redisAddr", "", "redis address")
+	s.redisCfg.InitFlags(rediscache.DefaultCfgRedisOptional)
 	flag.StringVar(&s.HARole, "HARole", string(process.HARolePrimary), string(process.HARolePrimary+" or "+process.HARoleSecondary))
 }
 
@@ -55,12 +54,16 @@ func (s *HighAvailabilityManager) Init(ctx context.Context, nodeGroupKey string,
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid HA Role type")
 	}
-	if s.redisAddr == "" {
+	if !s.redisCfg.AddrSpecified() {
 		s.PlatformInstanceActive = true
 		return fmt.Errorf("%s Redis Addr for HA not specified", HighAvailabilityManagerDisabled)
 	}
 	s.nodeGroupKey = nodeGroupKey
+	if s.nodeGroupKey == "" {
+		return fmt.Errorf("group key node not specified")
+	}
 	s.HAEnabled = true
+
 	err := s.connectRedis(ctx)
 	if err != nil {
 		s.updateRedisFailed(ctx, true, err)
@@ -93,31 +96,19 @@ func (s *HighAvailabilityManager) pingRedis(ctx context.Context, genLog bool) er
 
 func (s *HighAvailabilityManager) connectRedis(ctx context.Context) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "connectRedis")
-	if s.redisAddr == "" {
-		return fmt.Errorf("Redis address not specified")
-	}
-	if s.nodeGroupKey == "" {
-		return fmt.Errorf("group key node not specified")
-	}
-	s.redisClient = redis.NewClient(&redis.Options{
-		Addr: s.redisAddr,
-	})
-	start := time.Now()
 	var err error
-	for {
-		err = s.pingRedis(ctx, true)
-		if err == nil {
-			return nil
-		}
-		elapsed := time.Since(start)
-		if elapsed >= (MaxRedisWait) {
-			log.SpanLog(ctx, log.DebugLevelInfra, "redis wait timed out", "err", err)
-			break
-		}
-		time.Sleep(200 * time.Millisecond)
+	s.redisClient, err = rediscache.NewClient(ctx, &s.redisCfg)
+	if err != nil {
+		return err
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis failed", "err", err)
-	return fmt.Errorf("pingRedis failed - %v", err)
+
+	err = rediscache.IsServerReady(s.redisClient, rediscache.MaxRedisWait)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "pingRedis failed", "err", err)
+		return err
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "redis ping done successfully")
+	return nil
 }
 
 // TryActive is called on startup
@@ -140,12 +131,11 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 			return true, nil
 		}
 	}
-	cmd := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration)
-	v, err := cmd.Result()
+	v, err := s.redisClient.SetNX(s.nodeGroupKey, s.HARole, s.activeDuration).Result()
 	if err != nil {
 		// don't log this if the redis is already down because it result in excessive logs
 		if !s.RedisConnectionFailed {
-			log.SpanLog(ctx, log.DebugLevelInfra, "tryActive setNX error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "tryActive setNX error", "key", s.nodeGroupKey, "v", v, "err", err)
 		}
 		return false, err
 	}
@@ -154,14 +144,13 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 
 func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error) {
 
-	cmd := s.redisClient.Get(s.nodeGroupKey)
-	v, err := cmd.Result()
+	v, err := s.redisClient.Get(s.nodeGroupKey).Result()
 	if err != nil {
 		if err == redis.Nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive - key does not exist -- neither unit is active")
 			return false, nil
 		} else {
-			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "CheckActive error", "key", s.nodeGroupKey, "v", v, "err", err)
 			return false, err
 		}
 	}
@@ -170,10 +159,9 @@ func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error)
 }
 
 func (s *HighAvailabilityManager) BumpActiveExpire(ctx context.Context) error {
-	cmd := s.redisClient.Set(s.nodeGroupKey, s.HARole, s.activeDuration)
-	v, err := cmd.Result()
+	v, err := s.redisClient.Set(s.nodeGroupKey, s.HARole, s.activeDuration).Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire error", "key", s.nodeGroupKey, "cmd", cmd, "v", v, "err", err)
+		log.SpanLog(ctx, log.DebugLevelInfra, "BumpActiveExpire error", "key", s.nodeGroupKey, "v", v, "err", err)
 		return err
 	}
 	if v != "OK" {

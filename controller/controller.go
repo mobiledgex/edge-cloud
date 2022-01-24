@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -26,6 +27,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -83,6 +85,8 @@ var sigChan chan os.Signal
 var services Services
 var vaultConfig *vault.Config
 var nodeMgr node.NodeMgr
+var redisCfg rediscache.RedisConfig
+var redisClient *redis.Client
 
 type Services struct {
 	etcdLocal                 *process.Etcd
@@ -105,6 +109,7 @@ type Services struct {
 
 func main() {
 	nodeMgr.InitFlags()
+	redisCfg.InitFlags(rediscache.DefaultCfgRedisHA)
 	flag.Parse()
 
 	services.listeners = make([]net.Listener, 0)
@@ -213,6 +218,15 @@ func startServices() error {
 	err = objStore.CheckConnected(50, 20*time.Millisecond)
 	if err != nil {
 		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
+	}
+
+	redisClient, err = rediscache.NewClient(ctx, &redisCfg)
+	if err != nil {
+		return err
+	}
+
+	if err := rediscache.IsServerReady(redisClient, rediscache.MaxRedisWait); err != nil {
+		return err
 	}
 
 	sync := InitSync(objStore)
@@ -527,9 +541,6 @@ func startServices() error {
 	}
 	go allApis.clusterInstApi.runCheckpoints(ctx)
 
-	// setup cleanup timer to remove expired stream messages
-	go streamObjs.SetupCleanupTimer()
-
 	log.SpanLog(ctx, log.DebugLevelInfo, "Ready")
 	return nil
 }
@@ -582,6 +593,8 @@ func stopServices() {
 		lis.Close()
 	}
 	nodeMgr.Finish()
+	redisClient.Close()
+	redisClient = nil
 	services = Services{}
 }
 

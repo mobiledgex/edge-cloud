@@ -535,6 +535,7 @@ func (s *OperatorCodeStoreImpl) parseGetData(val []byte, buf *OperatorCode) bool
 
 func (s *OperatorCodeStoreImpl) STMPut(stm concurrency.STM, obj *OperatorCode, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("OperatorCode", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("OperatorCode json marshal failed", "obj", obj, "err", err)
