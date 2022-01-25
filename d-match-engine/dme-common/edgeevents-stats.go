@@ -175,6 +175,13 @@ func (e *EdgeEventStats) RunNotify() {
 						e.shards[ii].deviceStatMap[key] = NewDeviceStat()
 					}
 				}
+				for key, stat := range e.shards[ii].EcnStatMap {
+					if stat.Changed && stat.NumSessions > 0 {
+						metric := EcnStatusToMetric(ts, key, stat)
+						e.send(ctx, metric)
+						e.shards[ii].EcnStatMap[key] = NewEcnStat()
+					}
+				}
 				for key, stat := range e.shards[ii].customStatMap {
 					if stat.Changed {
 						metric := CustomStatToMetric(ts, key, stat)
@@ -224,6 +231,19 @@ func DeviceStatToMetric(ts *types.Timestamp, key DeviceStatKey, stat *DeviceStat
 	metric.AddIntVal("signalstrength", key.SignalStrength)
 	// Num session information
 	metric.AddIntVal("numsessions", stat.NumSessions)
+	return metric
+}
+
+func EcnStatusToMetric(ts *types.Timestamp, key EcnStatKey, stat *EcnStat) *edgeProto.Metric {
+	metric := initMetric(cloudcommon.EcnStatusMetric, *ts, key.AppInstKey)
+	metric.AddTag("locationtile", key.LocationTile)
+	metric.AddTag("ecn_bit", key.EcnBit) // Questionable value, but it is the very last recorded congestion status bit of a sample.
+	metric.AddTag("sample_start", key.SampleStart)
+	metric.AddTag("sample_end", key.SampleEnd)
+	metric.AddTag("num_ce", key.NumCe)
+	metric.AddTag("num_packets", key.NumPackets)
+	metric.AddTag("ecn_strategy", key.EcnStrategy)
+	metric.AddTag("bandwidth", key.bandwidth)
 	return metric
 }
 
