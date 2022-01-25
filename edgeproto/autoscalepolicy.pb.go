@@ -76,7 +76,7 @@ func (m *PolicyKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PolicyKey proto.InternalMessageInfo
 
-// AutoScalePolicy defines when and how ClusterInsts will have their
+// AutoScalePolicy defines when and how cluster instances will have their
 // nodes scaled up or down.
 type AutoScalePolicy struct {
 	// Fields are used for the Update API to specify which fields to apply
@@ -1137,6 +1137,7 @@ func (s *AutoScalePolicyStoreImpl) parseGetData(val []byte, buf *AutoScalePolicy
 
 func (s *AutoScalePolicyStoreImpl) STMPut(stm concurrency.STM, obj *AutoScalePolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoScalePolicy", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AutoScalePolicy json marshal failed", "obj", obj, "err", err)

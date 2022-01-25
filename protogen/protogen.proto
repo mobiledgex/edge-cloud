@@ -104,6 +104,8 @@ extend google.protobuf.MessageOptions {
   string controller_api_struct = 51056;
   // copy all member fields for update
   bool copy_in_all_fields = 51058;
+  // Key used for streaming messages and cached as part of redis
+  bool generate_stream_key = 51060;
 }
 
 extend google.protobuf.EnumOptions {
@@ -141,6 +143,8 @@ extend google.protobuf.FieldOptions {
   string refers_to = 51053;
   // tracked object that makes references to refers_to object
   string tracks_refs_by = 51057;
+  // field is only stored in redis, and should be cleared before writing to etcd
+  bool redis_only = 51059;
 }
 
 extend google.protobuf.MethodOptions {

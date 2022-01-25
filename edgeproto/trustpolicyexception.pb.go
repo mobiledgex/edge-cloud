@@ -1126,6 +1126,7 @@ func (s *TrustPolicyExceptionStoreImpl) parseGetData(val []byte, buf *TrustPolic
 
 func (s *TrustPolicyExceptionStoreImpl) STMPut(stm concurrency.STM, obj *TrustPolicyException, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("TrustPolicyException", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("TrustPolicyException json marshal failed", "obj", obj, "err", err)

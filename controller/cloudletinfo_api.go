@@ -46,7 +46,6 @@ func (s *CloudletInfoApi) EvictCloudletInfo(ctx context.Context, in *edgeproto.C
 
 func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.CloudletInfo) error {
-		obj.Status = edgeproto.StatusInfo{}
 		err := cb.Send(obj)
 		return err
 	})
@@ -61,6 +60,10 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "skipping due to info from standby CRM")
 		return
 	}
+
+	// publish the received info object on redis
+	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId
 	changedToOnline := false
@@ -72,7 +75,13 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 				changedToOnline = true
 			}
 		}
-		s.store.STMPut(stm, in)
+		// Clear fields that are cached in Redis as they should not be stored in DB
+		in.ClearRedisOnlyFields()
+		fields := make(map[string]struct{})
+		info.DiffFields(in, fields)
+		if len(fields) > 0 {
+			s.store.STMPut(stm, in)
+		}
 		return nil
 	})
 
@@ -113,10 +122,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		log.SpanLog(ctx, log.DebugLevelNotify, "Skip cloudletInfo state handling", "key", in.Key, "state", in.State)
 		return
 	}
-
-	// update only diff of status msgs
-	streamKey := edgeproto.GetStreamKeyFromCloudletKey(&in.Key)
-	s.all.streamObjApi.UpdateStatus(ctx, &in.Status, &streamKey)
 
 	newCloudlet := edgeproto.Cloudlet{}
 	key := &in.Key

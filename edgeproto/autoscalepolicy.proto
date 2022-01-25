@@ -22,7 +22,7 @@ message PolicyKey {
   option (gogoproto.gostring) = true;
 }
 
-// AutoScalePolicy defines when and how ClusterInsts will have their
+// AutoScalePolicy defines when and how cluster instances will have their
 // nodes scaled up or down.
 message AutoScalePolicy {
   // Fields are used for the Update API to specify which fields to apply

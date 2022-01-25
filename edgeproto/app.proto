@@ -252,6 +252,7 @@ message ServerlessConfig {
   uint32 min_replicas = 3;
 }
 
+// AutoProvPolicy belonging to an app
 message AppAutoProvPolicy {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "App"];
