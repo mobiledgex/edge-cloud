@@ -39,7 +39,7 @@ message ShowLog {
   bool follow = 4;
 }
 
-// ExecRequest is a common struct for enabling a connection to execute some work on a container.
+// ExecRequest is a common struct for enabling a connection to execute some work on a container
 message ExecRequest {
   // Target AppInst
   AppInstKey app_inst_key = 1 [(gogoproto.nullable) = false];

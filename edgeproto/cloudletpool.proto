@@ -26,7 +26,7 @@ message CloudletPoolKey {
   option (gogoproto.gostring) = true;
 }
 
-// CloudletPool defines a pool of Cloudlets that have restricted access.
+// CloudletPool defines a pool of Cloudlets that have restricted access
 message CloudletPool {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
