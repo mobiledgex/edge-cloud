@@ -446,7 +446,7 @@ func (m *PlatformConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PlatformConfig proto.InternalMessageInfo
 
-// optional resource input consists of a resource specifier and clouldkey name
+// Optional resource input consists of a resource specifier and clouldkey name
 type CloudletResMap struct {
 	// Resource cloudlet key
 	Key CloudletKey `protobuf:"bytes,1,opt,name=key,proto3" json:"key"`
@@ -1116,6 +1116,7 @@ func (m *PropertyInfo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PropertyInfo proto.InternalMessageInfo
 
+// Infra properties used to set up cloudlet
 type CloudletProps struct {
 	// Platform type
 	PlatformType PlatformType `protobuf:"varint,1,opt,name=platform_type,json=platformType,proto3,enum=edgeproto.PlatformType" json:"platform_type,omitempty"`
