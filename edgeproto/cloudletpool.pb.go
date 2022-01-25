@@ -83,7 +83,7 @@ func (m *CloudletPoolKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CloudletPoolKey proto.InternalMessageInfo
 
-// CloudletPool defines a pool of Cloudlets that have restricted access.
+// CloudletPool defines a pool of Cloudlets that have restricted access
 type CloudletPool struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`

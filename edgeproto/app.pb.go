@@ -489,6 +489,7 @@ func (m *ServerlessConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ServerlessConfig proto.InternalMessageInfo
 
+// AutoProvPolicy belonging to an app
 type AppAutoProvPolicy struct {
 	// App key
 	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey,proto3" json:"app_key"`
