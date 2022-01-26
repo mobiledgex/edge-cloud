@@ -783,7 +783,9 @@ message FlavorInfo {
 }
 
 message OSAZone {
+  // OpenStack availability zone name
   string name   = 1;
+  // OpenStack availability zone status
   string status = 2;
 }
 
@@ -857,7 +859,7 @@ message CloudletInfo {
   option (protogen.alias) = "cloudlet=Key.Name,cloudlet-org=Key.Organization,federated-org=Key.FederatedOrganization";
   option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.uses_org) = "none";
-  option (protogen.noconfig) = "Resources";
+  option (protogen.noconfig) = "Status";
 }
 
 service CloudletInfoApi {

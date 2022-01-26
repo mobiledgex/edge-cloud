@@ -310,12 +310,8 @@ var CloudletRefsRequiredArgs = []string{
 	"key.federatedorganization",
 }
 var CloudletRefsOptionalArgs = []string{
-	"rootlbports:#.key",
-	"rootlbports:#.value",
 	"useddynamicips",
 	"usedstaticips",
-	"optresusedmap:#.key",
-	"optresusedmap:#.value",
 	"reservedautoclusterids",
 	"clusterinsts:#.clusterkey.name",
 	"clusterinsts:#.organization",
@@ -388,12 +384,7 @@ var AppInstRefsRequiredArgs = []string{
 	"key.name",
 	"key.version",
 }
-var AppInstRefsOptionalArgs = []string{
-	"insts:#.key",
-	"insts:#.value",
-	"deleterequestedinsts:#.key",
-	"deleterequestedinsts:#.value",
-}
+var AppInstRefsOptionalArgs = []string{}
 var AppInstRefsAliasArgs = []string{}
 var AppInstRefsComments = map[string]string{
 	"key.organization": "App developer organization",
