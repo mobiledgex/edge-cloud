@@ -28,11 +28,29 @@ import (
 // This test data is post-copying of that data, and limited to just
 // testing CRM.
 var yamlData = `
+trustpolicies:
+-  key:
+      organization: dmuus
+      name: TrustPolicy1
+   outboundsecurityrules:
+    - protocol:  tcp
+      portrangemin: 443
+      remotecidr: "35.247.68.151/32"
+    - protocol:  tcp
+      portrangemin: 8080
+      portrangemax: 8088
+      remotecidr: "0.0.0.0/0"
+    - protocol: udp
+      portrangemin: 53
+      remotecidr: "0.0.0.0/0"
+    - protocol: icmp
+      remotecidr: "8.0.0.0/8"
 cloudlets:
 - key:
     organization: DMUUS
     name: cloud2
   vmpool: vmpool1
+  trustpolicy: TrustPolicy1
   gpuconfig:
     driver:
       name: gpudriver1
@@ -92,7 +110,15 @@ clusterinsts:
   nodes: 3
   liveness: LivenessDynamic
   ipaccess: Dedicated
-
+apps:
+- key:
+    organization: Atlantic
+    name: Pillimo Go
+    version: 1.0.0
+- key:
+    organization: Untomt
+    name: VRmax
+    version: 1.0.0
 appinstances:
 - key:
     appkey:
@@ -146,6 +172,7 @@ appinstances:
     latitude: 310
     longitude: -910
   liveness: LivenessDynamic
+  trusted: true
   flavor:
     name: x1.medium
 
@@ -351,6 +378,9 @@ func TestCRM(t *testing.T) {
 	for ii := range data.ClusterInsts {
 		ctrlHandler.ClusterInstCache.Update(ctx, &data.ClusterInsts[ii], 0)
 	}
+	for ii := range data.Apps {
+		ctrlHandler.AppCache.Update(ctx, &data.Apps[ii], 0)
+	}
 	for ii := range data.AppInstances {
 		data.AppInstances[ii].State = edgeproto.TrackedState_READY
 		ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
@@ -372,6 +402,7 @@ func TestCRM(t *testing.T) {
 	// myCloudlet Key will be sent.
 	log.SpanLog(ctx, log.DebugLevelApi, "wait for instances")
 	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 3))
+	require.Nil(t, notify.WaitFor(&controllerData.AppCache, 2))
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 3))
 	// ensure that only vmpool object associated with cloudlet is received
 	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 1))
@@ -389,6 +420,7 @@ func TestCRM(t *testing.T) {
 	log.SpanLog(ctx, log.DebugLevelApi, "check counts")
 	require.Equal(t, 3, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 3, len(controllerData.ClusterInstCache.Objs))
+	require.Equal(t, 2, len(controllerData.AppCache.Objs))
 	require.Equal(t, 3, len(controllerData.AppInstCache.Objs))
 	require.Equal(t, 1, len(controllerData.VMPoolCache.Objs))
 	require.Equal(t, 1, len(controllerData.GPUDriverCache.Objs))
@@ -413,6 +445,9 @@ func TestCRM(t *testing.T) {
 	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Delete(ctx, &data.AppInstances[ii], 0)
 	}
+	for ii := range data.Apps {
+		ctrlHandler.AppCache.Delete(ctx, &data.Apps[ii], 0)
+	}
 	for ii := range data.ClusterInsts {
 		ctrlHandler.ClusterInstCache.Delete(ctx, &data.ClusterInsts[ii], 0)
 	}
@@ -430,6 +465,7 @@ func TestCRM(t *testing.T) {
 	require.Nil(t, notify.WaitFor(&controllerData.FlavorCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.ClusterInstCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 0))
+	require.Nil(t, notify.WaitFor(&controllerData.AppCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.VMPoolCache, 0))
 	require.Nil(t, notify.WaitFor(&controllerData.GPUDriverCache, 0))
 	require.Nil(t, notify.WaitFor(controllerData.CloudletPoolCache, 0))
@@ -439,6 +475,7 @@ func TestCRM(t *testing.T) {
 	require.Equal(t, 0, len(controllerData.FlavorCache.Objs))
 	require.Equal(t, 0, len(controllerData.ClusterInstCache.Objs))
 	require.Equal(t, 0, len(controllerData.AppInstCache.Objs))
+	require.Equal(t, 0, len(controllerData.AppCache.Objs))
 	require.Equal(t, 0, len(controllerData.VMPoolCache.Objs))
 	require.Equal(t, 0, len(controllerData.GPUDriverCache.Objs))
 	require.Equal(t, 0, len(controllerData.CloudletPoolCache.Objs))
@@ -772,6 +809,24 @@ func testTrustPolicyExceptionUpdates1(t *testing.T, ctx context.Context, tpe *ed
 	count = fakePlatform.TrustPolicyExceptionCount(ctx)
 	require.Equal(t, 2, count)
 
+	// delete an appInst, should reduce the count by 1
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.5")
+	ii := 2 // index of trusted appInst on a clusterInst
+	data.AppInstances[ii].State = edgeproto.TrackedState_DELETE_REQUESTED
+	ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
+	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 3))
+	require.Equal(t, 3, len(controllerData.AppInstCache.Objs))
+	time.Sleep(5 * time.Millisecond)
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 1, count)
+
+	// restore appInst
+	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.6")
+	data.AppInstances[ii].State = edgeproto.TrackedState_READY
+	ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
+	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 3))
+	require.Equal(t, 3, len(controllerData.AppInstCache.Objs))
+
 	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates1 #############")
 }
 
@@ -796,7 +851,7 @@ func testTrustPolicyExceptionUpdates2(t *testing.T, ctx context.Context, tpe *ed
 
 	// test that the new Approved TPE is not programmed on any clusters, count should still be the old count
 	count := fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 2, count)
+	require.Equal(t, 1, count)
 
 	// test that a TPE with State ACTIVE, for an existing AppInst, adds that TPEs to that ClusterInst
 	log.SpanLog(ctx, log.DebugLevelApi, "############ UT2.2")
@@ -809,9 +864,9 @@ func testTrustPolicyExceptionUpdates2(t *testing.T, ctx context.Context, tpe *ed
 	found = fakePlatform.HasTrustPolicyException(ctx, &tpe.Key, clusterInst)
 	require.True(t, found, "tpe found")
 
-	// test that Multiple TPEs are configured per app, on multiple clusters. Total count increases to 4
+	// test that Multiple TPEs are configured per app, on multiple clusters. Total count increases by 2
 	count = fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 4, count)
+	require.Equal(t, 3, count)
 
 	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates2 #############")
 }
@@ -821,7 +876,7 @@ func testTrustPolicyExceptionUpdates3(t *testing.T, ctx context.Context, ctrlHan
 
 	log.SpanLog(ctx, log.DebugLevelApi, "############ begin CloudletPoolCache.Update")
 	count := fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 4, count)
+	require.Equal(t, 3, count)
 
 	var CloudletsSaved [][]string
 
