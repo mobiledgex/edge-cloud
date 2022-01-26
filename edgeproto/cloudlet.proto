@@ -165,7 +165,7 @@ enum PlatformType {
   PLATFORM_TYPE_FAKE_VM_POOL = 17;
 }
 
-// optional resource input consists of a resource specifier and clouldkey name
+// Optional resource input consists of a resource specifier and clouldkey name
 message CloudletResMap {
   // Resource cloudlet key
   CloudletKey key = 1[(gogoproto.nullable) = false, (protogen.refers_to) = "Cloudlet"];
@@ -554,6 +554,7 @@ message PropertyInfo {
   bool internal = 6;
 }
 
+// Infra properties used to set up cloudlet
 message CloudletProps {
   // Platform type
   PlatformType platform_type = 1;

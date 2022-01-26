@@ -76,7 +76,7 @@ func (m *PolicyKey) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PolicyKey proto.InternalMessageInfo
 
-// AutoScalePolicy defines when and how ClusterInsts will have their
+// AutoScalePolicy defines when and how cluster instances will have their
 // nodes scaled up or down.
 type AutoScalePolicy struct {
 	// Fields are used for the Update API to specify which fields to apply

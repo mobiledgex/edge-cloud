@@ -193,7 +193,7 @@ func (m *ShowLog) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ShowLog proto.InternalMessageInfo
 
-// ExecRequest is a common struct for enabling a connection to execute some work on a container.
+// ExecRequest is a common struct for enabling a connection to execute some work on a container
 type ExecRequest struct {
 	// Target AppInst
 	AppInstKey AppInstKey `protobuf:"bytes,1,opt,name=app_inst_key,json=appInstKey,proto3" json:"app_inst_key"`
