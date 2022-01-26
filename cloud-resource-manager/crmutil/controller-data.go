@@ -535,7 +535,7 @@ func (cd *ControllerData) clusterInstDeleted(ctx context.Context, old *edgeproto
 	cd.ClusterInstInfoCache.Delete(ctx, &info, 0)
 }
 
-func (cd *ControllerData) handleTrustPolicyExceptionRuleForCloudletPoolKey(ctx context.Context, appInst *edgeproto.AppInst, cloudletPoolKey edgeproto.CloudletPoolKey, clusterInstKey *edgeproto.ClusterInstKey) error {
+func (cd *ControllerData) handleTrustPolicyExceptionRuleForCloudletPoolKey(ctx context.Context, appInst *edgeproto.AppInst, cloudletPoolKey edgeproto.CloudletPoolKey, clusterInstKey *edgeproto.ClusterInstKey, action cloudcommon.Action) error {
 
 	// Find TrustPolicyException for this appInst and this cloudletKey
 	tpeKey := edgeproto.TrustPolicyExceptionKey{
@@ -552,28 +552,72 @@ func (cd *ControllerData) handleTrustPolicyExceptionRuleForCloudletPoolKey(ctx c
 		ClusterInstKey: ckey,
 	}
 
-	log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRuleForCloudletPoolKey() TrustPolicyException")
+	log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRuleForCloudletPoolKey() TrustPolicyException", "action", action.String())
 
-	err := cd.TrustPolicyExceptionCache.Show(&edgeproto.TrustPolicyException{Key: tpeKey}, func(obj *edgeproto.TrustPolicyException) error {
+	err := cd.TrustPolicyExceptionCache.Show(&edgeproto.TrustPolicyException{Key: tpeKey}, func(tpe *edgeproto.TrustPolicyException) error {
 		// The platform-specific implementation will probably involve network calls, which could potentially have long timeouts if stalled/hung,
 		// and we don't want to starve the notify thread (which is the context here).
 		// Hence we use tasks.KeyWorkers object to spawn a worker thread to do the work
+		tpeKeyclusterInstKey.TpeKey = tpe.Key
 		cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
 		return nil
 	})
 	return err
 }
 
-func (cd *ControllerData) handleTrustPolicyExceptionRules(ctx context.Context, appInst *edgeproto.AppInst, clusterInstKey *edgeproto.ClusterInstKey) error {
+func (cd *ControllerData) handleTrustPolicyExceptionForCloudlet(ctx context.Context, cloudletKey *edgeproto.CloudletKey, action cloudcommon.Action) error {
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForCloudlet()", "cloudletKey", cloudletKey, "action", action.String())
+
+	// A cloudlet may be part of many cloudlet pools
+	cloudletPoolList, err := cd.CloudletPoolCache.GetPoolsForCloudletKey(cloudletKey)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForCloudlet() no cloudletPool", "err", err)
+		return err
+	}
+
+	cloudlets := make(map[string]struct{})
+	cloudlets[cloudletKey.Name] = struct{}{}
+
+	for _, cloudletPoolKey := range cloudletPoolList {
+		cd.handleTrustPolicyExceptionForCloudlets(ctx, cloudlets, &cloudletPoolKey, action)
+	}
+
+	return nil
+}
+
+func (cd *ControllerData) CloudletHasTrustPolicy(ctx context.Context, cloudletKey *edgeproto.CloudletKey) (bool, error) {
+	var cloudlet edgeproto.Cloudlet
+	if !cd.CloudletCache.Get(cloudletKey, &cloudlet) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletHasTrustPolicy() failed to fetch cloudlet from cache", "cloudletKey", cloudletKey)
+		return false, fmt.Errorf("cloudlet %s not found", cloudletKey.String())
+	}
+	if cloudlet.TrustPolicy == "" {
+		// For a TrustPolicy exception, a cloudlet needs to have a TrustPolicy.
+		log.SpanLog(ctx, log.DebugLevelInfra, "CloudletHasTrustPolicy() cloudlet does not have a trust policy", "cloudletKey", cloudletKey)
+		return false, nil
+	}
+	return true, nil
+}
+
+func (cd *ControllerData) handleTrustPolicyExceptionRules(ctx context.Context, appInst *edgeproto.AppInst, clusterInstKey *edgeproto.ClusterInstKey, action cloudcommon.Action) error {
 
 	cloudletKey := appInst.Key.ClusterInstKey.CloudletKey
+
+	hasTrustPolicy, tpErr := cd.CloudletHasTrustPolicy(ctx, &cloudletKey)
+	if tpErr != nil {
+		return tpErr
+	}
+	if !hasTrustPolicy {
+		return nil
+	}
 
 	list, err := cd.CloudletPoolCache.GetPoolsForCloudletKey(&cloudletKey)
 
 	if err == nil {
 		for _, cloudletPoolKey := range list {
-			log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRules() checking cloudletPoolKey", "cloudletPoolKey", cloudletPoolKey)
-			cd.handleTrustPolicyExceptionRuleForCloudletPoolKey(ctx, appInst, cloudletPoolKey, clusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRules() checking cloudletPoolKey", "cloudletPoolKey", cloudletPoolKey, "action", action.String())
+			cd.handleTrustPolicyExceptionRuleForCloudletPoolKey(ctx, appInst, cloudletPoolKey, clusterInstKey, action)
 		}
 	} else {
 		log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRules() no cloudletPoolKeys", "err", err)
@@ -672,7 +716,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				// which would get updated by the worker handler function after calling the platform create/delete code.
 				// That way at least there's some way to see if the TPE was applied properly, or the state and error if not.
 
-				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key)
+				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key, cloudcommon.Create)
 				if err != nil {
 					errstr := fmt.Sprintf("Create App Inst : Add TrustPolicyException failed: %s", err)
 					log.SpanLog(ctx, log.DebugLevelInfra, "can't add Trust policy exception rules", "error", errstr, "key", new.Key)
@@ -816,7 +860,7 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			// Delete TPE
 			if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 				// Remove TrustPolicyException rules for a given appInst and target clusterInst only
-				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key)
+				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key, cloudcommon.Delete)
 				if err != nil {
 					errstr := fmt.Sprintf("Delete App Inst : remove TrustPolicyException failed: %s", err)
 					log.SpanLog(ctx, log.DebugLevelInfra, "can't remove Trust policy exception rules", "error", errstr, "key", new.Key)
@@ -994,12 +1038,15 @@ func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *
 		log.SpanLog(ctx, log.DebugLevelInfra, "Ignoring trust policy change because not active")
 		return
 	}
+	var action cloudcommon.Action
 	if old != nil {
 		if old.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 			new.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 			// A case of Delete TPE rules
+			action = cloudcommon.Delete
 		} else if new.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
 			// A case of Add TPE rules
+			action = cloudcommon.Create
 		} else {
 			// No need to handle any other transitions
 			log.SpanLog(ctx, log.DebugLevelInfra, "Skipping state transition", "old", old.State.String(), "new", new.State.String())
@@ -1010,11 +1057,19 @@ func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *
 		tpeKey := new.Key
 		clusterInsts := cd.GetClusterInstsFromTrustPolicyExceptionKey(ctx, &tpeKey)
 		for _, clusterInst := range clusterInsts {
+			cloudletKey := clusterInst.Key.CloudletKey
+			hasTrustPolicy, tpErr := cd.CloudletHasTrustPolicy(ctx, &cloudletKey)
+			if tpErr != nil {
+				return
+			}
+			if !hasTrustPolicy {
+				return
+			}
 			tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
 				TpeKey:         tpeKey,
 				ClusterInstKey: clusterInst.Key,
 			}
-			log.SpanLog(ctx, log.DebugLevelInfra, "calling handleTrustPolicyExceptionKeyWorkers", "for cluster", clusterInst.Key)
+			log.SpanLog(ctx, log.DebugLevelInfra, "calling handleTrustPolicyExceptionKeyWorkers", "for cluster", clusterInst.Key, "action", action)
 			cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
 		}
 	}
@@ -1043,6 +1098,7 @@ func (cd *ControllerData) getClusterInstsFromTrustPolicyExceptionKeyHelper(ctx c
 		appInsts = append(appInsts, *appInst)
 		return nil
 	})
+	log.SpanLog(ctx, log.DebugLevelInfra, "found appInsts", "num:", len(appInsts))
 
 	for _, appInst := range appInsts {
 		if !cd.ClusterInstCache.Get(appInst.ClusterInstKey(), &clusterInst) {
@@ -1148,32 +1204,29 @@ func (cd *ControllerData) GetTrustPolicyExceptionsForCloudletPoolKey(ctx context
 	return tpeArray
 }
 
-func (cd *ControllerData) handleTrustPolicyExceptionForCloudlets(ctx context.Context, cloudlets map[string]struct{}, cloudletPool *edgeproto.CloudletPool, action cloudcommon.Action) {
+func (cd *ControllerData) handleTrustPolicyExceptionForCloudlets(ctx context.Context, cloudlets map[string]struct{}, cloudletPoolKey *edgeproto.CloudletPoolKey, action cloudcommon.Action) {
 	for cloudletName, _ := range cloudlets {
 		log.SpanLog(ctx, log.DebugLevelInfra, "In handleTrustPolicyExceptionForCloudlets()", "cloudletName:", cloudletName, "action", action.String())
 
+		tpeArray := cd.GetTrustPolicyExceptionsForCloudletPoolKey(ctx, *cloudletPoolKey)
+		if len(tpeArray) == 0 {
+			log.SpanLog(ctx, log.DebugLevelInfra, "No trust policy exceptions", "cloudletName:", cloudletName, "action", action.String())
+			return
+		}
+
 		cloudletKey := edgeproto.CloudletKey{
 			Name:         cloudletName,
-			Organization: cloudletPool.Key.Organization,
+			Organization: cloudletPoolKey.Organization,
 		}
-		cloudletPoolKey := cloudletPool.Key
-		tpeArray := cd.GetTrustPolicyExceptionsForCloudletPoolKey(ctx, cloudletPoolKey)
+
 		for _, tpe := range tpeArray {
-			cloudletPoolKey := cloudletPool.Key
-			clusterInsts := cd.GetClusterInstsFromTrustPolicyExceptionKeyForCloudletKey(ctx, &tpe.Key, &cloudletKey, &cloudletPoolKey)
+			clusterInsts := cd.GetClusterInstsFromTrustPolicyExceptionKeyForCloudletKey(ctx, &tpe.Key, &cloudletKey, cloudletPoolKey)
 			for _, clusterInst := range clusterInsts {
-				if action == cloudcommon.Delete {
-					err := cd.platform.DeleteTrustPolicyException(ctx, &tpe.Key, &clusterInst.Key)
-					if err != nil {
-
-					}
-				} else if action == cloudcommon.Create {
-					err := cd.platform.UpdateTrustPolicyException(ctx, tpe, &clusterInst.Key)
-					if err != nil {
-
-					}
+				tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
+					TpeKey:         tpe.Key,
+					ClusterInstKey: clusterInst.Key,
 				}
-
+				cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
 			}
 		}
 	}
@@ -1221,10 +1274,10 @@ func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeprot
 		}
 	}
 	if len(cloudletsRemoved) > 0 {
-		cd.handleTrustPolicyExceptionForCloudlets(ctx, cloudletsRemoved, old, cloudcommon.Delete)
+		cd.handleTrustPolicyExceptionForCloudlets(ctx, cloudletsRemoved, &old.Key, cloudcommon.Delete)
 	}
 	if len(cloudletsAdded) > 0 {
-		cd.handleTrustPolicyExceptionForCloudlets(ctx, cloudletsAdded, new, cloudcommon.Create)
+		cd.handleTrustPolicyExceptionForCloudlets(ctx, cloudletsAdded, &new.Key, cloudcommon.Create)
 	}
 }
 
@@ -1681,6 +1734,16 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 	log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicy", "TrustPolicy", TrustPolicy)
 	err := cd.platform.UpdateTrustPolicy(ctx, &TrustPolicy)
 	log.SpanLog(ctx, log.DebugLevelInfra, "Update Privacy Done", "err", err)
+
+	// Trust Policy is added/removed from a cloudlet.
+	// If there are any trust policy exceptions programmed, they should also be added/removed.
+	if cloudlet.TrustPolicy == "" {
+		log.SpanLog(ctx, log.DebugLevelInfra, "UpdateTrustPolicy removed trust policy from cloudlet", "cloudletKey", cloudletKey)
+		cd.handleTrustPolicyExceptionForCloudlet(ctx, &cloudletKey, cloudcommon.Delete)
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfra, "UpdateTrustPolicy added trust policy on cloudlet", "cloudletKey", cloudletKey)
+		cd.handleTrustPolicyExceptionForCloudlet(ctx, &cloudletKey, cloudcommon.Create)
+	}
 	cloudletInfo := edgeproto.CloudletInfo{}
 	found := cd.CloudletInfoCache.Get(&cloudletKey, &cloudletInfo)
 	if !found {
@@ -1723,22 +1786,15 @@ func (cd *ControllerData) HandleTrustPolicyException(ctx context.Context, k inte
 	}
 
 	for _, TrustPolicyException := range tpeArray {
-
-		if TrustPolicyException.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
-			// Handle removal of trust policy exception rules
-			err := cd.platform.DeleteTrustPolicyException(ctx, &tpeKey, &clusterInstKey)
-			log.SpanLog(ctx, log.DebugLevelInfra, "platform DeleteTrustPolicyException Done", "err", err)
-			return
-		}
-
-		if TrustPolicyException.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
-			// Handle addition of trust policy exception rules
+		if cd.tpeNeeded(ctx, &tpeKeyClustInstKey) {
+			log.SpanLog(ctx, log.DebugLevelInfra, "tpeNeeded, calling platform.UpdateTrustPolicyException()")
 			err := cd.platform.UpdateTrustPolicyException(ctx, TrustPolicyException, &clusterInstKey)
 			log.SpanLog(ctx, log.DebugLevelInfra, "platform UpdateTrustPolicyException Done", "err", err)
-			return
+			continue
 		}
-
-		log.SpanLog(ctx, log.DebugLevelInfra, "HandleTrustPolicyException ignoring for tpe State", "key", tpeKey, "state", TrustPolicyException.State.String())
+		log.SpanLog(ctx, log.DebugLevelInfra, "tpeNeeded false, calling platform.DeleteTrustPolicyException()")
+		err := cd.platform.DeleteTrustPolicyException(ctx, &tpeKey, &clusterInstKey)
+		log.SpanLog(ctx, log.DebugLevelInfra, "platform DeleteTrustPolicyException Done", "err", err)
 	}
 }
 
@@ -1866,4 +1922,84 @@ func (cd *ControllerData) UpdateCloudletInfo(ctx context.Context, cloudletInfo *
 func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "StartHAManagerActiveCheck")
 	go haMgr.CheckActiveLoop(ctx)
+}
+
+func (cd *ControllerData) cloudletInPool(ctx context.Context, cloudletKey *edgeproto.CloudletKey) bool {
+	cloudletPoolList, _ := cd.CloudletPoolCache.GetPoolsForCloudletKey(cloudletKey)
+	if len(cloudletPoolList) == 0 {
+		log.SpanLog(ctx, log.DebugLevelInfra, "cloudletInPool() not found", "cloudletKey", cloudletKey)
+		return false
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletInPool() found", "cloudletKey", cloudletKey)
+	return true
+}
+
+func (cd *ControllerData) cloudletHasTrustPolicy(ctx context.Context, cloudletKey *edgeproto.CloudletKey) bool {
+	hasTrustPolicy, _ := cd.CloudletHasTrustPolicy(ctx, cloudletKey)
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudletHasTrustPolicy()", "cloudletKey", cloudletKey, "hasTrustPolicy", hasTrustPolicy)
+	return hasTrustPolicy
+}
+
+func (cd *ControllerData) tpeIsActive(ctx context.Context, tpeKey *edgeproto.TrustPolicyExceptionKey) bool {
+	tpe := edgeproto.TrustPolicyException{}
+	if cd.TrustPolicyExceptionCache.Get(tpeKey, &tpe) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "tpeIsActive()", "tpe", tpe)
+		if tpe.State == edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE {
+			return true
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "tpeIsActive() not found", "tpeKey", tpeKey)
+
+	return false
+}
+
+func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey *edgeproto.ClusterInstKey) bool {
+	clusterInst := edgeproto.ClusterInst{}
+
+	clusterInstFound := cd.ClusterInstCache.Get(clusterInstKey, &clusterInst)
+	log.SpanLog(ctx, log.DebugLevelInfra, "clusterInstExists()", "clusterInstKey", clusterInstKey, "clusterInstFound", clusterInstFound)
+
+	return clusterInstFound
+}
+func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
+
+	appInst := edgeproto.AppInst{}
+	appInstKeyFilter := edgeproto.AppInstKey{
+		AppKey:         *appKey,
+		ClusterInstKey: *clusterInstKey.Virtual(""),
+	}
+	appInstFound := cd.AppInstCache.Get(&appInstKeyFilter, &appInst)
+	if appInstFound {
+		if appInst.State != edgeproto.TrackedState_READY {
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
+			appInstFound = false
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
+
+	return appInstFound
+}
+
+func (cd *ControllerData) tpeNeeded(ctx context.Context, key *cloudcommon.TrustPolicyExceptionKeyClusterInstKey) bool {
+	if !cd.cloudletInPool(ctx, &key.ClusterInstKey.CloudletKey) {
+		// cloudlet not in cloudlet pool, so TPE does not apply
+		return false
+	}
+	if !cd.cloudletHasTrustPolicy(ctx, &key.ClusterInstKey.CloudletKey) {
+		// cloudlet does not have a trust policy, so no exceptions are needed
+		return false
+	}
+	if !cd.tpeIsActive(ctx, &key.TpeKey) {
+		// tpe does not exist, or is not active
+		return false
+	}
+	if !cd.clusterInstExists(ctx, &key.ClusterInstKey) {
+		return false
+	}
+	appInstFound := cd.appInstExistsForTpe(ctx, &key.TpeKey.AppKey, &key.ClusterInstKey)
+	if !appInstFound {
+		// appInst does not exist (/any more)
+		return false
+	}
+	return true
 }
