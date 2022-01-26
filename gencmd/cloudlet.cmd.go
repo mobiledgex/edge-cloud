@@ -2499,10 +2499,6 @@ var CloudletOptionalArgs = []string{
 	"physicalname",
 	"envvar",
 	"containerversion",
-	"restagmap:empty",
-	"restagmap:#.key",
-	"restagmap:#.value.name",
-	"restagmap:#.value.organization",
 	"accessvars",
 	"vmimageversion",
 	"deployment",
@@ -2548,6 +2544,7 @@ var CloudletComments = map[string]string{
 	"location.altitude":                    "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"location.course":                      "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                       "Speed (IOS) / velocity (Android) (meters/sec)",
+	"location.timestamp":                   "Timestamp",
 	"ipsupport":                            "Type of IP support provided by Cloudlet (see IpSupport), one of Unknown, Static, Dynamic",
 	"staticips":                            "List of static IPs for static IP support",
 	"numdynamicips":                        "Number of dynamic IPs available for dynamic IP support",
@@ -2590,9 +2587,6 @@ var CloudletComments = map[string]string{
 	"config.cachedir":                      "cache dir",
 	"config.secondarycrmaccessprivatekey":  "secondary crm access private key",
 	"config.thanosrecvaddr":                "Thanos Receive remote write address",
-	"restagmap:empty":                      "Optional resource to restagtbl key map key values = [gpu, nas, nic], specify restagmap:empty=true to clear",
-	"restagmap:#.value.name":               "Resource Table Name",
-	"restagmap:#.value.organization":       "Operator organization of the cloudlet site.",
 	"accessvars":                           "Variables required to access cloudlet, specify accessvars:empty=true to clear",
 	"vmimageversion":                       "MobiledgeX baseimage version where CRM services reside",
 	"deployment":                           "Deployment type to bring up CRM services (docker, kubernetes)",
@@ -2605,6 +2599,8 @@ var CloudletComments = map[string]string{
 	"vmpool":                               "VM Pool",
 	"crmaccesspublickey":                   "CRM access public key",
 	"crmaccesskeyupgraderequired":          "CRM access key upgrade required",
+	"createdat":                            "Created at time",
+	"updatedat":                            "Updated at time",
 	"trustpolicy":                          "Optional Trust Policy",
 	"trustpolicystate":                     "State of trust policy, one of TrackedStateUnknown, NotPresent, CreateRequested, Creating, CreateError, Ready, UpdateRequested, Updating, UpdateError, DeleteRequested, Deleting, DeleteError, DeletePrepare, CrmInitok, CreatingDependencies, DeleteDone",
 	"resourcequotas:empty":                 "Resource quotas, specify resourcequotas:empty=true to clear",
@@ -2696,25 +2692,12 @@ var PropertyInfoSpecialArgs = map[string]string{}
 var CloudletPropsRequiredArgs = []string{}
 var CloudletPropsOptionalArgs = []string{
 	"platformtype",
-	"properties:#.key",
-	"properties:#.value.name",
-	"properties:#.value.description",
-	"properties:#.value.value",
-	"properties:#.value.secret",
-	"properties:#.value.mandatory",
-	"properties:#.value.internal",
 	"organization",
 }
 var CloudletPropsAliasArgs = []string{}
 var CloudletPropsComments = map[string]string{
-	"platformtype":                   "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool",
-	"properties:#.value.name":        "Name of the property",
-	"properties:#.value.description": "Description of the property",
-	"properties:#.value.value":       "Default value of the property",
-	"properties:#.value.secret":      "Is the property a secret value, will be hidden",
-	"properties:#.value.mandatory":   "Is the property mandatory",
-	"properties:#.value.internal":    "Is the property internal, not to be set by Operator",
-	"organization":                   "Organization",
+	"platformtype": "Platform type, one of Fake, Dind, Openstack, Azure, Gcp, Edgebox, Fakeinfra, Vsphere, AwsEks, VmPool, AwsEc2, Vcd, K8SBareMetal, Kind, Kindinfra, FakeSingleCluster, Federation, FakeVmPool",
+	"organization": "Organization",
 }
 var CloudletPropsSpecialArgs = map[string]string{}
 var CloudletResourceQuotaPropsRequiredArgs = []string{}
@@ -2821,7 +2804,10 @@ var OSAZoneOptionalArgs = []string{
 	"status",
 }
 var OSAZoneAliasArgs = []string{}
-var OSAZoneComments = map[string]string{}
+var OSAZoneComments = map[string]string{
+	"name":   "OpenStack availability zone name",
+	"status": "OpenStack availability zone status",
+}
 var OSAZoneSpecialArgs = map[string]string{}
 var OSImageRequiredArgs = []string{}
 var OSImageOptionalArgs = []string{
@@ -2856,12 +2842,6 @@ var CloudletInfoOptionalArgs = []string{
 	"flavors:#.ram",
 	"flavors:#.disk",
 	"flavors:#.propmap",
-	"status.tasknumber",
-	"status.maxtasks",
-	"status.taskname",
-	"status.stepname",
-	"status.msgcount",
-	"status.msgs",
 	"containerversion",
 	"availabilityzones:#.name",
 	"availabilityzones:#.status",
@@ -2900,10 +2880,6 @@ var CloudletInfoOptionalArgs = []string{
 	"compatibilityversion",
 	"properties",
 	"nodeinfos:#.name",
-	"nodeinfos:#.allocatable:#.key",
-	"nodeinfos:#.allocatable:#.value",
-	"nodeinfos:#.capacity:#.key",
-	"nodeinfos:#.capacity:#.value",
 	"activecrminstance",
 	"standbycrm",
 }
@@ -2930,6 +2906,8 @@ var CloudletInfoComments = map[string]string{
 	"flavors:#.disk":                         "Amount of disk in GB on the Cloudlet",
 	"flavors:#.propmap":                      "OS Flavor Properties, if any",
 	"containerversion":                       "Cloudlet container version",
+	"availabilityzones:#.name":               "OpenStack availability zone name",
+	"availabilityzones:#.status":             "OpenStack availability zone status",
 	"osimages:#.name":                        "image name",
 	"osimages:#.tags":                        "optional tags present on image",
 	"osimages:#.properties":                  "image properties/metadata",
@@ -2940,6 +2918,8 @@ var CloudletInfoComments = map[string]string{
 	"resourcessnapshot.platformvms:#.type":   "Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm",
 	"resourcessnapshot.platformvms:#.status": "Runtime status of the VM",
 	"resourcessnapshot.platformvms:#.infraflavor":                   "Flavor allocated within the cloudlet infrastructure, distinct from the control plane flavor",
+	"resourcessnapshot.platformvms:#.ipaddresses:#.externalip":      "External IP address",
+	"resourcessnapshot.platformvms:#.ipaddresses:#.internalip":      "Internal IP address",
 	"resourcessnapshot.platformvms:#.containers:#.name":             "Name of the container",
 	"resourcessnapshot.platformvms:#.containers:#.type":             "Type can be docker or kubernetes",
 	"resourcessnapshot.platformvms:#.containers:#.status":           "Runtime status of the container",

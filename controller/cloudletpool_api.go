@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -42,7 +42,7 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 		if err := s.checkCloudletsExist(stm, in); err != nil {
 			return err
 		}
-		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		in.CreatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -117,7 +117,7 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		if k := s.all.trustPolicyExceptionApi.TrustPolicyExceptionForCloudletPoolKeyExists(&in.Key); k != nil {
 			return fmt.Errorf("Not allowed to update CloudletPool when TrustPolicyException %s is applied", k.GetKeyString())
 		}
-		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		cur.UpdatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})

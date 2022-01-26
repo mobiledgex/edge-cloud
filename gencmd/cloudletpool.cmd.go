@@ -444,6 +444,8 @@ var CloudletPoolComments = map[string]string{
 	"org":           "Name of the organization this pool belongs to",
 	"name":          "CloudletPool Name",
 	"cloudlets":     "Cloudlets part of the pool, specify cloudlets:empty=true to clear",
+	"createdat":     "Created at time",
+	"updatedat":     "Updated at time",
 	"deleteprepare": "Preparing to be deleted",
 }
 var CloudletPoolSpecialArgs = map[string]string{

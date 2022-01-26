@@ -34,7 +34,9 @@ message ContainerInfo{
 // and are are often the same unless a natted or floating IP is used.  If 
 // internalIP is not reported it is the same as the ExternalIP.
 message IpAddr{
+  // External IP address
   string externalIp = 1;
+  // Internal IP address
   string internalIp = 2;
 }
 
