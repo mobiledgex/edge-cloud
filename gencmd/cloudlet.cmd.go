@@ -2260,6 +2260,7 @@ var PlatformConfigOptionalArgs = []string{
 	"accessapiaddr",
 	"cachedir",
 	"secondarycrmaccessprivatekey",
+	"thanosrecvaddr",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -2285,6 +2286,7 @@ var PlatformConfigComments = map[string]string{
 	"accessapiaddr":                "controller access API address",
 	"cachedir":                     "cache dir",
 	"secondarycrmaccessprivatekey": "secondary crm access private key",
+	"thanosrecvaddr":               "Thanos Receive remote write address",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -2587,6 +2589,7 @@ var CloudletComments = map[string]string{
 	"config.accessapiaddr":                 "controller access API address",
 	"config.cachedir":                      "cache dir",
 	"config.secondarycrmaccessprivatekey":  "secondary crm access private key",
+	"config.thanosrecvaddr":                "Thanos Receive remote write address",
 	"restagmap:empty":                      "Optional resource to restagtbl key map key values = [gpu, nas, nic], specify restagmap:empty=true to clear",
 	"restagmap:#.value.name":               "Resource Table Name",
 	"restagmap:#.value.organization":       "Operator organization of the cloudlet site.",
