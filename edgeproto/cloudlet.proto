@@ -102,6 +102,8 @@ message PlatformConfig {
   string cache_dir = 24;
   // secondary crm access private key
   string secondary_crm_access_private_key = 25 [(protogen.hidetag) = "nocmp"];
+  // Thanos Receive remote write address
+  string thanos_recv_addr = 26;
 }
 
 // Platform Type
