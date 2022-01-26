@@ -130,8 +130,10 @@ type EventSearch struct {
 	NotMatch            EventMatch `json:"notmatch,omitempty"`
 	AllowedOrgs         []string   `json:"allowedorgs"` // to enforce rbac
 	edgeproto.TimeRange `json:",inline"`
-	From                int `json:"from,omitempty"`  // start document offset
-	Limit               int `json:"limit,omitempty"` // number of documents to return
+	// Start offset if paging through results
+	From                int `json:"from,omitempty"`
+	// Display the last X events
+	Limit               int `json:"limit,omitempty"`
 }
 
 type EventTerms struct {
