@@ -7,13 +7,18 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-type DeviceInfo struct {
-	DeviceInfoStatic  *dme.DeviceInfoStatic
-	DeviceInfoDynamic *dme.DeviceInfoDynamic
+type EcnStatInfo struct {
+	EcnBit					 uint64
+	SampleDurationMs uint64
+	NumCe            uint64
+	NumPackets       uint64
+	Strategy         string
+	Bandwidth        float64
 }
 
-func GetDeviceStatKey(appInstKey edgeproto.AppInstKey, deviceInfo *DeviceInfo, loc *dme.Loc, tileLength int) DeviceStatKey {
-	statKey := DeviceStatKey{
+// SignalStrength is a strange key/hash input.
+func GetEcnStatKey(appInstKey edgeproto.AppInstKey, deviceInfo *DeviceInfo, loc *dme.Loc, tileLength int) EcnStatKey {
+	statKey := EcnStatKey{
 		AppInstKey:   appInstKey,
 		LocationTile: GetLocationTileFromGpsLocation(loc, tileLength),
 	}
@@ -29,9 +34,9 @@ func GetDeviceStatKey(appInstKey edgeproto.AppInstKey, deviceInfo *DeviceInfo, l
 	return statKey
 }
 
-// Used to find corresponding CustomStat
-// Created using CustomStatInfo
-type DeviceStatKey struct {
+// Used to find corresponding EcnStat
+// Created using EcnStatInfo
+type EcnStatKey struct {
 	AppInstKey      edgeproto.AppInstKey
 	DeviceCarrier   string
 	LocationTile    string
@@ -41,17 +46,20 @@ type DeviceStatKey struct {
 	SignalStrength  uint64
 }
 
-type DeviceStat struct {
+type EcnStat struct {
 	NumSessions uint64 // number of sessions that send stats
 	Mux         sync.Mutex
 	Changed     bool
+	Info        EcnStatInfo
 }
 
-func NewDeviceStat() *DeviceStat {
-	return new(DeviceStat)
+func NewEcnStat() *EcnStat {
+	return new(EcnStat)
 }
 
-func (d *DeviceStat) Update() {
+func (d *EcnStat) Update(info *EcnStatInfo) {
 	d.Changed = true
 	d.NumSessions++
+
+	d.Info = *info
 }

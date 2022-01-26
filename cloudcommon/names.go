@@ -99,12 +99,14 @@ var CloudletFlavorUsageMeasurement = "cloudlet-flavor-usage"
 var EdgeEventsMetricsDbName = "edgeevents_metrics"
 var LatencyMetric = "latency-metric"
 var DeviceMetric = "device-metric"
+var EcnMetric = "ecn-metric"
 var CustomMetric = "custom-metric"
 
 // Map used to identify which metrics should go to persistent_metrics db. Value represents the measurement creation status
 var EdgeEventsMetrics = map[string]struct{}{
 	LatencyMetric: struct{}{},
 	DeviceMetric:  struct{}{},
+	EcnMetric:     struct{}{},
 	CustomMetric:  struct{}{},
 }
 

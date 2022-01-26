@@ -1620,13 +1620,20 @@ var QosPositionKpiReplySpecialArgs = map[string]string{
 var ECNStatusRequiredArgs = []string{}
 var ECNStatusOptionalArgs = []string{
 	"ecnbit",
+	"sampledurationms",
+	"numce",
+	"numpackets",
 	"strategy",
 	"bandwidth",
 }
 var ECNStatusAliasArgs = []string{}
 var ECNStatusComments = map[string]string{
-	"ecnbit":   ", one of NonEct, Ect0, Ect1, Ce",
-	"strategy": ", one of 1, 2, 3",
+	"ecnbit":           "Last seen ECN bit, one of NonEct, Ect0, Ect1, Ce",
+	"sampledurationms": "Start of sample period",
+	"numce":            "Number of Congestion Encountered bits during sampling period",
+	"numpackets":       "overall packets in sample",
+	"strategy":         "Inform current app or protocol strategy to determine sending bandwidth. App determined strategy as string name.",
+	"bandwidth":        "Bandwidth, as determined by ECN stragegy",
 }
 var ECNStatusSpecialArgs = map[string]string{}
 var ClientEdgeEventRequiredArgs = []string{}
@@ -1652,6 +1659,9 @@ var ClientEdgeEventOptionalArgs = []string{
 	"deviceinfodynamic.carriername",
 	"customevent",
 	"ecnstatus.ecnbit",
+	"ecnstatus.sampledurationms",
+	"ecnstatus.numce",
+	"ecnstatus.numpackets",
 	"ecnstatus.strategy",
 	"ecnstatus.bandwidth",
 	"tags",
@@ -1678,8 +1688,12 @@ var ClientEdgeEventComments = map[string]string{
 	"deviceinfodynamic.signalstrength":  "Device signal strength",
 	"deviceinfodynamic.carriername":     "Carrier name (can be different from cloudlet org if using )",
 	"customevent":                       "Custom event specified by the application",
-	"ecnstatus.ecnbit":                  ", one of NonEct, Ect0, Ect1, Ce",
-	"ecnstatus.strategy":                ", one of 1, 2, 3",
+	"ecnstatus.ecnbit":                  "Last seen ECN bit, one of NonEct, Ect0, Ect1, Ce",
+	"ecnstatus.sampledurationms":        "Start of sample period",
+	"ecnstatus.numce":                   "Number of Congestion Encountered bits during sampling period",
+	"ecnstatus.numpackets":              "overall packets in sample",
+	"ecnstatus.strategy":                "Inform current app or protocol strategy to determine sending bandwidth. App determined strategy as string name.",
+	"ecnstatus.bandwidth":               "Bandwidth, as determined by ECN stragegy",
 	"tags":                              "_(optional)_ Vendor specific data",
 }
 var ClientEdgeEventSpecialArgs = map[string]string{
@@ -1724,6 +1738,9 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.tags",
 	"errormsg",
 	"ecnstatus.ecnbit",
+	"ecnstatus.sampledurationms",
+	"ecnstatus.numce",
+	"ecnstatus.numpackets",
 	"ecnstatus.strategy",
 	"ecnstatus.bandwidth",
 	"tags",
@@ -1765,8 +1782,12 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.qoserrormsg":                         "Error message in case of QOS_SESSION_FAILED",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
 	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
-	"ecnstatus.ecnbit":                                ", one of NonEct, Ect0, Ect1, Ce",
-	"ecnstatus.strategy":                              ", one of 1, 2, 3",
+	"ecnstatus.ecnbit":                                "Last seen ECN bit, one of NonEct, Ect0, Ect1, Ce",
+	"ecnstatus.sampledurationms":                      "Start of sample period",
+	"ecnstatus.numce":                                 "Number of Congestion Encountered bits during sampling period",
+	"ecnstatus.numpackets":                            "overall packets in sample",
+	"ecnstatus.strategy":                              "Inform current app or protocol strategy to determine sending bandwidth. App determined strategy as string name.",
+	"ecnstatus.bandwidth":                             "Bandwidth, as determined by ECN stragegy",
 	"tags":                                            "_(optional)_ Vendor specific data",
 }
 var ServerEdgeEventSpecialArgs = map[string]string{

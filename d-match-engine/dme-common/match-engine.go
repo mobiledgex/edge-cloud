@@ -1501,7 +1501,31 @@ loop:
 		case dme.ClientEdgeEvent_EVENT_ECN_STATUS:
 			// TODO: Log only.
 			ecnStatus := cupdate.EcnStatus
-			log.SpanLog(ctx, log.DebugLevelDmereq, fmt.Sprintf("Client ECN Status update: Bandwidth: %f, Strategy: %s, Last ECN Bit: %s", ecnStatus.Bandwidth, ecnStatus.Strategy, ecnStatus.EcnBit))
+			log.SpanLog(ctx, log.DebugLevelDmereq, fmt.Sprintf(
+				"Client ECN Status update: Bandwidth: %f, Strategy: %s, Seen ECN bits: %d, Last ECN Bit: %d, Duration: %d",
+				ecnStatus.Bandwidth, ecnStatus.Strategy, ecnStatus.NumCe, ecnStatus.EcnBit, ecnStatus.SampleDurationMs))
+			// Ecn Stats update.
+			deviceInfoDynamic := cupdate.DeviceInfoDynamic
+			deviceInfo := &DeviceInfo{
+				DeviceInfoStatic:  deviceInfoStatic,
+				DeviceInfoDynamic: deviceInfoDynamic,
+			}
+			ecnStatKey := GetEcnStatKey(*appInstKey, deviceInfo, cupdate.GpsLocation, int(Settings.LocationTileSideLengthKm))
+			// Convert to metrics format:
+			ecnStatInfo := &EcnStatInfo{
+				EcnBit:           uint64(dme.ECNBit_value[cupdate.EcnStatus.EcnBit.String()]),
+				SampleDurationMs: cupdate.EcnStatus.SampleDurationMs,
+				NumCe:            cupdate.EcnStatus.NumCe,
+				NumPackets:       cupdate.EcnStatus.NumPackets,
+				Strategy:      cupdate.EcnStatus.Strategy,
+				Bandwidth:        cupdate.EcnStatus.Bandwidth,
+			}
+			edgeEventStatCall := &EdgeEventStatCall{
+				Metric:      cloudcommon.EcnMetric,
+				EcnStatKey:  ecnStatKey,
+				EcnStatInfo: ecnStatInfo,
+			}
+			EEStats.RecordEdgeEventStatCall(edgeEventStatCall)
 		case dme.ClientEdgeEvent_EVENT_CUSTOM_EVENT:
 			customStatKey := GetCustomStatKey(*appInstKey, cupdate.CustomEvent)
 			customStatInfo := &CustomStatInfo{

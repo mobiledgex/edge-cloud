@@ -19,6 +19,8 @@ type EdgeEventStatCall struct {
 	LatencyStatKey  LatencyStatKey   // Key needed if metric is cloudcommon.LatencyMetric
 	LatencyStatInfo *LatencyStatInfo // Latency stat info if metric is cloudcommon.LatencyMetric
 	DeviceStatKey   DeviceStatKey    // Key needed if metric is cloudcommon.DeviceStatKey
+	EcnStatKey      EcnStatKey       // Key needed if metric is cloudcommon.EcnStatKey
+	EcnStatInfo     *EcnStatInfo     // Ecn stat info if metric is cloudcommon.EcnStatInfo
 	CustomStatKey   CustomStatKey    // Key needed if metric is cloudcommon.CustomMetric
 	CustomStatInfo  *CustomStatInfo  // Custom stat info if metric is cloudcommon.CustomMetric
 }
@@ -27,6 +29,7 @@ type EdgeEventMapShard struct {
 	latencyStatMap map[LatencyStatKey]*LatencyStat
 	customStatMap  map[CustomStatKey]*CustomStat
 	deviceStatMap  map[DeviceStatKey]*DeviceStat
+	ecnStatMap     map[EcnStatKey]*EcnStat
 	notify         bool
 	mux            sync.Mutex
 }
@@ -129,6 +132,23 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 		}
 		stat.Update()
 		shard.deviceStatMap[key] = stat
+	} else if call.Metric == cloudcommon.EcnMetric {
+		key := call.EcnStatKey
+		emptyStatKey := EcnStatKey{}
+		if key == emptyStatKey {
+			return
+		}
+		idx := util.GetShardIndex(key, e.numShards)
+
+		shard := &e.shards[idx]
+		shard.mux.Lock()
+		defer shard.mux.Unlock()
+		stat, found := shard.ecnStatMap[key]
+		if !found {
+			stat = NewEcnStat()
+		}
+		stat.Update(call.EcnStatInfo)
+		shard.ecnStatMap[key] = stat
 	} else if call.Metric == cloudcommon.CustomMetric {
 		key := call.CustomStatKey
 		emptyStatKey := CustomStatKey{}
@@ -175,11 +195,11 @@ func (e *EdgeEventStats) RunNotify() {
 						e.shards[ii].deviceStatMap[key] = NewDeviceStat()
 					}
 				}
-				for key, stat := range e.shards[ii].EcnStatMap {
+				for key, stat := range e.shards[ii].ecnStatMap {
 					if stat.Changed && stat.NumSessions > 0 {
 						metric := EcnStatusToMetric(ts, key, stat)
 						e.send(ctx, metric)
-						e.shards[ii].EcnStatMap[key] = NewEcnStat()
+						e.shards[ii].ecnStatMap[key] = NewEcnStat()
 					}
 				}
 				for key, stat := range e.shards[ii].customStatMap {
@@ -234,16 +254,24 @@ func DeviceStatToMetric(ts *types.Timestamp, key DeviceStatKey, stat *DeviceStat
 	return metric
 }
 
-func EcnStatusToMetric(ts *types.Timestamp, key EcnStatKey, stat *EcnStat) *edgeProto.Metric {
-	metric := initMetric(cloudcommon.EcnStatusMetric, *ts, key.AppInstKey)
+func EcnStatusToMetric(ts *types.Timestamp, key EcnStatKey, stat *EcnStat) *edgeproto.Metric {
+	metric := initMetric(cloudcommon.EcnMetric, *ts, key.AppInstKey)
+	// Key
 	metric.AddTag("locationtile", key.LocationTile)
-	metric.AddTag("ecn_bit", key.EcnBit) // Questionable value, but it is the very last recorded congestion status bit of a sample.
-	metric.AddTag("sample_start", key.SampleStart)
-	metric.AddTag("sample_end", key.SampleEnd)
-	metric.AddTag("num_ce", key.NumCe)
-	metric.AddTag("num_packets", key.NumPackets)
-	metric.AddTag("ecn_strategy", key.EcnStrategy)
-	metric.AddTag("bandwidth", key.bandwidth)
+	metric.AddTag("devicecarrier", key.DeviceCarrier)
+	metric.AddTag("datanetworktype", key.DataNetworkType)
+	metric.AddTag("deviceos", key.DeviceOs)
+	metric.AddTag("devicemodel", key.DeviceModel)
+	// ??? Weird key member.
+	metric.AddIntVal("signalstrength", key.SignalStrength)
+
+	// ECN Stats:
+	metric.AddIntVal("ecn_bit", stat.Info.EcnBit)
+	metric.AddIntVal("sampledurationms", stat.Info.SampleDurationMs)
+	metric.AddIntVal("numce", stat.Info.NumCe)
+	metric.AddIntVal("numpackets", stat.Info.NumPackets)
+	metric.AddTag("ecnstrategy", stat.Info.Strategy)
+	metric.AddDoubleVal("bandwidth", stat.Info.Bandwidth)
 	return metric
 }
 
