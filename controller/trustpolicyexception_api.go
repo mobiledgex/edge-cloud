@@ -107,12 +107,14 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 
 		_, found := fields[edgeproto.TrustPolicyExceptionFieldState]
 		if found {
-			// caller specified state change
+			// caller specified state change, for an update, an operator can only specify state
 			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 				return fmt.Errorf("New state must be either Active or Rejected")
 			}
 		} else if !rulesSpecified {
+			// For an update, a developer can only specify security rules
+			// caller (developer) must provide at least one security rule
 			return fmt.Errorf("Security rules must be specified")
 		}
 		if rulesSpecified && cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {

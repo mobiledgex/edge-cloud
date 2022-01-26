@@ -1963,20 +1963,18 @@ func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey 
 }
 func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
 
-	appInstFilter := edgeproto.AppInst{
-		Key: edgeproto.AppInstKey{
-			AppKey:         *appKey,
-			ClusterInstKey: *clusterInstKey.Virtual(""),
-		},
+	appInst := edgeproto.AppInst{}
+	appInstKeyFilter := edgeproto.AppInstKey{
+		AppKey:         *appKey,
+		ClusterInstKey: *clusterInstKey.Virtual(""),
 	}
-	appInstFound := false
-	cd.AppInstCache.Show(&appInstFilter, func(appInst *edgeproto.AppInst) error {
+	appInstFound := cd.AppInstCache.Get(&appInstKeyFilter, &appInst)
+	if appInstFound {
 		if appInst.State != edgeproto.TrackedState_READY {
-			return nil
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
+			appInstFound = false
 		}
-		appInstFound = true
-		return nil
-	})
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
 
 	return appInstFound
