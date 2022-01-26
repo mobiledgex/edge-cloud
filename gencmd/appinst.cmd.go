@@ -800,6 +800,7 @@ var AppInstComments = map[string]string{
 	"cloudletloc.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"cloudletloc.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletloc.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"cloudletloc.timestamp":          "Timestamp",
 	"uri":                            "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.",
 	"liveness":                       "Liveness of instance (see Liveness), one of Unknown, Static, Dynamic, Autoprov",
 	"mappedports:empty":              "For instances accessible via a shared load balancer, defines the external ports on the shared load balancer that map to the internal ports External ports should be appended to the Uri for L4 access., specify mappedports:empty=true to clear",
@@ -816,6 +817,7 @@ var AppInstComments = map[string]string{
 	"errors":                         "Any errors trying to create, update, or delete the AppInst on the Cloudlet, specify errors:empty=true to clear",
 	"crmoverride":                    "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"runtimeinfo.containerids":       "List of container names, specify runtimeinfo.containerids:empty=true to clear",
+	"createdat":                      "Created at time",
 	"autoclusteripaccess":            "(Deprecated) IpAccess for auto-clusters. Ignored otherwise., one of Unknown, Dedicated, Shared",
 	"revision":                       "Revision changes each time the App is updated.  Refreshing the App Instance will sync the revision with that of the App",
 	"forceupdate":                    "Force Appinst refresh even if revision number matches App revision number.",
@@ -829,6 +831,7 @@ var AppInstComments = map[string]string{
 	"availabilityzone":               "Optional Availability Zone if any",
 	"vmflavor":                       "OS node flavor to use",
 	"optres":                         "Optional Resources required by OS flavor if any",
+	"updatedat":                      "Updated at time",
 	"realclustername":                "Real ClusterInst name",
 	"internalporttolbip":             "mapping of ports to load balancer IPs, specify internalporttolbip:empty=true to clear",
 	"dedicatedip":                    "Dedicated IP assigns an IP for this AppInst but requires platform support",
@@ -978,7 +981,6 @@ var AppInstLatencyOptionalArgs = []string{
 	"cluster",
 	"federated-org",
 	"cluster-org",
-	"message",
 }
 var AppInstLatencyAliasArgs = []string{
 	"app-org=key.appkey.organization",

@@ -450,6 +450,7 @@ var AutoProvPolicyComments = map[string]string{
 	"cloudlets:#.loc.altitude":              "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"cloudlets:#.loc.course":                "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudlets:#.loc.speed":                 "Speed (IOS) / velocity (Android) (meters/sec)",
+	"cloudlets:#.loc.timestamp":             "Timestamp",
 	"minactiveinstances":                    "Minimum number of active instances for High-Availability",
 	"maxinstances":                          "Maximum number of instances (active or not)",
 	"undeployclientcount":                   "Number of active clients for the undeploy interval below which trigers undeployment, 0 (default) disables auto undeploy",
@@ -472,8 +473,7 @@ var AutoProvCloudletOptionalArgs = []string{
 	"loc.altitude",
 	"loc.course",
 	"loc.speed",
-	"loc.timestamp.seconds",
-	"loc.timestamp.nanos",
+	"loc.timestamp",
 }
 var AutoProvCloudletAliasArgs = []string{}
 var AutoProvCloudletComments = map[string]string{
@@ -487,6 +487,7 @@ var AutoProvCloudletComments = map[string]string{
 	"loc.altitude":              "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"loc.course":                "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"loc.speed":                 "Speed (IOS) / velocity (Android) (meters/sec)",
+	"loc.timestamp":             "Timestamp",
 }
 var AutoProvCloudletSpecialArgs = map[string]string{}
 var AutoProvCountRequiredArgs = []string{}

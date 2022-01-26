@@ -5,6 +5,7 @@ package edgeproto;
 
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "edgeprotogen.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
@@ -19,6 +20,6 @@ message Udec64 {
   uint64 whole = 1;
   // Decimal value in nanos
   uint32 nanos = 2;
-  option (protogen.custom_yaml_json_marshalers) = true;
+  option (edgeprotogen.custom_yaml_json_marshalers) = true;
   option (protogen.copy_in_all_fields) = true;
 }

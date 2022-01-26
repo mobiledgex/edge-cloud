@@ -642,7 +642,7 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			}
 		}
 
-		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		in.CreatedAt = dme.TimeToTimestamp(time.Now())
 
 		if ignoreCRMState(cctx) {
 			in.State = edgeproto.TrackedState_READY
@@ -843,7 +843,7 @@ func (s *CloudletApi) updateTrustPolicyInternal(ctx context.Context, ckey *edgep
 		} else {
 			cloudlet.TrustPolicyState = edgeproto.TrackedState_UPDATE_REQUESTED
 		}
-		cloudlet.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		cloudlet.UpdatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cloudlet)
 		return nil
 	})
@@ -1174,7 +1174,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				}
 			}
 		}
-		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		cur.UpdatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, cur)
 		return nil
 	})

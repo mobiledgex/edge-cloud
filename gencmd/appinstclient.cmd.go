@@ -268,8 +268,7 @@ var AppInstClientOptionalArgs = []string{
 	"location.altitude",
 	"location.course",
 	"location.speed",
-	"location.timestamp.seconds",
-	"location.timestamp.nanos",
+	"location.timestamp",
 	"notifyid",
 }
 var AppInstClientAliasArgs = []string{}
@@ -292,6 +291,7 @@ var AppInstClientComments = map[string]string{
 	"location.altitude":                                                     "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"location.course":                                                       "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"location.speed":                                                        "Speed (IOS) / velocity (Android) (meters/sec)",
+	"location.timestamp":                                                    "Timestamp",
 	"notifyid":                                                              "Id of client assigned by server (internal use only)",
 }
 var AppInstClientSpecialArgs = map[string]string{

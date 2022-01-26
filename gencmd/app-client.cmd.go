@@ -690,8 +690,7 @@ var FindCloudletRequestOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"tags",
 }
 var FindCloudletRequestAliasArgs = []string{}
@@ -706,6 +705,7 @@ var FindCloudletRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":          "Timestamp",
 	"tags":                           "Tags _(optional)_ Vendor specific data",
 }
 var FindCloudletRequestSpecialArgs = map[string]string{
@@ -750,8 +750,7 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.altitude",
 	"cloudletlocation.course",
 	"cloudletlocation.speed",
-	"cloudletlocation.timestamp.seconds",
-	"cloudletlocation.timestamp.nanos",
+	"cloudletlocation.timestamp",
 	"edgeeventscookie",
 	"tags",
 }
@@ -775,6 +774,7 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"cloudletlocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudletlocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"cloudletlocation.timestamp":          "Timestamp",
 	"edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
 	"tags":                                "_(optional)_ Vendor specific data",
 }
@@ -793,8 +793,7 @@ var VerifyLocationRequestOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"verifyloctoken",
 	"tags",
 }
@@ -810,6 +809,7 @@ var VerifyLocationRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":          "Timestamp",
 	"verifyloctoken":                 "Verify Location Token Must be retrieved from TokenServerURI",
 	"tags":                           "Tags _(optional)_ Vendor specific data",
 }
@@ -865,8 +865,7 @@ var GetLocationReplyOptionalArgs = []string{
 	"networklocation.altitude",
 	"networklocation.course",
 	"networklocation.speed",
-	"networklocation.timestamp.seconds",
-	"networklocation.timestamp.nanos",
+	"networklocation.timestamp",
 	"tags",
 }
 var GetLocationReplyAliasArgs = []string{}
@@ -882,6 +881,7 @@ var GetLocationReplyComments = map[string]string{
 	"networklocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"networklocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"networklocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"networklocation.timestamp":          "Timestamp",
 	"tags":                               "_(optional)_ Vendor specific data",
 }
 var GetLocationReplySpecialArgs = map[string]string{
@@ -899,8 +899,7 @@ var AppInstListRequestOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"limit",
 	"tags",
 }
@@ -916,6 +915,7 @@ var AppInstListRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":          "Timestamp",
 	"limit":                          "_(optional)_ Limit the number of results, defaults to 3",
 	"tags":                           "_(optional)_ Vendor specific data",
 }
@@ -966,8 +966,7 @@ var CloudletLocationOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"distance",
 	"appinstances:#.appname",
 	"appinstances:#.appvers",
@@ -994,6 +993,7 @@ var CloudletLocationComments = map[string]string{
 	"gpslocation.altitude":                "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":                  "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":                   "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":               "Timestamp",
 	"distance":                            "Distance of cloudlet vs loc in request",
 	"appinstances:#.appname":              "App Instance Name",
 	"appinstances:#.appvers":              "App Instance Version",
@@ -1023,8 +1023,7 @@ var AppInstListReplyOptionalArgs = []string{
 	"cloudlets:#.gpslocation.altitude",
 	"cloudlets:#.gpslocation.course",
 	"cloudlets:#.gpslocation.speed",
-	"cloudlets:#.gpslocation.timestamp.seconds",
-	"cloudlets:#.gpslocation.timestamp.nanos",
+	"cloudlets:#.gpslocation.timestamp",
 	"cloudlets:#.distance",
 	"cloudlets:#.appinstances:#.appname",
 	"cloudlets:#.appinstances:#.appvers",
@@ -1054,6 +1053,7 @@ var AppInstListReplyComments = map[string]string{
 	"cloudlets:#.gpslocation.altitude":                "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"cloudlets:#.gpslocation.course":                  "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"cloudlets:#.gpslocation.speed":                   "Speed (IOS) / velocity (Android) (meters/sec)",
+	"cloudlets:#.gpslocation.timestamp":               "Timestamp",
 	"cloudlets:#.distance":                            "Distance of cloudlet vs loc in request",
 	"cloudlets:#.appinstances:#.appname":              "App Instance Name",
 	"cloudlets:#.appinstances:#.appvers":              "App Instance Version",
@@ -1144,8 +1144,7 @@ var AppOfficialFqdnRequestOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"tags",
 }
 var AppOfficialFqdnRequestAliasArgs = []string{}
@@ -1159,6 +1158,7 @@ var AppOfficialFqdnRequestComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":          "Timestamp",
 	"tags":                           "_(optional)_ Vendor specific data",
 }
 var AppOfficialFqdnRequestSpecialArgs = map[string]string{
@@ -1249,8 +1249,7 @@ var QosPositionOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 }
 var QosPositionAliasArgs = []string{}
 var QosPositionComments = map[string]string{
@@ -1262,6 +1261,7 @@ var QosPositionComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":          "Timestamp",
 }
 var QosPositionSpecialArgs = map[string]string{}
 var BandSelectionRequiredArgs = []string{}
@@ -1293,8 +1293,7 @@ var QosPositionRequestOptionalArgs = []string{
 	"positions:#.gpslocation.altitude",
 	"positions:#.gpslocation.course",
 	"positions:#.gpslocation.speed",
-	"positions:#.gpslocation.timestamp.seconds",
-	"positions:#.gpslocation.timestamp.nanos",
+	"positions:#.gpslocation.timestamp",
 	"ltecategory",
 	"bandselection.rat_2g",
 	"bandselection.rat_3g",
@@ -1314,6 +1313,7 @@ var QosPositionRequestComments = map[string]string{
 	"positions:#.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"positions:#.gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positions:#.gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"positions:#.gpslocation.timestamp":          "Timestamp",
 	"ltecategory":                                "_(optional)_ Clients device LTE category number.",
 	"bandselection.rat_2g":                       "Radio Access Technologies",
 	"tags":                                       "_(optional)_ Vendor specific data",
@@ -1335,8 +1335,7 @@ var QosPositionKpiResultOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"dluserthroughputmin",
 	"dluserthroughputavg",
 	"dluserthroughputmax",
@@ -1357,6 +1356,7 @@ var QosPositionKpiResultComments = map[string]string{
 	"gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":          "Timestamp",
 	"dluserthroughputmin":            "throughput",
 }
 var QosPositionKpiResultSpecialArgs = map[string]string{}
@@ -1372,8 +1372,7 @@ var QosPositionKpiReplyOptionalArgs = []string{
 	"positionresults:#.gpslocation.altitude",
 	"positionresults:#.gpslocation.course",
 	"positionresults:#.gpslocation.speed",
-	"positionresults:#.gpslocation.timestamp.seconds",
-	"positionresults:#.gpslocation.timestamp.nanos",
+	"positionresults:#.gpslocation.timestamp",
 	"positionresults:#.dluserthroughputmin",
 	"positionresults:#.dluserthroughputavg",
 	"positionresults:#.dluserthroughputmax",
@@ -1397,6 +1396,7 @@ var QosPositionKpiReplyComments = map[string]string{
 	"positionresults:#.gpslocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"positionresults:#.gpslocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"positionresults:#.gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"positionresults:#.gpslocation.timestamp":          "Timestamp",
 	"positionresults:#.dluserthroughputmin":            "throughput",
 	"tags":                                             "_(optional)_ Vendor specific data",
 }
@@ -1415,11 +1415,9 @@ var ClientEdgeEventOptionalArgs = []string{
 	"gpslocation.altitude",
 	"gpslocation.course",
 	"gpslocation.speed",
-	"gpslocation.timestamp.seconds",
-	"gpslocation.timestamp.nanos",
+	"gpslocation.timestamp",
 	"samples:#.value",
-	"samples:#.timestamp.seconds",
-	"samples:#.timestamp.nanos",
+	"samples:#.timestamp",
 	"samples:#.tags",
 	"deviceinfostatic.deviceos",
 	"deviceinfostatic.devicemodel",
@@ -1441,7 +1439,9 @@ var ClientEdgeEventComments = map[string]string{
 	"gpslocation.altitude":              "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"gpslocation.course":                "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"gpslocation.speed":                 "Speed (IOS) / velocity (Android) (meters/sec)",
+	"gpslocation.timestamp":             "Timestamp",
 	"samples:#.value":                   "Latency value",
+	"samples:#.timestamp":               "Timestamp",
 	"samples:#.tags":                    "_(optional)_ Vendor specific data",
 	"deviceinfostatic.deviceos":         "Android or iOS",
 	"deviceinfostatic.devicemodel":      "Device model",
@@ -1467,8 +1467,7 @@ var ServerEdgeEventOptionalArgs = []string{
 	"statistics.stddev",
 	"statistics.variance",
 	"statistics.numsamples",
-	"statistics.timestamp.seconds",
-	"statistics.timestamp.nanos",
+	"statistics.timestamp",
 	"newcloudlet.ver",
 	"newcloudlet.status",
 	"newcloudlet.fqdn",
@@ -1487,8 +1486,7 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.cloudletlocation.altitude",
 	"newcloudlet.cloudletlocation.course",
 	"newcloudlet.cloudletlocation.speed",
-	"newcloudlet.cloudletlocation.timestamp.seconds",
-	"newcloudlet.cloudletlocation.timestamp.nanos",
+	"newcloudlet.cloudletlocation.timestamp",
 	"newcloudlet.edgeeventscookie",
 	"newcloudlet.tags",
 	"errormsg",
@@ -1506,6 +1504,7 @@ var ServerEdgeEventComments = map[string]string{
 	"statistics.stddev":                               "Square root of unbiased variance",
 	"statistics.variance":                             "Unbiased variance",
 	"statistics.numsamples":                           "Number of samples to create stats",
+	"statistics.timestamp":                            "Timestamp",
 	"newcloudlet.ver":                                 "API version _(hidden)_ Reserved for future use",
 	"newcloudlet.status":                              "Status return, one of Unknown, Found, Notfound",
 	"newcloudlet.fqdn":                                "Fully Qualified Domain Name of the Closest App instance",
@@ -1524,6 +1523,7 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.cloudletlocation.altitude":           "On android only lat and long are guaranteed to be supplied Altitude in meters",
 	"newcloudlet.cloudletlocation.course":             "Course (IOS) / bearing (Android) (degrees east relative to true north)",
 	"newcloudlet.cloudletlocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
+	"newcloudlet.cloudletlocation.timestamp":          "Timestamp",
 	"newcloudlet.edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
 	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
