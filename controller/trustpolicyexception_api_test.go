@@ -143,6 +143,15 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "New state must be either Active or Rejected")
 
+	// test that TPE update with no security rules, fails
+	savedSecurityRules := tpeData.OutboundSecurityRules
+	tpeData.OutboundSecurityRules = []edgeproto.SecurityRule{}
+	tpeData.Fields = []string{edgeproto.TrustPolicyExceptionFieldOutboundSecurityRules}
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Security rules must be specified")
+	tpeData.OutboundSecurityRules = savedSecurityRules
+
 	// test that TPE update with non-existent CloudletPoolKey Organization, fails
 	tpeData.Fields = []string{
 		edgeproto.TrustPolicyExceptionFieldKeyCloudletPoolKeyOrganization,
