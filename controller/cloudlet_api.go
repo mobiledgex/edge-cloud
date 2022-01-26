@@ -186,6 +186,7 @@ func (s *CloudletApi) getPlatformConfig(ctx context.Context, cloudlet *edgeproto
 	pfConfig.ChefServerPath = *chefServerPath
 	pfConfig.ChefClientInterval = s.all.settingsApi.Get().ChefClientInterval
 	pfConfig.DeploymentTag = nodeMgr.DeploymentTag
+	pfConfig.ThanosRecvAddr = *thanosRecvAddr
 
 	return &pfConfig, nil
 }

@@ -2260,6 +2260,7 @@ var PlatformConfigOptionalArgs = []string{
 	"accessapiaddr",
 	"cachedir",
 	"secondarycrmaccessprivatekey",
+	"thanosrecvaddr",
 }
 var PlatformConfigAliasArgs = []string{}
 var PlatformConfigComments = map[string]string{
@@ -2285,6 +2286,7 @@ var PlatformConfigComments = map[string]string{
 	"accessapiaddr":                "controller access API address",
 	"cachedir":                     "cache dir",
 	"secondarycrmaccessprivatekey": "secondary crm access private key",
+	"thanosrecvaddr":               "Thanos Receive remote write address",
 }
 var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
@@ -2584,6 +2586,7 @@ var CloudletComments = map[string]string{
 	"config.accessapiaddr":                 "controller access API address",
 	"config.cachedir":                      "cache dir",
 	"config.secondarycrmaccessprivatekey":  "secondary crm access private key",
+	"config.thanosrecvaddr":                "Thanos Receive remote write address",
 	"accessvars":                           "Variables required to access cloudlet, specify accessvars:empty=true to clear",
 	"vmimageversion":                       "MobiledgeX baseimage version where CRM services reside",
 	"deployment":                           "Deployment type to bring up CRM services (docker, kubernetes)",
