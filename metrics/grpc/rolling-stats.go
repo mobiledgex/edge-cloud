@@ -4,7 +4,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
@@ -74,7 +73,7 @@ func (r *RollingStatistics) UpdateRollingStatistics(samples ...float64) {
 func CalculateStatistics(samples []*dme.Sample) dme.Statistics {
 	// Create statistics struct
 	statistics := new(dme.Statistics)
-	ts := cloudcommon.TimeToTimestamp(time.Now())
+	ts := dme.TimeToTimestamp(time.Now())
 	statistics.Timestamp = &ts
 	// return if samples is nil
 	if samples == nil {

@@ -80,7 +80,9 @@ var xxx_messageInfo_ContainerInfo proto.InternalMessageInfo
 // and are are often the same unless a natted or floating IP is used.  If
 // internalIP is not reported it is the same as the ExternalIP.
 type IpAddr struct {
+	// External IP address
 	ExternalIp string `protobuf:"bytes,1,opt,name=externalIp,proto3" json:"externalIp,omitempty"`
+	// Internal IP address
 	InternalIp string `protobuf:"bytes,2,opt,name=internalIp,proto3" json:"internalIp,omitempty"`
 }
 

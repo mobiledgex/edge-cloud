@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -74,7 +74,7 @@ func (m *ClientsMap) timeoutAppInstClients() {
 					// Check if this client needs to be timed out -
 					//   if last Valid time is later than the client timestamp
 					if client.Location.Timestamp == nil ||
-						lastValidTime.After(cloudcommon.TimestampToTime(*client.Location.Timestamp)) {
+						lastValidTime.After(dme.TimestampToTime(*client.Location.Timestamp)) {
 						continue
 					}
 					m.clientsByApp[k][jj] = client
