@@ -46,7 +46,7 @@ func (s *HighAvailabilityManager) InitFlags() {
 }
 
 func (s *HighAvailabilityManager) Init(ctx context.Context, nodeGroupKey string, nodeMgr *node.NodeMgr, activeDuration, activePollInterval edgeproto.Duration, haWatcher HAWatcher) error {
-	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
+	log.SpanLog(ctx, log.DebugLevelInfo, "HighAvailabilityManager init", "nodeGroupKey", nodeGroupKey, "redisCfg", s.redisCfg, "role", s.HARole, "activeDuration", activeDuration, "activePollInterval", activePollInterval)
 	s.activeDuration = activeDuration.TimeDuration()
 	s.activePollInterval = activePollInterval.TimeDuration()
 	s.nodeMgr = nodeMgr
