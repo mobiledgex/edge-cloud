@@ -34,6 +34,7 @@ type ClusterInstApi struct {
 var AutoClusterPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
 	cloudcommon.AutoClusterPrefix)
 var ObjBusyDeletionMsg = "busy, cannot be deleted"
+var ActionInProgressMsg = "action is already in progress"
 
 // Transition states indicate states in which the CRM is still busy.
 var CreateClusterInstTransitions = map[edgeproto.TrackedState]struct{}{
