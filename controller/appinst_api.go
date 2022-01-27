@@ -213,7 +213,8 @@ func (s *AppInstApi) AutoDeleteAppInsts(ctx context.Context, dynInsts map[edgepr
 				err = nil
 				break
 			}
-			if err != nil && strings.Contains(err.Error(), ObjBusyDeletionMsg) {
+			if err != nil && (strings.Contains(err.Error(), ObjBusyDeletionMsg) ||
+				strings.Contains(err.Error(), ActionInProgressMsg)) {
 				spinTime = time.Since(start)
 				if spinTime > s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration() {
 					log.SpanLog(ctx, log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
