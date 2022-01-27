@@ -125,6 +125,10 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		cookie = typ.SessionCookie
 	case *dme.PlatformFindCloudletRequest:
 		cookie = typ.SessionCookie
+	case *dme.QosPrioritySessionCreateRequest:
+		cookie = typ.SessionCookie
+	case *dme.QosPrioritySessionDeleteRequest:
+		cookie = typ.SessionCookie
 	case *dme.VerifyLocationRequest:
 		cookie = typ.SessionCookie
 	case *dme.GetLocationRequest:
