@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -157,6 +158,10 @@ func TestAllUpgradeFuncs(t *testing.T) {
 	objstore.InitRegion(1)
 	log.InitTracer(nil)
 	defer log.FinishTracer()
+
+	// There are timestamp fields which are stored in RFC3339 format.
+	// Hence, fix a timezone for consistent comparison
+	time.Local = time.UTC
 
 	cplookup := &node.CloudletPoolCache{}
 	cplookup.Init()
