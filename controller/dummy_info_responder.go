@@ -17,25 +17,6 @@ import (
 // But don't add too much because it increases the unit test run time.
 const DummyInfoDelay = 10 * time.Millisecond
 
-func NewDummyInfoResponder(appInstCache *edgeproto.AppInstCache, clusterInstCache *edgeproto.ClusterInstCache, recvAppInstInfo notify.RecvAppInstInfoHandler, recvClusterInstInfo notify.RecvClusterInstInfoHandler) *DummyInfoResponder {
-	d := DummyInfoResponder{
-		AppInstCache:        appInstCache,
-		ClusterInstCache:    clusterInstCache,
-		RecvAppInstInfo:     recvAppInstInfo,
-		RecvClusterInstInfo: recvClusterInstInfo,
-		enable:              true,
-	}
-	d.AppInstCache.SetNotifyCb(d.runAppInstChanged)
-	d.AppInstCache.SetDeletedCb(d.runAppInstDeleted)
-	d.ClusterInstCache.SetNotifyCb(d.runClusterInstChanged)
-	d.ClusterInstCache.SetDeletedCb(d.runClusterInstDeleted)
-	edgeproto.InitClusterInstInfoCache(&d.ClusterInstInfoCache)
-	edgeproto.InitAppInstInfoCache(&d.AppInstInfoCache)
-	d.AppInstInfoCache.SetNotifyCb(d.appInstInfoCb)
-	d.ClusterInstInfoCache.SetNotifyCb(d.clusterInstInfoCb)
-	return &d
-}
-
 type DummyInfoResponder struct {
 	AppInstCache                 *edgeproto.AppInstCache
 	AppInstInfoCache             edgeproto.AppInstInfoCache
@@ -43,13 +24,42 @@ type DummyInfoResponder struct {
 	ClusterInstInfoCache         edgeproto.ClusterInstInfoCache
 	RecvAppInstInfo              notify.RecvAppInstInfoHandler
 	RecvClusterInstInfo          notify.RecvClusterInstInfoHandler
+	VMPoolCache                  *edgeproto.VMPoolCache
+	VMPoolInfoCache              edgeproto.VMPoolInfoCache
+	RecvVMPoolInfo               notify.RecvVMPoolInfoHandler
 	simulateAppCreateFailure     bool
 	simulateAppUpdateFailure     bool
 	simulateAppDeleteFailure     bool
 	simulateClusterCreateFailure bool
 	simulateClusterUpdateFailure bool
 	simulateClusterDeleteFailure bool
+	simulateVMPoolUpdateFailure  bool
 	enable                       bool
+}
+
+func (d *DummyInfoResponder) InitDummyInfoResponder() {
+	d.enable = true
+	// init appinst obj
+	if d.AppInstCache != nil {
+		d.AppInstCache.SetNotifyCb(d.runAppInstChanged)
+		d.AppInstCache.SetDeletedCb(d.runAppInstDeleted)
+	}
+	edgeproto.InitAppInstInfoCache(&d.AppInstInfoCache)
+	d.AppInstInfoCache.SetNotifyCb(d.appInstInfoCb)
+	// init clusterinst obj
+	if d.ClusterInstCache != nil {
+		d.ClusterInstCache.SetNotifyCb(d.runClusterInstChanged)
+		d.ClusterInstCache.SetDeletedCb(d.runClusterInstDeleted)
+	}
+	edgeproto.InitClusterInstInfoCache(&d.ClusterInstInfoCache)
+	d.ClusterInstInfoCache.SetNotifyCb(d.clusterInstInfoCb)
+	// init vmpool obj
+	if d.VMPoolCache != nil {
+		d.VMPoolCache.SetNotifyCb(d.runVMPoolChanged)
+		d.VMPoolCache.SetDeletedCb(d.runVMPoolDeleted)
+	}
+	edgeproto.InitVMPoolInfoCache(&d.VMPoolInfoCache)
+	d.VMPoolInfoCache.SetNotifyCb(d.vmPoolInfoCb)
 }
 
 func (d *DummyInfoResponder) SetSimulateAppCreateFailure(state bool) {
@@ -66,6 +76,10 @@ func (d *DummyInfoResponder) SetSimulateClusterCreateFailure(state bool) {
 
 func (d *DummyInfoResponder) SetSimulateClusterDeleteFailure(state bool) {
 	d.simulateClusterDeleteFailure = state
+}
+
+func (d *DummyInfoResponder) SetSimulateVMPoolUpdateFailure(state bool) {
+	d.simulateVMPoolUpdateFailure = state
 }
 
 func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst, modRev int64) {
@@ -112,14 +126,36 @@ func (d *DummyInfoResponder) runAppInstDeleted(ctx context.Context, old *edgepro
 	go d.appInstDeleted(ctx, copy)
 }
 
+func (d *DummyInfoResponder) runVMPoolChanged(ctx context.Context, key *edgeproto.VMPoolKey, old *edgeproto.VMPool, modRev int64) {
+	if !d.enable {
+		return
+	}
+	// copy out from cache since data may change while thread runs
+	inst := edgeproto.VMPool{}
+	found := d.VMPoolCache.Get(key, &inst)
+	if !found {
+		return
+	}
+	go d.vmPoolChanged(ctx, &inst)
+}
+
+func (d *DummyInfoResponder) runVMPoolDeleted(ctx context.Context, old *edgeproto.VMPool) {
+	if !d.enable {
+		return
+	}
+	copy := &edgeproto.VMPool{}
+	copy.DeepCopyIn(old)
+	go d.vmPoolDeleted(ctx, copy)
+}
+
 func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgeproto.ClusterInst) {
 	key := &inst.Key
 	if inst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update
-		log.DebugLog(log.DebugLevelApi, "Update ClusterInst", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Update ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_UPDATING)
-		log.DebugLog(log.DebugLevelApi, "ClusterInst ready", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst ready", "key", key)
 		if d.simulateClusterUpdateFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_UPDATE_ERROR, "crm update ClusterInst failed")
 		} else {
@@ -127,11 +163,11 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgep
 		}
 	} else if inst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
-		log.DebugLog(log.DebugLevelApi, "Create ClusterInst", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Create ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_CREATING)
 		time.Sleep(DummyInfoDelay)
-		log.DebugLog(log.DebugLevelApi, "ClusterInst ready", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst ready", "key", key)
 		if d.simulateClusterCreateFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_CREATE_ERROR, "crm create ClusterInst failed")
 		} else {
@@ -139,11 +175,11 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgep
 		}
 	} else if inst.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// delete
-		log.DebugLog(log.DebugLevelApi, "Delete ClusterInst", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Delete ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_DELETING)
 		time.Sleep(DummyInfoDelay)
-		log.DebugLog(log.DebugLevelApi, "ClusterInst deleted", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst deleted", "key", key)
 		if d.simulateClusterDeleteFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_DELETE_ERROR, "crm delete ClusterInst failed")
 		} else {
@@ -161,10 +197,10 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto
 	key := &inst.Key
 	if inst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update
-		log.DebugLog(log.DebugLevelApi, "Update app inst", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Update app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_UPDATING)
-		log.DebugLog(log.DebugLevelApi, "app inst ready", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "app inst ready", "key", key)
 		if d.simulateAppUpdateFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_UPDATE_ERROR, "crm update app inst failed")
 		} else {
@@ -172,11 +208,11 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto
 		}
 	} else if inst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
-		log.DebugLog(log.DebugLevelApi, "Create app inst", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Create app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_CREATING)
 		time.Sleep(DummyInfoDelay)
-		log.DebugLog(log.DebugLevelApi, "app inst ready", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "app inst ready", "key", key)
 		if d.simulateAppCreateFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_CREATE_ERROR, "crm create app inst failed")
 		} else {
@@ -184,11 +220,11 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto
 		}
 	} else if inst.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// delete
-		log.DebugLog(log.DebugLevelApi, "Delete app inst", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "Delete app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_DELETING)
 		time.Sleep(DummyInfoDelay)
-		log.DebugLog(log.DebugLevelApi, "app inst deleted", "key", key)
+		log.SpanLog(ctx, log.DebugLevelApi, "app inst deleted", "key", key)
 		if d.simulateAppDeleteFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_DELETE_ERROR, "crm delete app inst failed")
 		} else {
@@ -220,4 +256,59 @@ func (d *DummyInfoResponder) appInstInfoCb(ctx context.Context, key *edgeproto.A
 		inst.Key = *key
 		d.RecvAppInstInfo.Delete(ctx, &inst, modRev)
 	}
+}
+
+func (d *DummyInfoResponder) vmPoolInfoCb(ctx context.Context, key *edgeproto.VMPoolKey, old *edgeproto.VMPoolInfo, modRev int64) {
+	info := edgeproto.VMPoolInfo{}
+	if d.VMPoolInfoCache.Get(key, &info) {
+		d.RecvVMPoolInfo.Update(ctx, &info, modRev)
+	} else {
+		info.Key = *key
+		d.RecvVMPoolInfo.Delete(ctx, &info, modRev)
+	}
+}
+
+func (d *DummyInfoResponder) vmPoolChanged(ctx context.Context, inst *edgeproto.VMPool) {
+	if inst.State != edgeproto.TrackedState_UPDATE_REQUESTED {
+		return
+	}
+	key := &inst.Key
+	// update
+	log.SpanLog(ctx, log.DebugLevelApi, "Update VMPool", "key", key)
+	time.Sleep(DummyInfoDelay)
+	d.VMPoolInfoCache.SetState(ctx, key, edgeproto.TrackedState_UPDATING)
+	if d.simulateVMPoolUpdateFailure {
+		d.VMPoolInfoCache.SetError(ctx, key, edgeproto.TrackedState_UPDATE_ERROR, "crm update VMPool failed")
+	} else {
+		newVMs := []edgeproto.VM{}
+		for _, vm := range inst.Vms {
+			switch vm.State {
+			case edgeproto.VMState_VM_ADD:
+				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
+			case edgeproto.VMState_VM_REMOVE:
+				continue
+			case edgeproto.VMState_VM_UPDATE:
+				vm.State = edgeproto.VMState_VM_FREE
+				newVMs = append(newVMs, vm)
+			default:
+				newVMs = append(newVMs, vm)
+			}
+		}
+		// save VM to VM pool
+		info := edgeproto.VMPoolInfo{}
+		if !d.VMPoolInfoCache.Get(&inst.Key, &info) {
+			info.Key = *key
+		}
+		info.Vms = newVMs
+		d.VMPoolInfoCache.Update(ctx, &info, 0)
+
+		log.SpanLog(ctx, log.DebugLevelApi, "VMPool ready", "key", key)
+		d.VMPoolInfoCache.SetState(ctx, key, edgeproto.TrackedState_READY)
+	}
+}
+
+func (d *DummyInfoResponder) vmPoolDeleted(ctx context.Context, old *edgeproto.VMPool) {
+	info := edgeproto.VMPoolInfo{Key: old.Key}
+	d.VMPoolInfoCache.Delete(ctx, &info, 0)
 }

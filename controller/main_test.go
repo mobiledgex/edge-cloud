@@ -72,8 +72,13 @@ func TestController(t *testing.T) {
 	crmNotify := notify.NewDummyHandler()
 	crmClient := notify.NewClient("crm", notifyAddrs, nil)
 	crmNotify.RegisterCRMClient(crmClient)
-	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
-		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &crmNotify.AppInstCache,
+		ClusterInstCache:    &crmNotify.ClusterInstCache,
+		RecvAppInstInfo:     &crmNotify.AppInstInfoCache,
+		RecvClusterInstInfo: &crmNotify.ClusterInstInfoCache,
+	}
+	dummyResponder.InitDummyInfoResponder()
 	for ii, _ := range testutil.CloudletInfoData {
 		crmNotify.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[ii], 0)
 	}
@@ -424,8 +429,13 @@ func TestControllerRace(t *testing.T) {
 	apis1 := NewAllApis(sync1)
 	sync1.Start()
 	defer sync1.Done()
-	NewDummyInfoResponder(&apis1.appInstApi.cache, &apis1.clusterInstApi.cache,
-		apis1.appInstInfoApi, apis1.clusterInstInfoApi)
+	dummyResponder1 := DummyInfoResponder{
+		AppInstCache:        &apis1.appInstApi.cache,
+		ClusterInstCache:    &apis1.clusterInstApi.cache,
+		RecvAppInstInfo:     apis1.appInstInfoApi,
+		RecvClusterInstInfo: apis1.clusterInstInfoApi,
+	}
+	dummyResponder1.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis1)
 
 	// ctrl2
@@ -438,8 +448,13 @@ func TestControllerRace(t *testing.T) {
 	apis2 := NewAllApis(sync2)
 	sync2.Start()
 	defer sync2.Done()
-	NewDummyInfoResponder(&apis2.appInstApi.cache, &apis2.clusterInstApi.cache,
-		apis2.appInstInfoApi, apis2.clusterInstInfoApi)
+	dummyResponder2 := DummyInfoResponder{
+		AppInstCache:        &apis2.appInstApi.cache,
+		ClusterInstCache:    &apis2.clusterInstApi.cache,
+		RecvAppInstInfo:     apis2.appInstInfoApi,
+		RecvClusterInstInfo: apis2.clusterInstInfoApi,
+	}
+	dummyResponder2.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis2)
 
 	// tests

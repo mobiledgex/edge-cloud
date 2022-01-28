@@ -966,8 +966,13 @@ func TestShowCloudletsAppDeploy(t *testing.T) {
 	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
 
 	// without a responder, clusterInst create waits forever
-	_ = NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 
 	reduceInfoTimeouts(t, ctx, apis)
 
