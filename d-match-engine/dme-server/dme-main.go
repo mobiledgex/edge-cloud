@@ -99,11 +99,8 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 
 	// Only attempt to create a QOS priority session if qosSesAddr is populated.
 	if *qosSesAddr != "" && err == nil && reply.Status == dme.FindCloudletReply_FIND_FOUND {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration, "DefaultFlavor", app.DefaultFlavor)
-		app.Lock()
-		defer app.Unlock()
+		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration)
 		qos := app.QosSessionProfile
-		log.SpanLog(ctx, log.DebugLevelDmereq, "QOS profile defined for app", "app.QosSessionProfile", app.QosSessionProfile)
 		duration := app.QosSessionDuration
 		if duration == 0 {
 			duration = 24 * time.Hour // 24 hours - default value
@@ -150,35 +147,36 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			} else if protocol == "" {
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
 			} else {
+				var parseErrProfile error
+				var parseErrProtocol error
 				// Build a new QosPrioritySessionCreateRequest and populate fields.
 				qosReq := new(dme.QosPrioritySessionCreateRequest)
 				qosReq.IpApplicationServer = asAddr
 				qosReq.IpUserEquipment = ueAddr
 				qosReq.PortApplicationServer = asPort
-				qosReq.Profile, err = dme.ParseQosSessionProfile(qos)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelDmereq, "Failed to ParseQosSessionProfile", "err", err)
-				}
-				qosReq.ProtocolIn, err = dme.ParseQosSessionProtocol(protocol)
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelDmereq, "Failed to ParseQosSessionProtocol", "err", err)
-				}
+				qosReq.Profile, parseErrProfile = dme.ParseQosSessionProfile(qos)
+				qosReq.ProtocolIn, parseErrProtocol = dme.ParseQosSessionProtocol(protocol)
 				qosReq.SessionDuration = uint32(duration.Seconds())
-				log.SpanLog(ctx, log.DebugLevelDmereq, "TODO. SessionDuration", "duration", duration, "qosReq.SessionDuration", qosReq.SessionDuration)
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Built new qosReq", "qosReq", qosReq)
 
-				sesReply, sesErr := operatorApiGw.CreatePrioritySession(ctx, qosReq)
-				sesReplyToLog := *sesReply // Copy so we can redact session Id in log
-				sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-				log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession() returned", "sesReply", sesReplyToLog)
-				if sesErr != nil {
-					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+				if parseErrProfile != nil {
+					log.SpanLog(ctx, log.DebugLevelDmereq, "Failed to ParseQosSessionProfile", "err", parseErrProfile)
+				} else if parseErrProtocol != nil {
+					log.SpanLog(ctx, log.DebugLevelDmereq, "Failed to ParseQosSessionProtocol", "err", parseErrProtocol)
 				} else {
-					// Let the client know the session ID.
-					reply.Tags = make(map[string]string)
-					if sesReply.SessionId != "" {
-						reply.Tags[cloudcommon.TagPrioritySessionId] = sesReply.SessionId
-						reply.Tags[cloudcommon.TagQosProfileName] = qos
+					sesReply, sesErr := operatorApiGw.CreatePrioritySession(ctx, qosReq)
+					sesReplyToLog := *sesReply // Copy so we can redact session Id in log
+					sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession() returned", "sesReply", sesReplyToLog)
+					if sesErr != nil {
+						log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+					} else {
+						// Let the client know the session ID.
+						reply.Tags = make(map[string]string)
+						if sesReply.SessionId != "" {
+							reply.Tags[cloudcommon.TagPrioritySessionId] = sesReply.SessionId
+							reply.Tags[cloudcommon.TagQosProfileName] = qos
+						}
 					}
 				}
 			}
