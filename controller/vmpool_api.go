@@ -354,6 +354,10 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 
 func (s *VMPoolApi) UpdateFromInfo(ctx context.Context, in *edgeproto.VMPoolInfo) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Update VM pool from info", "info", in)
+
+	// publish the received info object on redis
+	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		vmPool := edgeproto.VMPool{}
 		if !s.store.STMGet(stm, &in.Key, &vmPool) {

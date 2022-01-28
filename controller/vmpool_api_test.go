@@ -29,6 +29,7 @@ func TestVMPoolApi(t *testing.T) {
 	testutil.InternalVMPoolTest(t, "cud", apis.vmPoolApi, testutil.VMPoolData)
 
 	testAddRemoveVM(t, ctx, apis)
+	testUpdateVMPool(t, ctx, apis)
 
 	dummy.Stop()
 }
@@ -160,4 +161,60 @@ func testAddRemoveVM(t *testing.T, ctx context.Context, apis *AllApis) {
 	cm1.Key.Name = "SomeNonExistentCloudlet"
 	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm1)
 	require.NotNil(t, err)
+}
+
+func testUpdateVMPool(t *testing.T, ctx context.Context, apis *AllApis) {
+	dummyResponder := DummyInfoResponder{
+		VMPoolCache:    &apis.vmPoolApi.cache,
+		RecvVMPoolInfo: apis.vmPoolInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
+	reduceInfoTimeouts(t, ctx, apis)
+
+	// create support data
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+
+	cl := testutil.CloudletData()[1]
+	vmp := testutil.VMPoolData[0]
+	cl.VmPool = vmp.Key.Name
+	cl.PlatformType = edgeproto.PlatformType_PLATFORM_TYPE_FAKE_VM_POOL
+	err := apis.cloudletApi.CreateCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+
+	// test adding vm to the pool
+	cm1 := edgeproto.VMPoolMember{}
+	cm1.Key = vmp.Key
+	cm1.Vm = edgeproto.VM{
+		Name: "vmX",
+		NetInfo: edgeproto.VMNetInfo{
+			ExternalIp: "192.168.1.111",
+			InternalIp: "192.168.100.111",
+		},
+	}
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm1)
+	require.Nil(t, err, "add vm to vm pool")
+
+	// simulate vmpool responder failure
+	dummyResponder.SetSimulateVMPoolUpdateFailure(true)
+	// test adding another vm to the pool, should fail
+	cm2 := edgeproto.VMPoolMember{}
+	cm2.Key = vmp.Key
+	cm2.Vm = edgeproto.VM{
+		Name: "vmY",
+		NetInfo: edgeproto.VMNetInfo{
+			ExternalIp: "192.168.1.121",
+			InternalIp: "192.168.100.121",
+		},
+	}
+	_, err = apis.vmPoolApi.AddVMPoolMember(ctx, &cm2)
+	require.NotNil(t, err, "crm failure")
+	require.Contains(t, err.Error(), "crm update VMPool failed")
+	dummyResponder.SetSimulateVMPoolUpdateFailure(false)
+
+	// clean up
+	_, err = apis.vmPoolApi.RemoveVMPoolMember(ctx, &cm1)
+	require.Nil(t, err, "remove vm from pool")
+	err = apis.cloudletApi.DeleteCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	testutil.InternalFlavorDelete(t, apis.flavorApi, testutil.FlavorData)
 }

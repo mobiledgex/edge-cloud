@@ -243,6 +243,10 @@ func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 		args = append(args, "--chefServerPath")
 		args = append(args, p.ChefServerPath)
 	}
+	if p.ThanosRecvAddr != "" {
+		args = append(args, "--thanosRecvAddr")
+		args = append(args, p.ThanosRecvAddr)
+	}
 
 	envs := p.GetEnv()
 	if options.RolesFile != "" {

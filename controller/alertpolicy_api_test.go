@@ -28,7 +28,13 @@ func TestAlertPolicyApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache, apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis)
 	// create supporting data
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)

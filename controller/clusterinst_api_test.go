@@ -35,8 +35,14 @@ func TestClusterInstApi(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	responder := NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
+
+	responder := &DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	responder.InitDummyInfoResponder()
 
 	reduceInfoTimeouts(t, ctx, apis)
 
@@ -223,6 +229,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context, apis *AllApis) {
 	settings.UpdateAppInstTimeout = edgeproto.Duration(1 * time.Second)
 	settings.DeleteAppInstTimeout = edgeproto.Duration(1 * time.Second)
 	settings.CloudletMaintenanceTimeout = edgeproto.Duration(2 * time.Second)
+	settings.UpdateVmPoolTimeout = edgeproto.Duration(1 * time.Second)
 
 	settings.Fields = []string{
 		edgeproto.SettingsFieldCreateAppInstTimeout,
@@ -232,6 +239,7 @@ func reduceInfoTimeouts(t *testing.T, ctx context.Context, apis *AllApis) {
 		edgeproto.SettingsFieldUpdateClusterInstTimeout,
 		edgeproto.SettingsFieldDeleteClusterInstTimeout,
 		edgeproto.SettingsFieldCloudletMaintenanceTimeout,
+		edgeproto.SettingsFieldUpdateVmPoolTimeout,
 	}
 	_, err = apis.settingsApi.UpdateSettings(ctx, settings)
 	require.Nil(t, err)
@@ -894,9 +902,14 @@ func TestDefaultMTCluster(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
 
+	dummyResponder := &DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis)
 
 	testutil.InternalFlavorTest(t, "cud", apis.flavorApi, testutil.FlavorData)

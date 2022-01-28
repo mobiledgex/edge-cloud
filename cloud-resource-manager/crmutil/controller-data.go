@@ -1621,6 +1621,8 @@ func (cd *ControllerData) UpdateVMPool(ctx context.Context, k interface{}) {
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "found vmpool", "vmpool", vmPool)
 
+	cd.UpdateVMPoolInfo(ctx, edgeproto.TrackedState_UPDATING, "")
+
 	changed, oldVMs, validateVMs := cd.markUpdateVMs(ctx, &vmPool)
 	if !changed {
 		return

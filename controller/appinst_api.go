@@ -213,7 +213,8 @@ func (s *AppInstApi) AutoDeleteAppInsts(ctx context.Context, dynInsts map[edgepr
 				err = nil
 				break
 			}
-			if err != nil && strings.Contains(err.Error(), ObjBusyDeletionMsg) {
+			if err != nil && (strings.Contains(err.Error(), ObjBusyDeletionMsg) ||
+				strings.Contains(err.Error(), ActionInProgressMsg)) {
 				spinTime = time.Since(start)
 				if spinTime > s.all.settingsApi.Get().DeleteAppInstTimeout.TimeDuration() {
 					log.SpanLog(ctx, log.DebugLevelApi, "Timeout while waiting for App", "appName", val.Key.AppKey.Name)
@@ -1205,7 +1206,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if cloudletRefsChanged {
 			s.all.cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
-		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		in.CreatedAt = dme.TimeToTimestamp(time.Now())
 
 		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_READY
@@ -1582,7 +1583,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 			}
 			cur.PowerState = powerState
 		}
-		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		cur.UpdatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})
@@ -1739,7 +1740,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if clusterInstReqd && clusterInst.ReservedBy != "" && clusterInst.ReservedBy == in.Key.AppKey.Organization {
 			clusterInst.ReservedBy = ""
-			clusterInst.ReservationEndedAt = cloudcommon.TimeToTimestamp(time.Now())
+			clusterInst.ReservationEndedAt = dme.TimeToTimestamp(time.Now())
 			s.all.clusterInstApi.store.STMPut(stm, &clusterInst)
 			reservationFreed = true
 		}
