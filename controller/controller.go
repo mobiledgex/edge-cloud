@@ -262,6 +262,9 @@ func startServices() error {
 
 	allApis.Start(ctx)
 
+	// Sync data from redis with controller cache
+	syncRedisData(ctx, allApis)
+
 	initDebug(ctx, &nodeMgr, allApis)
 
 	err = allApis.settingsApi.initDefaults(ctx)

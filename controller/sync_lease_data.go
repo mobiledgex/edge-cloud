@@ -121,11 +121,6 @@ func (s *SyncLeaseData) syncData() error {
 
 		err = s.allApis.controllerApi.registerController(ctx, leaseID)
 		log.SpanLog(ctx, log.DebugLevelInfo, "registered controller", "hostname", cloudcommon.Hostname(), "err", err)
-
-		// Sync alerts inside goroutine because if there are lots of alerts then it
-		// might hold up keepalive and the controller lease might expire
-		err = s.allApis.alertApi.syncSourceData(ctx)
-		log.SpanLog(ctx, log.DebugLevelInfo, "synced alerts", "err", err)
 		span.Finish()
 	}()
 	return nil

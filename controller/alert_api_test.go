@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -51,7 +52,7 @@ func TestAlertApi(t *testing.T) {
 	testCloudletInfo := testutil.CloudletInfoData[0]
 	testCloudletInfo.Key.Name = testCloudlet.Key.Name
 	insertCloudletInfo(ctx, apis, []edgeproto.CloudletInfo{testCloudletInfo})
-	getAlertsCount := func() (int, int) {
+	getAlertsCount := func() (int, int, int, int) {
 		count := 0
 		totalCount := 0
 		for _, data := range apis.alertApi.cache.Objs {
@@ -67,17 +68,45 @@ func TestAlertApi(t *testing.T) {
 			}
 			count++
 		}
-		return count, totalCount
+
+		redisCount := 0
+		redisTotalCount := 0
+		pattern := getAllAlertsKeyPattern()
+		alertKeys, err := redisClient.Keys(pattern).Result()
+		require.Nil(t, err, "get all alert keys")
+		for _, alertKey := range alertKeys {
+			alertVal, err := redisClient.Get(alertKey).Result()
+			require.Nil(t, err, "get alert val")
+			var obj edgeproto.Alert
+			err = json.Unmarshal([]byte(alertVal), &obj)
+			require.Nil(t, err, "parse alert from redis cache")
+			redisTotalCount++
+			if cloudletName, found := obj.Labels[edgeproto.CloudletKeyTagName]; !found ||
+				cloudletName != testCloudlet.Key.Name {
+				continue
+			}
+			if cloudletOrg, found := obj.Labels[edgeproto.CloudletKeyTagOrganization]; !found ||
+				cloudletOrg != testCloudlet.Key.Organization {
+				continue
+			}
+			redisCount++
+		}
+		return count, totalCount, redisCount, redisTotalCount
 	}
-	cloudletCount, totalCount := getAlertsCount()
+	cloudletCount, totalCount, redisCloudletCount, redisTotalCount := getAlertsCount()
 	require.Greater(t, cloudletCount, 0, "cloudlet alerts exists")
 	require.Greater(t, totalCount, 0, "alerts exists")
+	require.Greater(t, redisCloudletCount, 0, "redis cloudlet alerts exists")
+	require.Greater(t, redisTotalCount, 0, "redis alerts exists")
+	require.Equal(t, cloudletCount, redisCloudletCount, "redis is in sync with controller cache")
+	require.Equal(t, totalCount, redisTotalCount, "redis is in sync with controller cache")
 	err := apis.cloudletApi.DeleteCloudlet(&testCloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err, "delete cloudlet")
 	expectedTotalCount := totalCount - cloudletCount
-	cloudletCount, totalCount = getAlertsCount()
+	cloudletCount, totalCount, redisCloudletCount, redisTotalCount = getAlertsCount()
 	require.Equal(t, cloudletCount, 0, "cloudlet alerts should not exist")
 	require.Equal(t, totalCount, expectedTotalCount, "expected alerts should exist")
+	require.Equal(t, redisTotalCount, expectedTotalCount, "expected alerts should exist (redis)")
 
 	dummy.Stop()
 }

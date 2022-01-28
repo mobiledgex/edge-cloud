@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -13,24 +13,16 @@ import (
 )
 
 type AlertApi struct {
-	all         *AllApis
-	sync        *Sync
-	store       edgeproto.AlertStore
-	cache       edgeproto.AlertCache
-	sourceCache edgeproto.AlertCache // source of truth from crm/etc
+	all   *AllApis
+	sync  *Sync
+	cache edgeproto.AlertCache
 }
-
-var ControllerCreatedAlerts = "ControllerCreatedAlerts"
 
 func NewAlertApi(sync *Sync, all *AllApis) *AlertApi {
 	alertApi := AlertApi{}
 	alertApi.all = all
 	alertApi.sync = sync
-	alertApi.store = edgeproto.NewAlertStore(sync.store)
 	edgeproto.InitAlertCache(&alertApi.cache)
-	edgeproto.InitAlertCache(&alertApi.sourceCache)
-	alertApi.sourceCache.SetUpdatedCb(alertApi.StoreUpdate)
-	alertApi.sourceCache.SetDeletedCb(alertApi.StoreDelete)
 	sync.RegisterCache(&alertApi.cache)
 	return &alertApi
 }
@@ -101,6 +93,14 @@ func (s *AlertApi) setAlertMetadata(in *edgeproto.Alert) {
 	in.Labels["region"] = *region
 }
 
+func getAlertStoreKey(in *edgeproto.Alert) string {
+	return objstore.DbKeyString("Alert", in.GetKey())
+}
+
+func getAllAlertsKeyPattern() string {
+	return objstore.DbKeyPrefixString("Alert") + "/*"
+}
+
 func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// for now, only store needed alerts
 	name, ok := in.Labels["alertname"]
@@ -113,34 +113,29 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		return
 	}
 	s.setAlertMetadata(in)
-	// The CRM is the source of truth for Alerts.
-	// We keep a local copy (sourceCache) of all alerts sent by the CRM.
-	// If we lose the keep-alive lease with etcd and it deletes all these
-	// alerts, we can push them back again from the source cache once the
-	// keep-alive lease is reestablished.
-	// All alert changes must pass through the source cache before going
-	// to etcd.
-	s.sourceCache.Update(ctx, in, rev)
-	// Note that any further actions should done as part of StoreUpdate.
-	// This is because if the keep-alive is lost and we resync, then
-	// these additional actions should be performed again as part of StoreUpdate.
-}
 
-func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
-	_, err := s.store.Put(ctx, new, nil, objstore.WithLease(s.all.syncLeaseData.ControllerAliveLease()))
+	// Store alerts in controller managed cache and also in redis cache.
+	s.cache.Update(ctx, in, rev)
+	// Alerts are stored in redis cache, instead of etcd for the following reasons:
+	// * They are transient in nature, this causes etcd fragmentation and hinders scalability
+	// * It can be re-triggered/re-computed and hence it doesn't need a persistent storage
+	key := getAlertStoreKey(in)
+	val, err := json.Marshal(in)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to store alert in objstore", "key", new.GetKeyVal(), "err", err)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to marshal alert object", "key", in.GetKeyVal(), "err", err)
 		return
 	}
-	name, ok := new.Labels["alertname"]
-	if !ok {
+	_, err = redisClient.Set(key, val, 0).Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to store alert in rediscache", "key", in.GetKeyVal(), "err", err)
 		return
 	}
+
 	if name == cloudcommon.AlertAppInstDown {
-		state, ok := new.Labels[cloudcommon.AlertHealthCheckStatus]
+		state, ok := in.Labels[cloudcommon.AlertHealthCheckStatus]
 		if !ok {
 			log.SpanLog(ctx, log.DebugLevelNotify, "HealthCheck status not found",
-				"labels", new.Labels)
+				"labels", in.Labels)
 			return
 		}
 		hcState, err := strconv.Atoi(state)
@@ -149,64 +144,45 @@ func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
 				"state", state, "error", err)
 			return
 		}
-		s.appInstSetStateFromHealthCheckAlert(ctx, new, dme.HealthCheck(hcState))
+		s.appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck(hcState))
 	}
 }
 
 func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// Add a region label
 	in.Labels["region"] = *region
-	// Controller created alerts, so delete directly
-	_, ok := ctx.Value(ControllerCreatedAlerts).(*string)
-	if ok {
-		s.sourceCache.Delete(ctx, in, rev)
-		s.store.Delete(ctx, in, s.sync.syncWait)
-		// Reset HealthCheck state back to OK
-		name, ok := in.Labels["alertname"]
-		if ok && name == cloudcommon.AlertAppInstDown {
-			s.appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck_HEALTH_CHECK_OK)
-		}
-	} else {
-		s.sourceCache.DeleteCondFunc(ctx, in, rev, func(old *edgeproto.Alert) bool {
-			if old.NotifyId != in.NotifyId {
-				// already updated by another thread, don't delete
-				return false
-			}
-			return true
-		})
-	}
-	// Note that any further actions should done as part of StoreDelete.
-}
+	s.cache.Delete(ctx, in, rev)
 
-func (s *AlertApi) StoreDelete(ctx context.Context, in *edgeproto.Alert) {
-	buf := edgeproto.Alert{}
-	var foundAlert bool
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, in.GetKey(), &buf) {
-			return nil
-		}
-		if buf.NotifyId != in.NotifyId || buf.Controller != ControllerId {
-			// updated by another thread or controller
-			return nil
-		}
-		s.store.STMDel(stm, in.GetKey())
-		foundAlert = true
-		return nil
-	})
+	key := getAlertStoreKey(in)
+	_, err := redisClient.Del(key).Result()
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete Alert", "key", in.GetKeyVal(), "err", err)
+		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete alert redis failure", "key", in.GetKeyVal(), "err", err)
 	}
+
 	// Reset HealthCheck state back to OK
 	name, ok := in.Labels["alertname"]
-	if ok && foundAlert && name == cloudcommon.AlertAppInstDown {
+	if ok && name == cloudcommon.AlertAppInstDown {
 		s.appInstSetStateFromHealthCheckAlert(ctx, in, dme.HealthCheck_HEALTH_CHECK_OK)
 	}
 }
 
 func (s *AlertApi) Flush(ctx context.Context, notifyId int64) {
-	// Delete all data from sourceCache. This will trigger StoreDelete calls
-	// for every item.
-	s.sourceCache.Flush(ctx, notifyId)
+	// Delete all data from controller cache and redis cache
+	s.cache.Flush(ctx, notifyId)
+	pattern := getAllAlertsKeyPattern()
+	alertKeys, err := redisClient.Keys(pattern).Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelNotify, "notify flush alert redis failure", "err", err)
+		return
+	}
+	if len(alertKeys) > 0 {
+		_, err = redisClient.Del(alertKeys...).Result()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelNotify, "notify flush alert redis failure", "err", err)
+			return
+		}
+	}
+
 }
 
 func (s *AlertApi) Prune(ctx context.Context, keys map[edgeproto.AlertKey]struct{}) {}
@@ -236,8 +212,7 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		s.sourceCache.Delete(ctx, val, 0)
-		s.store.Delete(ctx, val, s.sync.syncWait)
+		s.Delete(ctx, val, 0)
 	}
 }
 
@@ -262,8 +237,7 @@ func (s *AlertApi) CleanupAppInstAlerts(ctx context.Context, key *edgeproto.AppI
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		s.sourceCache.Delete(ctx, val, 0)
-		s.store.Delete(ctx, val, s.sync.syncWait)
+		s.Delete(ctx, val, 0)
 	}
 }
 
@@ -292,25 +266,6 @@ func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		s.sourceCache.Delete(ctx, val, 0)
-		s.store.Delete(ctx, val, s.sync.syncWait)
+		s.Delete(ctx, val, 0)
 	}
-}
-
-func (s *AlertApi) syncSourceData(ctx context.Context) error {
-	// Note that we don't need to delete "stale" data, because
-	// if the lease expired, it will be deleted automatically.
-	alerts := make([]*edgeproto.Alert, 0)
-	s.sourceCache.Mux.Lock()
-	for _, data := range s.sourceCache.Objs {
-		alert := edgeproto.Alert{}
-		alert.DeepCopyIn(data.Obj)
-		alerts = append(alerts, &alert)
-	}
-	s.sourceCache.Mux.Unlock()
-
-	for _, alert := range alerts {
-		s.StoreUpdate(ctx, nil, alert)
-	}
-	return nil
 }

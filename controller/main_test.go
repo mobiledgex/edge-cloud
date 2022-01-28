@@ -54,12 +54,16 @@ func TestController(t *testing.T) {
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
 
+	redisSyncData := initRedisSyncData(t, ctx)
+
 	err := startServices()
 	defer stopServices()
 	require.Nil(t, err, "start")
 	apis := services.allApis
 
 	reduceInfoTimeouts(t, ctx, apis)
+
+	testRedisSync(t, ctx, apis, redisSyncData)
 
 	testservices.CheckNotifySendOrder(t, notify.ServerMgrOne.GetSendOrder())
 
@@ -139,7 +143,6 @@ func TestController(t *testing.T) {
 	if false {
 		CheckCloudletInfo(t, cloudletInfoClient, testutil.CloudletInfoData)
 	}
-	testKeepAliveRecovery(t, ctx, apis)
 
 	// test that delete checks disallow deletes of dependent objects
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &cloudletData[0])
@@ -344,66 +347,6 @@ func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, dat
 		show.AssertFound(t, &obj)
 	}
 	require.Equal(t, len(data), len(show.Data), "show count")
-}
-
-func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis) {
-	log.SpanLog(ctx, log.DebugLevelInfo, "testKeepAliveRecovery")
-	// already some alerts from non-crm sources
-	numPrevAlerts := len(apis.alertApi.cache.Objs)
-	require.Equal(t, 0, len(apis.alertApi.sourceCache.Objs))
-
-	// add some alerts from crm, will go into source cache
-	for _, alert := range testutil.AlertData {
-		apis.alertApi.Update(ctx, &alert, 0)
-	}
-	numCrmAlerts := len(testutil.AlertData)
-	totalAlerts := numPrevAlerts + numCrmAlerts
-	WaitForAlerts(t, apis, totalAlerts)
-	require.Equal(t, numCrmAlerts, len(apis.alertApi.sourceCache.Objs))
-	leaseID := apis.syncLeaseData.ControllerAliveLease()
-
-	log.SpanLog(ctx, log.DebugLevelInfo, "grab sync lease data lock")
-	// grab syncLeaseData lock to prevent it restoring any
-	// source data, so that we can verify data was flushed from etcd
-	apis.syncLeaseData.mux.Lock()
-
-	log.SpanLog(ctx, log.DebugLevelInfo, "revoke lease")
-	// revoke lease to simulate timed out keepalives
-	err := apis.syncLeaseData.sync.store.Revoke(ctx, apis.syncLeaseData.leaseID)
-	require.Nil(t, err)
-	// wait for lease timeout (so etcd KeepAlive function returns)
-	time.Sleep(time.Duration(leaseTimeoutSec) * time.Second)
-
-	// data should have been flushed from etcd
-	WaitForAlerts(t, apis, numPrevAlerts)
-	// data should still be in source cache
-	require.Equal(t, numCrmAlerts, len(apis.alertApi.sourceCache.Objs))
-
-	log.SpanLog(ctx, log.DebugLevelInfo, "release sync lease data lock")
-	// release sync lock
-	apis.syncLeaseData.mux.Unlock()
-	// alerts should be re-sync'd
-	WaitForAlerts(t, apis, totalAlerts)
-	// make sure there is a new lease ID
-	require.NotEqual(t, leaseID, apis.syncLeaseData.leaseID)
-
-	log.SpanLog(ctx, log.DebugLevelInfo, "delete alerts")
-	// delete alerts
-	for _, alert := range testutil.AlertData {
-		apis.alertApi.Delete(ctx, &alert, 0)
-	}
-	WaitForAlerts(t, apis, numPrevAlerts)
-	require.Equal(t, 0, len(apis.alertApi.sourceCache.Objs))
-}
-
-func WaitForAlerts(t *testing.T, apis *AllApis, count int) {
-	for i := 0; i < 10; i++ {
-		if len(apis.alertApi.cache.Objs) == count {
-			break
-		}
-		time.Sleep(20 * time.Millisecond)
-	}
-	require.Equal(t, count, len(apis.alertApi.cache.Objs), "timed out waiting for alerts")
 }
 
 func TestControllerRace(t *testing.T) {
@@ -640,4 +583,37 @@ func testFlavorDeleteChecks(t *testing.T, ctx context.Context, apis1, apis2 *All
 		err = nil
 	}
 	require.Nil(t, err)
+}
+
+type testRedisSyncData struct {
+	alertCount int
+}
+
+func initRedisSyncData(t *testing.T, ctx context.Context) *testRedisSyncData {
+	out := testRedisSyncData{}
+
+	// Store alerts in redis
+	for _, alert := range testutil.AlertData {
+		key := getAlertStoreKey(&alert)
+		val, err := json.Marshal(alert)
+		require.Nil(t, err, "marshal alert data")
+		_, err = redisClient.Set(key, val, 0).Result()
+		require.Nil(t, err, "add alert data to redis")
+	}
+	out.alertCount = len(testutil.AlertData)
+
+	return &out
+}
+
+func testRedisSync(t *testing.T, ctx context.Context, apis *AllApis, expectedData *testRedisSyncData) {
+	// ensure that alerts are synced from redis
+	alertCount := len(apis.alertApi.cache.Objs)
+	require.Equal(t, expectedData.alertCount, alertCount)
+
+	// ensure that flush deletes all the alerts from redis cache
+	apis.alertApi.Flush(ctx, 0)
+	pattern := getAllAlertsKeyPattern()
+	alertKeys, err := redisClient.Keys(pattern).Result()
+	require.Nil(t, err, "get all alert keys")
+	require.Equal(t, 0, len(alertKeys), "no alerts present")
 }
