@@ -97,7 +97,13 @@ func TestAppInstApi(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	responder := NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache, apis.appInstInfoApi, apis.clusterInstInfoApi)
+	responder := &DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	responder.InitDummyInfoResponder()
 
 	reduceInfoTimeouts(t, ctx, apis)
 
@@ -410,8 +416,13 @@ func TestAutoClusterInst(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := &DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 
 	reduceInfoTimeouts(t, ctx, apis)
 
