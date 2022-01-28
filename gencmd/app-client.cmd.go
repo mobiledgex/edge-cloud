@@ -868,6 +868,8 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.speed",
 	"cloudletlocation.timestamp",
 	"edgeeventscookie",
+	"qosresult",
+	"qoserrormsg",
 	"tags",
 }
 var FindCloudletReplyAliasArgs = []string{}
@@ -892,6 +894,8 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"cloudletlocation.timestamp":          "Timestamp",
 	"edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
+	"qosresult":                           "Result of QOS priority session creation attempt, one of NotAttempted, SessionCreated, SessionFailed",
+	"qoserrormsg":                         "Error message in case of QOS_SESSION_FAILED",
 	"tags":                                "_(optional)_ Vendor specific data",
 }
 var FindCloudletReplySpecialArgs = map[string]string{
@@ -1698,6 +1702,8 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.cloudletlocation.speed",
 	"newcloudlet.cloudletlocation.timestamp",
 	"newcloudlet.edgeeventscookie",
+	"newcloudlet.qosresult",
+	"newcloudlet.qoserrormsg",
 	"newcloudlet.tags",
 	"errormsg",
 	"tags",
@@ -1735,6 +1741,8 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.cloudletlocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"newcloudlet.cloudletlocation.timestamp":          "Timestamp",
 	"newcloudlet.edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
+	"newcloudlet.qosresult":                           "Result of QOS priority session creation attempt, one of NotAttempted, SessionCreated, SessionFailed",
+	"newcloudlet.qoserrormsg":                         "Error message in case of QOS_SESSION_FAILED",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
 	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
 	"tags":                                            "_(optional)_ Vendor specific data",
