@@ -168,14 +168,15 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 				qosReq.SessionDuration = uint32(duration.Seconds())
 				log.SpanLog(ctx, log.DebugLevelDmereq, "Built new qosReq", "qosReq", qosReq)
 				sesReply, sesErr := operatorApiGw.CreatePrioritySession(ctx, qosReq)
-				sesReplyToLog := *sesReply // Copy so we can redact session Id in log
-				sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-				log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession() returned", "sesReply", sesReplyToLog)
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
 					reply.QosResult = dme.FindCloudletReply_QOS_SESSION_FAILED
 					reply.QosErrorMsg = sesErr.Error()
 				} else {
+					sesReplyToLog := *sesReply // Copy so we can redact session Id in log
+					sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession() returned", "sesReply", sesReplyToLog)
+
 					// Let the client know the session ID.
 					reply.Tags = make(map[string]string)
 					if sesReply.SessionId != "" {
