@@ -1963,6 +1963,26 @@ func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey 
 
 	return clusterInstFound
 }
+
+func (cd *ControllerData) appInstIsActiveState(state edgeproto.TrackedState) bool {
+	isActive := false
+	switch state {
+	case edgeproto.TrackedState_CREATE_REQUESTED:
+		fallthrough
+	case edgeproto.TrackedState_CREATING:
+		fallthrough
+	case edgeproto.TrackedState_CREATING_DEPENDENCIES:
+		fallthrough
+	case edgeproto.TrackedState_READY:
+		fallthrough
+	case edgeproto.TrackedState_UPDATE_REQUESTED:
+		fallthrough
+	case edgeproto.TrackedState_UPDATING:
+		isActive = true
+	}
+	return isActive
+}
+
 func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
 
 	appInst := edgeproto.AppInst{}
@@ -1972,10 +1992,9 @@ func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgep
 	}
 	appInstFound := cd.AppInstCache.Get(&appInstKeyFilter, &appInst)
 	if appInstFound {
-		if appInst.State != edgeproto.TrackedState_READY {
-			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
-			appInstFound = false
-		}
+		isActive := cd.appInstIsActiveState(appInst.State)
+		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String(), "isActive", isActive)
+		appInstFound = isActive
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
 
