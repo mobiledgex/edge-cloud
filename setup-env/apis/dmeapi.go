@@ -23,23 +23,25 @@ import (
 )
 
 type dmeApiRequest struct {
-	Rcreq            dmeproto.RegisterClientRequest       `yaml:"registerclientrequest"`
-	Fcreq            dmeproto.FindCloudletRequest         `yaml:"findcloudletrequest"`
-	Pfcreq           dmeproto.PlatformFindCloudletRequest `yaml:"platformfindcloudletrequest"`
-	Vlreq            dmeproto.VerifyLocationRequest       `yaml:"verifylocationrequest"`
-	Glreq            dmeproto.GetLocationRequest          `yaml:"getlocationrequest"`
-	Dlreq            dmeproto.DynamicLocGroupRequest      `yaml:"dynamiclocgrouprequest"`
-	Aireq            dmeproto.AppInstListRequest          `yaml:"appinstlistrequest"`
-	Fqreq            dmeproto.FqdnListRequest             `yaml:"fqdnlistrequest"`
-	Qosreq           dmeproto.QosPositionRequest          `yaml:"qospositionrequest"`
-	AppOFqreq        dmeproto.AppOfficialFqdnRequest      `yaml:"appofficialfqdnrequest"`
-	Eereq            dmeproto.ClientEdgeEvent             `yaml:"clientedgeevent"`
-	TokenServerPath  string                               `yaml:"token-server-path"`
-	ErrorExpected    string                               `yaml:"error-expected"`
-	Repeat           int                                  `yaml:"repeat"`
-	CountPerInterval int                                  `yaml:"countperinterval"`
-	RunAtIntervalSec float64                              `yaml:"runatintervalsec"`
-	RunAtOffsetSec   float64                              `yaml:"runatoffsetsec"`
+	Rcreq            dmeproto.RegisterClientRequest           `yaml:"registerclientrequest"`
+	Fcreq            dmeproto.FindCloudletRequest             `yaml:"findcloudletrequest"`
+	Pfcreq           dmeproto.PlatformFindCloudletRequest     `yaml:"platformfindcloudletrequest"`
+	Qossescreatereq  dmeproto.QosPrioritySessionCreateRequest `yaml:"QosPrioritySessionCreateRequest"`
+	Qossesdeletereq  dmeproto.QosPrioritySessionDeleteRequest `yaml:"QosPrioritySessionDeleteRequest"`
+	Vlreq            dmeproto.VerifyLocationRequest           `yaml:"verifylocationrequest"`
+	Glreq            dmeproto.GetLocationRequest              `yaml:"getlocationrequest"`
+	Dlreq            dmeproto.DynamicLocGroupRequest          `yaml:"dynamiclocgrouprequest"`
+	Aireq            dmeproto.AppInstListRequest              `yaml:"appinstlistrequest"`
+	Fqreq            dmeproto.FqdnListRequest                 `yaml:"fqdnlistrequest"`
+	Qosreq           dmeproto.QosPositionRequest              `yaml:"qospositionrequest"`
+	AppOFqreq        dmeproto.AppOfficialFqdnRequest          `yaml:"appofficialfqdnrequest"`
+	Eereq            dmeproto.ClientEdgeEvent                 `yaml:"clientedgeevent"`
+	TokenServerPath  string                                   `yaml:"token-server-path"`
+	ErrorExpected    string                                   `yaml:"error-expected"`
+	Repeat           int                                      `yaml:"repeat"`
+	CountPerInterval int                                      `yaml:"countperinterval"`
+	RunAtIntervalSec float64                                  `yaml:"runatintervalsec"`
+	RunAtOffsetSec   float64                                  `yaml:"runatoffsetsec"`
 }
 
 type registration struct {
@@ -98,6 +100,30 @@ func (c *dmeRestClient) PlatformFindCloudlet(ctx context.Context, in *dmeproto.P
 		c.client, in, out)
 	if err != nil {
 		log.Printf("findcloudlet rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dmeRestClient) QosPrioritySessionCreate(ctx context.Context, in *dmeproto.QosPrioritySessionCreateRequest, opts ...grpc.CallOption) (*dmeproto.QosPrioritySessionReply, error) {
+	log.Printf("QosPrioritySessionCreate. in=%v, opts=%v", in, opts)
+	out := new(dmeproto.QosPrioritySessionReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/qosprioritysessioncreate",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("qosprioritysessioncreate rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dmeRestClient) QosPrioritySessionDelete(ctx context.Context, in *dmeproto.QosPrioritySessionDeleteRequest, opts ...grpc.CallOption) (*dmeproto.QosPrioritySessionDeleteReply, error) {
+	log.Printf("QosPrioritySessionDelete. in=%v, opts=%v", in, opts)
+	out := new(dmeproto.QosPrioritySessionDeleteReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/qosprioritysessiondelete",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("qosprioritysessiondelete rest API failed\n")
 		return nil, err
 	}
 	return out, nil
