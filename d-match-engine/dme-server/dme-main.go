@@ -37,6 +37,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 // Command line options
@@ -98,11 +99,10 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 
 	// Only attempt to create a QOS priority session if qosSesAddr is populated.
 	if *qosSesAddr != "" && err == nil && reply.Status == dme.FindCloudletReply_FIND_FOUND {
-		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration, "DefaultFlavor", app.DefaultFlavor)
 		app.Lock()
 		defer app.Unlock()
-		qos := operatorApiGw.LookupQosParm(app.QosSessionProfile)
-		log.SpanLog(ctx, log.DebugLevelDmereq, "QOS profile defined for app", "app.QosSessionProfile", app.QosSessionProfile)
+		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration)
+		qos := app.QosSessionProfile
 		duration := app.QosSessionDuration
 		if duration == 0 {
 			duration = 24 * time.Hour // 24 hours - default value
@@ -141,28 +141,61 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 			asPort := fmt.Sprintf("%d", port.InternalPort)
 
 			if qos == "QOS_NO_PRIORITY" {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "QOS_NO_PRIORITY specified. Will not create priority session")
+				msg := "QOS_NO_PRIORITY specified. Will not create priority session"
+				log.SpanLog(ctx, log.DebugLevelDmereq, msg)
+				reply.QosResult = dme.FindCloudletReply_QOS_NOT_ATTEMPTED
 			} else if ueAddr == "" {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "ip_user_equipment value not found in tags. Aborting.", "req.Tags", req.Tags)
+				msg := "ip_user_equipment value not found in tags"
+				log.SpanLog(ctx, log.DebugLevelDmereq, msg, "req.Tags", req.Tags)
+				reply.QosResult = dme.FindCloudletReply_QOS_SESSION_FAILED
+				reply.QosErrorMsg = msg
 			} else if asAddr == "" {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "Could not decode app inst FQDN. Aborting.", "reply.Fqdn", reply.Fqdn)
+				msg := "Could not decode app inst FQDN"
+				log.SpanLog(ctx, log.DebugLevelDmereq, msg, "reply.Fqdn", reply.Fqdn)
+				reply.QosResult = dme.FindCloudletReply_QOS_SESSION_FAILED
+				reply.QosErrorMsg = msg
 			} else if protocol == "" {
-				log.SpanLog(ctx, log.DebugLevelDmereq, "Unknown port protocol. Aborting.", "port.Proto", port.Proto)
+				msg := "Unknown port protocol."
+				log.SpanLog(ctx, log.DebugLevelDmereq, msg, "port.Proto", port.Proto)
+				reply.QosResult = dme.FindCloudletReply_QOS_SESSION_FAILED
+				reply.QosErrorMsg = msg
 			} else {
-				id, sesErr := operatorApiGw.CreatePrioritySession(ctx, ueAddr, asAddr, asPort, protocol, qos, int64(duration.Seconds()))
+				// Build a new QosPrioritySessionCreateRequest and populate fields.
+				qosReq := new(dme.QosPrioritySessionCreateRequest)
+				qosReq.IpApplicationServer = asAddr
+				qosReq.IpUserEquipment = ueAddr
+				qosReq.PortApplicationServer = asPort
+				qosReq.Profile, _ = dme.ParseQosSessionProfile(qos)
+				qosReq.ProtocolIn, _ = dme.ParseQosSessionProtocol(protocol)
+				qosReq.SessionDuration = uint32(duration.Seconds())
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Built new qosReq", "qosReq", qosReq)
+				sesReply, sesErr := operatorApiGw.CreatePrioritySession(ctx, qosReq)
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+					reply.QosResult = dme.FindCloudletReply_QOS_SESSION_FAILED
+					reply.QosErrorMsg = sesErr.Error()
+				} else {
+					sesReplyToLog := *sesReply // Copy so we can redact session Id in log
+					sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession() returned", "sesReply", sesReplyToLog)
+
+					// Let the client know the session ID.
+					reply.Tags = make(map[string]string)
+					if sesReply.SessionId != "" {
+						reply.Tags[cloudcommon.TagPrioritySessionId] = sesReply.SessionId
+						reply.Tags[cloudcommon.TagQosProfileName] = qos
+						reply.QosResult = dme.FindCloudletReply_QOS_SESSION_CREATED
+					} else {
+						msg := "No session ID received from QOS API server"
+						log.SpanLog(ctx, log.DebugLevelDmereq, msg)
+						reply.QosResult = dme.FindCloudletReply_QOS_SESSION_FAILED
+						reply.QosErrorMsg = msg
+					}
 				}
-				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id received", (len(id) > 0), "sesErr", sesErr)
-				// Let the client know the session ID.
-				reply.Tags = make(map[string]string)
-				if id != "" {
-					reply.Tags[cloudcommon.TagPrioritySessionId] = id
-					reply.Tags[cloudcommon.TagQosProfileName] = qos
-				}
-				// TODO: Store id for when this same connection calls DeletePrioritySession()
 			}
 		}
+	} else {
+		reply.QosResult = dme.FindCloudletReply_QOS_NOT_ATTEMPTED
 	}
 
 	log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
@@ -213,6 +246,60 @@ func (s *server) PlatformFindCloudlet(ctx context.Context, req *dme.PlatformFind
 	err, _ = dmecommon.FindCloudlet(ctx, &tokdata.AppKey, req.CarrierName, &tokdata.Location, reply, *edgeEventsCookieExpiration)
 	log.SpanLog(ctx, log.DebugLevelDmereq, "PlatformFindCloudletRequest returns", "reply", reply, "error", err)
 	return reply, err
+}
+
+func (s *server) QosPrioritySessionCreate(ctx context.Context, req *dme.QosPrioritySessionCreateRequest) (*dme.QosPrioritySessionReply, error) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "QosPrioritySessionCreate", "req", req)
+	reply := new(dme.QosPrioritySessionReply)
+	var appkey edgeproto.AppKey
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+	appkey.Organization = ckey.OrgName
+	appkey.Name = ckey.AppName
+	appkey.Version = ckey.AppVers
+	log.SpanLog(ctx, log.DebugLevelDmereq, "appkey", "appkey", appkey, "appkey.Name", appkey.Name)
+	if *qosSesAddr != "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "qosSesAddr defined", "qosSesAddr", qosSesAddr, "req", req)
+		sesReply, sesErr := operatorApiGw.CreatePrioritySession(ctx, req)
+		if sesErr != nil {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+			return nil, sesErr
+		}
+		reply = sesReply
+		sesReplyToLog := *sesReply // Copy so we can redact session Id in log
+		sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+		log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "sesReply", sesReplyToLog, "sesErr", sesErr)
+	}
+	return reply, nil
+}
+
+func (s *server) QosPrioritySessionDelete(ctx context.Context, req *dme.QosPrioritySessionDeleteRequest) (*dme.QosPrioritySessionDeleteReply, error) {
+	log.SpanLog(ctx, log.DebugLevelDmereq, "QosPrioritySessionDelete", "req", req)
+	reply := new(dme.QosPrioritySessionDeleteReply)
+	var appkey edgeproto.AppKey
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "No valid session cookie")
+	}
+	appkey.Organization = ckey.OrgName
+	appkey.Name = ckey.AppName
+	appkey.Version = ckey.AppVers
+	log.SpanLog(ctx, log.DebugLevelDmereq, "appkey", "appkey", appkey, "appkey.Name", appkey.Name)
+	if *qosSesAddr != "" {
+		log.SpanLog(ctx, log.DebugLevelDmereq, "qosSesAddr defined", "qosSesAddr", qosSesAddr, "req", req)
+		sesId := req.SessionId
+		log.SpanLog(ctx, log.DebugLevelDmereq, "QOS Priority Session will be deleted", "sesId", sesId)
+		sesReply, sesErr := operatorApiGw.DeletePrioritySession(ctx, req)
+		if sesErr != nil {
+			log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+			return nil, sesErr
+		}
+		log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.DeletePrioritySession() successful")
+		reply = sesReply
+	}
+	return reply, nil
 }
 
 func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dme.FqdnListReply, error) {

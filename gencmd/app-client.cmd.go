@@ -196,6 +196,120 @@ func PlatformFindCloudlets(c *cli.Command, data []distributed_match_engine.Platf
 	}
 }
 
+var QosPrioritySessionCreateCmd = &cli.Command{
+	Use:          "QosPrioritySessionCreate",
+	RequiredArgs: strings.Join(QosPrioritySessionCreateRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(QosPrioritySessionCreateRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(QosPrioritySessionCreateRequestAliasArgs, " "),
+	SpecialArgs:  &QosPrioritySessionCreateRequestSpecialArgs,
+	Comments:     QosPrioritySessionCreateRequestComments,
+	ReqData:      &distributed_match_engine.QosPrioritySessionCreateRequest{},
+	ReplyData:    &distributed_match_engine.QosPrioritySessionReply{},
+	Run:          runQosPrioritySessionCreate,
+}
+
+func runQosPrioritySessionCreate(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*distributed_match_engine.QosPrioritySessionCreateRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return QosPrioritySessionCreate(c, obj)
+}
+
+func QosPrioritySessionCreate(c *cli.Command, in *distributed_match_engine.QosPrioritySessionCreateRequest) error {
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := MatchEngineApiCmd.QosPrioritySessionCreate(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("QosPrioritySessionCreate failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func QosPrioritySessionCreates(c *cli.Command, data []distributed_match_engine.QosPrioritySessionCreateRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("QosPrioritySessionCreate %v\n", data[ii])
+		myerr := QosPrioritySessionCreate(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var QosPrioritySessionDeleteCmd = &cli.Command{
+	Use:          "QosPrioritySessionDelete",
+	RequiredArgs: strings.Join(QosPrioritySessionDeleteRequestRequiredArgs, " "),
+	OptionalArgs: strings.Join(QosPrioritySessionDeleteRequestOptionalArgs, " "),
+	AliasArgs:    strings.Join(QosPrioritySessionDeleteRequestAliasArgs, " "),
+	SpecialArgs:  &QosPrioritySessionDeleteRequestSpecialArgs,
+	Comments:     QosPrioritySessionDeleteRequestComments,
+	ReqData:      &distributed_match_engine.QosPrioritySessionDeleteRequest{},
+	ReplyData:    &distributed_match_engine.QosPrioritySessionDeleteReply{},
+	Run:          runQosPrioritySessionDelete,
+}
+
+func runQosPrioritySessionDelete(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*distributed_match_engine.QosPrioritySessionDeleteRequest)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return QosPrioritySessionDelete(c, obj)
+}
+
+func QosPrioritySessionDelete(c *cli.Command, in *distributed_match_engine.QosPrioritySessionDeleteRequest) error {
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := MatchEngineApiCmd.QosPrioritySessionDelete(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("QosPrioritySessionDelete failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func QosPrioritySessionDeletes(c *cli.Command, data []distributed_match_engine.QosPrioritySessionDeleteRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("QosPrioritySessionDelete %v\n", data[ii])
+		myerr := QosPrioritySessionDelete(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var VerifyLocationCmd = &cli.Command{
 	Use:          "VerifyLocation",
 	RequiredArgs: strings.Join(VerifyLocationRequestRequiredArgs, " "),
@@ -619,6 +733,8 @@ var MatchEngineApiCmds = []*cobra.Command{
 	RegisterClientCmd.GenCmd(),
 	FindCloudletCmd.GenCmd(),
 	PlatformFindCloudletCmd.GenCmd(),
+	QosPrioritySessionCreateCmd.GenCmd(),
+	QosPrioritySessionDeleteCmd.GenCmd(),
 	VerifyLocationCmd.GenCmd(),
 	GetLocationCmd.GenCmd(),
 	AddUserToGroupCmd.GenCmd(),
@@ -752,6 +868,8 @@ var FindCloudletReplyOptionalArgs = []string{
 	"cloudletlocation.speed",
 	"cloudletlocation.timestamp",
 	"edgeeventscookie",
+	"qosresult",
+	"qoserrormsg",
 	"tags",
 }
 var FindCloudletReplyAliasArgs = []string{}
@@ -776,9 +894,105 @@ var FindCloudletReplyComments = map[string]string{
 	"cloudletlocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"cloudletlocation.timestamp":          "Timestamp",
 	"edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
+	"qosresult":                           "Result of QOS priority session creation attempt, one of NotAttempted, SessionCreated, SessionFailed",
+	"qoserrormsg":                         "Error message in case of QOS_SESSION_FAILED",
 	"tags":                                "_(optional)_ Vendor specific data",
 }
 var FindCloudletReplySpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var QosPrioritySessionCreateRequestRequiredArgs = []string{}
+var QosPrioritySessionCreateRequestOptionalArgs = []string{
+	"ver",
+	"sessioncookie",
+	"sessionduration",
+	"ipuserequipment",
+	"ipapplicationserver",
+	"portuserequipment",
+	"portapplicationserver",
+	"protocolin",
+	"protocolout",
+	"profile",
+	"notificationuri",
+	"notificationauthtoken",
+	"tags",
+}
+var QosPrioritySessionCreateRequestAliasArgs = []string{}
+var QosPrioritySessionCreateRequestComments = map[string]string{
+	"ver":                   "API version _(hidden)_ Reserved for future use",
+	"sessioncookie":         "Session Cookie from RegisterClientRequest",
+	"sessionduration":       "_(optional)_ QOS Priority Session duration in seconds",
+	"ipuserequipment":       "IP address of mobile device",
+	"ipapplicationserver":   "IP address of the application server",
+	"portuserequipment":     "_(optional)_ A list of single ports or port ranges on the user equipment.",
+	"portapplicationserver": "_(optional)_ A list of single ports or port ranges on the application server",
+	"protocolin":            "_(optional)_ The used transport protocol for the uplink, one of Tcp, Udp, Any",
+	"protocolout":           "_(optional)_ The used transport protocol for the downlink, one of Tcp, Udp, Any",
+	"profile":               "QOS Priority Session profile name, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"notificationuri":       "_(optional)_ URI of the callback receiver. Allows asynchronous delivery of session related events.",
+	"notificationauthtoken": "_(optional)_ Authentification token for callback API",
+	"tags":                  "_(optional)_ Vendor specific data",
+}
+var QosPrioritySessionCreateRequestSpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var QosPrioritySessionReplyRequiredArgs = []string{}
+var QosPrioritySessionReplyOptionalArgs = []string{
+	"ver",
+	"sessionduration",
+	"profile",
+	"sessionid",
+	"startedat",
+	"expiresat",
+	"httpstatus",
+	"tags",
+}
+var QosPrioritySessionReplyAliasArgs = []string{}
+var QosPrioritySessionReplyComments = map[string]string{
+	"ver":             "API version _(hidden)_ Reserved for future use",
+	"sessionduration": "QOS Priority Session duration in seconds",
+	"profile":         "QOS Priority Session profile name, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"sessionid":       "Session ID in UUID format",
+	"startedat":       "Timestamp of session start in seconds since unix epoch",
+	"expiresat":       "Timestamp of session expiration if the session was not deleted in seconds since unix epoch",
+	"httpstatus":      "HTTP Status Code of call to operators API server.",
+	"tags":            "_(optional)_ Vendor specific data",
+}
+var QosPrioritySessionReplySpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var QosPrioritySessionDeleteRequestRequiredArgs = []string{}
+var QosPrioritySessionDeleteRequestOptionalArgs = []string{
+	"ver",
+	"sessioncookie",
+	"profile",
+	"sessionid",
+	"tags",
+}
+var QosPrioritySessionDeleteRequestAliasArgs = []string{}
+var QosPrioritySessionDeleteRequestComments = map[string]string{
+	"ver":           "API version _(hidden)_ Reserved for future use",
+	"sessioncookie": "Session Cookie from RegisterClientRequest",
+	"profile":       "QOS Priority Session profile name, one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL",
+	"sessionid":     "QOS Priority Session ID to be deleted",
+	"tags":          "_(optional)_ Vendor specific data",
+}
+var QosPrioritySessionDeleteRequestSpecialArgs = map[string]string{
+	"tags": "StringToString",
+}
+var QosPrioritySessionDeleteReplyRequiredArgs = []string{}
+var QosPrioritySessionDeleteReplyOptionalArgs = []string{
+	"ver",
+	"status",
+	"tags",
+}
+var QosPrioritySessionDeleteReplyAliasArgs = []string{}
+var QosPrioritySessionDeleteReplyComments = map[string]string{
+	"ver":    "API version _(hidden)_ Reserved for future use",
+	"status": "Status return., one of Unknown, Deleted, NotFound",
+	"tags":   "_(optional)_ Vendor specific data",
+}
+var QosPrioritySessionDeleteReplySpecialArgs = map[string]string{
 	"tags": "StringToString",
 }
 var VerifyLocationRequestRequiredArgs = []string{}
@@ -1488,6 +1702,8 @@ var ServerEdgeEventOptionalArgs = []string{
 	"newcloudlet.cloudletlocation.speed",
 	"newcloudlet.cloudletlocation.timestamp",
 	"newcloudlet.edgeeventscookie",
+	"newcloudlet.qosresult",
+	"newcloudlet.qoserrormsg",
 	"newcloudlet.tags",
 	"errormsg",
 	"tags",
@@ -1525,6 +1741,8 @@ var ServerEdgeEventComments = map[string]string{
 	"newcloudlet.cloudletlocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"newcloudlet.cloudletlocation.timestamp":          "Timestamp",
 	"newcloudlet.edgeeventscookie":                    "Session Cookie for specific EdgeEvents for specific AppInst",
+	"newcloudlet.qosresult":                           "Result of QOS priority session creation attempt, one of NotAttempted, SessionCreated, SessionFailed",
+	"newcloudlet.qoserrormsg":                         "Error message in case of QOS_SESSION_FAILED",
 	"newcloudlet.tags":                                "_(optional)_ Vendor specific data",
 	"errormsg":                                        "Error message if event_type is EVENT_ERROR",
 	"tags":                                            "_(optional)_ Vendor specific data",
