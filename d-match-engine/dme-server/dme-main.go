@@ -99,6 +99,8 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 
 	// Only attempt to create a QOS priority session if qosSesAddr is populated.
 	if *qosSesAddr != "" && err == nil && reply.Status == dme.FindCloudletReply_FIND_FOUND {
+		app.Lock()
+		defer app.Unlock()
 		log.SpanLog(ctx, log.DebugLevelDmereq, "FindCloudlet returned app", "QosSessionProfile", app.QosSessionProfile, "QosSessionDuration", app.QosSessionDuration)
 		qos := app.QosSessionProfile
 		duration := app.QosSessionDuration
