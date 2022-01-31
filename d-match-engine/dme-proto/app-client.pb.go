@@ -93,6 +93,74 @@ func (ReplyStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_bb90079a337be67f, []int{1}
 }
 
+type QosSessionProfile int32
+
+const (
+	// Specifies that no priority session should be created
+	QosSessionProfile_QOS_NO_PRIORITY QosSessionProfile = 0
+	// Corresponds to a specific set of network parameters for low latency that will be
+	// negotiated with the network provider in advance
+	QosSessionProfile_QOS_LOW_LATENCY QosSessionProfile = 1
+	// Downlink traffic from AppInst to client is prioritized up to 20Mbps
+	QosSessionProfile_QOS_THROUGHPUT_DOWN_S QosSessionProfile = 2
+	// Downlink traffic from AppInst to client is prioritized up to 50Mbps
+	QosSessionProfile_QOS_THROUGHPUT_DOWN_M QosSessionProfile = 3
+	// Downlink traffic from AppInst to client is prioritized up to 100Mbps
+	QosSessionProfile_QOS_THROUGHPUT_DOWN_L QosSessionProfile = 4
+)
+
+var QosSessionProfile_name = map[int32]string{
+	0: "QOS_NO_PRIORITY",
+	1: "QOS_LOW_LATENCY",
+	2: "QOS_THROUGHPUT_DOWN_S",
+	3: "QOS_THROUGHPUT_DOWN_M",
+	4: "QOS_THROUGHPUT_DOWN_L",
+}
+
+var QosSessionProfile_value = map[string]int32{
+	"QOS_NO_PRIORITY":       0,
+	"QOS_LOW_LATENCY":       1,
+	"QOS_THROUGHPUT_DOWN_S": 2,
+	"QOS_THROUGHPUT_DOWN_M": 3,
+	"QOS_THROUGHPUT_DOWN_L": 4,
+}
+
+func (x QosSessionProfile) String() string {
+	return proto.EnumName(QosSessionProfile_name, int32(x))
+}
+
+func (QosSessionProfile) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{2}
+}
+
+type QosSessionProtocol int32
+
+const (
+	QosSessionProtocol_TCP QosSessionProtocol = 0
+	QosSessionProtocol_UDP QosSessionProtocol = 1
+	QosSessionProtocol_ANY QosSessionProtocol = 2
+)
+
+var QosSessionProtocol_name = map[int32]string{
+	0: "TCP",
+	1: "UDP",
+	2: "ANY",
+}
+
+var QosSessionProtocol_value = map[string]int32{
+	"TCP": 0,
+	"UDP": 1,
+	"ANY": 2,
+}
+
+func (x QosSessionProtocol) String() string {
+	return proto.EnumName(QosSessionProtocol_name, int32(x))
+}
+
+func (QosSessionProtocol) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{3}
+}
+
 type FindCloudletReply_FindStatus int32
 
 const (
@@ -121,6 +189,62 @@ func (FindCloudletReply_FindStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_bb90079a337be67f, []int{4, 0}
 }
 
+type FindCloudletReply_QosSessionResult int32
+
+const (
+	FindCloudletReply_QOS_NOT_ATTEMPTED   FindCloudletReply_QosSessionResult = 0
+	FindCloudletReply_QOS_SESSION_CREATED FindCloudletReply_QosSessionResult = 1
+	FindCloudletReply_QOS_SESSION_FAILED  FindCloudletReply_QosSessionResult = 2
+)
+
+var FindCloudletReply_QosSessionResult_name = map[int32]string{
+	0: "QOS_NOT_ATTEMPTED",
+	1: "QOS_SESSION_CREATED",
+	2: "QOS_SESSION_FAILED",
+}
+
+var FindCloudletReply_QosSessionResult_value = map[string]int32{
+	"QOS_NOT_ATTEMPTED":   0,
+	"QOS_SESSION_CREATED": 1,
+	"QOS_SESSION_FAILED":  2,
+}
+
+func (x FindCloudletReply_QosSessionResult) String() string {
+	return proto.EnumName(FindCloudletReply_QosSessionResult_name, int32(x))
+}
+
+func (FindCloudletReply_QosSessionResult) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{4, 1}
+}
+
+type QosPrioritySessionDeleteReply_DeleteStatus int32
+
+const (
+	QosPrioritySessionDeleteReply_QDEL_UNKNOWN   QosPrioritySessionDeleteReply_DeleteStatus = 0
+	QosPrioritySessionDeleteReply_QDEL_DELETED   QosPrioritySessionDeleteReply_DeleteStatus = 1
+	QosPrioritySessionDeleteReply_QDEL_NOT_FOUND QosPrioritySessionDeleteReply_DeleteStatus = 2
+)
+
+var QosPrioritySessionDeleteReply_DeleteStatus_name = map[int32]string{
+	0: "QDEL_UNKNOWN",
+	1: "QDEL_DELETED",
+	2: "QDEL_NOT_FOUND",
+}
+
+var QosPrioritySessionDeleteReply_DeleteStatus_value = map[string]int32{
+	"QDEL_UNKNOWN":   0,
+	"QDEL_DELETED":   1,
+	"QDEL_NOT_FOUND": 2,
+}
+
+func (x QosPrioritySessionDeleteReply_DeleteStatus) String() string {
+	return proto.EnumName(QosPrioritySessionDeleteReply_DeleteStatus_name, int32(x))
+}
+
+func (QosPrioritySessionDeleteReply_DeleteStatus) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{8, 0}
+}
+
 // Status of the reply
 type VerifyLocationReply_TowerStatus int32
 
@@ -147,7 +271,7 @@ func (x VerifyLocationReply_TowerStatus) String() string {
 }
 
 func (VerifyLocationReply_TowerStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{6, 0}
+	return fileDescriptor_bb90079a337be67f, []int{10, 0}
 }
 
 type VerifyLocationReply_GPSLocationStatus int32
@@ -190,7 +314,7 @@ func (x VerifyLocationReply_GPSLocationStatus) String() string {
 }
 
 func (VerifyLocationReply_GPSLocationStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{6, 1}
+	return fileDescriptor_bb90079a337be67f, []int{10, 1}
 }
 
 // Status of the reply
@@ -220,7 +344,7 @@ func (x GetLocationReply_LocStatus) String() string {
 }
 
 func (GetLocationReply_LocStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{8, 0}
+	return fileDescriptor_bb90079a337be67f, []int{12, 0}
 }
 
 // Status of the reply
@@ -249,7 +373,7 @@ func (x AppInstListReply_AIStatus) String() string {
 }
 
 func (AppInstListReply_AIStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{12, 0}
+	return fileDescriptor_bb90079a337be67f, []int{16, 0}
 }
 
 // Status of the reply
@@ -278,7 +402,7 @@ func (x FqdnListReply_FLStatus) String() string {
 }
 
 func (FqdnListReply_FLStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{15, 0}
+	return fileDescriptor_bb90079a337be67f, []int{19, 0}
 }
 
 type AppOfficialFqdnReply_AOFStatus int32
@@ -306,7 +430,7 @@ func (x AppOfficialFqdnReply_AOFStatus) String() string {
 }
 
 func (AppOfficialFqdnReply_AOFStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{17, 0}
+	return fileDescriptor_bb90079a337be67f, []int{21, 0}
 }
 
 // Use Secure communication or Open with the group
@@ -335,7 +459,7 @@ func (x DynamicLocGroupRequest_DlgCommType) String() string {
 }
 
 func (DynamicLocGroupRequest_DlgCommType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{18, 0}
+	return fileDescriptor_bb90079a337be67f, []int{22, 0}
 }
 
 type ClientEdgeEvent_ClientEventType int32
@@ -372,7 +496,7 @@ func (x ClientEdgeEvent_ClientEventType) String() string {
 }
 
 func (ClientEdgeEvent_ClientEventType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{25, 0}
+	return fileDescriptor_bb90079a337be67f, []int{29, 0}
 }
 
 type ServerEdgeEvent_ServerEventType int32
@@ -418,7 +542,7 @@ func (x ServerEdgeEvent_ServerEventType) String() string {
 }
 
 func (ServerEdgeEvent_ServerEventType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{26, 0}
+	return fileDescriptor_bb90079a337be67f, []int{30, 0}
 }
 
 type RegisterClientRequest struct {
@@ -731,6 +855,10 @@ type FindCloudletReply struct {
 	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation,proto3" json:"cloudlet_location,omitempty"`
 	// Session Cookie for specific EdgeEvents for specific AppInst
 	EdgeEventsCookie string `protobuf:"bytes,6,opt,name=edge_events_cookie,json=edgeEventsCookie,proto3" json:"edge_events_cookie,omitempty"`
+	// Result of QOS priority session creation attempt
+	QosResult FindCloudletReply_QosSessionResult `protobuf:"varint,7,opt,name=qos_result,json=qosResult,proto3,enum=distributed_match_engine.FindCloudletReply_QosSessionResult" json:"qos_result,omitempty"`
+	// Error message in case of QOS_SESSION_FAILED
+	QosErrorMsg string `protobuf:"bytes,8,opt,name=qos_error_msg,json=qosErrorMsg,proto3" json:"qos_error_msg,omitempty"`
 	// _(optional)_ Vendor specific data
 	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
@@ -770,6 +898,256 @@ func (m *FindCloudletReply) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_FindCloudletReply proto.InternalMessageInfo
+
+type QosPrioritySessionCreateRequest struct {
+	//
+	// API version
+	//
+	// _(hidden)_ Reserved for future use
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	//
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
+	//
+	// _(optional)_ QOS Priority Session duration in seconds
+	SessionDuration uint32 `protobuf:"varint,3,opt,name=session_duration,json=sessionDuration,proto3" json:"session_duration,omitempty"`
+	//
+	// IP address of mobile device
+	IpUserEquipment string `protobuf:"bytes,4,opt,name=ip_user_equipment,json=ipUserEquipment,proto3" json:"ip_user_equipment,omitempty"`
+	//
+	// IP address of the application server
+	IpApplicationServer string `protobuf:"bytes,5,opt,name=ip_application_server,json=ipApplicationServer,proto3" json:"ip_application_server,omitempty"`
+	//
+	// _(optional)_ A list of single ports or port ranges on the user equipment.
+	PortUserEquipment string `protobuf:"bytes,6,opt,name=port_user_equipment,json=portUserEquipment,proto3" json:"port_user_equipment,omitempty"`
+	//
+	// _(optional)_ A list of single ports or port ranges on the application server
+	PortApplicationServer string `protobuf:"bytes,7,opt,name=port_application_server,json=portApplicationServer,proto3" json:"port_application_server,omitempty"`
+	//
+	// _(optional)_ The used transport protocol for the uplink
+	ProtocolIn QosSessionProtocol `protobuf:"varint,8,opt,name=protocol_in,json=protocolIn,proto3,enum=distributed_match_engine.QosSessionProtocol" json:"protocol_in,omitempty"`
+	//
+	// _(optional)_ The used transport protocol for the downlink
+	ProtocolOut QosSessionProtocol `protobuf:"varint,9,opt,name=protocol_out,json=protocolOut,proto3,enum=distributed_match_engine.QosSessionProtocol" json:"protocol_out,omitempty"`
+	//
+	// QOS Priority Session profile name
+	Profile QosSessionProfile `protobuf:"varint,10,opt,name=profile,proto3,enum=distributed_match_engine.QosSessionProfile" json:"profile,omitempty"`
+	//
+	//  _(optional)_ URI of the callback receiver. Allows asynchronous delivery of session related events.
+	NotificationUri string `protobuf:"bytes,11,opt,name=notification_uri,json=notificationUri,proto3" json:"notification_uri,omitempty"`
+	//
+	// _(optional)_ Authentification token for callback API
+	NotificationAuthToken string `protobuf:"bytes,12,opt,name=notification_auth_token,json=notificationAuthToken,proto3" json:"notification_auth_token,omitempty"`
+	//
+	// _(optional)_ Vendor specific data
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *QosPrioritySessionCreateRequest) Reset()         { *m = QosPrioritySessionCreateRequest{} }
+func (m *QosPrioritySessionCreateRequest) String() string { return proto.CompactTextString(m) }
+func (*QosPrioritySessionCreateRequest) ProtoMessage()    {}
+func (*QosPrioritySessionCreateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{5}
+}
+func (m *QosPrioritySessionCreateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QosPrioritySessionCreateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QosPrioritySessionCreateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QosPrioritySessionCreateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QosPrioritySessionCreateRequest.Merge(m, src)
+}
+func (m *QosPrioritySessionCreateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QosPrioritySessionCreateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QosPrioritySessionCreateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QosPrioritySessionCreateRequest proto.InternalMessageInfo
+
+type QosPrioritySessionReply struct {
+	//
+	// API version
+	//
+	// _(hidden)_ Reserved for future use
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	//
+	// QOS Priority Session duration in seconds
+	SessionDuration uint32 `protobuf:"varint,2,opt,name=session_duration,json=sessionDuration,proto3" json:"session_duration,omitempty"`
+	//
+	// QOS Priority Session profile name
+	Profile QosSessionProfile `protobuf:"varint,3,opt,name=profile,proto3,enum=distributed_match_engine.QosSessionProfile" json:"profile,omitempty"`
+	//
+	// Session ID in UUID format
+	SessionId string `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	//
+	// Timestamp of session start in seconds since unix epoch
+	StartedAt uint32 `protobuf:"varint,5,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	//
+	// Timestamp of session expiration if the session was not deleted in seconds since unix epoch
+	ExpiresAt uint32 `protobuf:"varint,6,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
+	//
+	// HTTP Status Code of call to operator's API server.
+	HttpStatus uint32 `protobuf:"varint,7,opt,name=http_status,json=httpStatus,proto3" json:"http_status,omitempty"`
+	//
+	// _(optional)_ Vendor specific data
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *QosPrioritySessionReply) Reset()         { *m = QosPrioritySessionReply{} }
+func (m *QosPrioritySessionReply) String() string { return proto.CompactTextString(m) }
+func (*QosPrioritySessionReply) ProtoMessage()    {}
+func (*QosPrioritySessionReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{6}
+}
+func (m *QosPrioritySessionReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QosPrioritySessionReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QosPrioritySessionReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QosPrioritySessionReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QosPrioritySessionReply.Merge(m, src)
+}
+func (m *QosPrioritySessionReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *QosPrioritySessionReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_QosPrioritySessionReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QosPrioritySessionReply proto.InternalMessageInfo
+
+type QosPrioritySessionDeleteRequest struct {
+	//
+	// API version
+	//
+	// _(hidden)_ Reserved for future use
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	//
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
+	//
+	// QOS Priority Session profile name
+	Profile QosSessionProfile `protobuf:"varint,3,opt,name=profile,proto3,enum=distributed_match_engine.QosSessionProfile" json:"profile,omitempty"`
+	//
+	// QOS Priority Session ID to be deleted
+	SessionId string `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	//
+	// _(optional)_ Vendor specific data
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *QosPrioritySessionDeleteRequest) Reset()         { *m = QosPrioritySessionDeleteRequest{} }
+func (m *QosPrioritySessionDeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*QosPrioritySessionDeleteRequest) ProtoMessage()    {}
+func (*QosPrioritySessionDeleteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{7}
+}
+func (m *QosPrioritySessionDeleteRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QosPrioritySessionDeleteRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QosPrioritySessionDeleteRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QosPrioritySessionDeleteRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QosPrioritySessionDeleteRequest.Merge(m, src)
+}
+func (m *QosPrioritySessionDeleteRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QosPrioritySessionDeleteRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QosPrioritySessionDeleteRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QosPrioritySessionDeleteRequest proto.InternalMessageInfo
+
+type QosPrioritySessionDeleteReply struct {
+	//
+	// API version
+	//
+	// _(hidden)_ Reserved for future use
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Status return.
+	Status QosPrioritySessionDeleteReply_DeleteStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.QosPrioritySessionDeleteReply_DeleteStatus" json:"status,omitempty"`
+	//
+	// _(optional)_ Vendor specific data
+	Tags                 map[string]string `protobuf:"bytes,100,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *QosPrioritySessionDeleteReply) Reset()         { *m = QosPrioritySessionDeleteReply{} }
+func (m *QosPrioritySessionDeleteReply) String() string { return proto.CompactTextString(m) }
+func (*QosPrioritySessionDeleteReply) ProtoMessage()    {}
+func (*QosPrioritySessionDeleteReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb90079a337be67f, []int{8}
+}
+func (m *QosPrioritySessionDeleteReply) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QosPrioritySessionDeleteReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QosPrioritySessionDeleteReply.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QosPrioritySessionDeleteReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QosPrioritySessionDeleteReply.Merge(m, src)
+}
+func (m *QosPrioritySessionDeleteReply) XXX_Size() int {
+	return m.Size()
+}
+func (m *QosPrioritySessionDeleteReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_QosPrioritySessionDeleteReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QosPrioritySessionDeleteReply proto.InternalMessageInfo
 
 type VerifyLocationRequest struct {
 	//
@@ -811,7 +1189,7 @@ func (m *VerifyLocationRequest) Reset()         { *m = VerifyLocationRequest{} }
 func (m *VerifyLocationRequest) String() string { return proto.CompactTextString(m) }
 func (*VerifyLocationRequest) ProtoMessage()    {}
 func (*VerifyLocationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{5}
+	return fileDescriptor_bb90079a337be67f, []int{9}
 }
 func (m *VerifyLocationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -863,7 +1241,7 @@ func (m *VerifyLocationReply) Reset()         { *m = VerifyLocationReply{} }
 func (m *VerifyLocationReply) String() string { return proto.CompactTextString(m) }
 func (*VerifyLocationReply) ProtoMessage()    {}
 func (*VerifyLocationReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{6}
+	return fileDescriptor_bb90079a337be67f, []int{10}
 }
 func (m *VerifyLocationReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -913,7 +1291,7 @@ func (m *GetLocationRequest) Reset()         { *m = GetLocationRequest{} }
 func (m *GetLocationRequest) String() string { return proto.CompactTextString(m) }
 func (*GetLocationRequest) ProtoMessage()    {}
 func (*GetLocationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{7}
+	return fileDescriptor_bb90079a337be67f, []int{11}
 }
 func (m *GetLocationRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -966,7 +1344,7 @@ func (m *GetLocationReply) Reset()         { *m = GetLocationReply{} }
 func (m *GetLocationReply) String() string { return proto.CompactTextString(m) }
 func (*GetLocationReply) ProtoMessage()    {}
 func (*GetLocationReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{8}
+	return fileDescriptor_bb90079a337be67f, []int{12}
 }
 func (m *GetLocationReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1024,7 +1402,7 @@ func (m *AppInstListRequest) Reset()         { *m = AppInstListRequest{} }
 func (m *AppInstListRequest) String() string { return proto.CompactTextString(m) }
 func (*AppInstListRequest) ProtoMessage()    {}
 func (*AppInstListRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{9}
+	return fileDescriptor_bb90079a337be67f, []int{13}
 }
 func (m *AppInstListRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1075,7 +1453,7 @@ func (m *Appinstance) Reset()         { *m = Appinstance{} }
 func (m *Appinstance) String() string { return proto.CompactTextString(m) }
 func (*Appinstance) ProtoMessage()    {}
 func (*Appinstance) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{10}
+	return fileDescriptor_bb90079a337be67f, []int{14}
 }
 func (m *Appinstance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1124,7 +1502,7 @@ func (m *CloudletLocation) Reset()         { *m = CloudletLocation{} }
 func (m *CloudletLocation) String() string { return proto.CompactTextString(m) }
 func (*CloudletLocation) ProtoMessage()    {}
 func (*CloudletLocation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{11}
+	return fileDescriptor_bb90079a337be67f, []int{15}
 }
 func (m *CloudletLocation) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1172,7 +1550,7 @@ func (m *AppInstListReply) Reset()         { *m = AppInstListReply{} }
 func (m *AppInstListReply) String() string { return proto.CompactTextString(m) }
 func (*AppInstListReply) ProtoMessage()    {}
 func (*AppInstListReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{12}
+	return fileDescriptor_bb90079a337be67f, []int{16}
 }
 func (m *AppInstListReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1220,7 +1598,7 @@ func (m *FqdnListRequest) Reset()         { *m = FqdnListRequest{} }
 func (m *FqdnListRequest) String() string { return proto.CompactTextString(m) }
 func (*FqdnListRequest) ProtoMessage()    {}
 func (*FqdnListRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{13}
+	return fileDescriptor_bb90079a337be67f, []int{17}
 }
 func (m *FqdnListRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1269,7 +1647,7 @@ func (m *AppFqdn) Reset()         { *m = AppFqdn{} }
 func (m *AppFqdn) String() string { return proto.CompactTextString(m) }
 func (*AppFqdn) ProtoMessage()    {}
 func (*AppFqdn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{14}
+	return fileDescriptor_bb90079a337be67f, []int{18}
 }
 func (m *AppFqdn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1317,7 +1695,7 @@ func (m *FqdnListReply) Reset()         { *m = FqdnListReply{} }
 func (m *FqdnListReply) String() string { return proto.CompactTextString(m) }
 func (*FqdnListReply) ProtoMessage()    {}
 func (*FqdnListReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{15}
+	return fileDescriptor_bb90079a337be67f, []int{19}
 }
 func (m *FqdnListReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1367,7 +1745,7 @@ func (m *AppOfficialFqdnRequest) Reset()         { *m = AppOfficialFqdnRequest{}
 func (m *AppOfficialFqdnRequest) String() string { return proto.CompactTextString(m) }
 func (*AppOfficialFqdnRequest) ProtoMessage()    {}
 func (*AppOfficialFqdnRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{16}
+	return fileDescriptor_bb90079a337be67f, []int{20}
 }
 func (m *AppOfficialFqdnRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1421,7 +1799,7 @@ func (m *AppOfficialFqdnReply) Reset()         { *m = AppOfficialFqdnReply{} }
 func (m *AppOfficialFqdnReply) String() string { return proto.CompactTextString(m) }
 func (*AppOfficialFqdnReply) ProtoMessage()    {}
 func (*AppOfficialFqdnReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{17}
+	return fileDescriptor_bb90079a337be67f, []int{21}
 }
 func (m *AppOfficialFqdnReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1474,7 +1852,7 @@ func (m *DynamicLocGroupRequest) Reset()         { *m = DynamicLocGroupRequest{}
 func (m *DynamicLocGroupRequest) String() string { return proto.CompactTextString(m) }
 func (*DynamicLocGroupRequest) ProtoMessage()    {}
 func (*DynamicLocGroupRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{18}
+	return fileDescriptor_bb90079a337be67f, []int{22}
 }
 func (m *DynamicLocGroupRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1526,7 +1904,7 @@ func (m *DynamicLocGroupReply) Reset()         { *m = DynamicLocGroupReply{} }
 func (m *DynamicLocGroupReply) String() string { return proto.CompactTextString(m) }
 func (*DynamicLocGroupReply) ProtoMessage()    {}
 func (*DynamicLocGroupReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{19}
+	return fileDescriptor_bb90079a337be67f, []int{23}
 }
 func (m *DynamicLocGroupReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1569,7 +1947,7 @@ func (m *QosPosition) Reset()         { *m = QosPosition{} }
 func (m *QosPosition) String() string { return proto.CompactTextString(m) }
 func (*QosPosition) ProtoMessage()    {}
 func (*QosPosition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{20}
+	return fileDescriptor_bb90079a337be67f, []int{24}
 }
 func (m *QosPosition) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1614,7 +1992,7 @@ func (m *BandSelection) Reset()         { *m = BandSelection{} }
 func (m *BandSelection) String() string { return proto.CompactTextString(m) }
 func (*BandSelection) ProtoMessage()    {}
 func (*BandSelection) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{21}
+	return fileDescriptor_bb90079a337be67f, []int{25}
 }
 func (m *BandSelection) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1669,7 +2047,7 @@ func (m *QosPositionRequest) Reset()         { *m = QosPositionRequest{} }
 func (m *QosPositionRequest) String() string { return proto.CompactTextString(m) }
 func (*QosPositionRequest) ProtoMessage()    {}
 func (*QosPositionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{22}
+	return fileDescriptor_bb90079a337be67f, []int{26}
 }
 func (m *QosPositionRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1722,7 +2100,7 @@ func (m *QosPositionKpiResult) Reset()         { *m = QosPositionKpiResult{} }
 func (m *QosPositionKpiResult) String() string { return proto.CompactTextString(m) }
 func (*QosPositionKpiResult) ProtoMessage()    {}
 func (*QosPositionKpiResult) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{23}
+	return fileDescriptor_bb90079a337be67f, []int{27}
 }
 func (m *QosPositionKpiResult) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1772,7 +2150,7 @@ func (m *QosPositionKpiReply) Reset()         { *m = QosPositionKpiReply{} }
 func (m *QosPositionKpiReply) String() string { return proto.CompactTextString(m) }
 func (*QosPositionKpiReply) ProtoMessage()    {}
 func (*QosPositionKpiReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{24}
+	return fileDescriptor_bb90079a337be67f, []int{28}
 }
 func (m *QosPositionKpiReply) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1835,7 +2213,7 @@ func (m *ClientEdgeEvent) Reset()         { *m = ClientEdgeEvent{} }
 func (m *ClientEdgeEvent) String() string { return proto.CompactTextString(m) }
 func (*ClientEdgeEvent) ProtoMessage()    {}
 func (*ClientEdgeEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{25}
+	return fileDescriptor_bb90079a337be67f, []int{29}
 }
 func (m *ClientEdgeEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1895,7 +2273,7 @@ func (m *ServerEdgeEvent) Reset()         { *m = ServerEdgeEvent{} }
 func (m *ServerEdgeEvent) String() string { return proto.CompactTextString(m) }
 func (*ServerEdgeEvent) ProtoMessage()    {}
 func (*ServerEdgeEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bb90079a337be67f, []int{26}
+	return fileDescriptor_bb90079a337be67f, []int{30}
 }
 func (m *ServerEdgeEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1927,7 +2305,11 @@ var xxx_messageInfo_ServerEdgeEvent proto.InternalMessageInfo
 func init() {
 	proto.RegisterEnum("distributed_match_engine.IDTypes", IDTypes_name, IDTypes_value)
 	proto.RegisterEnum("distributed_match_engine.ReplyStatus", ReplyStatus_name, ReplyStatus_value)
+	proto.RegisterEnum("distributed_match_engine.QosSessionProfile", QosSessionProfile_name, QosSessionProfile_value)
+	proto.RegisterEnum("distributed_match_engine.QosSessionProtocol", QosSessionProtocol_name, QosSessionProtocol_value)
 	proto.RegisterEnum("distributed_match_engine.FindCloudletReply_FindStatus", FindCloudletReply_FindStatus_name, FindCloudletReply_FindStatus_value)
+	proto.RegisterEnum("distributed_match_engine.FindCloudletReply_QosSessionResult", FindCloudletReply_QosSessionResult_name, FindCloudletReply_QosSessionResult_value)
+	proto.RegisterEnum("distributed_match_engine.QosPrioritySessionDeleteReply_DeleteStatus", QosPrioritySessionDeleteReply_DeleteStatus_name, QosPrioritySessionDeleteReply_DeleteStatus_value)
 	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_TowerStatus", VerifyLocationReply_TowerStatus_name, VerifyLocationReply_TowerStatus_value)
 	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_GPSLocationStatus", VerifyLocationReply_GPSLocationStatus_name, VerifyLocationReply_GPSLocationStatus_value)
 	proto.RegisterEnum("distributed_match_engine.GetLocationReply_LocStatus", GetLocationReply_LocStatus_name, GetLocationReply_LocStatus_value)
@@ -1947,6 +2329,14 @@ func init() {
 	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.PlatformFindCloudletRequest.TagsEntry")
 	proto.RegisterType((*FindCloudletReply)(nil), "distributed_match_engine.FindCloudletReply")
 	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.FindCloudletReply.TagsEntry")
+	proto.RegisterType((*QosPrioritySessionCreateRequest)(nil), "distributed_match_engine.QosPrioritySessionCreateRequest")
+	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.QosPrioritySessionCreateRequest.TagsEntry")
+	proto.RegisterType((*QosPrioritySessionReply)(nil), "distributed_match_engine.QosPrioritySessionReply")
+	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.QosPrioritySessionReply.TagsEntry")
+	proto.RegisterType((*QosPrioritySessionDeleteRequest)(nil), "distributed_match_engine.QosPrioritySessionDeleteRequest")
+	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.QosPrioritySessionDeleteRequest.TagsEntry")
+	proto.RegisterType((*QosPrioritySessionDeleteReply)(nil), "distributed_match_engine.QosPrioritySessionDeleteReply")
+	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.QosPrioritySessionDeleteReply.TagsEntry")
 	proto.RegisterType((*VerifyLocationRequest)(nil), "distributed_match_engine.VerifyLocationRequest")
 	proto.RegisterMapType((map[string]string)(nil), "distributed_match_engine.VerifyLocationRequest.TagsEntry")
 	proto.RegisterType((*VerifyLocationReply)(nil), "distributed_match_engine.VerifyLocationReply")
@@ -1990,202 +2380,243 @@ func init() {
 func init() { proto.RegisterFile("app-client.proto", fileDescriptor_bb90079a337be67f) }
 
 var fileDescriptor_bb90079a337be67f = []byte{
-	// 3118 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5a, 0xdd, 0x8f, 0xdb, 0xc6,
-	0x11, 0x0f, 0xf5, 0x71, 0x27, 0x8d, 0xee, 0x83, 0xb7, 0x77, 0x76, 0x14, 0x39, 0xbe, 0x3a, 0x4a,
-	0x82, 0x38, 0x97, 0xc6, 0x76, 0xce, 0x71, 0x9d, 0xb8, 0xf9, 0x28, 0x23, 0xf1, 0xee, 0x68, 0x4b,
-	0x94, 0x42, 0xe9, 0xec, 0xb8, 0x2d, 0x40, 0xd0, 0xe4, 0x1e, 0x8f, 0x38, 0x89, 0xa4, 0x49, 0xea,
-	0xec, 0x7b, 0x28, 0x50, 0x34, 0x05, 0x8a, 0xa0, 0x08, 0x8a, 0xa2, 0x45, 0x81, 0x00, 0x05, 0x0a,
-	0xf4, 0xb1, 0x40, 0x81, 0xbe, 0xb4, 0x7f, 0x42, 0x1b, 0xf4, 0xa9, 0x40, 0x9f, 0x8a, 0xf6, 0xa1,
-	0x0d, 0x8a, 0xf6, 0x3f, 0x68, 0xd1, 0xb7, 0x62, 0x97, 0xa4, 0x44, 0x52, 0x3c, 0x59, 0x8a, 0xe5,
-	0x00, 0x79, 0x23, 0x67, 0x77, 0x76, 0x66, 0x67, 0x7e, 0x33, 0xbb, 0x3b, 0xbb, 0xc0, 0x2a, 0xb6,
-	0xfd, 0xaa, 0xda, 0x33, 0xb0, 0xe9, 0x5d, 0xb2, 0x1d, 0xcb, 0xb3, 0x50, 0x59, 0x33, 0x5c, 0xcf,
-	0x31, 0xee, 0x0d, 0x3c, 0xac, 0xc9, 0x7d, 0xc5, 0x53, 0x0f, 0x65, 0x6c, 0xea, 0x86, 0x89, 0x2b,
-	0xcf, 0xea, 0x96, 0xa5, 0xf7, 0xf0, 0x65, 0xc5, 0x36, 0x2e, 0x2b, 0xa6, 0x69, 0x79, 0x8a, 0x67,
-	0x58, 0xa6, 0xeb, 0xf3, 0x55, 0x8a, 0x3d, 0x4b, 0x0d, 0x3e, 0x57, 0x15, 0xdb, 0x56, 0xad, 0x7e,
-	0xdf, 0x32, 0x7d, 0x42, 0xf5, 0x67, 0x59, 0x38, 0x23, 0x61, 0xdd, 0x70, 0x3d, 0xec, 0xd4, 0xa8,
-	0x30, 0x09, 0xdf, 0x1f, 0x60, 0xd7, 0x43, 0x2c, 0x64, 0x8f, 0xb1, 0x53, 0x66, 0x2e, 0x30, 0x17,
-	0x97, 0x25, 0xf2, 0x89, 0x9e, 0x81, 0x82, 0xe5, 0xe8, 0xb2, 0xa9, 0xf4, 0x71, 0x39, 0x73, 0x81,
-	0xb9, 0x58, 0x94, 0x16, 0x2d, 0x47, 0x17, 0x95, 0x3e, 0x26, 0x4d, 0x8a, 0x6d, 0xfb, 0x4d, 0x59,
-	0xbf, 0x49, 0xb1, 0xed, 0x68, 0xd3, 0x31, 0x76, 0xdc, 0x72, 0x6e, 0xd8, 0x74, 0x1b, 0x3b, 0x2e,
-	0x7a, 0x0e, 0x96, 0x54, 0xc5, 0x71, 0x0c, 0xec, 0xf8, 0x9c, 0x79, 0xda, 0x5c, 0x0a, 0x68, 0x94,
-	0xfb, 0x3c, 0x80, 0x32, 0xf0, 0x0e, 0x65, 0xcf, 0x3a, 0xc2, 0x66, 0x79, 0x81, 0x76, 0x28, 0x12,
-	0x4a, 0x97, 0x10, 0xd0, 0x0b, 0xb0, 0x32, 0x30, 0x8d, 0xfb, 0x03, 0x2c, 0x1b, 0x9a, 0xec, 0x9d,
-	0xd8, 0xb8, 0x5c, 0xa0, 0x5d, 0x96, 0x7c, 0xaa, 0xa0, 0x75, 0x4f, 0x6c, 0x8c, 0xce, 0x41, 0x71,
-	0xd8, 0xab, 0x5c, 0xa4, 0x1d, 0x0a, 0x61, 0x07, 0xd4, 0x84, 0x9c, 0xa7, 0xe8, 0x6e, 0x59, 0xbb,
-	0x90, 0xbd, 0x58, 0xda, 0x7e, 0xf3, 0xd2, 0x69, 0x46, 0xbe, 0x94, 0x6a, 0xa6, 0x4b, 0x5d, 0x45,
-	0x77, 0x79, 0xd3, 0x73, 0x4e, 0x24, 0x3a, 0x4c, 0xe5, 0x3a, 0x14, 0x87, 0x24, 0x62, 0xc3, 0x23,
-	0x7c, 0x42, 0x6d, 0x58, 0x94, 0xc8, 0x27, 0xda, 0x80, 0xfc, 0xb1, 0xd2, 0x1b, 0x84, 0x06, 0xf4,
-	0x7f, 0x6e, 0x64, 0xde, 0x60, 0x6e, 0xe6, 0x0a, 0x8b, 0x6c, 0x41, 0x5a, 0x54, 0x71, 0xaf, 0x27,
-	0x1b, 0x5a, 0xf5, 0xbb, 0x59, 0x58, 0x4f, 0x4a, 0xb4, 0x7b, 0x27, 0x29, 0x6e, 0x79, 0x1b, 0x16,
-	0x5c, 0x4f, 0xf1, 0x06, 0x2e, 0x1d, 0x73, 0x65, 0xfb, 0xc5, 0x49, 0x53, 0xb0, 0x7b, 0x27, 0x1d,
-	0xda, 0x59, 0x0a, 0x98, 0xd0, 0x8b, 0xb0, 0xe2, 0x62, 0xd7, 0x35, 0x2c, 0x53, 0x56, 0x2d, 0xeb,
-	0xc8, 0x08, 0x1d, 0xb8, 0x1c, 0x50, 0x6b, 0x94, 0x88, 0x2e, 0x02, 0x4b, 0x7d, 0x20, 0xbb, 0xd8,
-	0x39, 0xc6, 0x8e, 0x3c, 0x70, 0x8c, 0xc0, 0x9d, 0x2b, 0x94, 0xde, 0xa1, 0xe4, 0x7d, 0xc7, 0x48,
-	0xf1, 0x49, 0xfe, 0x51, 0x3e, 0x59, 0x48, 0xf8, 0xe4, 0x56, 0xcc, 0x27, 0xd7, 0xa7, 0xf7, 0x89,
-	0xdd, 0x3b, 0x99, 0x9b, 0x47, 0xaa, 0x9f, 0x66, 0x60, 0x7d, 0xc7, 0x30, 0xb5, 0x5a, 0xcf, 0x1a,
-	0x68, 0x3d, 0x3c, 0x21, 0x32, 0xc6, 0x6d, 0x98, 0x49, 0xb3, 0x61, 0x12, 0xef, 0xd9, 0x71, 0xbc,
-	0x7f, 0x03, 0x96, 0x74, 0xdb, 0x95, 0x7b, 0x96, 0x4a, 0x43, 0x98, 0x9a, 0xb8, 0xb4, 0x7d, 0xfe,
-	0x74, 0x0b, 0x34, 0x2c, 0x55, 0x2a, 0xe9, 0xb6, 0xdb, 0x08, 0x38, 0xa6, 0xb7, 0x5d, 0xca, 0xd4,
-	0xe6, 0x89, 0xe6, 0x02, 0x5b, 0x1c, 0xa1, 0xf9, 0x57, 0x19, 0x38, 0xd7, 0xee, 0x29, 0xde, 0x81,
-	0xe5, 0xf4, 0xbf, 0x68, 0x93, 0x92, 0x2e, 0x14, 0x1e, 0x41, 0x12, 0xc9, 0x05, 0x5d, 0x28, 0xcd,
-	0x4f, 0x23, 0x9d, 0x98, 0xcd, 0xde, 0x3d, 0xdd, 0x66, 0x13, 0xe6, 0x30, 0x3f, 0xdc, 0x7d, 0x98,
-	0x83, 0xb5, 0xb8, 0x80, 0xf4, 0xc0, 0x17, 0x13, 0x81, 0xff, 0xb5, 0x69, 0x7d, 0x4d, 0xa2, 0x84,
-	0x50, 0x12, 0x99, 0x00, 0x41, 0xee, 0xe0, 0xbe, 0x66, 0x06, 0x36, 0xa4, 0xdf, 0xe8, 0x3a, 0xe4,
-	0x6d, 0xcb, 0xf1, 0x48, 0xea, 0x26, 0xa6, 0x79, 0xee, 0x74, 0x11, 0x9c, 0x6d, 0xb7, 0x2d, 0xc7,
-	0x93, 0xfc, 0xfe, 0xe8, 0x26, 0xac, 0xa9, 0x81, 0xc0, 0x11, 0x9a, 0xf3, 0xd3, 0xa0, 0x99, 0x0d,
-	0xf9, 0x86, 0x90, 0xfe, 0x2a, 0x20, 0xac, 0xe9, 0x58, 0xc6, 0xc7, 0xd8, 0xf4, 0xdc, 0x10, 0x0f,
-	0x7e, 0xd2, 0x60, 0x49, 0x0b, 0x4f, 0x1b, 0x02, 0x48, 0x08, 0x31, 0x67, 0x5e, 0x9b, 0xc5, 0x28,
-	0x73, 0x73, 0x21, 0x07, 0x30, 0x32, 0x30, 0x62, 0x61, 0x69, 0x47, 0x10, 0xeb, 0xf2, 0xbe, 0x78,
-	0x4b, 0x6c, 0xdd, 0x11, 0xd9, 0xa7, 0xd0, 0x0a, 0x00, 0xa5, 0xec, 0xb4, 0xf6, 0xc5, 0x3a, 0xcb,
-	0xa0, 0x35, 0x58, 0xa6, 0xff, 0x62, 0xab, 0xeb, 0x93, 0x32, 0xd5, 0xff, 0x64, 0xe0, 0xcc, 0x6d,
-	0xec, 0x18, 0x07, 0x27, 0xa1, 0x1d, 0xbe, 0x1c, 0xf9, 0xe7, 0x22, 0xb0, 0xc7, 0x54, 0x6d, 0x32,
-	0x48, 0x10, 0x72, 0xfe, 0x02, 0xb0, 0x72, 0x1c, 0x4e, 0xc7, 0x8f, 0xba, 0xa9, 0x57, 0xde, 0x54,
-	0x33, 0xcc, 0x33, 0x57, 0x2d, 0xb0, 0x8b, 0xa3, 0x5c, 0xf5, 0xd1, 0x02, 0xac, 0x27, 0x25, 0xa6,
-	0x07, 0xe0, 0xb7, 0x61, 0xc9, 0xb3, 0x1e, 0x60, 0x47, 0x8e, 0x85, 0xe1, 0x0c, 0x13, 0xa1, 0x98,
-	0x23, 0x23, 0x04, 0x91, 0x58, 0xf2, 0x46, 0x3f, 0xc8, 0x82, 0xf5, 0xa8, 0x2b, 0x42, 0x21, 0x59,
-	0x2a, 0xe4, 0xdd, 0xd9, 0x84, 0xec, 0xb6, 0x3b, 0x21, 0x21, 0x10, 0xb5, 0x16, 0xf1, 0x59, 0x20,
-	0xf0, 0x3a, 0x94, 0x63, 0x02, 0x15, 0x55, 0x1d, 0x38, 0x8a, 0x7a, 0x22, 0x1f, 0xf5, 0x29, 0x0e,
-	0x18, 0xe9, 0x4c, 0x84, 0x89, 0x0b, 0x5a, 0x6f, 0xf5, 0xa7, 0x5f, 0x72, 0x52, 0xe7, 0x3f, 0xaf,
-	0x98, 0x3b, 0x84, 0x52, 0xc4, 0x96, 0x24, 0xa4, 0xba, 0xad, 0x3b, 0xbc, 0x14, 0x89, 0xba, 0x0b,
-	0xf0, 0x6c, 0xad, 0x25, 0x8a, 0x7c, 0xad, 0xcb, 0xd7, 0xe5, 0x6e, 0x4b, 0xee, 0xb4, 0xf9, 0x9a,
-	0xb0, 0x23, 0xd0, 0x9f, 0x3b, 0xbc, 0xc4, 0x32, 0xe8, 0x05, 0xb8, 0x20, 0xb6, 0xba, 0xf2, 0xc4,
-	0x5e, 0x99, 0xea, 0xbf, 0x19, 0x58, 0x1b, 0xb3, 0x28, 0x5a, 0x85, 0x52, 0xa3, 0x55, 0x8b, 0x88,
-	0x63, 0x61, 0x89, 0x10, 0x6e, 0xf3, 0x12, 0x65, 0x67, 0x19, 0x74, 0x1e, 0x9e, 0x21, 0x94, 0xa6,
-	0xd0, 0x69, 0x72, 0xdd, 0xda, 0x9e, 0xdc, 0xe1, 0x9a, 0xbc, 0x5c, 0x6b, 0xed, 0x8b, 0x5d, 0xe9,
-	0x2e, 0x9b, 0x41, 0x9b, 0x50, 0x89, 0x35, 0xb7, 0xba, 0x7b, 0xbc, 0x34, 0x6c, 0xcf, 0x86, 0xec,
-	0x52, 0x8b, 0x6b, 0x0a, 0xe2, 0x6e, 0xd8, 0x20, 0xd3, 0xce, 0x6c, 0x8e, 0x4c, 0x2f, 0xb5, 0x39,
-	0x18, 0x8e, 0xcd, 0xa3, 0x0a, 0x9c, 0x25, 0x3d, 0x78, 0x49, 0x6a, 0x11, 0xbb, 0x70, 0xfb, 0xdd,
-	0xbd, 0x96, 0x24, 0x7c, 0x93, 0xaf, 0xb3, 0x0b, 0x68, 0x1d, 0x56, 0x47, 0x6d, 0x54, 0x32, 0xbb,
-	0x58, 0xfd, 0x7e, 0x06, 0xd0, 0xee, 0x28, 0x13, 0x7f, 0x11, 0x19, 0xe8, 0x66, 0x0c, 0x4c, 0x13,
-	0xd6, 0xb4, 0x71, 0xbd, 0xe6, 0x99, 0x12, 0x72, 0x6c, 0x7e, 0x94, 0x12, 0x7e, 0x9b, 0x05, 0x36,
-	0x26, 0x2e, 0x3d, 0x1f, 0x34, 0x12, 0x0b, 0xf2, 0xeb, 0x53, 0x2a, 0x4f, 0xc2, 0xa0, 0x61, 0xa9,
-	0x89, 0xe5, 0x78, 0x0a, 0x5b, 0x6d, 0x40, 0x9e, 0x66, 0x0c, 0x1a, 0x9e, 0x39, 0xc9, 0xff, 0x41,
-	0x7b, 0xc0, 0x9a, 0xd8, 0x7b, 0x60, 0x39, 0x47, 0x33, 0xae, 0xbc, 0xab, 0x01, 0xdb, 0x30, 0x97,
-	0xef, 0xc5, 0x7c, 0x31, 0xcb, 0x74, 0xe6, 0x16, 0xd5, 0x5f, 0x87, 0xe2, 0xd0, 0x34, 0xe3, 0x21,
-	0xb6, 0x0c, 0x45, 0x42, 0x08, 0x97, 0xd1, 0x15, 0x00, 0xf2, 0x5b, 0xe7, 0x45, 0x12, 0x6f, 0x99,
-	0xea, 0xdf, 0x32, 0x80, 0x38, 0xdb, 0x16, 0x4c, 0xd7, 0x6b, 0x18, 0xee, 0x97, 0x64, 0x03, 0xbf,
-	0x01, 0xf9, 0x9e, 0xd1, 0x37, 0x3c, 0xba, 0xc1, 0x59, 0x96, 0xfc, 0x9f, 0xe9, 0xc3, 0x62, 0x7c,
-	0xbe, 0xf3, 0x0c, 0x8b, 0x3c, 0xbb, 0x30, 0x0a, 0x8b, 0xbf, 0x30, 0x50, 0xe2, 0x6c, 0xdb, 0x30,
-	0x5d, 0x4f, 0x31, 0xd5, 0x78, 0x15, 0x80, 0x39, 0xbd, 0x0a, 0x90, 0x89, 0x57, 0x01, 0xe6, 0xba,
-	0xed, 0x8c, 0xd6, 0x28, 0xf2, 0xf1, 0x1a, 0xc5, 0x4c, 0xbb, 0xc8, 0xea, 0x87, 0x19, 0x60, 0x6b,
-	0xc9, 0x8d, 0x68, 0xd2, 0xff, 0xcc, 0xb8, 0xff, 0x9f, 0x87, 0xe5, 0xe1, 0xbe, 0x37, 0x52, 0x29,
-	0x59, 0x0a, 0x89, 0xa9, 0x20, 0xc9, 0xce, 0x0c, 0x92, 0x0a, 0x14, 0x48, 0x67, 0x62, 0xf6, 0x60,
-	0x6d, 0x1e, 0xfe, 0x23, 0x01, 0x96, 0x94, 0x91, 0x57, 0xdc, 0x72, 0x9e, 0xda, 0xf0, 0xc5, 0x89,
-	0x36, 0x0c, 0x7b, 0x4b, 0x31, 0xd6, 0xea, 0xff, 0x32, 0xc0, 0xc6, 0x00, 0x95, 0x9e, 0xf8, 0x6e,
-	0x25, 0x12, 0xdf, 0xd5, 0x29, 0xe1, 0x49, 0x32, 0x05, 0x27, 0x24, 0xf2, 0xde, 0x1e, 0x14, 0x43,
-	0x63, 0x91, 0xdd, 0x0e, 0xd1, 0x7d, 0xeb, 0xf4, 0xf1, 0x92, 0x3e, 0x92, 0x46, 0xcc, 0xd3, 0xa7,
-	0xaf, 0x31, 0xa5, 0xe6, 0x96, 0xbe, 0xde, 0x84, 0x42, 0x38, 0x41, 0xb2, 0x1f, 0xe0, 0x04, 0x79,
-	0x5f, 0xac, 0xf3, 0x3b, 0x82, 0xc8, 0xd7, 0xfd, 0x63, 0x00, 0x27, 0xc8, 0x9d, 0xfd, 0x5a, 0x8d,
-	0xef, 0x74, 0x58, 0x06, 0x95, 0x60, 0x91, 0x13, 0xe4, 0x1d, 0x4e, 0x68, 0xb0, 0x99, 0xea, 0x5f,
-	0x19, 0x58, 0xdd, 0xb9, 0xaf, 0x99, 0x73, 0xc9, 0x5c, 0xbb, 0x31, 0x53, 0x4c, 0xf0, 0x4f, 0x42,
-	0xe2, 0x3c, 0x73, 0x47, 0x96, 0xcd, 0x8d, 0x72, 0xc7, 0x2f, 0x19, 0x58, 0xe4, 0x6c, 0x9b, 0x88,
-	0xfb, 0x9c, 0x79, 0x23, 0x1a, 0xea, 0xd9, 0x78, 0xa8, 0x6f, 0x40, 0x9e, 0xa4, 0x11, 0x3f, 0x7d,
-	0x14, 0x25, 0xff, 0x07, 0x5d, 0x81, 0x0d, 0xc5, 0xd4, 0x1c, 0xcb, 0xd0, 0x64, 0x5b, 0x51, 0x8f,
-	0x14, 0x1d, 0x47, 0xf3, 0x04, 0x0a, 0xda, 0xda, 0x7e, 0x13, 0x19, 0xa7, 0xfa, 0xaf, 0x0c, 0x2c,
-	0x8f, 0x0c, 0x92, 0x8e, 0xfd, 0x77, 0xa0, 0x48, 0x34, 0xf4, 0xe5, 0x65, 0xa7, 0x48, 0x57, 0x64,
-	0x40, 0x89, 0xcc, 0x6a, 0x87, 0x6a, 0xb5, 0x37, 0x8c, 0x9d, 0x1c, 0x8d, 0x9d, 0x2b, 0xd3, 0xf8,
-	0x86, 0x9e, 0xe0, 0x1b, 0x89, 0xc0, 0xe1, 0x63, 0x3e, 0x7e, 0x6d, 0xda, 0x71, 0xe6, 0x89, 0xf5,
-	0x50, 0x27, 0x7a, 0xe4, 0x6d, 0x24, 0xb1, 0xbe, 0xd3, 0x88, 0x63, 0x7d, 0xa7, 0x11, 0x62, 0xfd,
-	0xe7, 0x19, 0x38, 0xcb, 0xd9, 0x76, 0xeb, 0xe0, 0xc0, 0x50, 0x0d, 0xa5, 0x47, 0x4d, 0xf4, 0xb8,
-	0x90, 0x7f, 0xfc, 0x24, 0x2b, 0xc6, 0x0c, 0x7a, 0x63, 0xa2, 0x57, 0x53, 0x54, 0x9f, 0x63, 0x25,
-	0x32, 0x0b, 0x1b, 0x63, 0x32, 0xd2, 0xe1, 0xb8, 0x05, 0x6b, 0x04, 0x8e, 0x56, 0xd0, 0x95, 0xe2,
-	0x32, 0x18, 0x70, 0x55, 0x89, 0x0f, 0x31, 0x56, 0x19, 0xcb, 0x8e, 0x57, 0xc6, 0xda, 0x09, 0x74,
-	0xbe, 0x31, 0x83, 0x11, 0x68, 0x76, 0x6f, 0xed, 0x24, 0x50, 0x3a, 0x5c, 0xda, 0xf3, 0x33, 0x2e,
-	0xed, 0x8d, 0x98, 0x37, 0x66, 0x55, 0x64, 0x6e, 0xbe, 0x78, 0x1b, 0x8a, 0xc3, 0x49, 0x91, 0x43,
-	0x26, 0xd7, 0xda, 0x89, 0xe1, 0x7c, 0x15, 0x4a, 0x84, 0x34, 0x02, 0xfa, 0x12, 0x14, 0x08, 0x21,
-	0x40, 0xfa, 0xef, 0xb2, 0x70, 0xb6, 0x7e, 0x62, 0x2a, 0x7d, 0x43, 0x6d, 0x58, 0xea, 0xae, 0x63,
-	0x0d, 0xec, 0xc7, 0x46, 0xfa, 0x3a, 0xe4, 0x7b, 0xba, 0x6c, 0x68, 0xd4, 0x81, 0x39, 0x29, 0xd7,
-	0xd3, 0x05, 0x0d, 0xdd, 0x85, 0xa2, 0x6a, 0xf5, 0xfb, 0x7e, 0x05, 0xbe, 0x44, 0x9d, 0xf7, 0xd6,
-	0xe9, 0x36, 0x4b, 0x57, 0xe9, 0x52, 0xbd, 0xa7, 0xd7, 0xac, 0x7e, 0xbf, 0x7b, 0x62, 0x63, 0xa9,
-	0xa0, 0x06, 0x5f, 0xb4, 0x76, 0xef, 0x62, 0x47, 0xd6, 0x14, 0x4f, 0x29, 0x2f, 0x05, 0xb5, 0x7b,
-	0x17, 0x3b, 0x75, 0xc5, 0x53, 0xa6, 0x0f, 0x9a, 0x53, 0x44, 0xce, 0xcd, 0x51, 0xef, 0x40, 0x29,
-	0xa2, 0x3e, 0x71, 0x55, 0xbd, 0xb1, 0x9b, 0x4c, 0x49, 0x84, 0xd4, 0xe1, 0x6b, 0xfb, 0x12, 0xef,
-	0x7b, 0x8a, 0xfc, 0xb7, 0xda, 0xbc, 0xc8, 0x66, 0x6e, 0xe6, 0x0a, 0xcb, 0xec, 0xca, 0x68, 0xc1,
-	0xfa, 0x4d, 0x06, 0x36, 0xc6, 0x54, 0x7e, 0x22, 0x37, 0x32, 0xe7, 0x01, 0xb0, 0xe3, 0x58, 0x8e,
-	0xac, 0x5a, 0x9a, 0xbf, 0xb4, 0x2d, 0x4b, 0x45, 0x4a, 0xa9, 0x59, 0x1a, 0x3d, 0x84, 0xe8, 0x44,
-	0x7a, 0x08, 0x89, 0xe0, 0xd6, 0x8c, 0xd2, 0x02, 0x40, 0x4c, 0x1d, 0x2a, 0x69, 0x13, 0x9a, 0x9f,
-	0x07, 0x2c, 0x28, 0xbd, 0x6f, 0xb9, 0x6d, 0xcb, 0x35, 0x68, 0x3a, 0xdd, 0x04, 0xb0, 0x83, 0x6f,
-	0x43, 0xa3, 0x23, 0x64, 0xa5, 0x08, 0x65, 0x2c, 0x61, 0x67, 0x66, 0x4d, 0xd8, 0xd5, 0x23, 0x58,
-	0x7e, 0x4f, 0x31, 0xb5, 0x0e, 0xee, 0x61, 0x95, 0x8a, 0x3c, 0x03, 0x0b, 0x8e, 0xe2, 0xc9, 0xdb,
-	0x7a, 0x99, 0xf1, 0x77, 0x02, 0x8e, 0xe2, 0x6d, 0xeb, 0x21, 0xf9, 0xaa, 0x5e, 0xce, 0x0c, 0xc9,
-	0x57, 0x87, 0xe4, 0xd7, 0x75, 0xba, 0x8e, 0xfb, 0xe4, 0xd7, 0x87, 0xe4, 0x6b, 0x7a, 0xb8, 0x9d,
-	0x70, 0x14, 0xef, 0x9a, 0x5e, 0xfd, 0x24, 0x0b, 0x28, 0x32, 0xbd, 0xc7, 0x8e, 0xe2, 0x1a, 0x14,
-	0x43, 0x63, 0x84, 0x1b, 0x89, 0x09, 0xc0, 0x89, 0x4a, 0x1e, 0xf1, 0x11, 0x70, 0xf4, 0x3c, 0x2c,
-	0xab, 0x8a, 0x87, 0x75, 0xcb, 0x39, 0xa1, 0x59, 0x3b, 0x2f, 0x95, 0x7a, 0x1e, 0xae, 0x05, 0x24,
-	0x24, 0xc2, 0xca, 0x3d, 0xc5, 0xd4, 0x64, 0x37, 0xb4, 0x52, 0x50, 0x1c, 0x78, 0xe9, 0x74, 0x61,
-	0x31, 0xa3, 0x4a, 0xcb, 0xf7, 0x62, 0x36, 0x9e, 0xfa, 0x64, 0x3a, 0x6e, 0xac, 0x27, 0x56, 0xc3,
-	0xfd, 0x38, 0x07, 0x1b, 0x11, 0x71, 0xb7, 0x6c, 0x43, 0xc2, 0xee, 0xa0, 0xe7, 0x3d, 0x79, 0x0c,
-	0xa2, 0xd7, 0x60, 0x43, 0xeb, 0x91, 0x6c, 0xe8, 0x1d, 0x3a, 0xd6, 0x40, 0x3f, 0xb4, 0x07, 0x9e,
-	0xdc, 0x37, 0xfc, 0xc5, 0x35, 0x23, 0xad, 0x27, 0xdb, 0x9a, 0x46, 0x3a, 0x8b, 0x72, 0xac, 0x53,
-	0xe7, 0xa5, 0xb0, 0x70, 0xc7, 0x7a, 0xba, 0x14, 0xe5, 0x21, 0x75, 0x65, 0x9a, 0x14, 0xe5, 0x21,
-	0x61, 0x19, 0xa4, 0x29, 0xb6, 0xe0, 0xb3, 0x0c, 0xd2, 0x15, 0x1b, 0xa4, 0x29, 0xb6, 0x98, 0xce,
-	0x12, 0x28, 0x36, 0x48, 0x53, 0xac, 0x70, 0x8a, 0x14, 0xe5, 0x21, 0xfa, 0x0a, 0x94, 0x7a, 0x8a,
-	0x87, 0x4d, 0xf5, 0x84, 0xea, 0x53, 0xa4, 0x3d, 0x21, 0x20, 0x11, 0x35, 0x22, 0x1d, 0x88, 0x74,
-	0x88, 0x75, 0x20, 0x42, 0xa3, 0x23, 0x28, 0x0f, 0xe9, 0x6a, 0x17, 0x19, 0x41, 0x79, 0x58, 0xfd,
-	0x43, 0x06, 0xd6, 0x93, 0x78, 0x78, 0x22, 0xb9, 0xfb, 0x2e, 0xb0, 0x21, 0x9a, 0x64, 0x87, 0x42,
-	0x2e, 0x8c, 0xe5, 0x4b, 0x53, 0x05, 0xc6, 0x10, 0xa9, 0xd2, 0xaa, 0x3d, 0x8c, 0x15, 0x3a, 0xcc,
-	0xf4, 0x55, 0xf6, 0x94, 0x89, 0xce, 0x2f, 0xa7, 0xff, 0x71, 0x01, 0x56, 0xfd, 0xdb, 0x76, 0x3e,
-	0x2c, 0x99, 0xa4, 0x24, 0x38, 0x26, 0x2d, 0xc1, 0xa5, 0x17, 0x60, 0x32, 0xa7, 0x5c, 0xe3, 0x7d,
-	0x00, 0x40, 0x3b, 0xfa, 0x1b, 0x98, 0xec, 0xa3, 0xae, 0x56, 0x12, 0x3a, 0x85, 0xff, 0xe4, 0x9b,
-	0xee, 0x5e, 0x8a, 0x38, 0xfc, 0x9c, 0x43, 0x89, 0xee, 0x06, 0x2c, 0xba, 0x4a, 0xdf, 0xee, 0x0d,
-	0x8b, 0x2b, 0x17, 0x4e, 0x67, 0xee, 0xd0, 0x8e, 0x52, 0xc8, 0x80, 0x3e, 0x00, 0xa4, 0xe1, 0x63,
-	0x43, 0xc5, 0xb2, 0x61, 0x1e, 0x58, 0xf4, 0x56, 0xc7, 0x50, 0x69, 0x10, 0x4e, 0xac, 0x73, 0xd4,
-	0x29, 0x8f, 0x60, 0x1e, 0x58, 0x1d, 0xca, 0x21, 0xb1, 0x5a, 0x82, 0x82, 0xbe, 0x05, 0xeb, 0xd1,
-	0x91, 0x35, 0x7f, 0x6d, 0xa7, 0xc1, 0x5a, 0xda, 0x7e, 0x65, 0x9a, 0xa1, 0x83, 0xed, 0x80, 0xb4,
-	0xa6, 0x25, 0x49, 0xf4, 0xac, 0x30, 0x70, 0x3d, 0xab, 0xef, 0xbb, 0x2f, 0x78, 0x67, 0x53, 0xf2,
-	0x69, 0x3e, 0x0c, 0xa6, 0xae, 0x31, 0x24, 0x7d, 0x35, 0x37, 0x70, 0xfe, 0x9a, 0x19, 0x82, 0x73,
-	0xe8, 0xed, 0x35, 0x58, 0xe6, 0x6f, 0xf3, 0x62, 0x37, 0x52, 0x35, 0x7e, 0x06, 0xce, 0xf8, 0x24,
-	0x41, 0x14, 0x86, 0x97, 0x3d, 0x42, 0x4b, 0x64, 0x19, 0xb4, 0x09, 0x15, 0xbf, 0xa9, 0xcb, 0x4b,
-	0x4d, 0x41, 0xe4, 0xba, 0x7c, 0xb4, 0x3d, 0x33, 0x62, 0x6d, 0x70, 0x5d, 0x5e, 0xac, 0xdd, 0x95,
-	0x3b, 0x5c, 0xb3, 0xdd, 0xe0, 0x3b, 0x6c, 0x36, 0xd2, 0xd4, 0xaa, 0x71, 0xa4, 0xbb, 0xbc, 0xdf,
-	0xae, 0x73, 0x5d, 0x9e, 0xcd, 0xa1, 0xb3, 0x80, 0xfc, 0xa6, 0xda, 0x7e, 0xa7, 0xdb, 0x6a, 0xca,
-	0xf4, 0x87, 0xcd, 0x57, 0x3f, 0x5e, 0x84, 0x55, 0xff, 0xe1, 0xcc, 0x28, 0x98, 0xe2, 0xb8, 0x67,
-	0x1e, 0x85, 0xfb, 0x04, 0x7b, 0xf8, 0x9f, 0x86, 0x7b, 0x11, 0x56, 0x86, 0xa5, 0x49, 0x02, 0x3b,
-	0x1c, 0xa4, 0xb8, 0x97, 0x1e, 0x5d, 0x5d, 0x23, 0x08, 0xc3, 0xd2, 0xb0, 0xb2, 0x49, 0x7f, 0xd1,
-	0x1d, 0x58, 0xeb, 0x2b, 0x86, 0xe9, 0x61, 0x53, 0x31, 0x55, 0x1c, 0x0c, 0xe9, 0x07, 0xea, 0x04,
-	0x20, 0x37, 0x47, 0x2c, 0xfe, 0xa8, 0x6c, 0x3f, 0x41, 0x41, 0x7b, 0xb0, 0x74, 0x88, 0x95, 0x9e,
-	0x77, 0x28, 0xab, 0x87, 0x58, 0x3d, 0x0a, 0x8e, 0x9e, 0x13, 0x32, 0xf1, 0x1e, 0xed, 0x5d, 0x23,
-	0x9d, 0xa5, 0xd2, 0xe1, 0xe8, 0x07, 0xd5, 0x01, 0x68, 0x80, 0xb9, 0x9e, 0xa1, 0xba, 0xc1, 0x3e,
-	0xe7, 0x85, 0x09, 0xc6, 0x1c, 0xf6, 0x95, 0x22, 0x7c, 0x48, 0x84, 0x25, 0x13, 0x3f, 0x90, 0xc3,
-	0xd9, 0x07, 0xc1, 0xfa, 0xca, 0x0c, 0x2f, 0x0b, 0xa4, 0x92, 0x89, 0x1f, 0x84, 0x14, 0x72, 0x7e,
-	0xf2, 0x37, 0xf8, 0x7d, 0xd7, 0x5f, 0x4b, 0x8b, 0x52, 0x81, 0x12, 0x9a, 0xae, 0x3e, 0x7d, 0x14,
-	0x25, 0x3d, 0x3f, 0xb7, 0x28, 0xfa, 0x2f, 0x33, 0x44, 0xe5, 0xe7, 0x8c, 0xa2, 0xb1, 0x28, 0x91,
-	0xf8, 0xf7, 0xf7, 0xf9, 0x4e, 0x97, 0xcd, 0xa0, 0x73, 0xf0, 0x74, 0xbc, 0xa9, 0x2d, 0xb5, 0xc8,
-	0x41, 0x99, 0xaf, 0xb3, 0x59, 0x54, 0x86, 0x8d, 0x20, 0x4e, 0x1a, 0xad, 0xfd, 0x7a, 0x83, 0xef,
-	0xca, 0x9d, 0xae, 0x1f, 0x41, 0xc3, 0xb8, 0x1c, 0xb6, 0x34, 0x39, 0x41, 0xec, 0xf2, 0x22, 0x27,
-	0xd6, 0x78, 0x36, 0x3f, 0xe2, 0xe4, 0xda, 0x6d, 0x41, 0xec, 0x74, 0xe5, 0x3d, 0x9e, 0x6b, 0x74,
-	0xf7, 0xd8, 0x85, 0x91, 0x2e, 0x43, 0xce, 0x20, 0x2c, 0x17, 0xc9, 0x51, 0xdd, 0x6f, 0xa2, 0x97,
-	0x9e, 0x6c, 0x61, 0xeb, 0x6d, 0x58, 0x14, 0xea, 0x64, 0xbe, 0xb4, 0x80, 0x25, 0xd4, 0x63, 0xa7,
-	0xc5, 0x02, 0xe4, 0x84, 0x26, 0x2f, 0xb0, 0x0c, 0x02, 0x58, 0x68, 0x76, 0x84, 0x4e, 0x9d, 0x24,
-	0x04, 0x80, 0x05, 0xa1, 0xcd, 0xd5, 0xeb, 0x12, 0x9b, 0xdd, 0x7a, 0x0b, 0x4a, 0x91, 0x3d, 0x01,
-	0x19, 0x42, 0xea, 0x24, 0x0f, 0x9c, 0x52, 0x27, 0x5e, 0x03, 0x93, 0x3a, 0x41, 0x65, 0x60, 0xfb,
-	0xf7, 0x4b, 0xb0, 0xd2, 0x24, 0x0e, 0xe6, 0xa9, 0x7f, 0x39, 0xdb, 0x40, 0x3f, 0x62, 0x60, 0x25,
-	0xfe, 0xc4, 0x0d, 0x5d, 0x9e, 0xf1, 0x81, 0x62, 0xe5, 0xd5, 0x99, 0x5e, 0xcf, 0x55, 0xcf, 0x7f,
-	0xef, 0xcf, 0xff, 0xfc, 0x49, 0xe6, 0xe9, 0x2a, 0xba, 0x7c, 0xfc, 0xda, 0x65, 0x27, 0xe8, 0xe0,
-	0x57, 0x84, 0x6e, 0x30, 0x5b, 0xe8, 0x07, 0x0c, 0x2c, 0x45, 0xd1, 0x8d, 0x5e, 0x9d, 0xe9, 0x81,
-	0x59, 0x65, 0x96, 0xa0, 0xa9, 0x9e, 0xa3, 0xba, 0x9c, 0xa9, 0xb2, 0x44, 0x97, 0x03, 0xc3, 0xd4,
-	0xc2, 0x08, 0x24, 0x9a, 0xfc, 0x82, 0x81, 0x8d, 0xb4, 0xe7, 0x58, 0xe8, 0xda, 0xe7, 0x7a, 0xbe,
-	0x35, 0x9b, 0x66, 0xcf, 0x53, 0xcd, 0xce, 0x57, 0xcb, 0x44, 0x33, 0x3b, 0x18, 0x35, 0xa9, 0x21,
-	0xf1, 0x5e, 0xfc, 0xc5, 0xc3, 0x24, 0xef, 0xa5, 0x3e, 0x72, 0x99, 0xe4, 0xbd, 0x94, 0xc7, 0x14,
-	0x71, 0xef, 0xf9, 0xcf, 0x6d, 0xc2, 0x6d, 0x0e, 0xd1, 0xe8, 0x43, 0x06, 0x4a, 0xbb, 0xd1, 0x87,
-	0x55, 0xb3, 0xdc, 0xae, 0x57, 0xb6, 0xa6, 0xbf, 0xff, 0xad, 0x56, 0xa8, 0x22, 0x1b, 0xd5, 0x55,
-	0xa2, 0x88, 0x8e, 0xbd, 0xa8, 0x16, 0x3f, 0x66, 0x60, 0x85, 0xd3, 0xb4, 0x7d, 0x17, 0x3b, 0x5d,
-	0x8b, 0xd6, 0x1d, 0xd0, 0x95, 0x59, 0xcb, 0x44, 0x95, 0x4b, 0xb3, 0x15, 0x35, 0xe2, 0x96, 0x51,
-	0x34, 0x8d, 0x1e, 0x43, 0x2c, 0x5a, 0x34, 0x21, 0x3a, 0x7d, 0xc4, 0xc0, 0xca, 0x2e, 0xf6, 0x22,
-	0x17, 0x41, 0x93, 0x8c, 0x33, 0x7e, 0xc7, 0x3a, 0xc9, 0x38, 0xc9, 0xdb, 0xa5, 0xb8, 0x2e, 0x3a,
-	0xf6, 0x82, 0x2b, 0xb7, 0x9e, 0xe1, 0x52, 0xdc, 0x7c, 0x87, 0x3a, 0x29, 0x2c, 0xd2, 0xa3, 0x97,
-	0xa7, 0xbe, 0xac, 0xa9, 0xbc, 0x34, 0x65, 0xcd, 0x7f, 0xcc, 0x3d, 0x07, 0xf7, 0x35, 0x33, 0x14,
-	0xff, 0x09, 0x43, 0xdf, 0x7c, 0x24, 0xaa, 0xa8, 0x93, 0x5c, 0x94, 0x5e, 0xfe, 0x9e, 0xe4, 0xa2,
-	0xb4, 0x12, 0x6d, 0xf5, 0x39, 0xaa, 0xd4, 0xb9, 0xea, 0xd9, 0x91, 0x59, 0xc2, 0x32, 0x36, 0xd1,
-	0x8f, 0xe8, 0xf6, 0x53, 0x06, 0xd6, 0x76, 0xb1, 0x17, 0x3f, 0xe1, 0x4c, 0xf2, 0xd4, 0x78, 0xcd,
-	0x61, 0x52, 0x48, 0xa5, 0x9c, 0x9c, 0xaa, 0x17, 0xa8, 0x56, 0x95, 0xea, 0x99, 0x40, 0xab, 0xfb,
-	0x96, 0x1b, 0x9e, 0xcc, 0x8e, 0x6c, 0xe3, 0x06, 0xb3, 0x75, 0x85, 0x41, 0x3f, 0x24, 0x2b, 0xa6,
-	0xe7, 0x60, 0xa5, 0x3f, 0xda, 0xc7, 0xbd, 0x3c, 0xf5, 0xfe, 0xb7, 0xf2, 0xf2, 0xd4, 0x8b, 0x7c,
-	0x75, 0x93, 0x6a, 0x53, 0xae, 0xae, 0x13, 0x6d, 0x5c, 0x2a, 0x92, 0x9c, 0x9c, 0xe8, 0x26, 0xef,
-	0x06, 0xb3, 0x75, 0x91, 0xb9, 0xc2, 0xbc, 0xc7, 0x7e, 0xfa, 0x8f, 0xcd, 0xa7, 0x3e, 0xfd, 0x6c,
-	0x93, 0xf9, 0xd3, 0x67, 0x9b, 0xcc, 0xdf, 0x3f, 0xdb, 0x64, 0xee, 0x2d, 0xd0, 0xc7, 0xfe, 0x57,
-	0xff, 0x1f, 0x00, 0x00, 0xff, 0xff, 0x22, 0xbb, 0x3f, 0x54, 0x54, 0x30, 0x00, 0x00,
+	// 3772 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x5b, 0xdd, 0x8f, 0xe3, 0x46,
+	0x72, 0x5f, 0xea, 0x63, 0x34, 0x2a, 0xcd, 0x68, 0x38, 0x3d, 0x33, 0xbb, 0xb2, 0xd6, 0xbb, 0x5e,
+	0xeb, 0x6c, 0x78, 0x3d, 0x67, 0xef, 0xae, 0xc7, 0x1f, 0x7b, 0xde, 0x3b, 0xdf, 0x85, 0x27, 0x71,
+	0x66, 0xe8, 0xd5, 0xd7, 0x52, 0x92, 0xf7, 0xf6, 0x2e, 0x00, 0x41, 0x93, 0x3d, 0x1a, 0x62, 0x24,
+	0x92, 0x43, 0x52, 0xe3, 0x9d, 0x87, 0x00, 0x41, 0x2e, 0x40, 0x70, 0x08, 0x2e, 0x41, 0x90, 0x20,
+	0xc0, 0x01, 0x01, 0x02, 0x04, 0xc8, 0x43, 0x02, 0x04, 0x48, 0x80, 0x7c, 0xfc, 0x09, 0x31, 0xf2,
+	0x14, 0x24, 0x4f, 0x41, 0xf2, 0x70, 0x31, 0x82, 0xdc, 0x7f, 0x90, 0x20, 0x6f, 0x41, 0x37, 0x9b,
+	0x12, 0x49, 0x51, 0x5a, 0x69, 0x57, 0x6b, 0xc0, 0x6f, 0x62, 0x55, 0x77, 0x57, 0x75, 0xd5, 0xaf,
+	0xaa, 0xbb, 0xab, 0x5b, 0xc0, 0xab, 0xb6, 0xfd, 0xae, 0x36, 0x30, 0xb0, 0xe9, 0xdd, 0xb1, 0x1d,
+	0xcb, 0xb3, 0x50, 0x49, 0x37, 0x5c, 0xcf, 0x31, 0x3e, 0x1f, 0x79, 0x58, 0x57, 0x86, 0xaa, 0xa7,
+	0x9d, 0x2a, 0xd8, 0xec, 0x1b, 0x26, 0x2e, 0xbf, 0xda, 0xb7, 0xac, 0xfe, 0x00, 0xdf, 0x55, 0x6d,
+	0xe3, 0xae, 0x6a, 0x9a, 0x96, 0xa7, 0x7a, 0x86, 0x65, 0xba, 0x7e, 0xbf, 0x72, 0x7e, 0x60, 0x69,
+	0xec, 0xe7, 0x96, 0x6a, 0xdb, 0x9a, 0x35, 0x1c, 0x5a, 0xa6, 0x4f, 0xa8, 0xfc, 0x71, 0x1a, 0xf6,
+	0x64, 0xdc, 0x37, 0x5c, 0x0f, 0x3b, 0x55, 0x2a, 0x4c, 0xc6, 0xe7, 0x23, 0xec, 0x7a, 0x88, 0x87,
+	0xf4, 0x05, 0x76, 0x4a, 0xdc, 0x2d, 0xee, 0xf6, 0xa6, 0x4c, 0x7e, 0xa2, 0x57, 0x60, 0xdd, 0x72,
+	0xfa, 0x8a, 0xa9, 0x0e, 0x71, 0x29, 0x75, 0x8b, 0xbb, 0x9d, 0x97, 0x73, 0x96, 0xd3, 0x6f, 0xaa,
+	0x43, 0x4c, 0x58, 0xaa, 0x6d, 0xfb, 0xac, 0xb4, 0xcf, 0x52, 0x6d, 0x3b, 0xcc, 0xba, 0xc0, 0x8e,
+	0x5b, 0xca, 0x8c, 0x59, 0x9f, 0x61, 0xc7, 0x45, 0xaf, 0xc3, 0x86, 0xa6, 0x3a, 0x8e, 0x81, 0x1d,
+	0xbf, 0x67, 0x96, 0xb2, 0x0b, 0x8c, 0x46, 0x7b, 0xdf, 0x00, 0x50, 0x47, 0xde, 0xa9, 0xe2, 0x59,
+	0x67, 0xd8, 0x2c, 0xad, 0xd1, 0x06, 0x79, 0x42, 0xe9, 0x12, 0x02, 0x7a, 0x03, 0x8a, 0x23, 0xd3,
+	0x38, 0x1f, 0x61, 0xc5, 0xd0, 0x15, 0xef, 0xd2, 0xc6, 0xa5, 0x75, 0xda, 0x64, 0xc3, 0xa7, 0x4a,
+	0x7a, 0xf7, 0xd2, 0xc6, 0xe8, 0x3a, 0xe4, 0xc7, 0xad, 0x4a, 0x79, 0xda, 0x60, 0x3d, 0x68, 0x80,
+	0x1a, 0x90, 0xf1, 0xd4, 0xbe, 0x5b, 0xd2, 0x6f, 0xa5, 0x6f, 0x17, 0x0e, 0x3e, 0xbe, 0x33, 0xcb,
+	0xc8, 0x77, 0x12, 0xcd, 0x74, 0xa7, 0xab, 0xf6, 0x5d, 0xd1, 0xf4, 0x9c, 0x4b, 0x99, 0x0e, 0x53,
+	0xbe, 0x0f, 0xf9, 0x31, 0x89, 0xd8, 0xf0, 0x0c, 0x5f, 0x52, 0x1b, 0xe6, 0x65, 0xf2, 0x13, 0xed,
+	0x42, 0xf6, 0x42, 0x1d, 0x8c, 0x02, 0x03, 0xfa, 0x1f, 0x0f, 0x52, 0xdf, 0xe1, 0x3e, 0xcd, 0xac,
+	0xe7, 0xf8, 0x75, 0x39, 0xa7, 0xe1, 0xc1, 0x40, 0x31, 0xf4, 0xca, 0x6f, 0xa6, 0x61, 0x27, 0x2e,
+	0xd1, 0x1e, 0x5c, 0x26, 0xb8, 0xe5, 0x13, 0x58, 0x73, 0x3d, 0xd5, 0x1b, 0xb9, 0x74, 0xcc, 0xe2,
+	0xc1, 0x9b, 0xf3, 0xa6, 0x60, 0x0f, 0x2e, 0x3b, 0xb4, 0xb1, 0xcc, 0x3a, 0xa1, 0x37, 0xa1, 0xe8,
+	0x62, 0xd7, 0x35, 0x2c, 0x53, 0xd1, 0x2c, 0xeb, 0xcc, 0x08, 0x1c, 0xb8, 0xc9, 0xa8, 0x55, 0x4a,
+	0x44, 0xb7, 0x81, 0xa7, 0x3e, 0x50, 0x5c, 0xec, 0x5c, 0x60, 0x47, 0x19, 0x39, 0x06, 0x73, 0x67,
+	0x91, 0xd2, 0x3b, 0x94, 0xdc, 0x73, 0x8c, 0x04, 0x9f, 0x64, 0x9f, 0xe5, 0x93, 0xb5, 0x98, 0x4f,
+	0x1e, 0x46, 0x7c, 0x72, 0x7f, 0x71, 0x9f, 0xd8, 0x83, 0xcb, 0x95, 0x79, 0xa4, 0xf2, 0x65, 0x0a,
+	0x76, 0x0e, 0x0d, 0x53, 0xaf, 0x0e, 0xac, 0x91, 0x3e, 0xc0, 0x73, 0x22, 0x63, 0xda, 0x86, 0xa9,
+	0x24, 0x1b, 0xc6, 0xf1, 0x9e, 0x9e, 0xc6, 0xfb, 0xaf, 0xc1, 0x46, 0xdf, 0x76, 0x95, 0x81, 0xa5,
+	0xd1, 0x10, 0xa6, 0x26, 0x2e, 0x1c, 0xdc, 0x98, 0x6d, 0x81, 0xba, 0xa5, 0xc9, 0x85, 0xbe, 0xed,
+	0xd6, 0x59, 0x8f, 0xc5, 0x6d, 0x97, 0x30, 0xb5, 0x55, 0xa2, 0x79, 0x9d, 0xcf, 0x4f, 0xd0, 0xfc,
+	0x97, 0x29, 0xb8, 0xde, 0x1e, 0xa8, 0xde, 0x89, 0xe5, 0x0c, 0xbf, 0x6e, 0x93, 0x92, 0x26, 0x14,
+	0x1e, 0x2c, 0x89, 0x64, 0x58, 0x13, 0x4a, 0xf3, 0xd3, 0x48, 0x27, 0x62, 0xb3, 0x1f, 0xcc, 0xb6,
+	0xd9, 0x9c, 0x39, 0xac, 0x0e, 0x77, 0xbf, 0xcc, 0xc2, 0x76, 0x54, 0x40, 0x72, 0xe0, 0x37, 0x63,
+	0x81, 0xff, 0xd1, 0xa2, 0xbe, 0x26, 0x51, 0x42, 0x28, 0xb1, 0x4c, 0x80, 0x20, 0x73, 0x72, 0xae,
+	0x9b, 0xcc, 0x86, 0xf4, 0x37, 0xba, 0x0f, 0x59, 0xdb, 0x72, 0x3c, 0x92, 0xba, 0x89, 0x69, 0x5e,
+	0x9f, 0x2d, 0x42, 0xb0, 0xed, 0xb6, 0xe5, 0x78, 0xb2, 0xdf, 0x1e, 0x7d, 0x0a, 0xdb, 0x1a, 0x13,
+	0x38, 0x41, 0x73, 0x76, 0x11, 0x34, 0xf3, 0x41, 0xbf, 0x31, 0xa4, 0xdf, 0x01, 0x84, 0xf5, 0x3e,
+	0x56, 0xf0, 0x05, 0x36, 0x3d, 0x37, 0xc0, 0x83, 0x9f, 0x34, 0x78, 0xc2, 0x11, 0x29, 0x83, 0x41,
+	0xe2, 0x27, 0x00, 0xe7, 0x96, 0xab, 0x38, 0xd8, 0x1d, 0x0d, 0xbc, 0x52, 0x8e, 0x9a, 0xe6, 0x7b,
+	0xcb, 0x98, 0xe6, 0x91, 0xe5, 0x76, 0x7c, 0x90, 0xc9, 0x74, 0x0c, 0x39, 0x7f, 0x6e, 0xb9, 0xfe,
+	0x4f, 0x54, 0x81, 0x4d, 0x32, 0x38, 0x76, 0x1c, 0xcb, 0x51, 0x86, 0x6e, 0x9f, 0xad, 0x37, 0x85,
+	0x73, 0xcb, 0x15, 0x09, 0xad, 0xe1, 0xf6, 0x91, 0x14, 0x41, 0xd3, 0x87, 0xcb, 0x88, 0x5e, 0x19,
+	0x86, 0x04, 0x80, 0x89, 0x87, 0x11, 0x0f, 0x1b, 0x87, 0x52, 0xb3, 0xa6, 0xf4, 0x9a, 0x0f, 0x9b,
+	0xad, 0xc7, 0x4d, 0xfe, 0x0a, 0x2a, 0x02, 0x50, 0xca, 0x61, 0xab, 0xd7, 0xac, 0xf1, 0x1c, 0xda,
+	0x86, 0x4d, 0xfa, 0xdd, 0x6c, 0x75, 0x7d, 0x52, 0xaa, 0xf2, 0x63, 0xe0, 0xe3, 0x96, 0x40, 0x7b,
+	0xb0, 0xfd, 0xa8, 0xd5, 0x21, 0xad, 0x14, 0xa1, 0xdb, 0x15, 0x1b, 0xed, 0xae, 0x58, 0xe3, 0xaf,
+	0xa0, 0x6b, 0xb0, 0x43, 0xc8, 0x1d, 0xb1, 0xd3, 0x91, 0x5a, 0x4d, 0xa5, 0x2a, 0x8b, 0x02, 0x61,
+	0x70, 0xe8, 0x2a, 0xa0, 0x30, 0xe3, 0x50, 0x90, 0xea, 0x22, 0x19, 0xfb, 0x2f, 0xd6, 0xe0, 0xb5,
+	0x47, 0x96, 0xdb, 0x76, 0x0c, 0xcb, 0x31, 0xbc, 0x4b, 0x26, 0xa4, 0xea, 0x60, 0xd5, 0xc3, 0x2f,
+	0x9c, 0x13, 0xde, 0x06, 0x3e, 0x68, 0xa6, 0x8f, 0x1c, 0x1f, 0x79, 0x69, 0x3a, 0xca, 0x16, 0xa3,
+	0xd7, 0x18, 0x19, 0xed, 0xc3, 0xb6, 0x61, 0x2b, 0x23, 0x17, 0x3b, 0x0a, 0x3e, 0x1f, 0x19, 0xf6,
+	0x10, 0x9b, 0x1e, 0x4b, 0x10, 0x5b, 0x86, 0xdd, 0x73, 0xb1, 0x23, 0x06, 0x64, 0x74, 0x00, 0x7b,
+	0x86, 0xad, 0xa8, 0xb6, 0x3d, 0x30, 0x7c, 0x5c, 0xb2, 0xa5, 0x90, 0x2d, 0x6f, 0x3b, 0x86, 0x2d,
+	0x4c, 0x78, 0xfe, 0x72, 0x88, 0xee, 0xc0, 0x0e, 0x09, 0x87, 0xb8, 0x04, 0x1f, 0xba, 0xdb, 0x84,
+	0x15, 0x95, 0xf1, 0x11, 0x5c, 0xa3, 0xed, 0x13, 0xa4, 0xe4, 0x68, 0x9f, 0x3d, 0xc2, 0x9e, 0x96,
+	0xd3, 0x80, 0x02, 0xdd, 0xcf, 0x69, 0xd6, 0x40, 0x31, 0x4c, 0x0a, 0xca, 0xe2, 0xc1, 0x3b, 0xb3,
+	0x91, 0x37, 0x71, 0x6c, 0x9b, 0x75, 0x93, 0x21, 0x18, 0x40, 0x32, 0x51, 0x0b, 0x36, 0xc6, 0xc3,
+	0x59, 0x23, 0x8f, 0xee, 0x99, 0x96, 0x1d, 0x6f, 0xac, 0x50, 0x6b, 0xe4, 0x21, 0x11, 0x72, 0xb6,
+	0x63, 0x9d, 0x18, 0x03, 0x5c, 0x02, 0x3a, 0xd6, 0xb7, 0x17, 0x1c, 0x8b, 0x74, 0x91, 0x83, 0xbe,
+	0xc4, 0xb3, 0xa6, 0xe5, 0x19, 0x27, 0x81, 0x69, 0xc8, 0x26, 0xa4, 0xe0, 0x7b, 0x2b, 0x4c, 0x27,
+	0xbb, 0x90, 0x8f, 0xe0, 0x5a, 0xa4, 0x69, 0x68, 0x17, 0xb9, 0xe1, 0x5b, 0x32, 0xcc, 0x16, 0xc6,
+	0x3b, 0xca, 0xc7, 0x91, 0xe0, 0xad, 0xce, 0x55, 0x73, 0x1e, 0x7c, 0x57, 0x17, 0xca, 0x7f, 0x9e,
+	0x86, 0x6b, 0xd3, 0xc2, 0x66, 0x2d, 0x0a, 0x49, 0xe0, 0x4f, 0x25, 0x83, 0x3f, 0xe4, 0x94, 0xf4,
+	0x0b, 0x38, 0xe5, 0x06, 0x40, 0x20, 0xd1, 0xd0, 0x59, 0xf0, 0xe4, 0x19, 0x45, 0xd2, 0x29, 0xdb,
+	0x53, 0x1d, 0x32, 0xa2, 0xea, 0xd1, 0x58, 0xd9, 0x94, 0xf3, 0x8c, 0x22, 0x78, 0x84, 0x8d, 0x9f,
+	0xda, 0x86, 0x83, 0x5d, 0xc2, 0x5e, 0xf3, 0xd9, 0x8c, 0x22, 0x78, 0xe8, 0x35, 0x28, 0x9c, 0x7a,
+	0x9e, 0xad, 0xb0, 0x85, 0x2e, 0x47, 0xf9, 0x40, 0x48, 0x2c, 0xb5, 0xb5, 0x22, 0xfe, 0xfa, 0xee,
+	0x32, 0xfe, 0x5a, 0x71, 0xca, 0xfd, 0x97, 0x54, 0x52, 0x4e, 0xab, 0xe1, 0x01, 0x5e, 0x41, 0x4e,
+	0xfb, 0x7a, 0x7c, 0xf5, 0x02, 0xe0, 0x8f, 0xcc, 0x73, 0x75, 0x46, 0xfd, 0x55, 0x0a, 0x6e, 0xcc,
+	0x16, 0x96, 0x1c, 0x02, 0xbf, 0x1e, 0xdb, 0x17, 0xd5, 0x9e, 0x67, 0x1e, 0x04, 0x1a, 0xfe, 0xef,
+	0xd8, 0x2e, 0xa9, 0x17, 0xb1, 0x91, 0xf0, 0xbc, 0x63, 0xaf, 0xcc, 0x42, 0x87, 0xb0, 0x11, 0xd6,
+	0x93, 0xac, 0xf5, 0x8f, 0x6a, 0x62, 0x3d, 0xb4, 0xd6, 0x07, 0x94, 0x9a, 0x58, 0x17, 0xfd, 0x65,
+	0x19, 0x41, 0x91, 0x52, 0xc8, 0x3a, 0x1e, 0x2c, 0xf7, 0xff, 0x93, 0x82, 0xbd, 0xcf, 0xb0, 0x63,
+	0x9c, 0x5c, 0x06, 0xfb, 0xae, 0x6f, 0xc6, 0x79, 0xe7, 0x36, 0xf0, 0x17, 0x54, 0x6d, 0x32, 0x08,
+	0xcb, 0xf0, 0xfe, 0x8a, 0x5c, 0xbc, 0x08, 0xa6, 0xe3, 0xa7, 0xf6, 0x85, 0x4f, 0xfa, 0x89, 0x66,
+	0x58, 0xe5, 0xd9, 0x68, 0x8d, 0xcf, 0x4d, 0xce, 0x46, 0x3f, 0x5b, 0x83, 0x9d, 0xb8, 0xc4, 0x59,
+	0xc0, 0xde, 0xf0, 0xac, 0x2f, 0xb0, 0xa3, 0x44, 0xe0, 0xbd, 0xc4, 0x44, 0x28, 0xf0, 0xc8, 0x08,
+	0x0c, 0xd3, 0x05, 0x6f, 0xf2, 0x81, 0x2c, 0xd8, 0x09, 0xbb, 0x22, 0x10, 0xe2, 0xa7, 0x9b, 0x1f,
+	0x2c, 0x27, 0xe4, 0xa8, 0xdd, 0x09, 0x08, 0x4c, 0xd4, 0x76, 0xc8, 0x67, 0x4c, 0xe0, 0x7d, 0x28,
+	0x45, 0x04, 0xaa, 0x9a, 0x36, 0x72, 0x54, 0xed, 0x52, 0x39, 0x1b, 0x52, 0x1c, 0x70, 0xf2, 0x5e,
+	0xa8, 0x93, 0xc0, 0xb8, 0x0f, 0x87, 0x8b, 0x1f, 0x71, 0x13, 0xe7, 0xbf, 0xaa, 0xc0, 0x3b, 0x85,
+	0x42, 0xc8, 0x96, 0x64, 0x07, 0xdd, 0x6d, 0x3d, 0x16, 0xe5, 0x50, 0xe0, 0xdd, 0x82, 0x57, 0xab,
+	0xad, 0x66, 0x53, 0xac, 0x76, 0xc5, 0x9a, 0xd2, 0x6d, 0x29, 0x9d, 0xb6, 0x58, 0x95, 0x0e, 0x25,
+	0xfa, 0xf1, 0x58, 0x94, 0x79, 0x0e, 0xbd, 0x01, 0xb7, 0x48, 0x0c, 0xce, 0x6d, 0x95, 0xaa, 0xfc,
+	0x8a, 0x83, 0xed, 0x29, 0x8b, 0xa2, 0x2d, 0x28, 0xd4, 0x5b, 0xd5, 0x68, 0x9c, 0x13, 0xc2, 0x67,
+	0xa2, 0x4c, 0xbb, 0xf3, 0x1c, 0xba, 0x01, 0xaf, 0x10, 0x4a, 0x43, 0xea, 0x34, 0x84, 0x6e, 0xf5,
+	0x58, 0xe9, 0x08, 0x0d, 0x51, 0xa9, 0xb6, 0x7a, 0xcd, 0xae, 0xfc, 0x84, 0x4f, 0xa1, 0x9b, 0x50,
+	0x8e, 0xb0, 0x5b, 0xdd, 0x63, 0x51, 0x1e, 0xf3, 0xd3, 0x41, 0x77, 0xb9, 0x25, 0x34, 0xa4, 0xe6,
+	0x51, 0xc0, 0x50, 0x68, 0x63, 0x3e, 0x43, 0xa6, 0x97, 0xc8, 0x66, 0xc3, 0xf1, 0x59, 0x54, 0x86,
+	0xab, 0xa4, 0x85, 0x28, 0xcb, 0x2d, 0x62, 0x17, 0xa1, 0xd7, 0x3d, 0x6e, 0xc9, 0xd2, 0x8f, 0xc5,
+	0x1a, 0xbf, 0x86, 0x76, 0x60, 0x6b, 0xc2, 0xa3, 0x92, 0xf9, 0x5c, 0xe5, 0xb7, 0x53, 0x80, 0x8e,
+	0x26, 0x27, 0xbf, 0xaf, 0x23, 0x03, 0x7d, 0x1a, 0x01, 0xd3, 0x9c, 0x33, 0xf4, 0xb4, 0x5e, 0xab,
+	0x4c, 0x09, 0x19, 0x3e, 0x3b, 0x49, 0x09, 0x7f, 0x97, 0x06, 0x3e, 0x22, 0x2e, 0x39, 0x1f, 0xd4,
+	0x63, 0x0b, 0xdd, 0x07, 0x0b, 0x2a, 0x4f, 0xc2, 0xa0, 0x6e, 0x69, 0xb1, 0x85, 0x6d, 0x01, 0x5b,
+	0xed, 0x42, 0x96, 0x66, 0x0c, 0x1a, 0x9e, 0x19, 0xd9, 0xff, 0x40, 0xc7, 0xc0, 0x9b, 0xd8, 0xfb,
+	0xc2, 0x72, 0xce, 0x96, 0x3c, 0xe9, 0x6f, 0xb1, 0x6e, 0xe3, 0x5c, 0x7e, 0x1c, 0xf1, 0xc5, 0x32,
+	0xd3, 0x59, 0x59, 0x54, 0x7f, 0x17, 0xf2, 0x63, 0xd3, 0x4c, 0x87, 0xd8, 0x26, 0xe4, 0x09, 0x21,
+	0x38, 0x35, 0x17, 0x01, 0xc8, 0x67, 0x4d, 0x6c, 0x4a, 0xf4, 0x58, 0xfb, 0x1f, 0x29, 0x40, 0x82,
+	0x6d, 0x4b, 0xa6, 0xeb, 0xd5, 0x0d, 0xf7, 0x1b, 0x52, 0x30, 0xdc, 0x85, 0xec, 0xc0, 0x18, 0x1a,
+	0xc1, 0xe6, 0xdb, 0xff, 0x58, 0x3c, 0x2c, 0xa6, 0xe7, 0xbb, 0xca, 0xb0, 0xc8, 0xf2, 0x6b, 0x93,
+	0xb0, 0xf8, 0x37, 0x0e, 0x0a, 0x82, 0x6d, 0x1b, 0xa6, 0xeb, 0xa9, 0xa6, 0x16, 0xbd, 0x75, 0xe0,
+	0x66, 0xdf, 0x3a, 0xa4, 0xa2, 0xb7, 0x0e, 0x2b, 0x2d, 0x73, 0x85, 0xef, 0x44, 0xb2, 0xd1, 0x3b,
+	0x91, 0xa5, 0xaa, 0x56, 0x95, 0x9f, 0xa6, 0x80, 0xaf, 0xc6, 0x0b, 0x5f, 0x71, 0xff, 0x73, 0xd3,
+	0xfe, 0xff, 0x16, 0x6c, 0x8e, 0xeb, 0x6c, 0xa1, 0x9b, 0x99, 0x8d, 0x80, 0x98, 0x08, 0x92, 0xf4,
+	0xd2, 0x20, 0x29, 0xc3, 0x3a, 0x69, 0x4c, 0xcc, 0xce, 0xd6, 0xe6, 0xf1, 0x37, 0x92, 0x60, 0x43,
+	0x9d, 0x78, 0xc5, 0x2d, 0x65, 0xa9, 0x0d, 0xdf, 0x9c, 0x6b, 0xc3, 0xa0, 0xb5, 0x1c, 0xe9, 0x5a,
+	0xf9, 0xbf, 0x14, 0xf0, 0x11, 0x40, 0x25, 0x27, 0xbe, 0x87, 0xb1, 0xc4, 0xf7, 0xfe, 0x82, 0xf0,
+	0x24, 0x99, 0x42, 0x90, 0x62, 0x79, 0xef, 0x18, 0xf2, 0x81, 0xb1, 0xc8, 0x6e, 0x87, 0xe8, 0xbe,
+	0x3f, 0x7b, 0xbc, 0xb8, 0x8f, 0xe4, 0x49, 0xe7, 0xc5, 0xd3, 0xd7, 0x94, 0x52, 0x2b, 0x4b, 0x5f,
+	0x1f, 0xc3, 0x7a, 0x30, 0x41, 0xb2, 0x1f, 0x10, 0x24, 0xa5, 0xd7, 0xac, 0x89, 0x87, 0x52, 0x93,
+	0xd6, 0xe9, 0x8a, 0x00, 0x82, 0xa4, 0x74, 0x7a, 0xd5, 0xaa, 0xd8, 0xe9, 0xf0, 0x1c, 0x2a, 0x40,
+	0x4e, 0x90, 0x68, 0x55, 0x8e, 0x4f, 0x55, 0xfe, 0x9d, 0x83, 0xad, 0xc3, 0x73, 0xdd, 0x5c, 0x49,
+	0xe6, 0x3a, 0x8a, 0x98, 0x62, 0x8e, 0x7f, 0x62, 0x12, 0x57, 0x99, 0x3b, 0xd2, 0x7c, 0x66, 0x92,
+	0x3b, 0xfe, 0x8c, 0x83, 0x9c, 0x60, 0xdb, 0x44, 0xdc, 0x73, 0xe6, 0x8d, 0x70, 0xa8, 0xa7, 0xa3,
+	0xa1, 0xbe, 0x0b, 0x59, 0x92, 0x46, 0xfc, 0xf4, 0x91, 0x97, 0xfd, 0x0f, 0x74, 0x0f, 0x76, 0x55,
+	0x53, 0x77, 0x2c, 0x43, 0x57, 0x6c, 0x55, 0x3b, 0x53, 0xfb, 0x38, 0x9c, 0x27, 0x10, 0xe3, 0xb5,
+	0x7d, 0x16, 0x19, 0xa7, 0xf2, 0xdf, 0x29, 0xd8, 0x9c, 0x18, 0x24, 0x19, 0xfb, 0xdf, 0x87, 0x3c,
+	0xd1, 0xd0, 0x97, 0x97, 0x5e, 0x20, 0x5d, 0x91, 0x01, 0x65, 0x32, 0xab, 0x43, 0xaa, 0xd5, 0xf1,
+	0x38, 0x76, 0x32, 0x34, 0x76, 0xee, 0x2d, 0xe2, 0x1b, 0x7a, 0x63, 0x50, 0x8f, 0x05, 0x8e, 0x18,
+	0xf1, 0xf1, 0x7b, 0x8b, 0x8e, 0xb3, 0x4a, 0xac, 0x07, 0x3a, 0xd1, 0x0a, 0x77, 0x3d, 0x8e, 0xf5,
+	0xc3, 0x7a, 0x14, 0xeb, 0x87, 0xf5, 0x00, 0xeb, 0x7f, 0x92, 0x82, 0xab, 0x82, 0x6d, 0xb7, 0x4e,
+	0x4e, 0x0c, 0xcd, 0x50, 0x07, 0xd4, 0x44, 0x2f, 0x0a, 0xf9, 0x17, 0x4f, 0xb2, 0xcd, 0x88, 0x41,
+	0x1f, 0xcc, 0xf5, 0x6a, 0x82, 0xea, 0x2b, 0xbc, 0xf9, 0x4c, 0xc3, 0xee, 0x94, 0x8c, 0x64, 0x38,
+	0xee, 0xc3, 0x36, 0x81, 0xa3, 0xc5, 0x9a, 0x52, 0x5c, 0xb2, 0x01, 0xb7, 0xd4, 0xe8, 0x10, 0x53,
+	0x37, 0x71, 0xe9, 0xe9, 0x9b, 0xb8, 0x76, 0x0c, 0x9d, 0xdf, 0x59, 0xc2, 0x08, 0x34, 0xbb, 0xb7,
+	0x0e, 0x63, 0x28, 0x1d, 0x2f, 0xed, 0xd9, 0x25, 0x97, 0xf6, 0x7a, 0xc4, 0x1b, 0xcb, 0x2a, 0xb2,
+	0x32, 0x5f, 0x7c, 0x02, 0xf9, 0xf1, 0xa4, 0xc8, 0x21, 0x53, 0x68, 0x1d, 0x46, 0x70, 0xbe, 0x05,
+	0x05, 0x42, 0x9a, 0x00, 0x7d, 0x03, 0xd6, 0x09, 0x81, 0x21, 0xfd, 0xef, 0xd3, 0x70, 0xb5, 0x76,
+	0x69, 0xaa, 0x43, 0x43, 0xab, 0x5b, 0xda, 0x91, 0x63, 0x8d, 0xec, 0x17, 0x46, 0xfa, 0x0e, 0x64,
+	0x07, 0x7d, 0xc5, 0xd0, 0xa9, 0x03, 0x33, 0x72, 0x66, 0xd0, 0x97, 0x74, 0xf4, 0x04, 0xf2, 0x9a,
+	0x35, 0x1c, 0xfa, 0x37, 0xfe, 0x85, 0x67, 0xdd, 0xba, 0x25, 0xab, 0x74, 0xa7, 0x36, 0xe8, 0x57,
+	0xad, 0xe1, 0xb0, 0x7b, 0x69, 0x63, 0x79, 0x5d, 0x63, 0xbf, 0xe8, 0x5b, 0x01, 0x17, 0x3b, 0x8a,
+	0xae, 0x7a, 0x2a, 0xab, 0xde, 0xaf, 0x13, 0x42, 0x4d, 0xf5, 0xd4, 0xc5, 0x83, 0x66, 0x86, 0xc8,
+	0x95, 0x39, 0xea, 0xfb, 0x50, 0x08, 0xa9, 0x4f, 0x5c, 0x55, 0xab, 0x1f, 0xc5, 0x53, 0x12, 0x21,
+	0x75, 0xc4, 0x6a, 0x4f, 0x16, 0x7d, 0x4f, 0x91, 0xef, 0x56, 0x5b, 0x6c, 0xf2, 0xa9, 0x4f, 0x33,
+	0xeb, 0x9b, 0x7c, 0x71, 0xb2, 0x60, 0xfd, 0x75, 0x0a, 0x76, 0xa7, 0x54, 0x7e, 0x29, 0x2f, 0x40,
+	0x6e, 0x00, 0xf8, 0xf7, 0x99, 0x9a, 0xa5, 0x63, 0x76, 0x53, 0x96, 0xa7, 0x94, 0xaa, 0xa5, 0xd3,
+	0x43, 0x48, 0x9f, 0x48, 0x0f, 0x20, 0xc1, 0x5e, 0xe9, 0x50, 0x1a, 0x03, 0xc4, 0xc2, 0xa1, 0x92,
+	0x34, 0xa1, 0xd5, 0x79, 0xc0, 0x82, 0xc2, 0x23, 0xcb, 0x6d, 0x5b, 0xae, 0x41, 0xd3, 0xe9, 0x4d,
+	0x00, 0x9b, 0xfd, 0x36, 0x74, 0x3a, 0x42, 0x5a, 0x0e, 0x51, 0xa6, 0x12, 0x76, 0x6a, 0xd9, 0x84,
+	0x5d, 0x39, 0x83, 0xcd, 0x1f, 0xaa, 0xa6, 0xde, 0xc1, 0x03, 0xac, 0x51, 0x91, 0x7b, 0xb0, 0xe6,
+	0xa8, 0x9e, 0x72, 0xd0, 0x2f, 0x71, 0xfe, 0x4e, 0xc0, 0x51, 0xbd, 0x83, 0x7e, 0x40, 0x7e, 0xbf,
+	0x5f, 0x4a, 0x8d, 0xc9, 0xef, 0x8f, 0xc9, 0x1f, 0xf4, 0xe9, 0x3a, 0xee, 0x93, 0x3f, 0x18, 0x93,
+	0x3f, 0xec, 0x07, 0xdb, 0x09, 0x47, 0xf5, 0x3e, 0xec, 0x57, 0x7e, 0x91, 0x06, 0x14, 0x9a, 0xde,
+	0x0b, 0x47, 0x71, 0x15, 0xf2, 0x81, 0x31, 0x82, 0x8d, 0xc4, 0x9b, 0xf3, 0xab, 0xd9, 0x81, 0xe4,
+	0x49, 0x3f, 0x02, 0x8e, 0x81, 0x87, 0x15, 0x4d, 0xf5, 0x70, 0xdf, 0x72, 0x2e, 0x69, 0xd6, 0xce,
+	0xca, 0x85, 0x81, 0x87, 0xab, 0x8c, 0x84, 0x9a, 0x50, 0xfc, 0x5c, 0x35, 0x75, 0xc5, 0x0d, 0xac,
+	0xc4, 0x8a, 0x03, 0x6f, 0xcd, 0x16, 0x16, 0x31, 0xaa, 0xbc, 0xf9, 0x79, 0xc4, 0xc6, 0x0b, 0x9f,
+	0x4c, 0xa7, 0x8d, 0xf5, 0xd2, 0x6a, 0xb8, 0x3f, 0xcf, 0xc0, 0x6e, 0x48, 0xdc, 0x43, 0xdb, 0x60,
+	0x17, 0xe6, 0x2f, 0x1d, 0x83, 0xe8, 0x3d, 0xd8, 0xd5, 0x07, 0x24, 0x1b, 0x7a, 0xa7, 0x8e, 0x35,
+	0xea, 0x9f, 0xda, 0x23, 0x4f, 0x19, 0x1a, 0xfe, 0xe2, 0x9a, 0x92, 0x77, 0xe2, 0xbc, 0x86, 0x91,
+	0xdc, 0x45, 0xbd, 0xe8, 0x53, 0xe7, 0x25, 0x74, 0x11, 0x2e, 0xfa, 0xc9, 0x52, 0xd4, 0xa7, 0xd4,
+	0x95, 0x49, 0x52, 0xd4, 0xa7, 0xa4, 0xcb, 0x28, 0x49, 0xb1, 0x35, 0xbf, 0xcb, 0x28, 0x59, 0xb1,
+	0x51, 0x92, 0x62, 0xb9, 0xe4, 0x2e, 0x4c, 0xb1, 0x51, 0x92, 0x62, 0xeb, 0x33, 0xa4, 0xa8, 0x4f,
+	0xd1, 0x6b, 0x50, 0x18, 0xa8, 0x1e, 0x36, 0xb5, 0x4b, 0xaa, 0x4f, 0x9e, 0xb6, 0x04, 0x46, 0x22,
+	0x6a, 0x84, 0x1a, 0x10, 0xe9, 0x10, 0x69, 0x40, 0x84, 0x86, 0x47, 0x50, 0x9f, 0xd2, 0xd5, 0x2e,
+	0x34, 0x82, 0xfa, 0xb4, 0xf2, 0x8f, 0x29, 0xd8, 0x89, 0xe3, 0xe1, 0xa5, 0xe4, 0xee, 0x27, 0xc0,
+	0x07, 0x68, 0x62, 0x2f, 0x5e, 0x82, 0x58, 0xbe, 0xb3, 0x50, 0x60, 0x8c, 0x91, 0x2a, 0x6f, 0xd9,
+	0xe3, 0x58, 0xa1, 0xc3, 0x2c, 0x5e, 0x65, 0x4f, 0x98, 0xe8, 0xea, 0x72, 0xfa, 0x3f, 0xad, 0xc1,
+	0x96, 0xff, 0xba, 0x4f, 0x0c, 0x4a, 0x26, 0x09, 0x09, 0x8e, 0x4b, 0x4a, 0x70, 0xc9, 0x05, 0x98,
+	0xd4, 0x8c, 0x67, 0x43, 0x3f, 0x02, 0xa0, 0x0d, 0xfd, 0x0d, 0x4c, 0xfa, 0x59, 0x57, 0x2b, 0x31,
+	0x9d, 0x82, 0x6f, 0xf2, 0x9b, 0xee, 0x5e, 0xf2, 0x38, 0xf8, 0xb9, 0x82, 0x12, 0xdd, 0x03, 0xc8,
+	0xb9, 0xea, 0xd0, 0x1e, 0x8c, 0x8b, 0x2b, 0xb7, 0x66, 0x77, 0xee, 0xd0, 0x86, 0x72, 0xd0, 0x01,
+	0xfd, 0x08, 0x90, 0x8e, 0x2f, 0x0c, 0x0d, 0x2b, 0x86, 0x79, 0x62, 0xd1, 0x5b, 0x1d, 0x43, 0xa3,
+	0x41, 0x38, 0xb7, 0xce, 0x51, 0xa3, 0x7d, 0x24, 0xf3, 0xc4, 0xea, 0xd0, 0x1e, 0x32, 0xaf, 0xc7,
+	0x28, 0xe8, 0x27, 0xb0, 0x13, 0x1e, 0x59, 0xf7, 0xd7, 0x76, 0x1a, 0xac, 0x85, 0x79, 0xf7, 0xd3,
+	0x93, 0xa1, 0xd9, 0x76, 0x40, 0xde, 0xd6, 0xe3, 0x24, 0x7a, 0x56, 0x18, 0xb9, 0x9e, 0x35, 0xf4,
+	0xdd, 0x17, 0xbc, 0xb3, 0xf2, 0x69, 0x3e, 0x0c, 0x16, 0xae, 0x31, 0xc4, 0x7d, 0xb5, 0x32, 0x70,
+	0xfe, 0x15, 0x37, 0x06, 0xe7, 0xd8, 0xdb, 0xdb, 0xb0, 0x29, 0x7e, 0x26, 0x36, 0xbb, 0xa1, 0xaa,
+	0xf1, 0x2b, 0xb0, 0xe7, 0x93, 0xa4, 0xa6, 0x34, 0xbe, 0xec, 0x91, 0x5a, 0x4d, 0x9e, 0x43, 0x37,
+	0xa1, 0xec, 0xb3, 0xba, 0xa2, 0xdc, 0x90, 0x9a, 0x42, 0x57, 0x0c, 0xf3, 0x53, 0x93, 0xae, 0x75,
+	0xa1, 0x2b, 0x36, 0xab, 0x4f, 0x94, 0x8e, 0xd0, 0x68, 0xd7, 0xc5, 0x0e, 0x9f, 0x0e, 0xb1, 0x5a,
+	0x55, 0x81, 0x34, 0x57, 0x7a, 0xed, 0x9a, 0xd0, 0x15, 0xf9, 0x0c, 0xba, 0x0a, 0xc8, 0x67, 0x55,
+	0x7b, 0x9d, 0x6e, 0xab, 0xa1, 0xd0, 0x0f, 0x3e, 0x5b, 0xf9, 0x79, 0x0e, 0xb6, 0xfc, 0x17, 0x43,
+	0x93, 0x60, 0x8a, 0xe2, 0x9e, 0x7b, 0x16, 0xee, 0x63, 0xdd, 0x83, 0xef, 0x24, 0xdc, 0x37, 0xa1,
+	0x38, 0x2e, 0x4d, 0x12, 0xd8, 0x61, 0x96, 0xe2, 0xde, 0x7a, 0x76, 0x75, 0x8d, 0x20, 0x0c, 0xcb,
+	0xe3, 0xca, 0x26, 0xfd, 0x44, 0x8f, 0x61, 0x7b, 0xa8, 0x1a, 0xa6, 0x87, 0x4d, 0xd5, 0xd4, 0x30,
+	0x1b, 0xd2, 0x0f, 0xd4, 0x39, 0x40, 0x6e, 0x4c, 0xba, 0xf8, 0xa3, 0xf2, 0xc3, 0x18, 0x05, 0x1d,
+	0xc3, 0xc6, 0x29, 0x56, 0x07, 0xde, 0xa9, 0xa2, 0x9d, 0x62, 0xed, 0x8c, 0x1d, 0x3d, 0xe7, 0x64,
+	0xe2, 0x63, 0xda, 0xba, 0x4a, 0x1a, 0xcb, 0x85, 0xd3, 0xc9, 0x07, 0xaa, 0xd1, 0xc7, 0x2e, 0x9e,
+	0xe1, 0x7a, 0x86, 0xe6, 0xb2, 0x7d, 0xce, 0x1b, 0x73, 0x8c, 0x39, 0x6e, 0x2b, 0x87, 0xfa, 0xa1,
+	0x26, 0x6c, 0x98, 0xf8, 0x0b, 0x25, 0x98, 0x3d, 0x0b, 0xd6, 0x6f, 0x2f, 0xf1, 0x90, 0x50, 0x2e,
+	0x98, 0xf8, 0x8b, 0x80, 0x42, 0xce, 0x4f, 0x93, 0x07, 0x8b, 0xfe, 0x3b, 0xb2, 0x75, 0x1c, 0xbc,
+	0x56, 0x5c, 0x38, 0x8a, 0xe2, 0x9e, 0x5f, 0x59, 0x14, 0xfd, 0x2f, 0x37, 0x46, 0xe5, 0x73, 0x46,
+	0xd1, 0x54, 0x94, 0xc8, 0xe2, 0xa3, 0x9e, 0xd8, 0xe9, 0xf2, 0x29, 0x74, 0x1d, 0xae, 0x45, 0x59,
+	0x6d, 0xb9, 0x45, 0x0e, 0xca, 0x62, 0x8d, 0x4f, 0xa3, 0x12, 0xec, 0xb2, 0x38, 0xa9, 0xb7, 0x7a,
+	0xb5, 0xba, 0xd8, 0x55, 0x3a, 0x5d, 0x3f, 0x82, 0xc6, 0x71, 0x39, 0xe6, 0x34, 0x04, 0xa9, 0xd9,
+	0x15, 0x9b, 0x42, 0xb3, 0x2a, 0xf2, 0xd9, 0x49, 0x4f, 0xa1, 0xdd, 0x96, 0x9a, 0x9d, 0xae, 0x72,
+	0x2c, 0x0a, 0xf5, 0xee, 0x31, 0xbf, 0x36, 0xd1, 0x65, 0xdc, 0x93, 0x85, 0x65, 0x8e, 0x1c, 0xd5,
+	0x7d, 0x16, 0xbd, 0xf4, 0xe4, 0xd7, 0xf7, 0x3f, 0x81, 0x9c, 0x54, 0x23, 0xf3, 0xa5, 0x05, 0x2c,
+	0xa9, 0x16, 0x39, 0x2d, 0xae, 0x43, 0x46, 0x6a, 0x88, 0x12, 0xcf, 0x21, 0x80, 0xb5, 0x46, 0x47,
+	0xea, 0xd4, 0x48, 0x42, 0x00, 0x58, 0x93, 0xda, 0x42, 0xad, 0x26, 0xf3, 0xe9, 0xfd, 0xef, 0x41,
+	0x21, 0xb4, 0x27, 0x20, 0x43, 0xc8, 0x9d, 0xf8, 0x81, 0x53, 0xee, 0x44, 0x6b, 0x60, 0x72, 0x87,
+	0x55, 0x06, 0xf6, 0x7f, 0x8f, 0x83, 0xed, 0xa9, 0xa7, 0x42, 0x68, 0x07, 0xb6, 0xfc, 0x17, 0x9e,
+	0x4a, 0x5b, 0x96, 0x5a, 0xb2, 0xd4, 0x7d, 0xc2, 0x5f, 0x09, 0x88, 0xf5, 0xd6, 0xe3, 0xc0, 0x8c,
+	0xbe, 0xd1, 0x09, 0xb1, 0x7b, 0x2c, 0xb7, 0x7a, 0x47, 0xc7, 0xed, 0x5e, 0x57, 0xa9, 0xb5, 0x1e,
+	0x37, 0x95, 0x8e, 0x9f, 0xb5, 0x92, 0x58, 0x0d, 0x3f, 0x6b, 0x25, 0xb1, 0xea, 0x7c, 0x66, 0xff,
+	0x2e, 0x3d, 0xdf, 0xc4, 0xde, 0x11, 0xa2, 0x1c, 0xa4, 0xbb, 0xd5, 0x36, 0x7f, 0x85, 0xfc, 0xe8,
+	0xd5, 0xda, 0x3c, 0x47, 0x7e, 0x08, 0xcd, 0x27, 0x7c, 0xea, 0xe0, 0x6f, 0xb7, 0xa0, 0xd8, 0x20,
+	0x10, 0x15, 0x29, 0x42, 0x05, 0xdb, 0x40, 0xbf, 0xcf, 0x41, 0x31, 0xfa, 0xa7, 0x00, 0x74, 0x77,
+	0xc9, 0xbf, 0x74, 0x94, 0xdf, 0x5d, 0xea, 0xff, 0x06, 0x95, 0x1b, 0xbf, 0xf5, 0xaf, 0xff, 0xf5,
+	0x87, 0xa9, 0x6b, 0x15, 0x74, 0xf7, 0xe2, 0xbd, 0xbb, 0x0e, 0x6b, 0xe0, 0xd7, 0xb4, 0x1e, 0x70,
+	0xfb, 0xe8, 0x77, 0x38, 0xd8, 0x08, 0xc7, 0x27, 0x7a, 0x77, 0xa9, 0x27, 0xf9, 0xe5, 0x65, 0xc2,
+	0xbe, 0x72, 0x9d, 0xea, 0xb2, 0x57, 0xe1, 0x89, 0x2e, 0x27, 0x86, 0xa9, 0x07, 0x39, 0x84, 0x68,
+	0xf2, 0xa7, 0x1c, 0xec, 0x26, 0x3d, 0x60, 0x47, 0x1f, 0x3e, 0xd7, 0x83, 0xf7, 0xe5, 0x34, 0xfb,
+	0x16, 0xd5, 0xec, 0x46, 0xa5, 0x44, 0x34, 0xb3, 0xd9, 0xa8, 0x71, 0x0d, 0xff, 0x86, 0x83, 0xd2,
+	0xac, 0x77, 0x95, 0xe8, 0xe3, 0xe7, 0x7e, 0x8b, 0x59, 0x7e, 0x6f, 0xe9, 0x67, 0x81, 0x95, 0xb7,
+	0xa8, 0xbe, 0xaf, 0x57, 0x5e, 0x25, 0xfa, 0x9e, 0x5b, 0xae, 0xcd, 0x1a, 0xb1, 0x2d, 0xa6, 0x46,
+	0xc7, 0x27, 0x3a, 0xff, 0x43, 0xa2, 0xce, 0xfe, 0x93, 0xac, 0xe5, 0x74, 0x8e, 0x3c, 0xa1, 0x2b,
+	0xdf, 0x7f, 0xce, 0x97, 0x65, 0xcf, 0xd2, 0x5c, 0xa7, 0x4d, 0x89, 0xe6, 0x24, 0x56, 0xa2, 0x2f,
+	0x64, 0xe6, 0xc5, 0x4a, 0xe2, 0xa3, 0xa8, 0x79, 0xb1, 0x92, 0xf0, 0xf8, 0x26, 0x1a, 0x2b, 0xfe,
+	0xf3, 0xac, 0x60, 0x5b, 0x4c, 0x34, 0xfa, 0x29, 0x07, 0x85, 0xa3, 0xf0, 0xc3, 0xff, 0x65, 0x5e,
+	0x63, 0x94, 0xf7, 0x17, 0x7f, 0x2f, 0x50, 0x29, 0x53, 0x45, 0x76, 0x2b, 0x5b, 0x44, 0x91, 0x3e,
+	0xf6, 0xc2, 0x5a, 0xfc, 0x01, 0x07, 0x45, 0x41, 0xd7, 0x7b, 0x2e, 0x76, 0xba, 0x16, 0xad, 0x53,
+	0xa1, 0x7b, 0xcb, 0x96, 0x15, 0xcb, 0x77, 0x96, 0x2b, 0x82, 0x45, 0x2d, 0xa3, 0xea, 0x3a, 0x3d,
+	0xb6, 0x5a, 0xb4, 0xc8, 0x46, 0x74, 0xfa, 0x19, 0x07, 0xc5, 0x23, 0xec, 0x85, 0x2e, 0x0e, 0xe7,
+	0x19, 0x67, 0xfa, 0x4e, 0x7e, 0x9e, 0x71, 0xe2, 0xb7, 0x91, 0x51, 0x5d, 0xfa, 0xd8, 0x63, 0x57,
+	0xb4, 0x03, 0xc3, 0xa5, 0x51, 0xfa, 0x1b, 0xd4, 0x49, 0xc1, 0xa5, 0x0e, 0x7a, 0x7b, 0xe1, 0xcb,
+	0xbd, 0xf2, 0x5b, 0x0b, 0xde, 0x11, 0x4d, 0xb9, 0xe7, 0xe4, 0x5c, 0x37, 0x03, 0xf1, 0xbf, 0xe0,
+	0xe8, 0x1b, 0xa1, 0x58, 0xd5, 0x7d, 0x9e, 0x8b, 0x92, 0xaf, 0x4b, 0xe6, 0xb9, 0x28, 0xa9, 0xa4,
+	0x5f, 0x79, 0x9d, 0x2a, 0x75, 0xbd, 0x72, 0x75, 0x62, 0x96, 0xe0, 0xda, 0x83, 0xe8, 0x47, 0x74,
+	0xfb, 0x23, 0x0e, 0xb6, 0x8f, 0xb0, 0x17, 0x3d, 0x11, 0xa3, 0x77, 0x96, 0xa9, 0x51, 0xcd, 0x0b,
+	0xa9, 0x84, 0x93, 0x76, 0xe5, 0x16, 0xd5, 0xaa, 0x5c, 0xd9, 0x63, 0x5a, 0x91, 0x88, 0x67, 0x6d,
+	0xce, 0x6c, 0xe3, 0x01, 0xb7, 0x7f, 0x8f, 0x43, 0xbf, 0x4b, 0x76, 0x58, 0x9e, 0x83, 0xd5, 0xe1,
+	0x64, 0xdf, 0xff, 0xf6, 0xc2, 0xe7, 0xa5, 0xf2, 0xdb, 0x0b, 0x6f, 0x0a, 0x2b, 0x37, 0xa9, 0x36,
+	0xa5, 0xca, 0x0e, 0xd1, 0xc6, 0xa5, 0x22, 0xc9, 0x49, 0x9b, 0x1e, 0x0a, 0x1e, 0x70, 0xfb, 0xb7,
+	0xb9, 0x7b, 0xdc, 0x0f, 0xf9, 0x2f, 0xff, 0xf3, 0xe6, 0x95, 0x2f, 0xbf, 0xba, 0xc9, 0xfd, 0xf3,
+	0x57, 0x37, 0xb9, 0x5f, 0x7e, 0x75, 0x93, 0xfb, 0x7c, 0x8d, 0xfe, 0x57, 0xe0, 0xfd, 0xff, 0x0f,
+	0x00, 0x00, 0xff, 0xff, 0xec, 0x5e, 0x69, 0x0c, 0xf4, 0x3a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2222,6 +2653,18 @@ type MatchEngineApiClient interface {
 	// Similar to FindCloudlet, except uses a token for client data.
 	// This API is only applicable for Platform Applications.
 	PlatformFindCloudlet(ctx context.Context, in *PlatformFindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error)
+	//
+	// QosPrioritySessionCreate
+	//
+	// Creates a QOS priority session (latency or throughput priority) from the client
+	// to the app inst by making a call to the operator's priority session API server.
+	QosPrioritySessionCreate(ctx context.Context, in *QosPrioritySessionCreateRequest, opts ...grpc.CallOption) (*QosPrioritySessionReply, error)
+	//
+	// QosPrioritySessionDelete
+	//
+	// Deletes a previously created QOS priority session by making a call to the operator's
+	// priority session API server.
+	QosPrioritySessionDelete(ctx context.Context, in *QosPrioritySessionDeleteRequest, opts ...grpc.CallOption) (*QosPrioritySessionDeleteReply, error)
 	//
 	// VerifyLocation
 	//
@@ -2265,6 +2708,24 @@ func (c *matchEngineApiClient) FindCloudlet(ctx context.Context, in *FindCloudle
 func (c *matchEngineApiClient) PlatformFindCloudlet(ctx context.Context, in *PlatformFindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error) {
 	out := new(FindCloudletReply)
 	err := c.cc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/PlatformFindCloudlet", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *matchEngineApiClient) QosPrioritySessionCreate(ctx context.Context, in *QosPrioritySessionCreateRequest, opts ...grpc.CallOption) (*QosPrioritySessionReply, error) {
+	out := new(QosPrioritySessionReply)
+	err := c.cc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/QosPrioritySessionCreate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *matchEngineApiClient) QosPrioritySessionDelete(ctx context.Context, in *QosPrioritySessionDeleteRequest, opts ...grpc.CallOption) (*QosPrioritySessionDeleteReply, error) {
+	out := new(QosPrioritySessionDeleteReply)
+	err := c.cc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/QosPrioritySessionDelete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2413,6 +2874,18 @@ type MatchEngineApiServer interface {
 	// This API is only applicable for Platform Applications.
 	PlatformFindCloudlet(context.Context, *PlatformFindCloudletRequest) (*FindCloudletReply, error)
 	//
+	// QosPrioritySessionCreate
+	//
+	// Creates a QOS priority session (latency or throughput priority) from the client
+	// to the app inst by making a call to the operator's priority session API server.
+	QosPrioritySessionCreate(context.Context, *QosPrioritySessionCreateRequest) (*QosPrioritySessionReply, error)
+	//
+	// QosPrioritySessionDelete
+	//
+	// Deletes a previously created QOS priority session by making a call to the operator's
+	// priority session API server.
+	QosPrioritySessionDelete(context.Context, *QosPrioritySessionDeleteRequest) (*QosPrioritySessionDeleteReply, error)
+	//
 	// VerifyLocation
 	//
 	// Verifies that the GPS coordinates accurately report the actual location of the device.
@@ -2438,6 +2911,12 @@ func (*UnimplementedMatchEngineApiServer) FindCloudlet(ctx context.Context, req 
 }
 func (*UnimplementedMatchEngineApiServer) PlatformFindCloudlet(ctx context.Context, req *PlatformFindCloudletRequest) (*FindCloudletReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PlatformFindCloudlet not implemented")
+}
+func (*UnimplementedMatchEngineApiServer) QosPrioritySessionCreate(ctx context.Context, req *QosPrioritySessionCreateRequest) (*QosPrioritySessionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QosPrioritySessionCreate not implemented")
+}
+func (*UnimplementedMatchEngineApiServer) QosPrioritySessionDelete(ctx context.Context, req *QosPrioritySessionDeleteRequest) (*QosPrioritySessionDeleteReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method QosPrioritySessionDelete not implemented")
 }
 func (*UnimplementedMatchEngineApiServer) VerifyLocation(ctx context.Context, req *VerifyLocationRequest) (*VerifyLocationReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyLocation not implemented")
@@ -2518,6 +2997,42 @@ func _MatchEngineApi_PlatformFindCloudlet_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MatchEngineApiServer).PlatformFindCloudlet(ctx, req.(*PlatformFindCloudletRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MatchEngineApi_QosPrioritySessionCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QosPrioritySessionCreateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MatchEngineApiServer).QosPrioritySessionCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.MatchEngineApi/QosPrioritySessionCreate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MatchEngineApiServer).QosPrioritySessionCreate(ctx, req.(*QosPrioritySessionCreateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MatchEngineApi_QosPrioritySessionDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QosPrioritySessionDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MatchEngineApiServer).QosPrioritySessionDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.MatchEngineApi/QosPrioritySessionDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MatchEngineApiServer).QosPrioritySessionDelete(ctx, req.(*QosPrioritySessionDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2692,6 +3207,14 @@ var _MatchEngineApi_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PlatformFindCloudlet",
 			Handler:    _MatchEngineApi_PlatformFindCloudlet_Handler,
+		},
+		{
+			MethodName: "QosPrioritySessionCreate",
+			Handler:    _MatchEngineApi_QosPrioritySessionCreate_Handler,
+		},
+		{
+			MethodName: "QosPrioritySessionDelete",
+			Handler:    _MatchEngineApi_QosPrioritySessionDelete_Handler,
 		},
 		{
 			MethodName: "VerifyLocation",
@@ -3120,6 +3643,18 @@ func (m *FindCloudletReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0xa2
 		}
 	}
+	if len(m.QosErrorMsg) > 0 {
+		i -= len(m.QosErrorMsg)
+		copy(dAtA[i:], m.QosErrorMsg)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.QosErrorMsg)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if m.QosResult != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.QosResult))
+		i--
+		dAtA[i] = 0x38
+	}
 	if len(m.EdgeEventsCookie) > 0 {
 		i -= len(m.EdgeEventsCookie)
 		copy(dAtA[i:], m.EdgeEventsCookie)
@@ -3159,6 +3694,343 @@ func (m *FindCloudletReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Fqdn)))
 		i--
 		dAtA[i] = 0x1a
+	}
+	if m.Status != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Ver != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QosPrioritySessionCreateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosPrioritySessionCreateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QosPrioritySessionCreateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintAppClient(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x6
+			i--
+			dAtA[i] = 0xa2
+		}
+	}
+	if len(m.NotificationAuthToken) > 0 {
+		i -= len(m.NotificationAuthToken)
+		copy(dAtA[i:], m.NotificationAuthToken)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.NotificationAuthToken)))
+		i--
+		dAtA[i] = 0x62
+	}
+	if len(m.NotificationUri) > 0 {
+		i -= len(m.NotificationUri)
+		copy(dAtA[i:], m.NotificationUri)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.NotificationUri)))
+		i--
+		dAtA[i] = 0x5a
+	}
+	if m.Profile != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Profile))
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.ProtocolOut != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.ProtocolOut))
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.ProtocolIn != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.ProtocolIn))
+		i--
+		dAtA[i] = 0x40
+	}
+	if len(m.PortApplicationServer) > 0 {
+		i -= len(m.PortApplicationServer)
+		copy(dAtA[i:], m.PortApplicationServer)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.PortApplicationServer)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.PortUserEquipment) > 0 {
+		i -= len(m.PortUserEquipment)
+		copy(dAtA[i:], m.PortUserEquipment)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.PortUserEquipment)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.IpApplicationServer) > 0 {
+		i -= len(m.IpApplicationServer)
+		copy(dAtA[i:], m.IpApplicationServer)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.IpApplicationServer)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.IpUserEquipment) > 0 {
+		i -= len(m.IpUserEquipment)
+		copy(dAtA[i:], m.IpUserEquipment)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.IpUserEquipment)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.SessionDuration != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.SessionDuration))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.SessionCookie) > 0 {
+		i -= len(m.SessionCookie)
+		copy(dAtA[i:], m.SessionCookie)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Ver != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QosPrioritySessionReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosPrioritySessionReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QosPrioritySessionReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintAppClient(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x6
+			i--
+			dAtA[i] = 0xa2
+		}
+	}
+	if m.HttpStatus != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.HttpStatus))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.ExpiresAt != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.ExpiresAt))
+		i--
+		dAtA[i] = 0x30
+	}
+	if m.StartedAt != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.StartedAt))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.SessionId) > 0 {
+		i -= len(m.SessionId)
+		copy(dAtA[i:], m.SessionId)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Profile != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Profile))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.SessionDuration != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.SessionDuration))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Ver != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QosPrioritySessionDeleteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosPrioritySessionDeleteRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QosPrioritySessionDeleteRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintAppClient(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x6
+			i--
+			dAtA[i] = 0xa2
+		}
+	}
+	if len(m.SessionId) > 0 {
+		i -= len(m.SessionId)
+		copy(dAtA[i:], m.SessionId)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Profile != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Profile))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.SessionCookie) > 0 {
+		i -= len(m.SessionCookie)
+		copy(dAtA[i:], m.SessionCookie)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Ver != 0 {
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QosPrioritySessionDeleteReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QosPrioritySessionDeleteReply) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QosPrioritySessionDeleteReply) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Tags) > 0 {
+		for k := range m.Tags {
+			v := m.Tags[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintAppClient(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintAppClient(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x6
+			i--
+			dAtA[i] = 0xa2
+		}
 	}
 	if m.Status != 0 {
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
@@ -5273,6 +6145,14 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) int {
 		m.EdgeEventsCookie = src.EdgeEventsCookie
 		changed++
 	}
+	if m.QosResult != src.QosResult {
+		m.QosResult = src.QosResult
+		changed++
+	}
+	if m.QosErrorMsg != src.QosErrorMsg {
+		m.QosErrorMsg = src.QosErrorMsg
+		changed++
+	}
 	if src.Tags != nil {
 		m.Tags = make(map[string]string)
 		for k0, _ := range src.Tags {
@@ -5308,6 +6188,8 @@ func (m *FindCloudletReply) DeepCopyIn(src *FindCloudletReply) {
 		m.CloudletLocation = nil
 	}
 	m.EdgeEventsCookie = src.EdgeEventsCookie
+	m.QosResult = src.QosResult
+	m.QosErrorMsg = src.QosErrorMsg
 	if src.Tags != nil {
 		m.Tags = make(map[string]string)
 		for k, v := range src.Tags {
@@ -5333,6 +6215,9 @@ func (m *FindCloudletReply) ValidateEnums() error {
 			return err
 		}
 	}
+	if _, ok := FindCloudletReply_QosSessionResult_name[int32(m.QosResult)]; !ok {
+		return errors.New("invalid QosResult")
+	}
 	return nil
 }
 
@@ -5345,6 +6230,285 @@ func (s *FindCloudletReply) ClearTagged(tags map[string]struct{}) {
 	if s.CloudletLocation != nil {
 		s.CloudletLocation.ClearTagged(tags)
 	}
+}
+
+func (m *QosPrioritySessionCreateRequest) CopyInFields(src *QosPrioritySessionCreateRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.SessionDuration != src.SessionDuration {
+		m.SessionDuration = src.SessionDuration
+		changed++
+	}
+	if m.IpUserEquipment != src.IpUserEquipment {
+		m.IpUserEquipment = src.IpUserEquipment
+		changed++
+	}
+	if m.IpApplicationServer != src.IpApplicationServer {
+		m.IpApplicationServer = src.IpApplicationServer
+		changed++
+	}
+	if m.PortUserEquipment != src.PortUserEquipment {
+		m.PortUserEquipment = src.PortUserEquipment
+		changed++
+	}
+	if m.PortApplicationServer != src.PortApplicationServer {
+		m.PortApplicationServer = src.PortApplicationServer
+		changed++
+	}
+	if m.ProtocolIn != src.ProtocolIn {
+		m.ProtocolIn = src.ProtocolIn
+		changed++
+	}
+	if m.ProtocolOut != src.ProtocolOut {
+		m.ProtocolOut = src.ProtocolOut
+		changed++
+	}
+	if m.Profile != src.Profile {
+		m.Profile = src.Profile
+		changed++
+	}
+	if m.NotificationUri != src.NotificationUri {
+		m.NotificationUri = src.NotificationUri
+		changed++
+	}
+	if m.NotificationAuthToken != src.NotificationAuthToken {
+		m.NotificationAuthToken = src.NotificationAuthToken
+		changed++
+	}
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k0, _ := range src.Tags {
+			m.Tags[k0] = src.Tags[k0]
+			changed++
+		}
+	} else if m.Tags != nil {
+		m.Tags = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *QosPrioritySessionCreateRequest) DeepCopyIn(src *QosPrioritySessionCreateRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.SessionDuration = src.SessionDuration
+	m.IpUserEquipment = src.IpUserEquipment
+	m.IpApplicationServer = src.IpApplicationServer
+	m.PortUserEquipment = src.PortUserEquipment
+	m.PortApplicationServer = src.PortApplicationServer
+	m.ProtocolIn = src.ProtocolIn
+	m.ProtocolOut = src.ProtocolOut
+	m.Profile = src.Profile
+	m.NotificationUri = src.NotificationUri
+	m.NotificationAuthToken = src.NotificationAuthToken
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k, v := range src.Tags {
+			m.Tags[k] = v
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *QosPrioritySessionCreateRequest) ValidateEnums() error {
+	if _, ok := QosSessionProtocol_name[int32(m.ProtocolIn)]; !ok {
+		return errors.New("invalid ProtocolIn")
+	}
+	if _, ok := QosSessionProtocol_name[int32(m.ProtocolOut)]; !ok {
+		return errors.New("invalid ProtocolOut")
+	}
+	if _, ok := QosSessionProfile_name[int32(m.Profile)]; !ok {
+		return errors.New("invalid Profile")
+	}
+	return nil
+}
+
+func (s *QosPrioritySessionCreateRequest) ClearTagged(tags map[string]struct{}) {
+}
+
+func (m *QosPrioritySessionReply) CopyInFields(src *QosPrioritySessionReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionDuration != src.SessionDuration {
+		m.SessionDuration = src.SessionDuration
+		changed++
+	}
+	if m.Profile != src.Profile {
+		m.Profile = src.Profile
+		changed++
+	}
+	if m.SessionId != src.SessionId {
+		m.SessionId = src.SessionId
+		changed++
+	}
+	if m.StartedAt != src.StartedAt {
+		m.StartedAt = src.StartedAt
+		changed++
+	}
+	if m.ExpiresAt != src.ExpiresAt {
+		m.ExpiresAt = src.ExpiresAt
+		changed++
+	}
+	if m.HttpStatus != src.HttpStatus {
+		m.HttpStatus = src.HttpStatus
+		changed++
+	}
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k0, _ := range src.Tags {
+			m.Tags[k0] = src.Tags[k0]
+			changed++
+		}
+	} else if m.Tags != nil {
+		m.Tags = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *QosPrioritySessionReply) DeepCopyIn(src *QosPrioritySessionReply) {
+	m.Ver = src.Ver
+	m.SessionDuration = src.SessionDuration
+	m.Profile = src.Profile
+	m.SessionId = src.SessionId
+	m.StartedAt = src.StartedAt
+	m.ExpiresAt = src.ExpiresAt
+	m.HttpStatus = src.HttpStatus
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k, v := range src.Tags {
+			m.Tags[k] = v
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *QosPrioritySessionReply) ValidateEnums() error {
+	if _, ok := QosSessionProfile_name[int32(m.Profile)]; !ok {
+		return errors.New("invalid Profile")
+	}
+	return nil
+}
+
+func (s *QosPrioritySessionReply) ClearTagged(tags map[string]struct{}) {
+}
+
+func (m *QosPrioritySessionDeleteRequest) CopyInFields(src *QosPrioritySessionDeleteRequest) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.SessionCookie != src.SessionCookie {
+		m.SessionCookie = src.SessionCookie
+		changed++
+	}
+	if m.Profile != src.Profile {
+		m.Profile = src.Profile
+		changed++
+	}
+	if m.SessionId != src.SessionId {
+		m.SessionId = src.SessionId
+		changed++
+	}
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k0, _ := range src.Tags {
+			m.Tags[k0] = src.Tags[k0]
+			changed++
+		}
+	} else if m.Tags != nil {
+		m.Tags = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *QosPrioritySessionDeleteRequest) DeepCopyIn(src *QosPrioritySessionDeleteRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.Profile = src.Profile
+	m.SessionId = src.SessionId
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k, v := range src.Tags {
+			m.Tags[k] = v
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *QosPrioritySessionDeleteRequest) ValidateEnums() error {
+	if _, ok := QosSessionProfile_name[int32(m.Profile)]; !ok {
+		return errors.New("invalid Profile")
+	}
+	return nil
+}
+
+func (s *QosPrioritySessionDeleteRequest) ClearTagged(tags map[string]struct{}) {
+}
+
+func (m *QosPrioritySessionDeleteReply) CopyInFields(src *QosPrioritySessionDeleteReply) int {
+	changed := 0
+	if m.Ver != src.Ver {
+		m.Ver = src.Ver
+		changed++
+	}
+	if m.Status != src.Status {
+		m.Status = src.Status
+		changed++
+	}
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k0, _ := range src.Tags {
+			m.Tags[k0] = src.Tags[k0]
+			changed++
+		}
+	} else if m.Tags != nil {
+		m.Tags = nil
+		changed++
+	}
+	return changed
+}
+
+func (m *QosPrioritySessionDeleteReply) DeepCopyIn(src *QosPrioritySessionDeleteReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	if src.Tags != nil {
+		m.Tags = make(map[string]string)
+		for k, v := range src.Tags {
+			m.Tags[k] = v
+		}
+	} else {
+		m.Tags = nil
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *QosPrioritySessionDeleteReply) ValidateEnums() error {
+	if _, ok := QosPrioritySessionDeleteReply_DeleteStatus_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
+}
+
+func (s *QosPrioritySessionDeleteReply) ClearTagged(tags map[string]struct{}) {
 }
 
 func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) int {
@@ -7432,6 +8596,14 @@ func (m *ServerEdgeEvent) CopyInFields(src *ServerEdgeEvent) int {
 			m.NewCloudlet.EdgeEventsCookie = src.NewCloudlet.EdgeEventsCookie
 			changed++
 		}
+		if m.NewCloudlet.QosResult != src.NewCloudlet.QosResult {
+			m.NewCloudlet.QosResult = src.NewCloudlet.QosResult
+			changed++
+		}
+		if m.NewCloudlet.QosErrorMsg != src.NewCloudlet.QosErrorMsg {
+			m.NewCloudlet.QosErrorMsg = src.NewCloudlet.QosErrorMsg
+			changed++
+		}
 		if src.NewCloudlet.Tags != nil {
 			m.NewCloudlet.Tags = make(map[string]string)
 			for k1, _ := range src.NewCloudlet.Tags {
@@ -7756,6 +8928,238 @@ func (e ReplyStatus) MarshalJSON() ([]byte, error) {
 
 var ReplyStatusCommonPrefix = "Rs"
 
+var QosSessionProfileStrings = []string{
+	"QOS_NO_PRIORITY",
+	"QOS_LOW_LATENCY",
+	"QOS_THROUGHPUT_DOWN_S",
+	"QOS_THROUGHPUT_DOWN_M",
+	"QOS_THROUGHPUT_DOWN_L",
+}
+
+const (
+	QosSessionProfileQOS_NO_PRIORITY       uint64 = 1 << 0
+	QosSessionProfileQOS_LOW_LATENCY       uint64 = 1 << 1
+	QosSessionProfileQOS_THROUGHPUT_DOWN_S uint64 = 1 << 2
+	QosSessionProfileQOS_THROUGHPUT_DOWN_M uint64 = 1 << 3
+	QosSessionProfileQOS_THROUGHPUT_DOWN_L uint64 = 1 << 4
+)
+
+var QosSessionProfile_CamelName = map[int32]string{
+	// QOS_NO_PRIORITY -> QosNoPriority
+	0: "QosNoPriority",
+	// QOS_LOW_LATENCY -> QosLowLatency
+	1: "QosLowLatency",
+	// QOS_THROUGHPUT_DOWN_S -> QosThroughputDownS
+	2: "QosThroughputDownS",
+	// QOS_THROUGHPUT_DOWN_M -> QosThroughputDownM
+	3: "QosThroughputDownM",
+	// QOS_THROUGHPUT_DOWN_L -> QosThroughputDownL
+	4: "QosThroughputDownL",
+}
+var QosSessionProfile_CamelValue = map[string]int32{
+	"QosNoPriority":      0,
+	"QosLowLatency":      1,
+	"QosThroughputDownS": 2,
+	"QosThroughputDownM": 3,
+	"QosThroughputDownL": 4,
+}
+
+func ParseQosSessionProfile(data interface{}) (QosSessionProfile, error) {
+	if val, ok := data.(QosSessionProfile); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := QosSessionProfile_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = QosSessionProfile_CamelValue["Qos"+util.CamelCase(str)]
+		}
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = QosSessionProfile_CamelName[val]
+			}
+		}
+		if !ok {
+			return QosSessionProfile(0), fmt.Errorf("Invalid QosSessionProfile value %q", str)
+		}
+		return QosSessionProfile(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := QosSessionProfile_CamelName[ival]; ok {
+			return QosSessionProfile(ival), nil
+		} else {
+			return QosSessionProfile(0), fmt.Errorf("Invalid QosSessionProfile value %d", ival)
+		}
+	}
+	return QosSessionProfile(0), fmt.Errorf("Invalid QosSessionProfile value %v", data)
+}
+
+func (e *QosSessionProfile) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseQosSessionProfile(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e QosSessionProfile) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(QosSessionProfile_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qos")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *QosSessionProfile) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, err := ParseQosSessionProfile(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(QosSessionProfile(0)),
+			}
+		}
+		*e = QosSessionProfile(val)
+		return nil
+	}
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseQosSessionProfile(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(QosSessionProfile(0)),
+	}
+}
+
+func (e QosSessionProfile) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(QosSessionProfile_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qos")
+	return json.Marshal(str)
+}
+
+var QosSessionProfileCommonPrefix = "Qos"
+
+var QosSessionProtocolStrings = []string{
+	"TCP",
+	"UDP",
+	"ANY",
+}
+
+const (
+	QosSessionProtocolTCP uint64 = 1 << 0
+	QosSessionProtocolUDP uint64 = 1 << 1
+	QosSessionProtocolANY uint64 = 1 << 2
+)
+
+var QosSessionProtocol_CamelName = map[int32]string{
+	// TCP -> Tcp
+	0: "Tcp",
+	// UDP -> Udp
+	1: "Udp",
+	// ANY -> Any
+	2: "Any",
+}
+var QosSessionProtocol_CamelValue = map[string]int32{
+	"Tcp": 0,
+	"Udp": 1,
+	"Any": 2,
+}
+
+func ParseQosSessionProtocol(data interface{}) (QosSessionProtocol, error) {
+	if val, ok := data.(QosSessionProtocol); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := QosSessionProtocol_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = QosSessionProtocol_CamelName[val]
+			}
+		}
+		if !ok {
+			return QosSessionProtocol(0), fmt.Errorf("Invalid QosSessionProtocol value %q", str)
+		}
+		return QosSessionProtocol(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := QosSessionProtocol_CamelName[ival]; ok {
+			return QosSessionProtocol(ival), nil
+		} else {
+			return QosSessionProtocol(0), fmt.Errorf("Invalid QosSessionProtocol value %d", ival)
+		}
+	}
+	return QosSessionProtocol(0), fmt.Errorf("Invalid QosSessionProtocol value %v", data)
+}
+
+func (e *QosSessionProtocol) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseQosSessionProtocol(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e QosSessionProtocol) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(QosSessionProtocol_CamelName, int32(e))
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *QosSessionProtocol) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, err := ParseQosSessionProtocol(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(QosSessionProtocol(0)),
+			}
+		}
+		*e = QosSessionProtocol(val)
+		return nil
+	}
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseQosSessionProtocol(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(QosSessionProtocol(0)),
+	}
+}
+
+func (e QosSessionProtocol) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(QosSessionProtocol_CamelName, int32(e))
+	return json.Marshal(str)
+}
+
 var FindStatusStrings = []string{
 	"FIND_UNKNOWN",
 	"FIND_FOUND",
@@ -7870,6 +9274,236 @@ func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
 }
 
 var FindStatusCommonPrefix = "Find"
+
+var QosSessionResultStrings = []string{
+	"QOS_NOT_ATTEMPTED",
+	"QOS_SESSION_CREATED",
+	"QOS_SESSION_FAILED",
+}
+
+const (
+	QosSessionResultQOS_NOT_ATTEMPTED   uint64 = 1 << 0
+	QosSessionResultQOS_SESSION_CREATED uint64 = 1 << 1
+	QosSessionResultQOS_SESSION_FAILED  uint64 = 1 << 2
+)
+
+var FindCloudletReply_QosSessionResult_CamelName = map[int32]string{
+	// QOS_NOT_ATTEMPTED -> QosNotAttempted
+	0: "QosNotAttempted",
+	// QOS_SESSION_CREATED -> QosSessionCreated
+	1: "QosSessionCreated",
+	// QOS_SESSION_FAILED -> QosSessionFailed
+	2: "QosSessionFailed",
+}
+var FindCloudletReply_QosSessionResult_CamelValue = map[string]int32{
+	"QosNotAttempted":   0,
+	"QosSessionCreated": 1,
+	"QosSessionFailed":  2,
+}
+
+func ParseFindCloudletReply_QosSessionResult(data interface{}) (FindCloudletReply_QosSessionResult, error) {
+	if val, ok := data.(FindCloudletReply_QosSessionResult); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := FindCloudletReply_QosSessionResult_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = FindCloudletReply_QosSessionResult_CamelValue["Qos"+util.CamelCase(str)]
+		}
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = FindCloudletReply_QosSessionResult_CamelName[val]
+			}
+		}
+		if !ok {
+			return FindCloudletReply_QosSessionResult(0), fmt.Errorf("Invalid FindCloudletReply_QosSessionResult value %q", str)
+		}
+		return FindCloudletReply_QosSessionResult(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := FindCloudletReply_QosSessionResult_CamelName[ival]; ok {
+			return FindCloudletReply_QosSessionResult(ival), nil
+		} else {
+			return FindCloudletReply_QosSessionResult(0), fmt.Errorf("Invalid FindCloudletReply_QosSessionResult value %d", ival)
+		}
+	}
+	return FindCloudletReply_QosSessionResult(0), fmt.Errorf("Invalid FindCloudletReply_QosSessionResult value %v", data)
+}
+
+func (e *FindCloudletReply_QosSessionResult) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseFindCloudletReply_QosSessionResult(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e FindCloudletReply_QosSessionResult) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(FindCloudletReply_QosSessionResult_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qos")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *FindCloudletReply_QosSessionResult) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, err := ParseFindCloudletReply_QosSessionResult(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(FindCloudletReply_QosSessionResult(0)),
+			}
+		}
+		*e = FindCloudletReply_QosSessionResult(val)
+		return nil
+	}
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseFindCloudletReply_QosSessionResult(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(FindCloudletReply_QosSessionResult(0)),
+	}
+}
+
+func (e FindCloudletReply_QosSessionResult) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(FindCloudletReply_QosSessionResult_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qos")
+	return json.Marshal(str)
+}
+
+var QosSessionResultCommonPrefix = "Qos"
+
+var DeleteStatusStrings = []string{
+	"QDEL_UNKNOWN",
+	"QDEL_DELETED",
+	"QDEL_NOT_FOUND",
+}
+
+const (
+	DeleteStatusQDEL_UNKNOWN   uint64 = 1 << 0
+	DeleteStatusQDEL_DELETED   uint64 = 1 << 1
+	DeleteStatusQDEL_NOT_FOUND uint64 = 1 << 2
+)
+
+var QosPrioritySessionDeleteReply_DeleteStatus_CamelName = map[int32]string{
+	// QDEL_UNKNOWN -> QdelUnknown
+	0: "QdelUnknown",
+	// QDEL_DELETED -> QdelDeleted
+	1: "QdelDeleted",
+	// QDEL_NOT_FOUND -> QdelNotFound
+	2: "QdelNotFound",
+}
+var QosPrioritySessionDeleteReply_DeleteStatus_CamelValue = map[string]int32{
+	"QdelUnknown":  0,
+	"QdelDeleted":  1,
+	"QdelNotFound": 2,
+}
+
+func ParseQosPrioritySessionDeleteReply_DeleteStatus(data interface{}) (QosPrioritySessionDeleteReply_DeleteStatus, error) {
+	if val, ok := data.(QosPrioritySessionDeleteReply_DeleteStatus); ok {
+		return val, nil
+	} else if str, ok := data.(string); ok {
+		val, ok := QosPrioritySessionDeleteReply_DeleteStatus_CamelValue[util.CamelCase(str)]
+		if !ok {
+			// may have omitted common prefix
+			val, ok = QosPrioritySessionDeleteReply_DeleteStatus_CamelValue["Qdel"+util.CamelCase(str)]
+		}
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = QosPrioritySessionDeleteReply_DeleteStatus_CamelName[val]
+			}
+		}
+		if !ok {
+			return QosPrioritySessionDeleteReply_DeleteStatus(0), fmt.Errorf("Invalid QosPrioritySessionDeleteReply_DeleteStatus value %q", str)
+		}
+		return QosPrioritySessionDeleteReply_DeleteStatus(val), nil
+	} else if ival, ok := data.(int32); ok {
+		if _, ok := QosPrioritySessionDeleteReply_DeleteStatus_CamelName[ival]; ok {
+			return QosPrioritySessionDeleteReply_DeleteStatus(ival), nil
+		} else {
+			return QosPrioritySessionDeleteReply_DeleteStatus(0), fmt.Errorf("Invalid QosPrioritySessionDeleteReply_DeleteStatus value %d", ival)
+		}
+	}
+	return QosPrioritySessionDeleteReply_DeleteStatus(0), fmt.Errorf("Invalid QosPrioritySessionDeleteReply_DeleteStatus value %v", data)
+}
+
+func (e *QosPrioritySessionDeleteReply_DeleteStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, err := ParseQosPrioritySessionDeleteReply_DeleteStatus(str)
+	if err != nil {
+		return err
+	}
+	*e = val
+	return nil
+}
+
+func (e QosPrioritySessionDeleteReply_DeleteStatus) MarshalYAML() (interface{}, error) {
+	str := proto.EnumName(QosPrioritySessionDeleteReply_DeleteStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qdel")
+	return str, nil
+}
+
+// custom JSON encoding/decoding
+func (e *QosPrioritySessionDeleteReply_DeleteStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, err := ParseQosPrioritySessionDeleteReply_DeleteStatus(str)
+		if err != nil {
+			return &json.UnmarshalTypeError{
+				Value: "string " + str,
+				Type:  reflect.TypeOf(QosPrioritySessionDeleteReply_DeleteStatus(0)),
+			}
+		}
+		*e = QosPrioritySessionDeleteReply_DeleteStatus(val)
+		return nil
+	}
+	var ival int32
+	err = json.Unmarshal(b, &ival)
+	if err == nil {
+		val, err := ParseQosPrioritySessionDeleteReply_DeleteStatus(ival)
+		if err == nil {
+			*e = val
+			return nil
+		}
+	}
+	return &json.UnmarshalTypeError{
+		Value: "value " + string(b),
+		Type:  reflect.TypeOf(QosPrioritySessionDeleteReply_DeleteStatus(0)),
+	}
+}
+
+func (e QosPrioritySessionDeleteReply_DeleteStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(QosPrioritySessionDeleteReply_DeleteStatus_CamelName, int32(e))
+	str = strings.TrimPrefix(str, "Qdel")
+	return json.Marshal(str)
+}
+
+var DeleteStatusCommonPrefix = "Qdel"
 
 var TowerStatusStrings = []string{
 	"TOWER_UNKNOWN",
@@ -8980,6 +10614,14 @@ func (m *PlatformFindCloudletRequest) IsValidArgsForPlatformFindCloudlet() error
 	return nil
 }
 
+func (m *QosPrioritySessionCreateRequest) IsValidArgsForQosPrioritySessionCreate() error {
+	return nil
+}
+
+func (m *QosPrioritySessionDeleteRequest) IsValidArgsForQosPrioritySessionDelete() error {
+	return nil
+}
+
 func (m *VerifyLocationRequest) IsValidArgsForVerifyLocation() error {
 	return nil
 }
@@ -9065,6 +10707,10 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 		return ParseIDTypes(data)
 	case reflect.TypeOf(ReplyStatus(0)):
 		return ParseReplyStatus(data)
+	case reflect.TypeOf(QosSessionProfile(0)):
+		return ParseQosSessionProfile(data)
+	case reflect.TypeOf(QosSessionProtocol(0)):
+		return ParseQosSessionProtocol(data)
 	}
 	return data, nil
 }
@@ -9087,6 +10733,10 @@ func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
 		return "IDTypes", ", valid values are one of IdUndefined, Imei, Msisdn, Ipaddr, or 0, 1, 2, 3", true
 	case reflect.TypeOf(ReplyStatus(0)):
 		return "ReplyStatus", ", valid values are one of Undefined, Success, Fail, or 0, 1, 2", true
+	case reflect.TypeOf(QosSessionProfile(0)):
+		return "QosSessionProfile", ", valid values are one of NoPriority, LowLatency, ThroughputDownS, ThroughputDownM, ThroughputDownL, or 0, 1, 2, 3, 4", true
+	case reflect.TypeOf(QosSessionProtocol(0)):
+		return "QosSessionProtocol", ", valid values are one of Tcp, Udp, Any, or 0, 1, 2", true
 	}
 	return "", "", false
 }
@@ -9290,6 +10940,178 @@ func (m *FindCloudletReply) Size() (n int) {
 	l = len(m.EdgeEventsCookie)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.QosResult != 0 {
+		n += 1 + sovAppClient(uint64(m.QosResult))
+	}
+	l = len(m.QosErrorMsg)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovAppClient(uint64(len(k))) + 1 + len(v) + sovAppClient(uint64(len(v)))
+			n += mapEntrySize + 2 + sovAppClient(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *QosPrioritySessionCreateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	l = len(m.SessionCookie)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.SessionDuration != 0 {
+		n += 1 + sovAppClient(uint64(m.SessionDuration))
+	}
+	l = len(m.IpUserEquipment)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.IpApplicationServer)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.PortUserEquipment)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.PortApplicationServer)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.ProtocolIn != 0 {
+		n += 1 + sovAppClient(uint64(m.ProtocolIn))
+	}
+	if m.ProtocolOut != 0 {
+		n += 1 + sovAppClient(uint64(m.ProtocolOut))
+	}
+	if m.Profile != 0 {
+		n += 1 + sovAppClient(uint64(m.Profile))
+	}
+	l = len(m.NotificationUri)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.NotificationAuthToken)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovAppClient(uint64(len(k))) + 1 + len(v) + sovAppClient(uint64(len(v)))
+			n += mapEntrySize + 2 + sovAppClient(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *QosPrioritySessionReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	if m.SessionDuration != 0 {
+		n += 1 + sovAppClient(uint64(m.SessionDuration))
+	}
+	if m.Profile != 0 {
+		n += 1 + sovAppClient(uint64(m.Profile))
+	}
+	l = len(m.SessionId)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.StartedAt != 0 {
+		n += 1 + sovAppClient(uint64(m.StartedAt))
+	}
+	if m.ExpiresAt != 0 {
+		n += 1 + sovAppClient(uint64(m.ExpiresAt))
+	}
+	if m.HttpStatus != 0 {
+		n += 1 + sovAppClient(uint64(m.HttpStatus))
+	}
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovAppClient(uint64(len(k))) + 1 + len(v) + sovAppClient(uint64(len(v)))
+			n += mapEntrySize + 2 + sovAppClient(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *QosPrioritySessionDeleteRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	l = len(m.SessionCookie)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.Profile != 0 {
+		n += 1 + sovAppClient(uint64(m.Profile))
+	}
+	l = len(m.SessionId)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if len(m.Tags) > 0 {
+		for k, v := range m.Tags {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovAppClient(uint64(len(k))) + 1 + len(v) + sovAppClient(uint64(len(v)))
+			n += mapEntrySize + 2 + sovAppClient(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *QosPrioritySessionDeleteReply) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		n += 1 + sovAppClient(uint64(m.Status))
 	}
 	if len(m.Tags) > 0 {
 		for k, v := range m.Tags {
@@ -11663,6 +13485,1386 @@ func (m *FindCloudletReply) Unmarshal(dAtA []byte) error {
 			}
 			m.EdgeEventsCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QosResult", wireType)
+			}
+			m.QosResult = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.QosResult |= FindCloudletReply_QosSessionResult(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QosErrorMsg", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QosErrorMsg = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 100:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowAppClient
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipAppClient(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Tags[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosPrioritySessionCreateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosPrioritySessionCreateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosPrioritySessionCreateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionCookie = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionDuration", wireType)
+			}
+			m.SessionDuration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SessionDuration |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpUserEquipment", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IpUserEquipment = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IpApplicationServer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.IpApplicationServer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortUserEquipment", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortUserEquipment = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortApplicationServer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortApplicationServer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProtocolIn", wireType)
+			}
+			m.ProtocolIn = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProtocolIn |= QosSessionProtocol(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProtocolOut", wireType)
+			}
+			m.ProtocolOut = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProtocolOut |= QosSessionProtocol(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Profile", wireType)
+			}
+			m.Profile = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Profile |= QosSessionProfile(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotificationUri", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NotificationUri = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotificationAuthToken", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NotificationAuthToken = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 100:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowAppClient
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipAppClient(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Tags[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosPrioritySessionReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosPrioritySessionReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosPrioritySessionReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionDuration", wireType)
+			}
+			m.SessionDuration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SessionDuration |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Profile", wireType)
+			}
+			m.Profile = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Profile |= QosSessionProfile(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartedAt", wireType)
+			}
+			m.StartedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartedAt |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
+			}
+			m.ExpiresAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExpiresAt |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HttpStatus", wireType)
+			}
+			m.HttpStatus = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.HttpStatus |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 100:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowAppClient
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipAppClient(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Tags[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosPrioritySessionDeleteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosPrioritySessionDeleteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosPrioritySessionDeleteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionCookie = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Profile", wireType)
+			}
+			m.Profile = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Profile |= QosSessionProfile(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 100:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowAppClient
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAppClient
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipAppClient(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthAppClient
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Tags[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QosPrioritySessionDeleteReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QosPrioritySessionDeleteReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QosPrioritySessionDeleteReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= QosPrioritySessionDeleteReply_DeleteStatus(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 100:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
