@@ -93,7 +93,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		return reply, err
 	}
 
-	log.SpanLog(ctx, log.DebugLevelDmereq, "req tags", "req.Tags", req.Tags, "ip_user_equipment", req.Tags["ip_user_equipment"])
+	log.SpanLog(ctx, log.DebugLevelDmereq, "req tags", "req.Tags", req.Tags)
 	err, app = dmecommon.FindCloudlet(ctx, &appkey, req.CarrierName, req.GpsLocation, reply, *edgeEventsCookieExpiration)
 
 	// Only attempt to create a QOS priority session if qosSesAddr is populated.
@@ -120,7 +120,14 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 					break
 				}
 			}
-			ueAddr := req.Tags["ip_user_equipment"]
+			if asAddr == "" && os.Getenv("E2ETEST_QOS_SIM") == "true" {
+				// If running e2e-test, the sessions-srv-sim will be used where the asAddr is ignored.
+				// FQDN lookup above failed, so just set it to any known good IP (in this case, localhost).
+				asAddr = "127.0.0.1"
+				log.SpanLog(ctx, log.DebugLevelDmereq, "Running e2e-test. Setting asAddr to localhost", "asAddr", asAddr)
+			}
+
+			ueAddr := req.Tags[cloudcommon.TagIpUserEquipment]
 			// Use the first port
 			port := app.Ports[0]
 			log.SpanLog(ctx, log.DebugLevelDmereq, "Port", "port.PublicPort", port.PublicPort, "port.Proto", port.Proto, "port.InternalPort", port.InternalPort)
@@ -146,12 +153,12 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 				if sesErr != nil {
 					log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
 				}
-				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id", id, "sesErr", sesErr)
+				log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "id received", (len(id) > 0), "sesErr", sesErr)
 				// Let the client know the session ID.
 				reply.Tags = make(map[string]string)
 				if id != "" {
-					reply.Tags["priority_session_id"] = id
-					reply.Tags["qos_profile_name"] = qos
+					reply.Tags[cloudcommon.TagPrioritySessionId] = id
+					reply.Tags[cloudcommon.TagQosProfileName] = qos
 				}
 				// TODO: Store id for when this same connection calls DeletePrioritySession()
 			}

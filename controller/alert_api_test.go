@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/stretchr/testify/require"
@@ -23,8 +24,8 @@ func TestAlertApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -87,8 +88,8 @@ func TestAppInstDownAlert(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -97,8 +98,13 @@ func TestAppInstDownAlert(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
@@ -150,8 +156,13 @@ func TestAppInstDownAlert(t *testing.T) {
 	dummy.Stop()
 }
 
+type testServices struct {
+	DummyRedisSrv *rediscache.DummyRedis
+}
+
 // Set up globals for API unit tests
-func testinit() {
+func testinit(ctx context.Context, t *testing.T) *testServices {
+	svcs := &testServices{}
 	objstore.InitRegion(1)
 	tMode := true
 	testMode = &tMode
@@ -168,8 +179,24 @@ func testinit() {
 	cloudletLookup := &node.CloudletCache{}
 	cloudletLookup.Init()
 	nodeMgr.CloudletLookup = cloudletLookup
+	redisServer, err := rediscache.NewMockRedisServer()
+	require.Nil(t, err, "start mock redis server")
+	svcs.DummyRedisSrv = redisServer
+	redisClient, err = rediscache.NewClient(ctx, &rediscache.RedisConfig{
+		SentinelAddrs: redisServer.GetSentinelAddr(),
+	})
+	require.Nil(t, err, "setup redis client")
+	return svcs
 }
 
-func testfinish() {
+func testfinish(s *testServices) {
+	if s.DummyRedisSrv != nil {
+		s.DummyRedisSrv.Close()
+		s.DummyRedisSrv = nil
+	}
+	if redisClient != nil {
+		redisClient.Close()
+		redisClient = nil
+	}
 	services = Services{}
 }

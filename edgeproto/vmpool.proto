@@ -94,8 +94,8 @@ message VMPool {
   TrackedState state = 4 [(protogen.backend) = true];
   // Any errors trying to add/remove VM to/from VM Pool
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
-  // status is used to reflect progress of creation or other events
-  StatusInfo status = 6 [(protogen.backend) = true, (gogoproto.nullable) = false];
+  // StatusInfo (6) (Deprecated) status is used to reflect progress of creation or other events
+
   // Override actions to CRM
   CRMOverride crm_override = 7;
   // Preparing to be deleted
@@ -104,10 +104,10 @@ message VMPool {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
-  option (protogen.generate_wait_for_state) = "TrackedState";
+  option (protogen.generate_stream_key) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Status,Vms:#.Flavor";
+  option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Vms:#.Flavor";
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.controller_api_struct) = "vmPoolApi";
@@ -231,6 +231,7 @@ message VMPoolInfo {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";

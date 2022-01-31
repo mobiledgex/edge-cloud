@@ -963,6 +963,7 @@ func (s *DeviceReportStoreImpl) parseGetData(val []byte, buf *DeviceReport) bool
 
 func (s *DeviceReportStoreImpl) STMPut(stm concurrency.STM, obj *DeviceReport, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("DeviceReport", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("DeviceReport json marshal failed", "obj", obj, "err", err)
@@ -1468,6 +1469,7 @@ func (s *DeviceStoreImpl) parseGetData(val []byte, buf *Device) bool {
 
 func (s *DeviceStoreImpl) STMPut(stm concurrency.STM, obj *Device, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Device", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("Device json marshal failed", "obj", obj, "err", err)

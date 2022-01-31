@@ -523,7 +523,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		s.all.appInstRefsApi.createRef(stm, &in.Key)
 
-		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		in.CreatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, in)
 		elapsed := time.Since(start)
 		log.SpanLog(ctx, log.DebugLevelApi, "CreateApp finish ApplySTMWait", "app", in.Key.String(), "elapsed", elapsed, "err", err)
@@ -659,7 +659,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if err := s.configureApp(ctx, stm, &cur, newRevision); err != nil {
 			return err
 		}
-		cur.UpdatedAt = cloudcommon.TimeToTimestamp(time.Now())
+		cur.UpdatedAt = dme.TimeToTimestamp(time.Now())
 		s.store.STMPut(stm, &cur)
 		return nil
 	})

@@ -161,7 +161,6 @@ func (s *ClusterInstInfoCache) RefreshObj(ctx context.Context, obj *ClusterInst)
 	info.Key = obj.Key
 	info.State = obj.State
 	info.Errors = obj.Errors
-	info.Status = obj.Status
 	info.Resources = obj.Resources
 	s.Update(ctx, &info, 0)
 }
@@ -417,7 +416,6 @@ func (s *AppInstInfoCache) RefreshObj(ctx context.Context, obj *AppInst) {
 	info.State = obj.State
 	info.Errors = obj.Errors
 	info.RuntimeInfo = obj.RuntimeInfo
-	info.Status = obj.Status
 	info.PowerState = obj.PowerState
 	info.Uri = obj.Uri
 	s.Update(ctx, &info, 0)
@@ -469,4 +467,36 @@ func (s *CloudletPoolCache) GetPoolsForCloudletKey(in *CloudletKey) ([]CloudletP
 		log.DebugLog(log.DebugLevelApi, "GetPoolsForCloudletKey() not found ", "CloudletKey:", in)
 	}
 	return cloudletPoolKeys, nil
+}
+
+func (s *VMPoolInfoCache) SetState(ctx context.Context, key *VMPoolKey, state TrackedState) error {
+	var err error
+	s.UpdateModFunc(ctx, key, 0, func(old *VMPoolInfo) (newObj *VMPoolInfo, changed bool) {
+		info := &VMPoolInfo{}
+		if old == nil {
+			info.Key = *key
+			info.Status = StatusInfo{}
+		} else {
+			err = StateConflict(old.State, state)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelApi, "SetState conflict", "oldState", old.State, "newState", state, "err", err)
+				return old, false
+			}
+			*info = *old
+		}
+		info.Errors = nil
+		info.State = state
+		return info, true
+	})
+	return err
+}
+
+func (s *VMPoolInfoCache) SetError(ctx context.Context, key *VMPoolKey, errState TrackedState, err string) {
+	info := VMPoolInfo{}
+	if !s.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = append(info.Errors, err)
+	info.State = errState
+	s.Update(ctx, &info, 0)
 }

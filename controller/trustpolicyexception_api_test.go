@@ -15,8 +15,8 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -26,8 +26,13 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 
 	// create supporting data
 	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
@@ -143,6 +148,14 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "New state must be either Active or Rejected")
 
+	// test that TPE update with no security rules, does not give any error
+	savedSecurityRules := tpeData.OutboundSecurityRules
+	tpeData.OutboundSecurityRules = []edgeproto.SecurityRule{}
+	tpeData.Fields = []string{edgeproto.TrustPolicyExceptionFieldOutboundSecurityRules}
+	_, err = apis.trustPolicyExceptionApi.UpdateTrustPolicyException(ctx, &tpeData)
+	require.Nil(t, err)
+	tpeData.OutboundSecurityRules = savedSecurityRules
+
 	// test that TPE update with non-existent CloudletPoolKey Organization, fails
 	tpeData.Fields = []string{
 		edgeproto.TrustPolicyExceptionFieldKeyCloudletPoolKeyOrganization,
@@ -198,8 +211,10 @@ func TestTrustPolicyExceptionApi(t *testing.T) {
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[0], "cannot be higher than max")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[1], "invalid CIDR")
 	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[2], "Invalid min port")
-	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3], testutil.TrustPolicyExceptionErrorData[3].Key.AppKey.NotFoundError().Error())
-	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4], testutil.TrustPolicyExceptionErrorData[4].Key.CloudletPoolKey.NotFoundError().Error())
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[3],
+		testutil.TrustPolicyExceptionErrorData[3].Key.AppKey.NotFoundError().Error())
+	expectCreatePolicyExceptionError(t, ctx, apis, &testutil.TrustPolicyExceptionErrorData[4],
+		testutil.TrustPolicyExceptionErrorData[4].Key.CloudletPoolKey.NotFoundError().Error())
 
 	dummy.Stop()
 }

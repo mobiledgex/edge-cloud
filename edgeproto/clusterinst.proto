@@ -67,8 +67,8 @@ message ClusterInst {
   uint32 num_masters = 13;
   // Number of k8s nodes (In case of docker deployment, this field is not required)
   uint32 num_nodes = 14;
-  // status is used to reflect progress of creation or other events
-  StatusInfo status = 16 [(protogen.backend) = true, (gogoproto.nullable) = false, (protogen.hidetag) = "nocmp"];
+  // StatusInfo (16) (Deprecated) status is used to reflect progress of creation or other events
+
   // Size of external volume to be attached to nodes.  This is for the root partition
   uint64 external_volume_size = 17 [(protogen.backend) = true];
   // Auto scale policy name
@@ -112,12 +112,12 @@ message ClusterInst {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_stream_key) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,Status,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt,DeletePrepare,DnsLabel,Fqdn";
+  option (protogen.noconfig) = "Liveness,Auto,MasterNodeFlavor,NodeFlavor,ExternalVolumeSize,AllocatedIp,ReservedBy,State,Errors,Resources,AvailabilityZone,CreatedAt,UpdatedAt,OptRes,ReservationEndedAt,DeletePrepare,DnsLabel,Fqdn";
   option (protogen.not_required) = "Key.CloudletKey.FederatedOrganization";
-  option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,cloudlet-org=Key.CloudletKey.Organization,federated-org=Key.CloudletKey.FederatedOrganization,cluster-org=Key.Organization,flavor=Flavor.Name";
   option (protogen.mc2_target_cloudlet) = "Key.CloudletKey";
   option (protogen.uses_org) = "custom";
@@ -202,6 +202,7 @@ message ClusterInstInfo {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
+  option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.uses_org) = "none";

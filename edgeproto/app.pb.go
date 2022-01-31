@@ -489,6 +489,7 @@ func (m *ServerlessConfig) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ServerlessConfig proto.InternalMessageInfo
 
+// AutoProvPolicy belonging to an app
 type AppAutoProvPolicy struct {
 	// App key
 	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey,proto3" json:"app_key"`
@@ -3219,6 +3220,7 @@ func (s *AppStoreImpl) parseGetData(val []byte, buf *App) bool {
 
 func (s *AppStoreImpl) STMPut(stm concurrency.STM, obj *App, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("App", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("App json marshal failed", "obj", obj, "err", err)

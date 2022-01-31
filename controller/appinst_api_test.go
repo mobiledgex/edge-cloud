@@ -86,8 +86,8 @@ func TestAppInstApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -97,7 +97,13 @@ func TestAppInstApi(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	responder := NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache, apis.appInstInfoApi, apis.clusterInstInfoApi)
+	responder := &DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	responder.InitDummyInfoResponder()
 
 	reduceInfoTimeouts(t, ctx, apis)
 
@@ -400,8 +406,8 @@ func TestAutoClusterInst(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -410,8 +416,13 @@ func TestAutoClusterInst(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache,
-		apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := &DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 
 	reduceInfoTimeouts(t, ctx, apis)
 

@@ -78,11 +78,17 @@ func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context
 }
 
 func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
+
+	log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "policy", in)
+
 	cur := edgeproto.TrustPolicyException{}
 
 	fields := edgeproto.MakeFieldMap(in.Fields)
 
 	rulesSpecified := false
+	// Check individual subfields of TrustPolicyExceptionFieldOutboundSecurityRules
+	// This is because with outboundsecurityrules:empty=true subfields are not present
+	// We do not want to allow to empty OutboundSecurityRules in Update
 	if _, found := fields[edgeproto.TrustPolicyExceptionFieldOutboundSecurityRulesProtocol]; found {
 		rulesSpecified = true
 	}
@@ -102,20 +108,30 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 		}
 		log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException", "in state", in.State.String(), "cur state", cur.State.String())
 
-		if _, found := fields[edgeproto.TrustPolicyExceptionFieldState]; found {
-			// caller specified state change
+		_, stateSpecified := fields[edgeproto.TrustPolicyExceptionFieldState]
+		if stateSpecified {
+			// caller specified state change, for an update, an operator can only specify state
 			if in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_ACTIVE &&
 				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 				return fmt.Errorf("New state must be either Active or Rejected")
 			}
+		} else if !rulesSpecified {
+			// For an update, a developer can only specify security rules
+			// caller (developer) must provide at least one security rule
+			return fmt.Errorf("Security rules must be specified")
 		}
 		if rulesSpecified && cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
 			return fmt.Errorf("Can update security rules only when trust policy exception is still in approval requested state")
 		}
 
+		if !stateSpecified && !rulesSpecified {
+			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException rule/state not changed", "state", cur.State.String())
+			return nil
+		}
 		// Copy in user specified fields only
 		changed := cur.CopyInFields(in)
 		if changed == 0 {
+			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException no changes", "state", cur.State.String())
 			return nil // no changes
 		}
 		s.fixupPortRangeMax(ctx, &cur)

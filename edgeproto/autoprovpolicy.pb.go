@@ -1674,6 +1674,7 @@ func (s *AutoProvPolicyStoreImpl) parseGetData(val []byte, buf *AutoProvPolicy) 
 
 func (s *AutoProvPolicyStoreImpl) STMPut(stm concurrency.STM, obj *AutoProvPolicy, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoProvPolicy", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AutoProvPolicy json marshal failed", "obj", obj, "err", err)
@@ -2908,6 +2909,7 @@ func (s *AutoProvInfoStoreImpl) parseGetData(val []byte, buf *AutoProvInfo) bool
 
 func (s *AutoProvInfoStoreImpl) STMPut(stm concurrency.STM, obj *AutoProvInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AutoProvInfo", obj.GetKey())
+
 	val, err := json.Marshal(obj)
 	if err != nil {
 		log.InfoLog("AutoProvInfo json marshal failed", "obj", obj, "err", err)

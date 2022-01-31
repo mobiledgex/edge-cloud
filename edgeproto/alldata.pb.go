@@ -996,9 +996,6 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 		names = append(names, "Cloudlets.Errors")
 	}
 	if _, found := tags["nocmp"]; found {
-		names = append(names, "Cloudlets.Status")
-	}
-	if _, found := tags["nocmp"]; found {
 		names = append(names, "Cloudlets.NotifySrvAddr")
 	}
 	if _, found := tags["nocmp"]; found {
@@ -1061,9 +1058,6 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "ClusterInsts.AllocatedIp")
 	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "ClusterInsts.Status")
-	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "ClusterInsts.CreatedAt")
 	}
@@ -1084,9 +1078,6 @@ func IgnoreAllDataFields(taglist string) cmp.Option {
 	}
 	if _, found := tags["timestamp"]; found {
 		names = append(names, "AppInstances.CreatedAt")
-	}
-	if _, found := tags["nocmp"]; found {
-		names = append(names, "AppInstances.Status")
 	}
 	if _, found := tags["nocmp"]; found {
 		names = append(names, "AppInstances.Revision")

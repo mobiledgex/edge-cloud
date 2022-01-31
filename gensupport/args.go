@@ -8,6 +8,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	"github.com/mobiledgex/edge-cloud/edgeprotogen"
 	"github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -267,7 +268,11 @@ func GetArgs(g *generator.Generator, support *PluginSupport, parents []string, d
 			clearComment = fmt.Sprintf(", specify %s:%s=true to clear", strings.ToLower(arg.Name), util.EmptySet)
 		}
 		mapType := support.GetMapType(g, field, WithNoImport())
-		if mapType != nil && mapType.FlagType != "" {
+		if mapType != nil {
+			if mapType.FlagType == "" {
+				// not supported map type
+				continue
+			}
 			specialArgs[hierName] = mapType.FlagType
 			if arg.Comment != "" && clearComment != "" {
 				arg.Comment += clearComment
@@ -429,5 +434,5 @@ func GetAlias(message *descriptor.DescriptorProto) string {
 }
 
 func GetCustomYamlJsonMarshalers(message *descriptor.DescriptorProto) bool {
-	return proto.GetBoolExtension(message.Options, protogen.E_CustomYamlJsonMarshalers, false)
+	return proto.GetBoolExtension(message.Options, edgeprotogen.E_CustomYamlJsonMarshalers, false)
 }

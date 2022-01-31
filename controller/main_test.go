@@ -39,8 +39,12 @@ func TestController(t *testing.T) {
 	flag.Parse() // set defaults
 	*localEtcd = true
 	*initLocalEtcd = true
-	testinit()
-	defer testfinish()
+
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
+
+	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
+
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
 
@@ -68,8 +72,13 @@ func TestController(t *testing.T) {
 	crmNotify := notify.NewDummyHandler()
 	crmClient := notify.NewClient("crm", notifyAddrs, nil)
 	crmNotify.RegisterCRMClient(crmClient)
-	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
-		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &crmNotify.AppInstCache,
+		ClusterInstCache:    &crmNotify.ClusterInstCache,
+		RecvAppInstInfo:     &crmNotify.AppInstInfoCache,
+		RecvClusterInstInfo: &crmNotify.ClusterInstInfoCache,
+	}
+	dummyResponder.InitDummyInfoResponder()
 	for ii, _ := range testutil.CloudletInfoData {
 		crmNotify.CloudletInfoCache.Update(ctx, &testutil.CloudletInfoData[ii], 0)
 	}
@@ -95,7 +104,7 @@ func TestController(t *testing.T) {
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 	for ii, _ := range testutil.CloudletInfoData {
-		err := apis.cloudletInfoApi.cache.WaitForState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
+		err := apis.cloudletInfoApi.cache.WaitForCloudletState(ctx, &testutil.CloudletInfoData[ii].Key, dme.CloudletState_CLOUDLET_STATE_READY, time.Second)
 		require.Nil(t, err)
 	}
 
@@ -206,13 +215,15 @@ func TestEdgeCloudBug26(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 	flag.Parse()
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
 
 	*localEtcd = true
 	*initLocalEtcd = true
+
+	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
 
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
@@ -401,8 +412,8 @@ func TestControllerRace(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	etcdLocal, err := StartLocalEtcdServer(process.WithCleanStartup())
 	require.Nil(t, err)
@@ -418,8 +429,13 @@ func TestControllerRace(t *testing.T) {
 	apis1 := NewAllApis(sync1)
 	sync1.Start()
 	defer sync1.Done()
-	NewDummyInfoResponder(&apis1.appInstApi.cache, &apis1.clusterInstApi.cache,
-		apis1.appInstInfoApi, apis1.clusterInstInfoApi)
+	dummyResponder1 := DummyInfoResponder{
+		AppInstCache:        &apis1.appInstApi.cache,
+		ClusterInstCache:    &apis1.clusterInstApi.cache,
+		RecvAppInstInfo:     apis1.appInstInfoApi,
+		RecvClusterInstInfo: apis1.clusterInstInfoApi,
+	}
+	dummyResponder1.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis1)
 
 	// ctrl2
@@ -432,8 +448,13 @@ func TestControllerRace(t *testing.T) {
 	apis2 := NewAllApis(sync2)
 	sync2.Start()
 	defer sync2.Done()
-	NewDummyInfoResponder(&apis2.appInstApi.cache, &apis2.clusterInstApi.cache,
-		apis2.appInstInfoApi, apis2.clusterInstInfoApi)
+	dummyResponder2 := DummyInfoResponder{
+		AppInstCache:        &apis2.appInstApi.cache,
+		ClusterInstCache:    &apis2.clusterInstApi.cache,
+		RecvAppInstInfo:     apis2.appInstInfoApi,
+		RecvClusterInstInfo: apis2.clusterInstInfoApi,
+	}
+	dummyResponder2.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis2)
 
 	// tests

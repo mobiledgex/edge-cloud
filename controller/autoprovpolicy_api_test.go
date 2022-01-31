@@ -21,8 +21,8 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testinit()
-	defer testfinish()
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -33,7 +33,13 @@ func TestAutoProvPolicyApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	NewDummyInfoResponder(&apis.appInstApi.cache, &apis.clusterInstApi.cache, apis.appInstInfoApi, apis.clusterInstInfoApi)
+	dummyResponder := DummyInfoResponder{
+		AppInstCache:        &apis.appInstApi.cache,
+		ClusterInstCache:    &apis.clusterInstApi.cache,
+		RecvAppInstInfo:     apis.appInstInfoApi,
+		RecvClusterInstInfo: apis.clusterInstInfoApi,
+	}
+	dummyResponder.InitDummyInfoResponder()
 	reduceInfoTimeouts(t, ctx, apis)
 
 	cloudletData := testutil.CloudletData()

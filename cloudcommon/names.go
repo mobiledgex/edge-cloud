@@ -176,6 +176,11 @@ const DnsRegionLabelMaxLen = 10
 const DnsCloudletLabelMaxLen = 50
 const DnsCloudletObjectLabelMaxLen = 63
 
+// Values for QOS Priority Session API
+const TagPrioritySessionId string = "priority_session_id"
+const TagQosProfileName string = "qos_profile_name"
+const TagIpUserEquipment string = "ip_user_equipment"
+
 // Wildcard cert for all LBs both shared and dedicated
 func GetRootLBFQDNWildcard(cloudlet *edgeproto.Cloudlet) string {
 	names := strings.Split(cloudlet.RootLbFqdn, ".")

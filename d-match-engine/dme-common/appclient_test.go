@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -81,11 +81,11 @@ func TestAddClients(t *testing.T) {
 	require.Equal(t, 0, len(list))
 
 	// test timeout of the appInstances
-	tsOld := cloudcommon.TimeToTimestamp(time.Now().Add(-1 * time.Minute))
+	tsOld := dme.TimeToTimestamp(time.Now().Add(-1 * time.Minute))
 	data := dmetest.AppInstClientData[3]
 	data.Location.Timestamp = &tsOld
 	UpdateClientsBuffer(ctx, &data)
-	tsFuture := cloudcommon.TimeToTimestamp(time.Now().Add(1 * time.Minute))
+	tsFuture := dme.TimeToTimestamp(time.Now().Add(1 * time.Minute))
 	data = dmetest.AppInstClientData[4]
 	data.Location.Timestamp = &tsFuture
 	UpdateClientsBuffer(ctx, &data)
