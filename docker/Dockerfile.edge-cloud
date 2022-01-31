@@ -15,7 +15,7 @@ ARG REGISTRY=registry.mobiledgex.net:5000/mobiledgex
 ARG EDGE_CLOUD_BASE_IMAGE=scratch
 
 FROM $REGISTRY/protoc-gen-swagger:2020-01-19 AS protoc-gen-swagger
-FROM $REGISTRY/swagger:2020-03-12 AS swagger
+FROM $REGISTRY/go-swagger/swagger:v0.29.0.2mobiledgex AS swagger
 
 FROM $REGISTRY/build:go1.15.2 AS build
 
@@ -47,9 +47,9 @@ WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 ENV CGO_ENABLED=1
 RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make
 
-# Buld the docs
+# Build the docs
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
-COPY --from=swagger /swagger /go/bin/swagger
+COPY --from=swagger /usr/bin/swagger /go/bin/swagger
 RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make doc
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud
 RUN --mount=type=cache,id=go-build,target=/root/.cache/go-build make doc
