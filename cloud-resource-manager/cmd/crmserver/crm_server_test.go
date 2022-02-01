@@ -812,8 +812,8 @@ func testTrustPolicyExceptionUpdates1(t *testing.T, ctx context.Context, tpe *ed
 	// delete an appInst, should reduce the count by 1
 	log.SpanLog(ctx, log.DebugLevelApi, "############ UT1.5")
 	ii := 2 // index of trusted appInst on a clusterInst
-	data.AppInstances[ii].State = edgeproto.TrackedState_DELETE_REQUESTED
-	ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
+	data.AppInstances[ii].State = edgeproto.TrackedState_DELETE_DONE
+	ctrlHandler.AppInstCache.Delete(ctx, &data.AppInstances[ii], 0)
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 3))
 	require.Equal(t, 3, len(controllerData.AppInstCache.Objs))
 	time.Sleep(5 * time.Millisecond)
@@ -826,7 +826,8 @@ func testTrustPolicyExceptionUpdates1(t *testing.T, ctx context.Context, tpe *ed
 	ctrlHandler.AppInstCache.Update(ctx, &data.AppInstances[ii], 0)
 	require.Nil(t, notify.WaitFor(&controllerData.AppInstCache, 3))
 	require.Equal(t, 3, len(controllerData.AppInstCache.Objs))
-
+	count = fakePlatform.TrustPolicyExceptionCount(ctx)
+	require.Equal(t, 2, count)
 	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates1 #############")
 }
 
@@ -851,7 +852,7 @@ func testTrustPolicyExceptionUpdates2(t *testing.T, ctx context.Context, tpe *ed
 
 	// test that the new Approved TPE is not programmed on any clusters, count should still be the old count
 	count := fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 1, count)
+	require.Equal(t, 2, count)
 
 	// test that a TPE with State ACTIVE, for an existing AppInst, adds that TPEs to that ClusterInst
 	log.SpanLog(ctx, log.DebugLevelApi, "############ UT2.2")
@@ -866,7 +867,7 @@ func testTrustPolicyExceptionUpdates2(t *testing.T, ctx context.Context, tpe *ed
 
 	// test that Multiple TPEs are configured per app, on multiple clusters. Total count increases by 2
 	count = fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 3, count)
+	require.Equal(t, 4, count)
 
 	log.SpanLog(ctx, log.DebugLevelApi, "############# end testTrustPolicyExceptionUpdates2 #############")
 }
@@ -876,7 +877,7 @@ func testTrustPolicyExceptionUpdates3(t *testing.T, ctx context.Context, ctrlHan
 
 	log.SpanLog(ctx, log.DebugLevelApi, "############ begin CloudletPoolCache.Update")
 	count := fakePlatform.TrustPolicyExceptionCount(ctx)
-	require.Equal(t, 3, count)
+	require.Equal(t, 4, count)
 
 	var CloudletsSaved [][]string
 

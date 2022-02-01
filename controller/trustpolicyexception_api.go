@@ -115,10 +115,6 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 				in.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_REJECTED {
 				return fmt.Errorf("New state must be either Active or Rejected")
 			}
-		} else if !rulesSpecified {
-			// For an update, a developer can only specify security rules
-			// caller (developer) must provide at least one security rule
-			return fmt.Errorf("Security rules must be specified")
 		}
 		if rulesSpecified && cur.State != edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED {
 			return fmt.Errorf("Can update security rules only when trust policy exception is still in approval requested state")
