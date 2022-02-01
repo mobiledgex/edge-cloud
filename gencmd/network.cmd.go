@@ -378,7 +378,7 @@ var NetworkKeyComments = map[string]string{
 var NetworkKeySpecialArgs = map[string]string{}
 var NetworkRequiredArgs = []string{
 	"cloudlet-org",
-	"key.cloudletkey.name",
+	"cloudlet",
 	"name",
 }
 var NetworkOptionalArgs = []string{
@@ -390,13 +390,14 @@ var NetworkOptionalArgs = []string{
 }
 var NetworkAliasArgs = []string{
 	"cloudlet-org=key.cloudletkey.organization",
+	"cloudlet=key.cloudletkey.name",
 	"federated-org=key.cloudletkey.federatedorganization",
 	"name=key.name",
 }
 var NetworkComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
 	"cloudlet-org":             "Organization of the cloudlet site",
-	"key.cloudletkey.name":     "Name of the cloudlet",
+	"cloudlet":                 "Name of the cloudlet",
 	"federated-org":            "Federated operator organization who shared this cloudlet",
 	"name":                     "Network Name",
 	"routes:empty":             "List of routes, specify routes:empty=true to clear",
