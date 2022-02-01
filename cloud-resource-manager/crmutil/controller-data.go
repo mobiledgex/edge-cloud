@@ -627,13 +627,24 @@ func (cd *ControllerData) handleTrustPolicyExceptionRules(ctx context.Context, a
 }
 
 func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.AppInst, new *edgeproto.AppInst) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstChanged", "AppInst old", old, "new", new)
+
 	var err error
 	if old != nil && old.State == new.State {
 		return
 	}
-	// store appInstInfo object on CRM bringup, if state is READY
-	if old == nil && new.State == edgeproto.TrackedState_READY {
-		cd.AppInstInfoCache.RefreshObj(ctx, new)
+
+	if new.State == edgeproto.TrackedState_READY {
+		if old == nil {
+			// store appInstInfo object on CRM bringup, if state is READY
+			cd.AppInstInfoCache.RefreshObj(ctx, new)
+		} else {
+			if old.State == edgeproto.TrackedState_READY {
+				return
+			}
+		}
+		// Create a TPE if configured
+		cd.handleTrustPolicyExceptionForAppInst(ctx, new, cloudcommon.Create)
 		return
 	}
 	if !cd.highAvailabilityManager.PlatformInstanceActive {
@@ -708,21 +719,6 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 			if app.Deployment == cloudcommon.DeploymentTypeVM {
 				// Marks end of appinst change and hence reduces ref count
 				defer cd.vmResourceActionEnd(ctx, &new.Key.ClusterInstKey.CloudletKey)
-			}
-			if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				// Add TrustPolicyException rules for a given appInst and target clusterInst only
-
-				// TO DO : A better thing to do here is to add TPEState and TPEError fields to AppInst,
-				// which would get updated by the worker handler function after calling the platform create/delete code.
-				// That way at least there's some way to see if the TPE was applied properly, or the state and error if not.
-
-				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key, cloudcommon.Create)
-				if err != nil {
-					errstr := fmt.Sprintf("Create App Inst : Add TrustPolicyException failed: %s", err)
-					log.SpanLog(ctx, log.DebugLevelInfra, "can't add Trust policy exception rules", "error", errstr, "key", new.Key)
-					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_CREATE_ERROR, errstr, updateAppCacheCallback)
-					return
-				}
 			}
 			oldUri := new.Uri
 			err = cd.platform.CreateAppInst(ctx, &clusterInst, &app, new, &flavor, updateAppCacheCallback)
@@ -857,17 +853,6 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 				log.SpanLog(ctx, log.DebugLevelInfra, "can't delete app inst", "error", errstr, "key", new.Key)
 				return
 			}
-			// Delete TPE
-			if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				// Remove TrustPolicyException rules for a given appInst and target clusterInst only
-				err = cd.handleTrustPolicyExceptionRules(ctx, new, &clusterInst.Key, cloudcommon.Delete)
-				if err != nil {
-					errstr := fmt.Sprintf("Delete App Inst : remove TrustPolicyException failed: %s", err)
-					log.SpanLog(ctx, log.DebugLevelInfra, "can't remove Trust policy exception rules", "error", errstr, "key", new.Key)
-					cd.appInstInfoError(ctx, &new.Key, edgeproto.TrackedState_DELETE_ERROR, errstr, updateAppCacheCallback)
-					return
-				}
-			}
 			log.SpanLog(ctx, log.DebugLevelInfra, "deleted app inst", "AppInst", new, "ClusterInst", clusterInst)
 			cd.appInstInfoState(ctx, &new.Key, edgeproto.TrackedState_DELETE_DONE, updateAppCacheCallback)
 		}()
@@ -901,10 +886,37 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 	}
 }
 
+func (cd *ControllerData) handleTrustPolicyExceptionForAppInst(ctx context.Context, appInst *edgeproto.AppInst, action cloudcommon.Action) {
+
+	app := edgeproto.App{}
+	found := cd.AppCache.Get(&appInst.Key.AppKey, &app)
+	if !found {
+		log.SpanLog(ctx, log.DebugLevelInfra, "App not found for AppInst", "key", appInst.Key)
+		return
+	}
+
+	if !cloudcommon.IsClusterInstReqd(&app) {
+		return
+	}
+
+	clusterInst := edgeproto.ClusterInst{}
+	clusterInstFound := cd.ClusterInstCache.Get(appInst.ClusterInstKey(), &clusterInst)
+	if !clusterInstFound {
+		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst not found for AppInst", "key", appInst.Key)
+		return
+	}
+	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+		// Handle TrustPolicyException rules for a given appInst and target clusterInst
+		log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForAppInst()", "key", appInst.Key, "action", action.String())
+		cd.handleTrustPolicyExceptionRules(ctx, appInst, &clusterInst.Key, action)
+	}
+}
+
 func (cd *ControllerData) appInstDeleted(ctx context.Context, old *edgeproto.AppInst) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstDeleted", "AppInst", old)
 	info := edgeproto.AppInstInfo{Key: old.Key}
 	cd.AppInstInfoCache.Delete(ctx, &info, 0)
+	cd.handleTrustPolicyExceptionForAppInst(ctx, old, cloudcommon.Delete)
 }
 
 func (cd *ControllerData) clusterInstInfoError(ctx context.Context, key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string, updateCallback edgeproto.CacheUpdateCallback) {
@@ -1964,25 +1976,6 @@ func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey 
 	return clusterInstFound
 }
 
-func (cd *ControllerData) appInstIsActiveState(state edgeproto.TrackedState) bool {
-	isActive := false
-	switch state {
-	case edgeproto.TrackedState_CREATE_REQUESTED:
-		fallthrough
-	case edgeproto.TrackedState_CREATING:
-		fallthrough
-	case edgeproto.TrackedState_CREATING_DEPENDENCIES:
-		fallthrough
-	case edgeproto.TrackedState_READY:
-		fallthrough
-	case edgeproto.TrackedState_UPDATE_REQUESTED:
-		fallthrough
-	case edgeproto.TrackedState_UPDATING:
-		isActive = true
-	}
-	return isActive
-}
-
 func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
 
 	appInst := edgeproto.AppInst{}
@@ -1992,9 +1985,10 @@ func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgep
 	}
 	appInstFound := cd.AppInstCache.Get(&appInstKeyFilter, &appInst)
 	if appInstFound {
-		isActive := cd.appInstIsActiveState(appInst.State)
-		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String(), "isActive", isActive)
-		appInstFound = isActive
+		if appInst.State != edgeproto.TrackedState_READY {
+			appInstFound = false
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
 
