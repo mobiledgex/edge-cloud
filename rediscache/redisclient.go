@@ -23,9 +23,12 @@ const (
 	DefaultCfgRedisStandalone
 	DefaultCfgRedisHA
 
-	DefaultRedisStandaloneAddr = "127.0.0.1:6379"
-	DefaultRedisMasterName     = "redismaster"
-	DefaultRedisSentinelAddrs  = "127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"
+	RedisStandalonePort         = "6379"
+	DefaultRedisStandaloneAddr  = "127.0.0.1:" + RedisStandalonePort
+	RedisHeadlessService        = "redis-headless"
+	RedisCloudletStandaloneAddr = RedisHeadlessService + ":" + RedisStandalonePort // for redis running in a cloudlet
+	DefaultRedisMasterName      = "redismaster"
+	DefaultRedisSentinelAddrs   = "127.0.0.1:26379,127.0.0.1:26380,127.0.0.1:26381"
 )
 
 type RedisConfig struct {
