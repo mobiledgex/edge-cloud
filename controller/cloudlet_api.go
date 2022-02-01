@@ -368,6 +368,9 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidCloudletDeployments) {
 			return fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidCloudletDeployments)
 		}
+		if in.PlatformHighAvailability && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
+			return fmt.Errorf("Platform High Availablility only supported for kubernetes deployments")
+		}
 	}
 
 	if in.GpuConfig.Driver.Name == "" {
