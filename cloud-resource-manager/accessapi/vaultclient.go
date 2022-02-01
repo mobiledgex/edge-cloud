@@ -9,6 +9,7 @@ import (
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/chefmgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/cloudflaremgmt"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/federationmgmt"
 	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
@@ -39,7 +40,16 @@ func NewVaultClient(cloudlet *edgeproto.Cloudlet, vaultConfig *vault.Config, reg
 	}
 }
 
+func NewVaultGlobalClient(vaultConfig *vault.Config) *VaultClient {
+	return &VaultClient{
+		vaultConfig: vaultConfig,
+	}
+}
+
 func (s *VaultClient) GetCloudletAccessVars(ctx context.Context) (map[string]string, error) {
+	if s.cloudlet == nil {
+		return nil, fmt.Errorf("Missing cloudlet details")
+	}
 	// Platform-specific implementation.
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, s.cloudlet.PlatformType.String(), nil)
 	if err != nil {
@@ -166,4 +176,12 @@ func (s *VaultClient) GetGCSCreds(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 	return creds, nil
+}
+
+func (s *VaultClient) GetFederationAPIKey(ctx context.Context, fedName string) (string, error) {
+	apiKey, err := federationmgmt.GetFederationAPIKey(ctx, s.vaultConfig, fedName)
+	if err != nil {
+		return "", err
+	}
+	return apiKey, nil
 }
