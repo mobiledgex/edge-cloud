@@ -544,8 +544,8 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 			}
 			// Whether first or subsequent run, save unfiltered output to be checked against on next run.
 			util.PrintToYamlFile(api+"unfiltered.yml", outputDir, reply, true)
+			util.FilterQosPrioritySessionReply(reply)
 		}
-		util.FilterQosPrioritySessionReply(reply)
 		dmereply = reply
 		dmeerror = err
 
