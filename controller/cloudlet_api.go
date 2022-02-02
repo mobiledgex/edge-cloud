@@ -1203,7 +1203,11 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	}
 	if privPolUpdateRequested && !ignoreCRM(cctx) {
 		// Wait for policy to update
-		return s.updateTrustPolicyInternal(ctx, &in.Key, in.TrustPolicy, cb)
+		err = s.updateTrustPolicyInternal(ctx, &in.Key, in.TrustPolicy, cb)
+		if caseInsensitiveContainsTimedOut(err.Error()) {
+			cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Update cloudlet is in progress: %s - %s Please use 'cloudlet show' to check current status", cloudletKey, err.Error())})
+		}
+		return err
 	}
 
 	// since default maintenance state is NORMAL_OPERATION, it is better to check
