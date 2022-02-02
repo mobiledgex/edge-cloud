@@ -651,6 +651,15 @@ func FilterFindCloudletReply(reply *dmeproto.FindCloudletReply) {
 	delete(reply.Tags, cloudcommon.TagPrioritySessionId)
 }
 
+func FilterQosPrioritySessionReply(reply *dmeproto.QosPrioritySessionReply) {
+	// Session ID and timestamps change each request.
+	if reply.SessionId != "" {
+		reply.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+	}
+	reply.StartedAt = 0
+	reply.ExpiresAt = 0
+}
+
 func FilterAppInstEdgeEventsCookies(appInstReply *dmeproto.AppInstListReply) {
 	for _, cloudlet := range appInstReply.Cloudlets {
 		for _, appinst := range cloudlet.Appinstances {
