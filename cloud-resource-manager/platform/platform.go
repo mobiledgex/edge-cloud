@@ -65,21 +65,23 @@ type Caches struct {
 
 // Features that the platform supports or enables
 type Features struct {
-	SupportsMultiTenantCluster       bool
-	SupportsSharedVolume             bool
-	SupportsTrustPolicy              bool
-	SupportsKubernetesOnly           bool // does not support docker/VM
-	KubernetesRequiresWorkerNodes    bool // k8s cluster cannot be master only
-	CloudletServicesLocal            bool // cloudlet services running locally to controller
-	IPAllocatedPerService            bool // Every k8s service gets a public IP (GCP/etc)
-	SupportsImageTypeOVF             bool // Supports OVF images for VM deployments
-	IsVMPool                         bool // cloudlet is just a pool of pre-existing VMs
-	IsFake                           bool // Just for unit-testing/e2e-testing
-	SupportsAdditionalNetworks       bool // Additional networks can be added
-	IsSingleKubernetesCluster        bool // Entire platform is just a single K8S cluster
-	SupportsAppInstDedicatedIP       bool // Supports per AppInst dedicated IPs
-	SupportsPlatformHighAvailability bool // Supports High Availablity with 2 CRMs
-	NoKubernetesClusterAutoScale     bool // No support for k8s cluster auto-scale
+	SupportsMultiTenantCluster               bool
+	SupportsSharedVolume                     bool
+	SupportsTrustPolicy                      bool
+	SupportsKubernetesOnly                   bool // does not support docker/VM
+	KubernetesRequiresWorkerNodes            bool // k8s cluster cannot be master only
+	CloudletServicesLocal                    bool // cloudlet services running locally to controller
+	IPAllocatedPerService                    bool // Every k8s service gets a public IP (GCP/etc)
+	SupportsImageTypeOVF                     bool // Supports OVF images for VM deployments
+	IsVMPool                                 bool // cloudlet is just a pool of pre-existing VMs
+	IsFake                                   bool // Just for unit-testing/e2e-testing
+	SupportsAdditionalNetworks               bool // Additional networks can be added
+	IsSingleKubernetesCluster                bool // Entire platform is just a single K8S cluster
+	SupportsAppInstDedicatedIP               bool // Supports per AppInst dedicated IPs
+	SupportsPlatformHighAvailabilityOnK8s    bool // Supports High Availablity with 2 CRMs on K8s
+	SupportsPlatformHighAvailabilityOnDocker bool // Supports HA on docker
+
+	NoKubernetesClusterAutoScale bool // No support for k8s cluster auto-scale
 }
 
 // Platform abstracts the underlying cloudlet platform.
