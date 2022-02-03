@@ -368,9 +368,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 		if !cloudcommon.IsValidDeploymentType(in.Deployment, cloudcommon.ValidCloudletDeployments) {
 			return fmt.Errorf("Invalid deployment, must be one of %v", cloudcommon.ValidCloudletDeployments)
 		}
-		if in.PlatformHighAvailability && in.Deployment != cloudcommon.DeploymentTypeKubernetes {
-			return fmt.Errorf("Platform High Availablility only supported for kubernetes deployments")
-		}
 	}
 
 	if in.GpuConfig.Driver.Name == "" {
@@ -471,8 +468,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if in.TrustPolicy != "" && !features.SupportsTrustPolicy {
 		return fmt.Errorf("Trust Policy not supported on %s", platName)
 	}
-	if in.PlatformHighAvailability && !features.SupportsPlatformHighAvailability {
-		return fmt.Errorf("Platform High Availability not supported on %s", platName)
+	if in.PlatformHighAvailability {
+		if in.Deployment == cloudcommon.DeploymentTypeDocker && !features.SupportsPlatformHighAvailabilityOnDocker {
+			return fmt.Errorf("Platform High Availability not supported for docker on %s", platName)
+		} else if in.Deployment == cloudcommon.DeploymentTypeKubernetes && !features.SupportsPlatformHighAvailabilityOnK8s {
+			return fmt.Errorf("Platform High Availability not supported for k8s on %s", platName)
+		}
 	}
 	if err := validateAllianceOrgs(ctx, in); err != nil {
 		return err
