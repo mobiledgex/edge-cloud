@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cespare/xxhash/v2"
+	"github.com/cespare/xxhash"
 )
 
 // Utility functions for statistics and metrics
