@@ -94,8 +94,8 @@ var xxx_messageInfo_ClusterInstKey proto.InternalMessageInfo
 type ClusterInst struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	// required: true
 	// Unique key
+	// required: true
 	Key ClusterInstKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Flavor of the k8s node
 	Flavor FlavorKey `protobuf:"bytes,3,opt,name=flavor,proto3" json:"flavor"`

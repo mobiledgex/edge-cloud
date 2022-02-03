@@ -7,10 +7,14 @@ import (
 
 // Used for search queries to specify a time range
 type TimeRange struct {
+	// Start time of the time range
 	StartTime time.Time `json:"starttime"`
-	EndTime   time.Time `json:"endtime"`
-	StartAge  Duration  `json:"startage"`
-	EndAge    Duration  `json:"endage"`
+	// End time of the time range
+	EndTime time.Time `json:"endtime"`
+	// Start age relative to now of the time range
+	StartAge Duration `json:"startage"`
+	// End age relative to now of the time range
+	EndAge Duration `json:"endage"`
 }
 
 // Resolve possible arguments to ensure StartTime and EndTime are set.
