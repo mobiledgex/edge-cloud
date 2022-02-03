@@ -17,7 +17,7 @@ ARG EDGE_CLOUD_BASE_IMAGE=scratch
 FROM $REGISTRY/protoc-gen-swagger:2020-01-19 AS protoc-gen-swagger
 FROM $REGISTRY/go-swagger/swagger:v0.29.0.2mobiledgex AS swagger
 
-FROM $REGISTRY/build:go1.15.2 AS build
+FROM $REGISTRY/build:go1.17.6 AS build
 
 ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
