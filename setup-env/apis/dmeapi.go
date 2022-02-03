@@ -26,8 +26,8 @@ type dmeApiRequest struct {
 	Rcreq            dmeproto.RegisterClientRequest           `yaml:"registerclientrequest"`
 	Fcreq            dmeproto.FindCloudletRequest             `yaml:"findcloudletrequest"`
 	Pfcreq           dmeproto.PlatformFindCloudletRequest     `yaml:"platformfindcloudletrequest"`
-	Qossescreatereq  dmeproto.QosPrioritySessionCreateRequest `yaml:"QosPrioritySessionCreateRequest"`
-	Qossesdeletereq  dmeproto.QosPrioritySessionDeleteRequest `yaml:"QosPrioritySessionDeleteRequest"`
+	Qossescreatereq  dmeproto.QosPrioritySessionCreateRequest `yaml:"qosprioritysessioncreaterequest"`
+	Qossesdeletereq  dmeproto.QosPrioritySessionDeleteRequest `yaml:"qosprioritysessiondeleterequest"`
 	Vlreq            dmeproto.VerifyLocationRequest           `yaml:"verifylocationrequest"`
 	Glreq            dmeproto.GetLocationRequest              `yaml:"getlocationrequest"`
 	Dlreq            dmeproto.DynamicLocGroupRequest          `yaml:"dynamiclocgrouprequest"`
@@ -500,6 +500,86 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				}
 			}
 		}
+	case "createqossession":
+		apiRequest.Qossescreatereq.SessionCookie = sessionCookie
+		reply, err := client.QosPrioritySessionCreate(ctx, &apiRequest.Qossescreatereq)
+		if err == nil {
+			// Before any filtering, check for existance of previous session data.
+			filename := outputDir + "/" + api + "unfiltered.yml"
+			log.Printf("Checking for %s", filename)
+			_, err := os.Stat(filename)
+			if err == nil {
+				// It exists, so read in values from previous run.
+				var replyPrev *dmeproto.QosPrioritySessionReply
+				err = util.ReadYamlFile(filename, &replyPrev)
+				if err == nil {
+					log.Printf("Previous QosPrioritySessionReply: %v.", replyPrev)
+					log.Printf("old: %s, %s. new: %s, %s", replyPrev.Profile, replyPrev.SessionId, reply.Profile, reply.SessionId)
+					if replyPrev.Profile == reply.Profile {
+						// If the same profile name is received, the session ID should
+						// also be the same, as it is reused by the DME.
+						if replyPrev.SessionId == reply.SessionId {
+							log.Printf("SessionId verified same as previous run")
+						} else {
+							log.Printf("FAIL: priority_session_id has changed and should not have")
+							return false, nil
+						}
+					} else {
+						// If the profile name has changed, the session ID should
+						// also be a new value, as a new session was created by the DME.
+						log.Printf("New QOS Profile: %s", reply.Profile)
+						if replyPrev.SessionId != reply.SessionId {
+							log.Printf("Verified new SessionId")
+						} else {
+							log.Printf("FAIL: SessionId was not updated for new profile")
+							return false, nil
+						}
+					}
+				} else {
+					log.Printf("Could not read yml file. err=%v", err)
+					return false, nil
+				}
+			} else {
+				log.Printf("%s doesn't exist. First run.", filename)
+			}
+			// Whether first or subsequent run, save unfiltered output to be checked against on next run.
+			util.PrintToYamlFile(api+"unfiltered.yml", outputDir, reply, true)
+			util.FilterQosPrioritySessionReply(reply)
+		}
+		dmereply = reply
+		dmeerror = err
+
+	case "deleteqossession":
+		var prevSessionId string
+		apiRequest.Qossesdeletereq.SessionCookie = sessionCookie
+		if apiRequest.Qossesdeletereq.SessionId != "" {
+			log.Printf("Using supplied SessionId: %s", apiRequest.Qossesdeletereq.SessionId)
+		} else {
+			log.Printf("Looking for previous SessionId")
+			// Look for previous createqossession output.
+			filename := outputDir + "/" + "createqossession" + "unfiltered.yml"
+			_, err := os.Stat(filename)
+			if err == nil {
+				// It exists, so read in values from previous run.
+				var replyPrev *dmeproto.QosPrioritySessionReply
+				err = util.ReadYamlFile(filename, &replyPrev)
+				if err == nil {
+					log.Printf("Previous QosPrioritySessionReply: %v. SessionId=%s", replyPrev, replyPrev.SessionId)
+					prevSessionId = replyPrev.SessionId
+					apiRequest.Qossesdeletereq.SessionId = prevSessionId
+				} else {
+					log.Printf("FAIL: Unable to retrieve previous session id. Failed to read " + filename)
+					return false, nil
+				}
+			} else {
+				log.Printf("FAIL: Unable to retrieve previous session id. File does not exist: " + filename)
+				return false, nil
+			}
+		}
+		reply, err := client.QosPrioritySessionDelete(ctx, &apiRequest.Qossesdeletereq)
+		dmereply = reply
+		dmeerror = err
+
 	case "register":
 		var expirySeconds int64 = 600
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
