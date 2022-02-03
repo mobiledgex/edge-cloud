@@ -397,6 +397,7 @@ func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInf
 		AccessApi:           accessApi,
 		TrustPolicy:         cloudlet.TrustPolicy,
 		CacheDir:            *cacheDir,
+		FederationConfig:    &cloudlet.FederationConfig,
 	}
 	if cloudlet.GpuConfig.Driver.Name != "" {
 		pc.GPUConfig = &cloudlet.GpuConfig
