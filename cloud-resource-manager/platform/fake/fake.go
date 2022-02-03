@@ -156,13 +156,14 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 
 func (s *Platform) GetFeatures() *platform.Features {
 	return &platform.Features{
-		SupportsMultiTenantCluster:       true,
-		SupportsSharedVolume:             true,
-		SupportsTrustPolicy:              true,
-		CloudletServicesLocal:            true,
-		IsFake:                           true,
-		SupportsAdditionalNetworks:       true,
-		SupportsPlatformHighAvailability: true,
+		SupportsMultiTenantCluster:               true,
+		SupportsSharedVolume:                     true,
+		SupportsTrustPolicy:                      true,
+		CloudletServicesLocal:                    true,
+		IsFake:                                   true,
+		SupportsAdditionalNetworks:               true,
+		SupportsPlatformHighAvailabilityOnDocker: true,
+		SupportsPlatformHighAvailabilityOnK8s:    true,
 	}
 }
 
