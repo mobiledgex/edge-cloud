@@ -156,7 +156,7 @@ type EventTerms struct {
 	Types []AggrVal `json:"types,omitempty"`
 	// Regions on events
 	Regions []AggrVal `json:"regions,omitempty"`
-	// Tag key s on events
+	// Tag keys on events
 	TagKeys []AggrVal `json:"tagkeys,omitempty"`
 }
 
