@@ -40,8 +40,8 @@ message ClusterInstKey {
 message ClusterInst {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // required: true
   // Unique key
+  // required: true
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
   // Flavor of the k8s node 
   FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.refers_to) = "Flavor"];

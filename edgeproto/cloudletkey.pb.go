@@ -28,6 +28,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// CloudletKey uniquely identifies a Cloudlet.
 type CloudletKey struct {
 	// Organization of the cloudlet site
 	Organization string `protobuf:"bytes,1,opt,name=organization,proto3" json:"organization,omitempty"`

@@ -56,8 +56,8 @@ message FlowRateLimitSettingsKey {
 message FlowRateLimitSettings {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // required: true
   // Unique identifier key
+  // required: true
   FlowRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
   // FlowSettings
   FlowSettings settings = 3 [(gogoproto.nullable) = false];
@@ -92,8 +92,8 @@ message MaxReqsRateLimitSettingsKey {
 message MaxReqsRateLimitSettings {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // required: true
   // Unique identifier key
+  // required: true
   MaxReqsRateLimitSettingsKey key = 2 [(gogoproto.nullable) = false];
   // MaxReqsSettings
   MaxReqsSettings settings = 3 [(gogoproto.nullable) = false];

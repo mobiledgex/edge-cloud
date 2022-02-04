@@ -482,8 +482,8 @@ var ResTagTableAliasArgs = []string{
 var ResTagTableComments = map[string]string{
 	"res":           "Resource Table Name",
 	"organization":  "Operator organization of the cloudlet site.",
-	"tags":          "one or more string tags, specify tags:empty=true to clear",
-	"azone":         "availability zone(s) of resource if required",
+	"tags":          "One or more string tags, specify tags:empty=true to clear",
+	"azone":         "Availability zone(s) of resource if required",
 	"deleteprepare": "Preparing to be deleted",
 }
 var ResTagTableSpecialArgs = map[string]string{
