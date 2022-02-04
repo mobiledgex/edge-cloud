@@ -214,8 +214,8 @@ var xxx_messageInfo_AppInstKey proto.InternalMessageInfo
 type AppInst struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	// required: true
 	// Unique identifier key
+	// required: true
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Cached location of the cloudlet
 	CloudletLoc dme_proto.Loc `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc,proto3" json:"cloudlet_loc"`

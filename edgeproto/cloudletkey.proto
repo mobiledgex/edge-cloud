@@ -6,13 +6,11 @@ package edgeproto;
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
-//
-// CloudletKey uniquely identifies a Cloudlet.
-
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;
 option (gogoproto.goproto_sizecache_all) = false;
 
+// CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
   // Organization of the cloudlet site
   string organization = 1 [(protogen.keytag) = "cloudletorg"];

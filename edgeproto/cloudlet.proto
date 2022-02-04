@@ -405,8 +405,8 @@ message GPUConfig {
 message Cloudlet {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // required: true
   // Unique identifier key
+  // required: true
   CloudletKey key = 2 [(gogoproto.nullable) = false];
   // Location of the Cloudlet site
   distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
