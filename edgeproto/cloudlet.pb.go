@@ -854,8 +854,8 @@ var xxx_messageInfo_GPUConfig proto.InternalMessageInfo
 type Cloudlet struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	// required: true
 	// Unique identifier key
+	// required: true
 	Key CloudletKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// Location of the Cloudlet site
 	Location dme_proto.Loc `protobuf:"bytes,5,opt,name=location,proto3" json:"location"`

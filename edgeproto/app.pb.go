@@ -329,8 +329,8 @@ var xxx_messageInfo_ConfigFile proto.InternalMessageInfo
 type App struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	// required: true
 	// Unique identifier key
+	// required: true
 	Key AppKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// URI of where image resides
 	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`

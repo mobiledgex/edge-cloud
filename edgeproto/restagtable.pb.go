@@ -114,11 +114,12 @@ func (m *ResTagTableKey) XXX_DiscardUnknown() {
 var xxx_messageInfo_ResTagTableKey proto.InternalMessageInfo
 
 type ResTagTable struct {
-	Fields []string       `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	Key    ResTagTableKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
-	// one or more string tags
+	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
+	// Resource tags table key
+	Key ResTagTableKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
+	// One or more string tags
 	Tags map[string]string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// availability zone(s) of resource if required
+	// Availability zone(s) of resource if required
 	Azone string `protobuf:"bytes,4,opt,name=azone,proto3" json:"azone,omitempty"`
 	// Preparing to be deleted
 	DeletePrepare bool `protobuf:"varint,5,opt,name=delete_prepare,json=deletePrepare,proto3" json:"delete_prepare,omitempty"`

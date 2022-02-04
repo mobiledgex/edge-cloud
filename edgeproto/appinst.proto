@@ -94,8 +94,8 @@ enum PowerState {
 message AppInst {
   // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
-  // required: true
   // Unique identifier key
+  // required: true
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Cached location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
