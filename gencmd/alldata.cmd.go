@@ -1147,7 +1147,7 @@ var AllDataComments = map[string]string{
 	"appinstances:#.updatemultiple":                                                 "Allow multiple instances to be updated at once",
 	"appinstances:#.configs:#.kind":                                                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"appinstances:#.configs:#.config":                                               "Config file contents or URI reference",
-	"appinstances:#.healthcheck":                                                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
+	"appinstances:#.healthcheck":                                                    "Health Check status, one of Unknown, RootlbOffline, ServerFail, Ok, CloudletOffline",
 	"appinstances:#.powerstate":                                                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"appinstances:#.externalvolumesize":                                             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"appinstances:#.availabilityzone":                                               "Optional Availability Zone if any",

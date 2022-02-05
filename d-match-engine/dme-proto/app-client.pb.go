@@ -10724,7 +10724,7 @@ func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
 	case reflect.TypeOf(LProto(0)):
 		return "LProto", ", valid values are one of Unknown, Tcp, Udp, or 0, 1, 2", true
 	case reflect.TypeOf(HealthCheck(0)):
-		return "HealthCheck", ", valid values are one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline, or 0, 1, 2, 3, 4", true
+		return "HealthCheck", ", valid values are one of Unknown, RootlbOffline, ServerFail, Ok, CloudletOffline, or 0, 1, 2, 3, 4", true
 	case reflect.TypeOf(CloudletState(0)):
 		return "CloudletState", ", valid values are one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync, or 0, 1, 2, 3, 4, 5, 6, 7", true
 	case reflect.TypeOf(MaintenanceState(0)):
