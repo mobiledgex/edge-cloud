@@ -196,7 +196,7 @@ func TestAddRemove(t *testing.T) {
 
 	// Change the health check status of the appInst and get check the results
 	appInst := dmetest.MakeAppInst(&dmetest.Apps[0], &dmetest.Cloudlets[2])
-	appInst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_FAIL_ROOTLB_OFFLINE
+	appInst.HealthCheck = dme.HealthCheck_HEALTH_CHECK_ROOTLB_OFFLINE
 	dmecommon.AddAppInst(ctx, appInst)
 	reply, err = serv.FindCloudlet(ctx, &dmetest.DisabledCloudletRR.Req)
 	assert.Nil(t, err, "find cloudlet")

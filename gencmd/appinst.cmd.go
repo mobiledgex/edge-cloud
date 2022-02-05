@@ -825,7 +825,7 @@ var AppInstComments = map[string]string{
 	"configs:empty":                  "Customization files passed through to implementing services, specify configs:empty=true to clear",
 	"configs:#.kind":                 "Kind (type) of config, i.e. envVarsYaml, helmCustomizationYaml",
 	"configs:#.config":               "Config file contents or URI reference",
-	"healthcheck":                    "Health Check status, one of Unknown, FailRootlbOffline, FailServerFail, Ok, CloudletOffline",
+	"healthcheck":                    "Health Check status, one of Unknown, RootlbOffline, ServerFail, Ok, CloudletOffline",
 	"powerstate":                     "Power State of the AppInst, one of PowerOn, PowerOff, Reboot",
 	"externalvolumesize":             "Size of external volume to be attached to nodes.  This is for the root partition",
 	"availabilityzone":               "Optional Availability Zone if any",
