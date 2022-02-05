@@ -653,7 +653,9 @@ func GetParseHelp(t reflect.Type) (string, string, bool) {
 	// Specially handled types are typically types with
 	// custom unmarshalers and custom DecodeHooks.
 	if t == reflect.TypeOf(time.Time{}) {
-		return "time", fmt.Sprintf(", valid values are RFC3339 format, i.e. %q", time.RFC3339), true
+		UTCFmtStr := strings.Split(time.RFC3339, "Z")[0] + "Z"
+		timezoneFmtStr := strings.ReplaceAll(time.RFC3339, "Z", "+")
+		return "time", fmt.Sprintf(", valid values are RFC3339 format, i.e. %q, or %q", UTCFmtStr, timezoneFmtStr), true
 	}
 	if t == reflect.TypeOf(time.Duration(0)) || t == reflect.TypeOf(edgeproto.Duration(0)) {
 		return "duration", fmt.Sprintf(", valid values are 300ms, 1s, 1.5h, 2h45m, etc"), true

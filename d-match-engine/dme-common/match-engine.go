@@ -381,7 +381,7 @@ func RemoveAppInst(ctx context.Context, appInst *edgeproto.AppInst) {
 	if c, foundCarrier := app.Carriers[carrierName]; foundCarrier {
 		if cl, foundAppInst := c.Insts[appInst.Key.ClusterInstKey]; foundAppInst {
 			log.SpanLog(ctx, log.DebugLevelDmereq, "removing app inst", "appinst", cl, "removed appinst health", appInst.HealthCheck)
-			cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_FAIL_SERVER_FAIL
+			cl.AppInstHealth = dme.HealthCheck_HEALTH_CHECK_SERVER_FAIL
 
 			// Remove AppInst from edgeevents plugin
 			appinstState := &DmeAppInstState{
