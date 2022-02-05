@@ -52,7 +52,7 @@ message AlertPolicy {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,alert-org=Key.Organization,cpu-utilization=CpuUtilizationLimit,mem-utilization=MemUtilizationLimit,disk-utilization=DiskUtilizationLimit,active-connections=ActiveConnLimit,trigger-time=TriggerTime";
+  option (protogen.alias) = "name=Key.Name,alertorg=Key.Organization,cpuutilization=CpuUtilizationLimit,memutilization=MemUtilizationLimit,diskutilization=DiskUtilizationLimit,activeconnections=ActiveConnLimit,triggertime=TriggerTime";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.noconfig) = "DeletePrepare";
 }

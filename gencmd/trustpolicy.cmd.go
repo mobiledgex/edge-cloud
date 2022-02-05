@@ -370,7 +370,7 @@ var SecurityRuleComments = map[string]string{
 }
 var SecurityRuleSpecialArgs = map[string]string{}
 var TrustPolicyRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"name",
 }
 var TrustPolicyOptionalArgs = []string{
@@ -381,12 +381,12 @@ var TrustPolicyOptionalArgs = []string{
 	"outboundsecurityrules:#.remotecidr",
 }
 var TrustPolicyAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"name=key.name",
 }
 var TrustPolicyComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":                         "Name of the organization for the cluster that this policy will apply to",
+	"cloudletorg":                          "Name of the organization for the cluster that this policy will apply to",
 	"name":                                 "Policy name",
 	"outboundsecurityrules:empty":          "List of outbound security rules for whitelisting traffic, specify outboundsecurityrules:empty=true to clear",
 	"outboundsecurityrules:#.protocol":     "TCP, UDP, ICMP",

@@ -1480,20 +1480,20 @@ var QosPositionComments = map[string]string{
 var QosPositionSpecialArgs = map[string]string{}
 var BandSelectionRequiredArgs = []string{}
 var BandSelectionOptionalArgs = []string{
-	"rat_2g",
-	"rat_3g",
-	"rat_4g",
-	"rat_5g",
+	"rat2g",
+	"rat3g",
+	"rat4g",
+	"rat5g",
 }
 var BandSelectionAliasArgs = []string{}
 var BandSelectionComments = map[string]string{
-	"rat_2g": "Radio Access Technologies",
+	"rat2g": "Radio Access Technologies",
 }
 var BandSelectionSpecialArgs = map[string]string{
-	"rat_2g": "StringArray",
-	"rat_3g": "StringArray",
-	"rat_4g": "StringArray",
-	"rat_5g": "StringArray",
+	"rat2g": "StringArray",
+	"rat3g": "StringArray",
+	"rat4g": "StringArray",
+	"rat5g": "StringArray",
 }
 var QosPositionRequestRequiredArgs = []string{}
 var QosPositionRequestOptionalArgs = []string{
@@ -1509,10 +1509,10 @@ var QosPositionRequestOptionalArgs = []string{
 	"positions:#.gpslocation.speed",
 	"positions:#.gpslocation.timestamp",
 	"ltecategory",
-	"bandselection.rat_2g",
-	"bandselection.rat_3g",
-	"bandselection.rat_4g",
-	"bandselection.rat_5g",
+	"bandselection.rat2g",
+	"bandselection.rat3g",
+	"bandselection.rat4g",
+	"bandselection.rat5g",
 	"tags",
 }
 var QosPositionRequestAliasArgs = []string{}
@@ -1529,15 +1529,15 @@ var QosPositionRequestComments = map[string]string{
 	"positions:#.gpslocation.speed":              "Speed (IOS) / velocity (Android) (meters/sec)",
 	"positions:#.gpslocation.timestamp":          "Timestamp",
 	"ltecategory":                                "_(optional)_ Clients device LTE category number.",
-	"bandselection.rat_2g":                       "Radio Access Technologies",
+	"bandselection.rat2g":                        "Radio Access Technologies",
 	"tags":                                       "_(optional)_ Vendor specific data",
 }
 var QosPositionRequestSpecialArgs = map[string]string{
-	"bandselection.rat_2g": "StringArray",
-	"bandselection.rat_3g": "StringArray",
-	"bandselection.rat_4g": "StringArray",
-	"bandselection.rat_5g": "StringArray",
-	"tags":                 "StringToString",
+	"bandselection.rat2g": "StringArray",
+	"bandselection.rat3g": "StringArray",
+	"bandselection.rat4g": "StringArray",
+	"bandselection.rat5g": "StringArray",
+	"tags":                "StringToString",
 }
 var QosPositionKpiResultRequiredArgs = []string{}
 var QosPositionKpiResultOptionalArgs = []string{

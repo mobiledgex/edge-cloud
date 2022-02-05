@@ -302,11 +302,11 @@ var TrustPolicyExceptionKeyComments = map[string]string{
 }
 var TrustPolicyExceptionKeySpecialArgs = map[string]string{}
 var TrustPolicyExceptionRequiredArgs = []string{
-	"app-org",
+	"apporg",
 	"appname",
 	"appvers",
-	"cloudletpool-org",
-	"cloudletpool-name",
+	"cloudletpoolorg",
+	"cloudletpoolname",
 	"name",
 }
 var TrustPolicyExceptionOptionalArgs = []string{
@@ -318,20 +318,20 @@ var TrustPolicyExceptionOptionalArgs = []string{
 	"outboundsecurityrules:#.remotecidr",
 }
 var TrustPolicyExceptionAliasArgs = []string{
-	"app-org=key.appkey.organization",
+	"apporg=key.appkey.organization",
 	"appname=key.appkey.name",
 	"appvers=key.appkey.version",
-	"cloudletpool-org=key.cloudletpoolkey.organization",
-	"cloudletpool-name=key.cloudletpoolkey.name",
+	"cloudletpoolorg=key.cloudletpoolkey.organization",
+	"cloudletpoolname=key.cloudletpoolkey.name",
 	"name=key.name",
 }
 var TrustPolicyExceptionComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
-	"app-org":                              "App developer organization",
+	"apporg":                               "App developer organization",
 	"appname":                              "App name",
 	"appvers":                              "App version",
-	"cloudletpool-org":                     "Name of the organization this pool belongs to",
-	"cloudletpool-name":                    "CloudletPool Name",
+	"cloudletpoolorg":                      "Name of the organization this pool belongs to",
+	"cloudletpoolname":                     "CloudletPool Name",
 	"name":                                 "TrustPolicyExceptionKey name",
 	"state":                                "State of the exception within the approval process, one of Unknown, ApprovalRequested, Active, Rejected",
 	"outboundsecurityrules:empty":          "List of outbound security rules for whitelisting traffic, specify outboundsecurityrules:empty=true to clear",
@@ -344,11 +344,11 @@ var TrustPolicyExceptionSpecialArgs = map[string]string{
 	"fields": "StringArray",
 }
 var CreateTrustPolicyExceptionRequiredArgs = []string{
-	"app-org",
+	"apporg",
 	"appname",
 	"appvers",
-	"cloudletpool-org",
-	"cloudletpool-name",
+	"cloudletpoolorg",
+	"cloudletpoolname",
 	"name",
 }
 var CreateTrustPolicyExceptionOptionalArgs = []string{
@@ -358,11 +358,11 @@ var CreateTrustPolicyExceptionOptionalArgs = []string{
 	"outboundsecurityrules:#.remotecidr",
 }
 var DeleteTrustPolicyExceptionRequiredArgs = []string{
-	"app-org",
+	"apporg",
 	"appname",
 	"appvers",
-	"cloudletpool-org",
-	"cloudletpool-name",
+	"cloudletpoolorg",
+	"cloudletpoolname",
 	"name",
 }
 var DeleteTrustPolicyExceptionOptionalArgs = []string{

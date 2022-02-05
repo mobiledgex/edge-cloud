@@ -246,13 +246,13 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, apiFileVars map[
 	if api == "accesscloudlet" {
 		args = append(args, "AccessCloudlet")
 	}
-	args = append(args, "app-org="+req.AppInstKey.AppKey.Organization)
+	args = append(args, "apporg="+req.AppInstKey.AppKey.Organization)
 	args = append(args, "appname="+req.AppInstKey.AppKey.Name)
 	args = append(args, "appvers="+req.AppInstKey.AppKey.Version)
 	args = append(args, "cloudlet="+req.AppInstKey.ClusterInstKey.CloudletKey.Name)
-	args = append(args, "cloudlet-org="+req.AppInstKey.ClusterInstKey.CloudletKey.Organization)
+	args = append(args, "cloudletorg="+req.AppInstKey.ClusterInstKey.CloudletKey.Organization)
 	args = append(args, "cluster="+req.AppInstKey.ClusterInstKey.ClusterKey.Name)
-	args = append(args, "cluster-org="+req.AppInstKey.ClusterInstKey.Organization)
+	args = append(args, "clusterorg="+req.AppInstKey.ClusterInstKey.Organization)
 	if api == "runcommand" && req.Cmd != nil {
 		args = append(args, "command=\""+req.Cmd.Command+"\"")
 	}
@@ -273,8 +273,8 @@ func RunCommandAPI(api string, ctrlname string, apiFile string, apiFileVars map[
 	if api == "accesscloudlet" && req.Cmd != nil {
 		args = append(args, "command=\""+req.Cmd.Command+"\"")
 		if req.Cmd.CloudletMgmtNode != nil {
-			args = append(args, "node-type=\""+req.Cmd.CloudletMgmtNode.Type+"\"")
-			args = append(args, "node-name=\""+req.Cmd.CloudletMgmtNode.Name+"\"")
+			args = append(args, "nodetype=\""+req.Cmd.CloudletMgmtNode.Type+"\"")
+			args = append(args, "nodename=\""+req.Cmd.CloudletMgmtNode.Name+"\"")
 		}
 	}
 	out, err := util.ControllerCLI(ctrl, args...)

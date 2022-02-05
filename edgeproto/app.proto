@@ -237,7 +237,7 @@ message App {
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
-  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
+  option (protogen.alias) = "appname=Key.Name,appvers=Key.Version,apporg=Key.Organization,defaultflavor=DefaultFlavor.Name";
   option (protogen.noconfig) = "DeletePrepare,CreatedAt,UpdatedAt,DelOpt,AutoProvPolicy";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.generate_lookup_by_sublist) = "PolicyKey:AutoProvPolicy";
@@ -258,7 +258,7 @@ message AppAutoProvPolicy {
   AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "App"];
   // Auto provisioning policy name
   string auto_prov_policy = 2 [(protogen.refers_to) = "AutoProvPolicy"];
-  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization";
+  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,apporg=AppKey.Organization";
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AutoProvPolicy";
 }
 
@@ -267,7 +267,7 @@ message AppAlertPolicy {
   AppKey app_key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "App"];
   // Alert name 
   string alert_policy = 2 [(protogen.refers_to) = "AlertPolicy"];
-  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,app-org=AppKey.Organization,alertpolicy-name=AlertPolicy";
+  option (protogen.alias) = "appname=AppKey.Name,appvers=AppKey.Version,apporg=AppKey.Organization,alertpolicyname=AlertPolicy";
   option (protogen.also_required) = "AppKey.Name,AppKey.Version,AppKey.Organization,AlertPolicy";
 }
 
@@ -278,7 +278,7 @@ message DeploymentCloudletRequest {
    bool dry_run_deploy = 2;
    // Optional number of worker VMs in dry run K8s Cluster, default = 2
    uint32 num_nodes = 3;
-   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,app-org=Key.Organization,defaultflavor=DefaultFlavor.Name";
+   option (protogen.alias) = "appname=App.Key.Name,appvers=App.Key.Version,apporg=Key.Organization,defaultflavor=DefaultFlavor.Name";
    option (protogen.noconfig) = "App.DeletePrepare,App.CreatedAt,App.UpdatedAt,App.DelOpt,App.AutoProvPolicy";
 }
 
