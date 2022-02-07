@@ -69,6 +69,14 @@ func GenerateMethodArgs(g *generator.Generator, support *PluginSupport, method *
 	generateArgs(g, support, desc, method, methodGroup, prefixMessageToAlias, count)
 }
 
+func checkValidArg(g *generator.Generator, desc *generator.Descriptor, arg, typ string) {
+	if !util.ValidCliArg(arg) {
+		messageName := *desc.DescriptorProto.Name
+		fileName := *desc.File().Name
+		g.Fail(fmt.Sprintf("Bad format %s cli arg %q on message %q in file %q, args must be lowercase with only letters and numbers", typ, arg, messageName, fileName))
+	}
+}
+
 func generateArgs(g *generator.Generator, support *PluginSupport, desc *generator.Descriptor, method *descriptor.MethodDescriptorProto, methodGroup *MethodGroup, prefixMessageToAlias bool, count int) {
 	if desc.Options != nil && desc.Options.MapEntry != nil && *desc.Options.MapEntry == true {
 		// descriptor for map entry, skip
@@ -95,7 +103,6 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if len(kv) != 2 {
 			continue
 		}
-		// real -> alias
 		aliasMap[kv[1]] = kv[0]
 	}
 	noconfig := GetNoConfig(message, method)
@@ -136,14 +143,15 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 			// default: implicitly not required
 			continue
 		}
-
 		requiredMap[arg.Name] = struct{}{}
 		// use alias if exists
 		str, ok := aliasMap[arg.Name]
 		if !ok {
 			str = arg.Name
 		}
-		g.P("\"", strings.ToLower(str), "\",")
+		str = strings.ToLower(str)
+		checkValidArg(g, desc, str, "required")
+		g.P("\"", str, "\",")
 	}
 	g.P("}")
 
@@ -181,7 +189,9 @@ func generateArgs(g *generator.Generator, support *PluginSupport, desc *generato
 		if !ok {
 			str = arg.Name
 		}
-		g.P("\"", strings.ToLower(str), "\",")
+		str = strings.ToLower(str)
+		checkValidArg(g, desc, str, "optional")
+		g.P("\"", str, "\",")
 	}
 	g.P("}")
 
