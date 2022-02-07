@@ -10,6 +10,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	v1 "k8s.io/api/core/v1"
 )
 
 var (
@@ -21,19 +22,25 @@ var (
 	ResourceDisk        = "Disk"
 
 	// Platform specific resources
-	ResourceInstances   = "Instances"
-	ResourceFloatingIPs = "Floating IPs"
+	ResourceInstances          = "Instances"
+	ResourceFloatingIPs        = "Floating IPs"
+	ResourceK8sClusters        = "K8s Clusters"
+	ResourceK8sNodesPerCluster = "K8s Nodes Per Cluster"
+	ResourceAppLBs             = "Application Load Balancers"
 
 	// Resource units
 	ResourceRamUnits = "MB"
 
 	// Resource metrics
-	ResourceMetricRamMB       = "ramUsed"
-	ResourceMetricVcpus       = "vcpusUsed"
-	ResourceMetricsGpus       = "gpusUsed"
-	ResourceMetricInstances   = "instancesUsed"
-	ResourceMetricExternalIPs = "externalIpsUsed"
-	ResourceMetricFloatingIPs = "floatingIpsUsed"
+	ResourceMetricRamMB              = "ramUsed"
+	ResourceMetricVcpus              = "vcpusUsed"
+	ResourceMetricsGpus              = "gpusUsed"
+	ResourceMetricInstances          = "instancesUsed"
+	ResourceMetricExternalIPs        = "externalIpsUsed"
+	ResourceMetricFloatingIPs        = "floatingIpsUsed"
+	ResourceMetricK8sClusters        = "k8sClustersUsed"
+	ResourceMetricK8sNodesPerCluster = "k8sNodesPerClusterUsed"
+	ResourceMetricAppLBs             = "appLBsUsed"
 
 	// Common cloudlet resources
 	CloudletResources = []edgeproto.InfraResource{
@@ -56,18 +63,24 @@ var (
 	}
 
 	ResourceQuotaDesc = map[string]string{
-		ResourceDisk:        "Limit on disk available (GB)",
-		ResourceInstances:   "Limit on number of instances that can be provisioned",
-		ResourceFloatingIPs: "Limit on number of floating IPs that can be created",
+		ResourceDisk:               "Limit on disk available (GB)",
+		ResourceInstances:          "Limit on number of instances that can be provisioned",
+		ResourceFloatingIPs:        "Limit on number of floating IPs that can be created",
+		ResourceK8sClusters:        "Limit on number of k8s clusters than can be created",
+		ResourceK8sNodesPerCluster: "Limit on maximum number of k8s nodes that can be created as part of k8s cluster",
+		ResourceAppLBs:             "Limit on maximum number of application load balancers that can be created in a region",
 	}
 
 	ResourceMetricsDesc = map[string]string{
-		ResourceMetricRamMB:       "RAM Usage (MB)",
-		ResourceMetricVcpus:       "vCPU Usage",
-		ResourceMetricsGpus:       "GPU Usage",
-		ResourceMetricInstances:   "VM Instance Usage",
-		ResourceMetricExternalIPs: "External IP Usage",
-		ResourceMetricFloatingIPs: "Floating IP Usage",
+		ResourceMetricRamMB:              "RAM Usage (MB)",
+		ResourceMetricVcpus:              "vCPU Usage",
+		ResourceMetricsGpus:              "GPU Usage",
+		ResourceMetricInstances:          "VM Instance Usage",
+		ResourceMetricExternalIPs:        "External IP Usage",
+		ResourceMetricFloatingIPs:        "Floating IP Usage",
+		ResourceMetricK8sClusters:        "K8s Cluster Usage",
+		ResourceMetricK8sNodesPerCluster: "Maximum K8s Nodes Per Cluster Usage",
+		ResourceMetricAppLBs:             "App Load Balancer Usage",
 	}
 )
 
@@ -151,6 +164,32 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 	return vmResources, nil
 }
 
+func GetK8sAppRequirements(ctx context.Context, app *edgeproto.App) ([]edgeproto.VMResource, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetK8sAppRequirements", "app", app)
+	resources := []edgeproto.VMResource{}
+	if app.Deployment != DeploymentTypeKubernetes && app.Deployment != DeploymentTypeHelm {
+		return resources, nil
+	}
+	objs, _, err := DecodeK8SYaml(app.DeploymentManifest)
+	if err != nil {
+		return nil, fmt.Errorf("parse kubernetes deployment yaml failed for app %v, %v", app.Key, err)
+	}
+	for _, obj := range objs {
+		ksvc, ok := obj.(*v1.Service)
+		if !ok {
+			continue
+		}
+		if ksvc.Spec.Type != v1.ServiceTypeLoadBalancer {
+			continue
+		}
+		// add LB svc as a resource for public-cloud based platform validations
+		resources = append(resources, edgeproto.VMResource{
+			Type: ResourceTypeK8sLBSvc,
+		})
+	}
+	return resources, nil
+}
+
 func usageAlertWarningLabels(ctx context.Context, key *edgeproto.CloudletKey, alertname, warning string) map[string]string {
 	labels := make(map[string]string)
 	labels["alertname"] = alertname
@@ -188,7 +227,7 @@ func ValidateCloudletResourceQuotas(ctx context.Context, curRes map[string]edgep
 	for _, resQuota := range resourceQuotas {
 		infraRes, ok := curRes[resQuota.Name]
 		if !ok {
-			return fmt.Errorf("Invalid resource quota name: %s, valid names are %s", resQuota.Name, strings.Join(quotaNames, ","))
+			return fmt.Errorf("Invalid resource quota name: %s, valid names are %s", resQuota.Name, strings.Join(quotaNames, ", "))
 		}
 		if infraRes.InfraMaxValue > 0 && resQuota.Value > infraRes.InfraMaxValue {
 			return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, infraRes.InfraMaxValue)

@@ -855,11 +855,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Target cloudlet running older version of CRM no longer supports auto-provisioning, please upgrade CRM")
 		}
 
+		refs := edgeproto.CloudletRefs{}
+		if !s.all.cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
+			initCloudletRefs(&refs, &in.Key.ClusterInstKey.CloudletKey)
+		}
+		refsChanged := false
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
-			refs := edgeproto.CloudletRefs{}
-			if !s.all.cloudletRefsApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &refs) {
-				initCloudletRefs(&refs, &in.Key.ClusterInstKey.CloudletKey)
-			}
 			err = s.all.clusterInstApi.validateResources(ctx, stm, nil, &app, in, &cloudlet, &info, &refs, GenResourceAlerts)
 			if err != nil {
 				return err
@@ -867,6 +868,22 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			vmAppInstRefKey := edgeproto.AppInstRefKey{}
 			vmAppInstRefKey.FromAppInstKey(&in.Key)
 			refs.VmAppInsts = append(refs.VmAppInsts, vmAppInstRefKey)
+			refsChanged = true
+		}
+		// Track K8s AppInstances for resource management only if platform supports IP per service
+		if isIPAllocatedPerService(ctx, cloudletPlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
+			if app.Deployment == cloudcommon.DeploymentTypeKubernetes || app.Deployment == cloudcommon.DeploymentTypeHelm {
+				err = s.all.clusterInstApi.validateResources(ctx, stm, nil, &app, nil, &cloudlet, &info, &refs, GenResourceAlerts)
+				if err != nil {
+					return err
+				}
+				k8sAppInstRefKey := edgeproto.AppInstRefKey{}
+				k8sAppInstRefKey.FromAppInstKey(&in.Key)
+				refs.K8SAppInsts = append(refs.K8SAppInsts, k8sAppInstRefKey)
+				refsChanged = true
+			}
+		}
+		if refsChanged {
 			s.all.cloudletRefsApi.store.STMPut(stm, &refs)
 		}
 		// Iterate to get a unique id. The number of iterations must

@@ -410,6 +410,7 @@ func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, 
 		resPropsMap[clRes.Name] = struct{}{}
 		resPropsNames = append(resPropsNames, clRes.Name)
 	}
+	sort.Strings(resPropsNames)
 	for _, resQuota := range resourceQuotas {
 		if _, ok := resPropsMap[resQuota.Name]; !ok {
 			return fmt.Errorf("Invalid quota name: %s, valid names are %s", resQuota.Name, strings.Join(resPropsNames, ","))
