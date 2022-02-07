@@ -23,10 +23,8 @@ message CloudletKey {
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
   option (protogen.also_required) = "Name,Organization";
-  option (protogen.alias) = "cloudlet=Name,cloudlet-org=Organization,federator-org=FederatedOrganization";
+  option (protogen.alias) = "cloudlet=Name,cloudletorg=Organization,federatororg=FederatedOrganization";
   option (protogen.custom_key_type) = "CloudletKey";
   option (protogen.generate_show_test) = true; 
   option (protogen.uses_org) = "none";
 }
-
-

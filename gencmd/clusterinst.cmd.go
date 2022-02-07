@@ -564,12 +564,12 @@ var ClusterInstKeyComments = map[string]string{
 var ClusterInstKeySpecialArgs = map[string]string{}
 var ClusterInstRequiredArgs = []string{
 	"cluster",
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
-	"cluster-org",
+	"clusterorg",
 }
 var ClusterInstOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"flavor",
 	"crmoverride",
 	"ipaccess",
@@ -586,19 +586,19 @@ var ClusterInstOptionalArgs = []string{
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
-	"cloudlet-org=key.cloudletkey.organization",
+	"cloudletorg=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
-	"federated-org=key.cloudletkey.federatedorganization",
-	"cluster-org=key.organization",
+	"federatedorg=key.cloudletkey.federatedorganization",
+	"clusterorg=key.organization",
 	"flavor=flavor.name",
 }
 var ClusterInstComments = map[string]string{
 	"fields":                            "Fields are used for the Update API to specify which fields to apply",
 	"cluster":                           "Cluster name",
-	"cloudlet-org":                      "Organization of the cloudlet site",
+	"cloudletorg":                       "Organization of the cloudlet site",
 	"cloudlet":                          "Name of the cloudlet",
-	"federated-org":                     "Federated operator organization who shared this cloudlet",
-	"cluster-org":                       "Name of Developer organization that this cluster belongs to",
+	"federatedorg":                      "Federated operator organization who shared this cloudlet",
+	"clusterorg":                        "Name of Developer organization that this cluster belongs to",
 	"flavor":                            "Flavor name",
 	"liveness":                          "Liveness of instance (see Liveness), one of Unknown, Static, Dynamic, Autoprov",
 	"auto":                              "Auto is set to true when automatically created by back-end (internal use only)",
@@ -717,12 +717,12 @@ var ClusterInstInfoSpecialArgs = map[string]string{
 }
 var UpdateClusterInstRequiredArgs = []string{
 	"cluster",
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
-	"cluster-org",
+	"clusterorg",
 }
 var UpdateClusterInstOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"crmoverride",
 	"numnodes",
 	"autoscalepolicy",

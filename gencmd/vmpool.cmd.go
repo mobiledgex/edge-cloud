@@ -524,7 +524,7 @@ var VMPoolKeyComments = map[string]string{
 }
 var VMPoolKeySpecialArgs = map[string]string{}
 var VMPoolRequiredArgs = []string{
-	"vmpool-org",
+	"vmpoolorg",
 	"vmpool",
 }
 var VMPoolOptionalArgs = []string{
@@ -537,12 +537,12 @@ var VMPoolOptionalArgs = []string{
 	"deleteprepare",
 }
 var VMPoolAliasArgs = []string{
-	"vmpool-org=key.organization",
+	"vmpoolorg=key.organization",
 	"vmpool=key.name",
 }
 var VMPoolComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
-	"vmpool-org":               "Organization of the vmpool",
+	"vmpoolorg":                "Organization of the vmpool",
 	"vmpool":                   "Name of the vmpool",
 	"vms:empty":                "list of VMs to be part of VM pool, specify vms:empty=true to clear",
 	"vms:#.name":               "VM Name",
@@ -569,7 +569,7 @@ var VMPoolSpecialArgs = map[string]string{
 	"vms:#.flavor.propmap": "StringToString",
 }
 var VMPoolMemberRequiredArgs = []string{
-	"vmpool-org",
+	"vmpoolorg",
 	"vmpool",
 }
 var VMPoolMemberOptionalArgs = []string{
@@ -579,11 +579,11 @@ var VMPoolMemberOptionalArgs = []string{
 	"crmoverride",
 }
 var VMPoolMemberAliasArgs = []string{
-	"vmpool-org=key.organization",
+	"vmpoolorg=key.organization",
 	"vmpool=key.name",
 }
 var VMPoolMemberComments = map[string]string{
-	"vmpool-org":            "Organization of the vmpool",
+	"vmpoolorg":             "Organization of the vmpool",
 	"vmpool":                "Name of the vmpool",
 	"vm.name":               "VM Name",
 	"vm.netinfo.externalip": "External IP",
@@ -634,7 +634,7 @@ var VMSpecSpecialArgs = map[string]string{
 	"flavor.optresmap": "StringToString",
 }
 var VMPoolInfoRequiredArgs = []string{
-	"vmpool-org",
+	"vmpoolorg",
 	"vmpool",
 }
 var VMPoolInfoOptionalArgs = []string{
@@ -662,12 +662,12 @@ var VMPoolInfoOptionalArgs = []string{
 	"status.msgs",
 }
 var VMPoolInfoAliasArgs = []string{
-	"vmpool-org=key.organization",
+	"vmpoolorg=key.organization",
 	"vmpool=key.name",
 }
 var VMPoolInfoComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
-	"vmpool-org":               "Organization of the vmpool",
+	"vmpoolorg":                "Organization of the vmpool",
 	"vmpool":                   "Name of the vmpool",
 	"notifyid":                 "Id of client assigned by server (internal use only)",
 	"vms:#.name":               "VM Name",
@@ -693,7 +693,7 @@ var VMPoolInfoSpecialArgs = map[string]string{
 	"vms:#.flavor.propmap": "StringToString",
 }
 var CreateVMPoolRequiredArgs = []string{
-	"vmpool-org",
+	"vmpoolorg",
 	"vmpool",
 }
 var CreateVMPoolOptionalArgs = []string{
@@ -704,7 +704,7 @@ var CreateVMPoolOptionalArgs = []string{
 	"deleteprepare",
 }
 var AddVMPoolMemberRequiredArgs = []string{
-	"vmpool-org",
+	"vmpoolorg",
 	"vmpool",
 	"vm.name",
 	"vm.netinfo.internalip",
@@ -714,7 +714,7 @@ var AddVMPoolMemberOptionalArgs = []string{
 	"crmoverride",
 }
 var RemoveVMPoolMemberRequiredArgs = []string{
-	"vmpool-org",
+	"vmpoolorg",
 	"vmpool",
 	"vm.name",
 }
