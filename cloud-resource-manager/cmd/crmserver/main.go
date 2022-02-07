@@ -286,13 +286,13 @@ func main() {
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
 				myCloudletInfo.ControllerCacheReceived = true
-				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-				err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
-				if err != nil {
-					log.FatalLog("Platform sync fail", "err", err)
-				}
 				// Update AppInst runtime info in case it has changed
 				if highAvailabilityManager.PlatformInstanceActive {
+					controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
+					err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
+					if err != nil {
+						log.FatalLog("Platform sync fail", "err", err)
+					}
 					controllerData.RefreshAppInstRuntime(ctx)
 					resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
 					if resources != nil {
