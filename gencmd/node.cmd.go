@@ -207,9 +207,9 @@ var NodeKeySpecialArgs = map[string]string{}
 var NodeRequiredArgs = []string{
 	"name",
 	"type",
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
-	"federated-org",
+	"federatedorg",
 	"region",
 }
 var NodeOptionalArgs = []string{
@@ -226,18 +226,18 @@ var NodeOptionalArgs = []string{
 var NodeAliasArgs = []string{
 	"name=key.name",
 	"type=key.type",
-	"cloudlet-org=key.cloudletkey.organization",
+	"cloudletorg=key.cloudletkey.organization",
 	"cloudlet=key.cloudletkey.name",
-	"federated-org=key.cloudletkey.federatedorganization",
+	"federatedorg=key.cloudletkey.federatedorganization",
 	"region=key.region",
 }
 var NodeComments = map[string]string{
 	"fields":           "Fields are used for the Update API to specify which fields to apply",
 	"name":             "Name or hostname of node",
 	"type":             "Node type",
-	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudletorg":      "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
-	"federated-org":    "Federated operator organization who shared this cloudlet",
+	"federatedorg":     "Federated operator organization who shared this cloudlet",
 	"region":           "Region the node is in",
 	"notifyid":         "Id of client assigned by server (internal use only)",
 	"buildmaster":      "Build Master Version",
