@@ -142,6 +142,21 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 	return v, nil
 }
 
+func (s *HighAvailabilityManager) SetValue(ctx context.Context, key string, value string) error {
+	status := s.redisClient.Set(key, value, 0)
+	log.SpanLog(ctx, log.DebugLevelInfra, "SetValue Done", "err", status.Err())
+	return status.Err()
+}
+
+func (s *HighAvailabilityManager) GetValue(ctx context.Context, key string) (string, error) {
+	val := s.redisClient.Get(key)
+	if val.Err() == redis.Nil {
+		return "", nil
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetValue Done", "val", val.Val())
+	return val.Val(), nil
+}
+
 func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error) {
 
 	v, err := s.redisClient.Get(s.nodeGroupKey).Result()

@@ -2,6 +2,7 @@ package crmutil
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -65,6 +66,7 @@ type ControllerData struct {
 	finishInfraResourceThread            chan struct{}
 	vmActionLastUpdate                   time.Time
 	highAvailabilityManager              *redundancy.HighAvailabilityManager
+	PlatformInitComplete                 bool
 }
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -1931,6 +1933,14 @@ func (cd *ControllerData) UpdateCloudletInfo(ctx context.Context, cloudletInfo *
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfo", "HAEnabled", cd.highAvailabilityManager.HAEnabled, "haActive", cd.highAvailabilityManager.PlatformInstanceActive, "state", cloudletInfo.State, "activeCrm", cloudletInfo.ActiveCrmInstance, "standby", cloudletInfo.StandbyCrm)
 	cd.CloudletInfoCache.Update(ctx, cloudletInfo, 0)
+	if cd.highAvailabilityManager.HAEnabled && !cloudletInfo.StandbyCrm {
+		ciJson, err := json.Marshal(cloudletInfo)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "cloudletinfo marshal fail", "err", err)
+		} else {
+			cd.highAvailabilityManager.SetValue(ctx, "cloudletInfo", string(ciJson))
+		}
+	}
 }
 
 func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {

@@ -260,6 +260,7 @@ func main() {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
+			controllerData.PlatformInitComplete = true
 			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
 			err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
@@ -290,23 +291,23 @@ func main() {
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
-
 				// Update AppInst runtime info in case it has changed
-				controllerData.RefreshAppInstRuntime(ctx)
-				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
-				if resources != nil {
-					resMap := make(map[string]edgeproto.InfraResource)
-					for _, resInfo := range resources.Info {
-						resMap[resInfo.Name] = resInfo
+				if highAvailabilityManager.PlatformInstanceActive {
+					controllerData.RefreshAppInstRuntime(ctx)
+					resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
+					if resources != nil {
+						resMap := make(map[string]edgeproto.InfraResource)
+						for _, resInfo := range resources.Info {
+							resMap[resInfo.Name] = resInfo
+						}
+						err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
+						if err != nil {
+							log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
+							err = nil
+						}
+						myCloudletInfo.ResourcesSnapshot = *resources
 					}
-					err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
-					if err != nil {
-						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
-						err = nil
-					}
-					myCloudletInfo.ResourcesSnapshot = *resources
 				}
-
 				myCloudletInfo.Errors = nil
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 				if cloudlet.TrustPolicy == "" {
