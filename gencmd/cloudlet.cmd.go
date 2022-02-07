@@ -2292,23 +2292,23 @@ var PlatformConfigSpecialArgs = map[string]string{
 	"envvar": "StringToString",
 }
 var CloudletResMapRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 	"mapping",
 }
 var CloudletResMapOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 }
 var CloudletResMapAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"cloudlet=key.name",
-	"federated-org=key.federatedorganization",
+	"federatedorg=key.federatedorganization",
 }
 var CloudletResMapComments = map[string]string{
-	"cloudlet-org":  "Organization of the cloudlet site",
-	"cloudlet":      "Name of the cloudlet",
-	"federated-org": "Federated operator organization who shared this cloudlet",
-	"mapping":       "Resource mapping info",
+	"cloudletorg":  "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"federatedorg": "Federated operator organization who shared this cloudlet",
+	"mapping":      "Resource mapping info",
 }
 var CloudletResMapSpecialArgs = map[string]string{
 	"mapping": "StringToString",
@@ -2371,7 +2371,7 @@ var GPUDriverBuildComments = map[string]string{
 var GPUDriverBuildSpecialArgs = map[string]string{}
 var GPUDriverBuildMemberRequiredArgs = []string{
 	"gpudrivername",
-	"gpudriver-org",
+	"gpudriverorg",
 }
 var GPUDriverBuildMemberOptionalArgs = []string{
 	"build.name",
@@ -2385,11 +2385,11 @@ var GPUDriverBuildMemberOptionalArgs = []string{
 }
 var GPUDriverBuildMemberAliasArgs = []string{
 	"gpudrivername=key.name",
-	"gpudriver-org=key.organization",
+	"gpudriverorg=key.organization",
 }
 var GPUDriverBuildMemberComments = map[string]string{
 	"gpudrivername":         "Name of the driver",
-	"gpudriver-org":         "Organization to which the driver belongs to",
+	"gpudriverorg":          "Organization to which the driver belongs to",
 	"build.name":            "Unique identifier key",
 	"build.driverpath":      "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
 	"build.driverpathcreds": "Optional credentials (username:password) to access driver path",
@@ -2415,7 +2415,7 @@ var GPUDriverRequiredArgs = []string{
 	"gpudrivername",
 }
 var GPUDriverOptionalArgs = []string{
-	"gpudriver-org",
+	"gpudriverorg",
 	"builds:empty",
 	"builds:#.name",
 	"builds:#.driverpath",
@@ -2430,12 +2430,12 @@ var GPUDriverOptionalArgs = []string{
 }
 var GPUDriverAliasArgs = []string{
 	"gpudrivername=key.name",
-	"gpudriver-org=key.organization",
+	"gpudriverorg=key.organization",
 }
 var GPUDriverComments = map[string]string{
 	"fields":                   "Fields are used for the Update API to specify which fields to apply",
 	"gpudrivername":            "Name of the driver",
-	"gpudriver-org":            "Organization to which the driver belongs to",
+	"gpudriverorg":             "Organization to which the driver belongs to",
 	"builds:empty":             "List of GPU driver build, specify builds:empty=true to clear",
 	"builds:#.name":            "Unique identifier key",
 	"builds:#.driverpath":      "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
@@ -2474,11 +2474,11 @@ var GPUConfigSpecialArgs = map[string]string{
 	"properties": "StringToString",
 }
 var CloudletRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var CloudletOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -2528,15 +2528,15 @@ var CloudletOptionalArgs = []string{
 	"secondarynotifysrvaddr",
 }
 var CloudletAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"cloudlet=key.name",
-	"federated-org=key.federatedorganization",
+	"federatedorg=key.federatedorganization",
 }
 var CloudletComments = map[string]string{
 	"fields":                               "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":                         "Organization of the cloudlet site",
+	"cloudletorg":                          "Organization of the cloudlet site",
 	"cloudlet":                             "Name of the cloudlet",
-	"federated-org":                        "Federated operator organization who shared this cloudlet",
+	"federatedorg":                         "Federated operator organization who shared this cloudlet",
 	"location.latitude":                    "Latitude in WGS 84 coordinates",
 	"location.longitude":                   "Longitude in WGS 84 coordinates",
 	"location.horizontalaccuracy":          "Horizontal accuracy (radius in meters)",
@@ -2639,24 +2639,24 @@ var CloudletSpecialArgs = map[string]string{
 	"gpuconfig.properties": "StringToString",
 }
 var FlavorMatchRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 	"flavor",
 }
 var FlavorMatchOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"availabilityzone",
 }
 var FlavorMatchAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"cloudlet=key.name",
-	"federated-org=key.federatedorganization",
+	"federatedorg=key.federatedorganization",
 	"flavor=flavorname",
 }
 var FlavorMatchComments = map[string]string{
-	"cloudlet-org":     "Organization of the cloudlet site",
+	"cloudletorg":      "Organization of the cloudlet site",
 	"cloudlet":         "Name of the cloudlet",
-	"federated-org":    "Federated operator organization who shared this cloudlet",
+	"federatedorg":     "Federated operator organization who shared this cloudlet",
 	"flavor":           "Flavor name to lookup",
 	"availabilityzone": "availability zone for optional resources if any",
 }
@@ -2726,11 +2726,11 @@ var CloudletResourceQuotaPropsComments = map[string]string{
 }
 var CloudletResourceQuotaPropsSpecialArgs = map[string]string{}
 var CloudletResourceUsageRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var CloudletResourceUsageOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"infrausage",
 	"info:#.name",
 	"info:#.value",
@@ -2741,14 +2741,14 @@ var CloudletResourceUsageOptionalArgs = []string{
 	"info:#.alertthreshold",
 }
 var CloudletResourceUsageAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"cloudlet=key.name",
-	"federated-org=key.federatedorganization",
+	"federatedorg=key.federatedorganization",
 }
 var CloudletResourceUsageComments = map[string]string{
-	"cloudlet-org":          "Organization of the cloudlet site",
+	"cloudletorg":           "Organization of the cloudlet site",
 	"cloudlet":              "Name of the cloudlet",
-	"federated-org":         "Federated operator organization who shared this cloudlet",
+	"federatedorg":          "Federated operator organization who shared this cloudlet",
 	"infrausage":            "Show Infra based usage",
 	"info:#.name":           "Resource name",
 	"info:#.value":          "Resource value",
@@ -2760,23 +2760,23 @@ var CloudletResourceUsageComments = map[string]string{
 }
 var CloudletResourceUsageSpecialArgs = map[string]string{}
 var CloudletAllianceOrgRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 	"organization",
 }
 var CloudletAllianceOrgOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 }
 var CloudletAllianceOrgAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"cloudlet=key.name",
-	"federated-org=key.federatedorganization",
+	"federatedorg=key.federatedorganization",
 }
 var CloudletAllianceOrgComments = map[string]string{
-	"cloudlet-org":  "Organization of the cloudlet site",
-	"cloudlet":      "Name of the cloudlet",
-	"federated-org": "Federated operator organization who shared this cloudlet",
-	"organization":  "Alliance organization",
+	"cloudletorg":  "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"federatedorg": "Federated operator organization who shared this cloudlet",
+	"organization": "Alliance organization",
 }
 var CloudletAllianceOrgSpecialArgs = map[string]string{}
 var FlavorInfoRequiredArgs = []string{}
@@ -2825,11 +2825,11 @@ var OSImageComments = map[string]string{
 }
 var OSImageSpecialArgs = map[string]string{}
 var CloudletInfoRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var CloudletInfoOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"state",
 	"notifyid",
 	"controller",
@@ -2884,15 +2884,15 @@ var CloudletInfoOptionalArgs = []string{
 	"standbycrm",
 }
 var CloudletInfoAliasArgs = []string{
-	"cloudlet-org=key.organization",
+	"cloudletorg=key.organization",
 	"cloudlet=key.name",
-	"federated-org=key.federatedorganization",
+	"federatedorg=key.federatedorganization",
 }
 var CloudletInfoComments = map[string]string{
 	"fields":                                 "Fields are used for the Update API to specify which fields to apply",
-	"cloudlet-org":                           "Organization of the cloudlet site",
+	"cloudletorg":                            "Organization of the cloudlet site",
 	"cloudlet":                               "Name of the cloudlet",
-	"federated-org":                          "Federated operator organization who shared this cloudlet",
+	"federatedorg":                           "Federated operator organization who shared this cloudlet",
 	"state":                                  "State of cloudlet, one of Unknown, Errors, Ready, Offline, NotPresent, Init, Upgrade, NeedSync",
 	"notifyid":                               "Id of client assigned by server (internal use only)",
 	"controller":                             "Connected controller unique id",
@@ -2966,13 +2966,13 @@ var UpdateGPUDriverRequiredArgs = []string{
 	"gpudrivername",
 }
 var UpdateGPUDriverOptionalArgs = []string{
-	"gpudriver-org",
+	"gpudriverorg",
 	"licenseconfig",
 	"properties",
 }
 var AddGPUDriverBuildRequiredArgs = []string{
 	"gpudrivername",
-	"gpudriver-org",
+	"gpudriverorg",
 	"build.name",
 	"build.driverpath",
 	"build.operatingsystem",
@@ -2986,7 +2986,7 @@ var AddGPUDriverBuildOptionalArgs = []string{
 }
 var RemoveGPUDriverBuildRequiredArgs = []string{
 	"gpudrivername",
-	"gpudriver-org",
+	"gpudriverorg",
 	"build.name",
 }
 var RemoveGPUDriverBuildOptionalArgs = []string{
@@ -2996,21 +2996,21 @@ var RemoveGPUDriverBuildOptionalArgs = []string{
 }
 var GetGPUDriverBuildURLRequiredArgs = []string{
 	"gpudrivername",
-	"gpudriver-org",
+	"gpudriverorg",
 	"build.name",
 }
 var GetGPUDriverBuildURLOptionalArgs = []string{
 	"ignorestate",
 }
 var CreateCloudletRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 	"location.latitude",
 	"location.longitude",
 	"numdynamicips",
 }
 var CreateCloudletOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"location.altitude",
 	"ipsupport",
 	"staticips",
@@ -3056,11 +3056,11 @@ var CreateCloudletOptionalArgs = []string{
 	"secondarynotifysrvaddr",
 }
 var DeleteCloudletRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var DeleteCloudletOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -3109,11 +3109,11 @@ var DeleteCloudletOptionalArgs = []string{
 	"secondarynotifysrvaddr",
 }
 var UpdateCloudletRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var UpdateCloudletOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -3151,11 +3151,11 @@ var UpdateCloudletOptionalArgs = []string{
 	"secondarynotifysrvaddr",
 }
 var ShowCloudletRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var ShowCloudletOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"location.latitude",
 	"location.longitude",
 	"location.altitude",
@@ -3216,16 +3216,16 @@ var GetCloudletResourceQuotaPropsOptionalArgs = []string{
 	"organization",
 }
 var GetCloudletResourceUsageRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var GetCloudletResourceUsageOptionalArgs = []string{
-	"federated-org",
+	"federatedorg",
 	"infrausage",
 }
 var ShowFlavorsForCloudletRequiredArgs = []string{}
 var ShowFlavorsForCloudletOptionalArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
-	"federator-org",
+	"federatororg",
 }

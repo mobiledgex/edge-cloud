@@ -18,20 +18,20 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var CloudletKeyRequiredArgs = []string{
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
 }
 var CloudletKeyOptionalArgs = []string{
-	"federator-org",
+	"federatororg",
 }
 var CloudletKeyAliasArgs = []string{
-	"cloudlet-org=organization",
+	"cloudletorg=organization",
 	"cloudlet=name",
-	"federator-org=federatedorganization",
+	"federatororg=federatedorganization",
 }
 var CloudletKeyComments = map[string]string{
-	"cloudlet-org":  "Organization of the cloudlet site",
-	"cloudlet":      "Name of the cloudlet",
-	"federator-org": "Federated operator organization who shared this cloudlet",
+	"cloudletorg":  "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"federatororg": "Federated operator organization who shared this cloudlet",
 }
 var CloudletKeySpecialArgs = map[string]string{}

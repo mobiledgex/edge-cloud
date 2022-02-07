@@ -21,6 +21,7 @@ var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")
 var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
 var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
 var dockerNameMatch = regexp.MustCompile(`^[0-9a-zA-Z][a-zA-Z0-9_.-]+$`)
+var cliArgMatch = regexp.MustCompile(`^[0-9a-z][0-9a-z.#:]*$`)
 
 const maxHostnameLength = 63
 const maxK8sNamespaceLength = 63
@@ -68,6 +69,12 @@ func ValidEmail(email string) bool {
 
 func ValidRegion(name string) bool {
 	return regionMatch.MatchString(name)
+}
+
+// Valid CLI args must be all lowercase, and my only contain
+// alphanumeric and period, and in the case of repeated objects, colons.
+func ValidCliArg(arg string) bool {
+	return cliArgMatch.MatchString(arg)
 }
 
 // DockerSanitize sanitizes the name string (which is assumed to be a
