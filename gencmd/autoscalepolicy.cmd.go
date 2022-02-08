@@ -294,7 +294,7 @@ var PolicyKeyComments = map[string]string{
 }
 var PolicyKeySpecialArgs = map[string]string{}
 var AutoScalePolicyRequiredArgs = []string{
-	"cluster-org",
+	"clusterorg",
 	"name",
 }
 var AutoScalePolicyOptionalArgs = []string{
@@ -309,12 +309,12 @@ var AutoScalePolicyOptionalArgs = []string{
 	"targetactiveconnections",
 }
 var AutoScalePolicyAliasArgs = []string{
-	"cluster-org=key.organization",
+	"clusterorg=key.organization",
 	"name=key.name",
 }
 var AutoScalePolicyComments = map[string]string{
 	"fields":                  "Fields are used for the Update API to specify which fields to apply",
-	"cluster-org":             "Name of the organization for the cluster that this policy will apply to",
+	"clusterorg":              "Name of the organization for the cluster that this policy will apply to",
 	"name":                    "Policy name",
 	"minnodes":                "Minimum number of cluster nodes",
 	"maxnodes":                "Maximum number of cluster nodes",
@@ -331,7 +331,7 @@ var AutoScalePolicySpecialArgs = map[string]string{
 	"fields": "StringArray",
 }
 var CreateAutoScalePolicyRequiredArgs = []string{
-	"cluster-org",
+	"clusterorg",
 	"name",
 	"minnodes",
 	"maxnodes",

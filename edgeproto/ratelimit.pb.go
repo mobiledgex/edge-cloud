@@ -233,8 +233,8 @@ var xxx_messageInfo_FlowRateLimitSettingsKey proto.InternalMessageInfo
 type FlowRateLimitSettings struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	// required: true
 	// Unique identifier key
+	// required: true
 	Key FlowRateLimitSettingsKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// FlowSettings
 	Settings FlowSettings `protobuf:"bytes,3,opt,name=settings,proto3" json:"settings"`
@@ -358,8 +358,8 @@ var xxx_messageInfo_MaxReqsRateLimitSettingsKey proto.InternalMessageInfo
 type MaxReqsRateLimitSettings struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
-	// required: true
 	// Unique identifier key
+	// required: true
 	Key MaxReqsRateLimitSettingsKey `protobuf:"bytes,2,opt,name=key,proto3" json:"key"`
 	// MaxReqsSettings
 	Settings MaxReqsSettings `protobuf:"bytes,3,opt,name=settings,proto3" json:"settings"`
