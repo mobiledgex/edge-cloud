@@ -260,12 +260,12 @@ func main() {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
-			controllerData.PlatformInitComplete = true
-			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
-			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-			err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
-			log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
-
+			if highAvailabilityManager.PlatformInstanceActive {
+				log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
+				updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
+				err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
+				log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
+			}
 			if err != nil {
 				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
@@ -286,9 +286,9 @@ func main() {
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
 				myCloudletInfo.ControllerCacheReceived = true
+				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 				// Update AppInst runtime info in case it has changed
 				if highAvailabilityManager.PlatformInstanceActive {
-					controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 					err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
 					if err != nil {
 						log.FatalLog("Platform sync fail", "err", err)
@@ -316,6 +316,7 @@ func main() {
 					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
 				}
 				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+				controllerData.PlatformInitComplete = true
 			}
 		}
 		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
