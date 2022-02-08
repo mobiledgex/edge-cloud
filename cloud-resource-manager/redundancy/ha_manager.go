@@ -149,12 +149,15 @@ func (s *HighAvailabilityManager) SetValue(ctx context.Context, key string, valu
 }
 
 func (s *HighAvailabilityManager) GetValue(ctx context.Context, key string) (string, error) {
-	val := s.redisClient.Get(key)
-	if val.Err() == redis.Nil {
-		return "", nil
+	val, err := s.redisClient.Get(key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+		return "", fmt.Errorf("Error getting value from redis: %v", err)
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "GetValue Done", "val", val.Val())
-	return val.Val(), nil
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetValue Done", "val", val)
+	return val, nil
 }
 
 func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error) {

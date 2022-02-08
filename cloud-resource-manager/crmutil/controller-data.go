@@ -69,6 +69,8 @@ type ControllerData struct {
 	PlatformInitComplete                 bool
 }
 
+const CloudletInfoCacheKey = "cloudletInfo"
+
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
 	if cd.ControllerSyncInProgress {
 		cd.ControllerSyncDone <- true
@@ -1936,9 +1938,10 @@ func (cd *ControllerData) UpdateCloudletInfo(ctx context.Context, cloudletInfo *
 	if cd.highAvailabilityManager.HAEnabled && !cloudletInfo.StandbyCrm {
 		ciJson, err := json.Marshal(cloudletInfo)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "cloudletinfo marshal fail", "err", err)
+			log.SpanLog(ctx, log.DebugLevelInfra, "cloudletinfo marshal fail", "cloudletInfo", cloudletInfo, "err", err)
 		} else {
-			cd.highAvailabilityManager.SetValue(ctx, "cloudletInfo", string(ciJson))
+			// store the cloudletInfo so that if a switchover occurs, the newly active unit can retrieve it
+			cd.highAvailabilityManager.SetValue(ctx, CloudletInfoCacheKey, string(ciJson))
 		}
 	}
 }

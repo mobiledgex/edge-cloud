@@ -38,13 +38,13 @@ func (s *CrmHAProcess) ActiveChangedPostSwitch(ctx context.Context, platformActi
 	}
 	if !s.controllerData.CloudletCache.Get(&s.controllerData.cloudletKey, &cloudlet) {
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to find cloudlet in cache", "cloudletKey", s.controllerData.cloudletKey)
-		return fmt.Errorf("cannot find in cloudlet info in cache for key %s", s.controllerData.cloudletKey.String())
+		return fmt.Errorf("cannot find in cloudlet in cache for key %s", s.controllerData.cloudletKey.String())
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChangedPostSwitch", "cloudletInfo", cloudletInfo, "cloudlet", cloudlet, "PlatformInitComplete", s.controllerData.PlatformInitComplete)
 
 	// if the platform is already initialized, copy the cloudlet info saved from the previously active unit. If not then the cloudletInfo will be rebuilt
 	if s.controllerData.PlatformInitComplete {
-		val, err := s.controllerData.highAvailabilityManager.GetValue(ctx, "cloudletInfo")
+		val, err := s.controllerData.highAvailabilityManager.GetValue(ctx, CloudletInfoCacheKey)
 		if err != nil {
 			return err
 		}
