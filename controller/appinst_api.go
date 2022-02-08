@@ -870,18 +870,16 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			refs.VmAppInsts = append(refs.VmAppInsts, vmAppInstRefKey)
 			refsChanged = true
 		}
-		// Track K8s AppInstances for resource management only if platform supports IP per service
-		if isIPAllocatedPerService(ctx, cloudletPlatformType, cloudletFeatures, in.Key.ClusterInstKey.CloudletKey.Organization) {
-			if app.Deployment == cloudcommon.DeploymentTypeKubernetes || app.Deployment == cloudcommon.DeploymentTypeHelm {
-				err = s.all.clusterInstApi.validateResources(ctx, stm, nil, &app, nil, &cloudlet, &info, &refs, GenResourceAlerts)
-				if err != nil {
-					return err
-				}
-				k8sAppInstRefKey := edgeproto.AppInstRefKey{}
-				k8sAppInstRefKey.FromAppInstKey(&in.Key)
-				refs.K8SAppInsts = append(refs.K8SAppInsts, k8sAppInstRefKey)
-				refsChanged = true
+		// Track K8s AppInstances for resource management only if platform supports K8s deployments only
+		if platform.TrackK8sAppInst(ctx, &app, cloudletFeatures) {
+			err = s.all.clusterInstApi.validateResources(ctx, stm, nil, &app, nil, &cloudlet, &info, &refs, GenResourceAlerts)
+			if err != nil {
+				return err
 			}
+			k8sAppInstRefKey := edgeproto.AppInstRefKey{}
+			k8sAppInstRefKey.FromAppInstKey(&in.Key)
+			refs.K8SAppInsts = append(refs.K8SAppInsts, k8sAppInstRefKey)
+			refsChanged = true
 		}
 		if refsChanged {
 			s.all.cloudletRefsApi.store.STMPut(stm, &refs)
@@ -971,6 +969,27 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 								copy(a[ii:], a[ii+1:])
 								a[len(a)-1] = edgeproto.AppInstRefKey{}
 								refs.VmAppInsts = a[:len(a)-1]
+								refsChanged = true
+							}
+						}
+					}
+					if platform.TrackK8sAppInst(ctx, &app, cloudletFeatures) {
+						if refsFound {
+							ii := 0
+							for ; ii < len(refs.K8SAppInsts); ii++ {
+								aiKey := edgeproto.AppInstKey{}
+								aiKey.FromAppInstRefKey(&refs.K8SAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
+								if aiKey.Matches(&in.Key) {
+									break
+								}
+							}
+							if ii < len(refs.K8SAppInsts) {
+								// explicity zero out deleted item to
+								// prevent memory leak
+								a := refs.K8SAppInsts
+								copy(a[ii:], a[ii+1:])
+								a[len(a)-1] = edgeproto.AppInstRefKey{}
+								refs.K8SAppInsts = a[:len(a)-1]
 								refsChanged = true
 							}
 						}
@@ -1748,6 +1767,29 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				copy(a[ii:], a[ii+1:])
 				a[len(a)-1] = edgeproto.AppInstRefKey{}
 				cloudletRefs.VmAppInsts = a[:len(a)-1]
+				cloudletRefsChanged = true
+			}
+		}
+		cloudletFeatures, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err != nil {
+			return fmt.Errorf("Failed to get features for platform: %s", err)
+		}
+		if platform.TrackK8sAppInst(ctx, &app, cloudletFeatures) {
+			ii := 0
+			for ; ii < len(cloudletRefs.K8SAppInsts); ii++ {
+				aiKey := edgeproto.AppInstKey{}
+				aiKey.FromAppInstRefKey(&cloudletRefs.K8SAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
+				if aiKey.Matches(&in.Key) {
+					break
+				}
+			}
+			if ii < len(cloudletRefs.K8SAppInsts) {
+				// explicity zero out deleted item to
+				// prevent memory leak
+				a := cloudletRefs.K8SAppInsts
+				copy(a[ii:], a[ii+1:])
+				a[len(a)-1] = edgeproto.AppInstRefKey{}
+				cloudletRefs.K8SAppInsts = a[:len(a)-1]
 				cloudletRefsChanged = true
 			}
 		}

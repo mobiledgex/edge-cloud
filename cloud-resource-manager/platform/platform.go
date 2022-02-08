@@ -210,3 +210,13 @@ func GetType(pfType string) string {
 	}
 	return out
 }
+
+// Track K8s AppInstances for resource management only if platform supports K8s deployments only
+func TrackK8sAppInst(ctx context.Context, app *edgeproto.App, features *Features) bool {
+	if features.SupportsKubernetesOnly &&
+		(app.Deployment == cloudcommon.DeploymentTypeKubernetes ||
+			app.Deployment == cloudcommon.DeploymentTypeHelm) {
+		return true
+	}
+	return false
+}

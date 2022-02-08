@@ -460,7 +460,7 @@ func getMetricCounts(t *testing.T, ctx context.Context, cloudlet *edgeproto.Clou
 				case cloudcommon.ResourceMetricVcpus:
 					out := val.Value.(*edgeproto.MetricVal_Ival)
 					vcpusUsed = out.Ival
-				case cloudcommon.ResourceMetricsGpus:
+				case cloudcommon.ResourceMetricGpus:
 					out := val.Value.(*edgeproto.MetricVal_Ival)
 					gpusUsed = out.Ival
 				case cloudcommon.ResourceMetricExternalIPs:
@@ -756,7 +756,8 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context, apis *AllAp
 		clusterInst.NodeFlavor = "flavor.large"
 		nodeFlavorInfo, masterFlavorInfo, err := apis.clusterInstApi.getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &clusterInst)
 		require.Nil(t, err, "get cluster flavor info")
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
+		skipMasterNode := true
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor, !skipMasterNode)
 		require.Nil(t, err, "get cluster inst vm requirements")
 		// number of vm resources = num_nodes + num_masters + num_of_rootLBs
 		require.Equal(t, 5, len(ciResources), "matches number of vm resources")

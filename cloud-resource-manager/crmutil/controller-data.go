@@ -248,9 +248,8 @@ func (cd *ControllerData) vmResourceActionBegin() {
 func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudletKey *edgeproto.CloudletKey) *edgeproto.InfraResourcesSnapshot {
 	// Track K8s based AppInstances only for platforms with IPAllocatedPerService
 	features := cd.platform.GetFeatures()
-	trackK8sAppInsts := features.IPAllocatedPerService
 
-	log.SpanLog(ctx, log.DebugLevelInfra, "update cloudlet resources snapshot", "key", cloudletKey, "track K8s AppInsts", trackK8sAppInsts)
+	log.SpanLog(ctx, log.DebugLevelInfra, "update cloudlet resources snapshot", "key", cloudletKey)
 
 	// get all the cluster instances deployed on this cloudlet
 	deployedClusters := make(map[edgeproto.ClusterInstRefKey]struct{})
@@ -274,11 +273,8 @@ func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudlet
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
 			deployedVMAppInsts[refKey] = struct{}{}
 		}
-		if trackK8sAppInsts {
-			if app.Deployment == cloudcommon.DeploymentTypeKubernetes ||
-				app.Deployment == cloudcommon.DeploymentTypeHelm {
-				deployedK8sAppInsts[refKey] = struct{}{}
-			}
+		if platform.TrackK8sAppInst(ctx, &app, features) {
+			deployedK8sAppInsts[refKey] = struct{}{}
 		}
 
 		return nil
@@ -310,14 +306,12 @@ func (cd *ControllerData) CaptureResourcesSnapshot(ctx context.Context, cloudlet
 	})
 
 	deployedK8sAppKeys := []edgeproto.AppInstRefKey{}
-	if trackK8sAppInsts {
-		for k, _ := range deployedK8sAppInsts {
-			deployedK8sAppKeys = append(deployedK8sAppKeys, k)
-		}
-		sort.Slice(deployedK8sAppKeys, func(ii, jj int) bool {
-			return deployedK8sAppKeys[ii].GetKeyString() < deployedK8sAppKeys[jj].GetKeyString()
-		})
+	for k, _ := range deployedK8sAppInsts {
+		deployedK8sAppKeys = append(deployedK8sAppKeys, k)
 	}
+	sort.Slice(deployedK8sAppKeys, func(ii, jj int) bool {
+		return deployedK8sAppKeys[ii].GetKeyString() < deployedK8sAppKeys[jj].GetKeyString()
+	})
 	resources.ClusterInsts = deployedClusterKeys
 	resources.VmAppInsts = deployedVMAppKeys
 	resources.K8SAppInsts = deployedK8sAppKeys
@@ -683,18 +677,13 @@ func (cd *ControllerData) appInstChanged(ctx context.Context, old *edgeproto.App
 		return
 	}
 
-	trackK8sAppInsts := false
-	if features := cd.platform.GetFeatures(); features.IPAllocatedPerService {
-		trackK8sAppInsts = true
-	}
+	trackK8sAppInsts := platform.TrackK8sAppInst(ctx, &app, cd.platform.GetFeatures())
 
 	trackAppResource := false
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
 		trackAppResource = true
 	}
-	if trackK8sAppInsts &&
-		(app.Deployment == cloudcommon.DeploymentTypeKubernetes ||
-			app.Deployment == cloudcommon.DeploymentTypeHelm) {
+	if trackK8sAppInsts {
 		trackAppResource = true
 	}
 
