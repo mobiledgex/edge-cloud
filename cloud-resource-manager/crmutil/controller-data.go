@@ -1979,9 +1979,18 @@ func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey 
 func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
 
 	appInst := edgeproto.AppInst{}
-	appInstKeyFilter := edgeproto.AppInstKey{
-		AppKey:         *appKey,
-		ClusterInstKey: *clusterInstKey.Virtual(""),
+	appInstKeyFilter := edgeproto.AppInstKey{}
+	autocluster := false
+	if strings.HasPrefix(clusterInstKey.ClusterKey.Name, cloudcommon.ReservableClusterPrefix) {
+		autocluster = true
+		appInstKeyFilter = edgeproto.AppInstKey{
+			AppKey: *appKey,
+		}
+	} else {
+		appInstKeyFilter = edgeproto.AppInstKey{
+			AppKey:         *appKey,
+			ClusterInstKey: *clusterInstKey.Virtual(""),
+		}
 	}
 	appInstFound := cd.AppInstCache.Get(&appInstKeyFilter, &appInst)
 	if appInstFound {
@@ -1989,6 +1998,12 @@ func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgep
 			appInstFound = false
 		}
 		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
+		if autocluster {
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst.RealClusterName", appInst.RealClusterName, "cluster", clusterInstKey.ClusterKey.Name)
+			if appInst.RealClusterName != clusterInstKey.ClusterKey.Name {
+				appInstFound = false
+			}
+		}
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
 
