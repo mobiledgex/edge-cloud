@@ -50,6 +50,9 @@ var VMTypeClusterMaster = "cluster-master"
 var VMTypeClusterK8sNode = "cluster-k8s-node"
 var VMTypeClusterDockerNode = "cluster-docker-node"
 
+// resource types
+var ResourceTypeK8sLBSvc = "k8s-lb-svc"
+
 // cloudlet node names
 var CloudletNodeSharedRootLB = "sharedrootlb"
 var CloudletNodeDedicatedRootLB = "dedicatedrootlb"

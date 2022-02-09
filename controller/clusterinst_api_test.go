@@ -460,7 +460,7 @@ func getMetricCounts(t *testing.T, ctx context.Context, cloudlet *edgeproto.Clou
 				case cloudcommon.ResourceMetricVcpus:
 					out := val.Value.(*edgeproto.MetricVal_Ival)
 					vcpusUsed = out.Ival
-				case cloudcommon.ResourceMetricsGpus:
+				case cloudcommon.ResourceMetricGpus:
 					out := val.Value.(*edgeproto.MetricVal_Ival)
 					gpusUsed = out.Ival
 				case cloudcommon.ResourceMetricExternalIPs:
@@ -756,7 +756,8 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context, apis *AllAp
 		clusterInst.NodeFlavor = "flavor.large"
 		nodeFlavorInfo, masterFlavorInfo, err := apis.clusterInstApi.getClusterFlavorInfo(ctx, stm, cloudletInfo.Flavors, &clusterInst)
 		require.Nil(t, err, "get cluster flavor info")
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
+		isManagedK8s := false // Master nodes & RootLB should be counted
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor, isManagedK8s)
 		require.Nil(t, err, "get cluster inst vm requirements")
 		// number of vm resources = num_nodes + num_masters + num_of_rootLBs
 		require.Equal(t, 5, len(ciResources), "matches number of vm resources")
@@ -778,6 +779,12 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context, apis *AllAp
 		require.Equal(t, numMasters, int(clusterInst.NumMasters), "resource type count matches")
 		require.Equal(t, numNodes, int(clusterInst.NumNodes), "resource type count matches")
 		require.Equal(t, numRootLB, 1, "resource type count matches")
+
+		isManagedK8s = true // Master nodes & RootLB should not be counted
+		ciResources, err = cloudcommon.GetClusterInstVMRequirements(ctx, &clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor, isManagedK8s)
+		require.Nil(t, err, "get cluster inst vm requirements")
+		// number of vm resources = num_nodes
+		require.Equal(t, numNodes, len(ciResources), "matches number of vm resources")
 
 		skipInfraCheck := false
 		warnings, err := apis.clusterInstApi.validateCloudletInfraResources(ctx, stm, &cloudlet, &cloudletInfo.ResourcesSnapshot, allRes, ciResources, diffRes, skipInfraCheck)

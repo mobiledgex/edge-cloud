@@ -299,10 +299,15 @@ func main() {
 					for _, resInfo := range resources.Info {
 						resMap[resInfo.Name] = resInfo
 					}
-					err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
+					quotaProps, err := platform.GetCloudletResourceQuotaProps(ctx)
 					if err != nil {
-						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
-						err = nil
+						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to get cloudlet specific resource quota", "cloudlet", cloudlet.Key, "err", err)
+					} else {
+						err = cloudcommon.ValidateCloudletResourceQuotas(ctx, quotaProps, resMap, cloudlet.ResourceQuotas)
+						if err != nil {
+							log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
+							err = nil
+						}
 					}
 					myCloudletInfo.ResourcesSnapshot = *resources
 				}
