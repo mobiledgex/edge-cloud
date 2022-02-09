@@ -399,25 +399,6 @@ func (s *CloudletApi) getCaches(ctx context.Context, vmPool *edgeproto.VMPool) *
 	return &caches
 }
 
-func validateResourceQuotaProps(resProps *edgeproto.CloudletResourceQuotaProps, resourceQuotas []edgeproto.ResourceQuota) error {
-	resPropsMap := make(map[string]struct{})
-	resPropsNames := []string{}
-	for _, prop := range resProps.Properties {
-		resPropsMap[prop.Name] = struct{}{}
-		resPropsNames = append(resPropsNames, prop.Name)
-	}
-	for _, clRes := range cloudcommon.CloudletResources {
-		resPropsMap[clRes.Name] = struct{}{}
-		resPropsNames = append(resPropsNames, clRes.Name)
-	}
-	for _, resQuota := range resourceQuotas {
-		if _, ok := resPropsMap[resQuota.Name]; !ok {
-			return fmt.Errorf("Invalid quota name: %s, valid names are %s", resQuota.Name, strings.Join(resPropsNames, ","))
-		}
-	}
-	return nil
-}
-
 func caseInsensitiveContains(s, substr string) bool {
 	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
 	return strings.Contains(s, substr)
@@ -695,15 +676,16 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if err != nil {
 				return err
 			}
-			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
-			if err == nil {
-				// Some platform types require caches
-				caches := s.getCaches(ctx, &vmPool)
-				accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
-				cloudletResourcesCreated, err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
-				if err != nil && len(accessVars) > 0 {
-					deleteAccessVars = true
-				}
+			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resProps, nil, in.ResourceQuotas)
+			if err != nil {
+				return err
+			}
+			// Some platform types require caches
+			caches := s.getCaches(ctx, &vmPool)
+			accessApi := accessapi.NewVaultClient(in, vaultConfig, *region)
+			cloudletResourcesCreated, err = cloudletPlatform.CreateCloudlet(ctx, in, pfConfig, &pfFlavor, caches, accessApi, updatecb.cb)
+			if err != nil && len(accessVars) > 0 {
+				deleteAccessVars = true
 			}
 		}
 	}
@@ -1019,28 +1001,19 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		crmUpdateReqd = true
 	}
 
+	cloudletPlatform, err := pfutils.GetPlatform(ctx, cur.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
+	}
+	cloudletSpecificResources, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
+	if err != nil {
+		return err
+	}
 	if !ignoreCRMState(cctx) {
-		var cloudletPlatform pf.Platform
-		cloudletPlatform, err := pfutils.GetPlatform(ctx, cur.PlatformType.String(), nodeMgr.UpdateNodeProps)
-		if err != nil {
-			return err
-		}
 		pfConfig, err := s.getPlatformConfig(ctx, in)
 		if err != nil {
 			return err
 		}
-		if _, found := fmap[edgeproto.CloudletFieldResourceQuotas]; found {
-			resProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
-			if err != nil {
-				return err
-			}
-			err = validateResourceQuotaProps(resProps, in.ResourceQuotas)
-			if err != nil {
-				return err
-			}
-			crmUpdateReqd = true
-		}
-
 		if len(accessVars) > 0 {
 			err = cloudletPlatform.SaveCloudletAccessVars(ctx, in, accessVars, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
 			if err != nil {
@@ -1079,10 +1052,11 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			if err != nil {
 				return err
 			}
-			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, allResInfo, in.ResourceQuotas)
+			err = cloudcommon.ValidateCloudletResourceQuotas(ctx, cloudletSpecificResources, allResInfo, in.ResourceQuotas)
 			if err != nil {
 				return err
 			}
+			crmUpdateReqd = true
 		}
 		if _, found := fmap[edgeproto.CloudletFieldGpuConfig]; found {
 			if in.GpuConfig.Driver.Name == "" {
@@ -2212,15 +2186,8 @@ func (s *CloudletApi) GetCloudletResourceInfo(ctx context.Context, stm concurren
 	if err != nil {
 		return nil, err
 	}
-	cloudletRes := map[string]string{
-		// Common Cloudlet Resources
-		cloudcommon.ResourceRamMb:       cloudcommon.ResourceRamUnits,
-		cloudcommon.ResourceVcpus:       "",
-		cloudcommon.ResourceGpus:        "",
-		cloudcommon.ResourceExternalIPs: "",
-	}
 	resInfo := make(map[string]edgeproto.InfraResource)
-	for resName, resUnits := range cloudletRes {
+	for resName, resUnits := range cloudcommon.CommonCloudletResources {
 		infraResMax := uint64(0)
 		if infraRes, ok := infraResMap[resName]; ok {
 			infraResMax = infraRes.InfraMaxValue
@@ -2257,6 +2224,11 @@ func (s *CloudletApi) GetCloudletResourceInfo(ctx context.Context, stm concurren
 			if ok {
 				vcpusInfo.Value += vmRes.VmFlavor.Vcpus
 				resInfo[cloudcommon.ResourceVcpus] = vcpusInfo
+			}
+			diskInfo, ok := resInfo[cloudcommon.ResourceDiskGb]
+			if ok {
+				diskInfo.Value += vmRes.VmFlavor.Disk
+				resInfo[cloudcommon.ResourceDiskGb] = diskInfo
 			}
 			if s.all.resTagTableApi.UsesGpu(ctx, stm, *vmRes.VmFlavor, *cloudlet) {
 				gpusInfo, ok := resInfo[cloudcommon.ResourceGpus]
@@ -2413,7 +2385,13 @@ func (s *CloudletApi) GetCloudletResourceQuotaProps(ctx context.Context, in *edg
 	}
 
 	quotaProps := edgeproto.CloudletResourceQuotaProps{}
-	quotaProps.Properties = append(quotaProps.Properties, cloudcommon.CloudletResources...)
+	for resName, _ := range cloudcommon.CommonCloudletResources {
+		quotaProps.Properties = append(quotaProps.Properties, edgeproto.InfraResource{
+			Name:        resName,
+			Description: cloudcommon.ResourceQuotaDesc[resName],
+		})
+
+	}
 
 	pfQuotaProps, err := cloudletPlatform.GetCloudletResourceQuotaProps(ctx)
 	if err != nil {

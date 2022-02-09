@@ -3,6 +3,7 @@ package cloudcommon
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -10,70 +11,83 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	v1 "k8s.io/api/core/v1"
 )
 
 var (
 	// Common platform resources
 	ResourceRamMb       = "RAM"
 	ResourceVcpus       = "vCPUs"
+	ResourceDiskGb      = "Disk"
 	ResourceGpus        = "GPUs"
 	ResourceExternalIPs = "External IPs"
-	ResourceDisk        = "Disk"
 
 	// Platform specific resources
-	ResourceInstances   = "Instances"
-	ResourceFloatingIPs = "Floating IPs"
+	ResourceInstances             = "Instances"
+	ResourceFloatingIPs           = "Floating IPs"
+	ResourceK8sClusters           = "K8s Clusters"
+	ResourceMaxK8sNodesPerCluster = "Maximum K8s Nodes Per Cluster"
+	ResourceTotalK8sNodes         = "Total Number Of K8s Nodes"
+	ResourceNetworkLBs            = "Network Load Balancers"
 
 	// Resource units
-	ResourceRamUnits = "MB"
+	ResourceRamUnits  = "MB"
+	ResourceDiskUnits = "GB"
 
 	// Resource metrics
-	ResourceMetricRamMB       = "ramUsed"
-	ResourceMetricVcpus       = "vcpusUsed"
-	ResourceMetricsGpus       = "gpusUsed"
-	ResourceMetricInstances   = "instancesUsed"
-	ResourceMetricExternalIPs = "externalIpsUsed"
-	ResourceMetricFloatingIPs = "floatingIpsUsed"
+	ResourceMetricRamMB                 = "ramUsed"
+	ResourceMetricVcpus                 = "vcpusUsed"
+	ResourceMetricDisk                  = "diskUsed"
+	ResourceMetricGpus                  = "gpusUsed"
+	ResourceMetricInstances             = "instancesUsed"
+	ResourceMetricExternalIPs           = "externalIpsUsed"
+	ResourceMetricFloatingIPs           = "floatingIpsUsed"
+	ResourceMetricK8sClusters           = "k8sClustersUsed"
+	ResourceMetricMaxK8sNodesPerCluster = "maxK8sNodesPerClusterUsed"
+	ResourceMetricTotalK8sNodes         = "totalK8sNodesUsed"
+	ResourceMetricNetworkLBs            = "networkLBsUsed"
 
 	// Common cloudlet resources
-	CloudletResources = []edgeproto.InfraResource{
-		edgeproto.InfraResource{
-			Name:        ResourceRamMb,
-			Description: "Limit on RAM available (MB)",
-		},
-		edgeproto.InfraResource{
-			Name:        ResourceVcpus,
-			Description: "Limit on vCPUs available",
-		},
-		edgeproto.InfraResource{
-			Name:        ResourceGpus,
-			Description: "Limit on GPUs available",
-		},
-		edgeproto.InfraResource{
-			Name:        ResourceExternalIPs,
-			Description: "Limit on external IPs available",
-		},
+	CommonCloudletResources = map[string]string{
+		ResourceRamMb:       ResourceRamUnits,
+		ResourceVcpus:       "",
+		ResourceDiskGb:      "",
+		ResourceGpus:        "",
+		ResourceExternalIPs: "",
 	}
 
 	ResourceQuotaDesc = map[string]string{
-		ResourceDisk:        "Limit on disk available (GB)",
-		ResourceInstances:   "Limit on number of instances that can be provisioned",
-		ResourceFloatingIPs: "Limit on number of floating IPs that can be created",
+		ResourceRamMb:                 "Limit on RAM available (MB)",
+		ResourceVcpus:                 "Limit on vCPUs available",
+		ResourceDiskGb:                "Limit on disk available (GB)",
+		ResourceGpus:                  "Limit on GPUs available",
+		ResourceExternalIPs:           "Limit on external IPs available",
+		ResourceInstances:             "Limit on number of instances that can be provisioned",
+		ResourceFloatingIPs:           "Limit on number of floating IPs that can be created",
+		ResourceK8sClusters:           "Limit on number of k8s clusters than can be created",
+		ResourceMaxK8sNodesPerCluster: "Limit on maximum number of k8s nodes that can be created as part of k8s cluster",
+		ResourceTotalK8sNodes:         "Limit on total number of k8s nodes that can be created altogether",
+		ResourceNetworkLBs:            "Limit on maximum number of application load balancers that can be created in a region",
 	}
 
 	ResourceMetricsDesc = map[string]string{
-		ResourceMetricRamMB:       "RAM Usage (MB)",
-		ResourceMetricVcpus:       "vCPU Usage",
-		ResourceMetricsGpus:       "GPU Usage",
-		ResourceMetricInstances:   "VM Instance Usage",
-		ResourceMetricExternalIPs: "External IP Usage",
-		ResourceMetricFloatingIPs: "Floating IP Usage",
+		ResourceMetricRamMB:                 "RAM Usage (MB)",
+		ResourceMetricVcpus:                 "vCPU Usage",
+		ResourceMetricDisk:                  "Disk Usage (GB)",
+		ResourceMetricGpus:                  "GPU Usage",
+		ResourceMetricExternalIPs:           "External IP Usage",
+		ResourceMetricInstances:             "VM Instance Usage",
+		ResourceMetricFloatingIPs:           "Floating IP Usage",
+		ResourceMetricK8sClusters:           "K8s Cluster Usage",
+		ResourceMetricMaxK8sNodesPerCluster: "Maximum K8s Nodes Per Cluster Usage",
+		ResourceMetricTotalK8sNodes:         "Total K8s Nodes Usage",
+		ResourceMetricNetworkLBs:            "Network Load Balancer Usage",
 	}
 )
 
 // GetClusterInstVMRequirements uses the nodeFlavor and masterNodeFlavor if it cannot find a platform flavor
-func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, nodeFlavor, masterNodeFlavor, rootLBFlavor *edgeproto.FlavorInfo) ([]edgeproto.VMResource, error) {
-	log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources", "clusterinst key", clusterInst.Key, "nodeFlavor", nodeFlavor.Name, "masterNodeFlavor", masterNodeFlavor.Name, "root lb flavor", rootLBFlavor)
+func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.ClusterInst, nodeFlavor, masterNodeFlavor, rootLBFlavor *edgeproto.FlavorInfo, isManagedK8s bool) ([]edgeproto.VMResource, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetClusterInstVMResources", "clusterinst key", clusterInst.Key, "nodeFlavor", nodeFlavor.Name, "masterNodeFlavor", masterNodeFlavor.Name, "root lb flavor", rootLBFlavor, "managed k8s", isManagedK8s)
 	vmResources := []edgeproto.VMResource{}
 
 	if clusterInst.Deployment == DeploymentTypeDocker {
@@ -83,19 +97,22 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			Type:     VMTypeClusterDockerNode,
 		})
 	} else {
-		for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
-			if clusterInst.MasterNodeFlavor == "" {
-				vmResources = append(vmResources, edgeproto.VMResource{
-					Key:      clusterInst.Key,
-					VmFlavor: nodeFlavor,
-					Type:     VMTypeClusterMaster,
-				})
-			} else {
-				vmResources = append(vmResources, edgeproto.VMResource{
-					Key:      clusterInst.Key,
-					VmFlavor: masterNodeFlavor,
-					Type:     VMTypeClusterMaster,
-				})
+		// For managed-k8s platforms, ignore master node for resource calculation
+		if !isManagedK8s {
+			for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
+				if clusterInst.MasterNodeFlavor == "" {
+					vmResources = append(vmResources, edgeproto.VMResource{
+						Key:      clusterInst.Key,
+						VmFlavor: nodeFlavor,
+						Type:     VMTypeClusterMaster,
+					})
+				} else {
+					vmResources = append(vmResources, edgeproto.VMResource{
+						Key:      clusterInst.Key,
+						VmFlavor: masterNodeFlavor,
+						Type:     VMTypeClusterMaster,
+					})
+				}
 			}
 		}
 		for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
@@ -107,15 +124,18 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		}
 	}
 
-	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-		if rootLBFlavor == nil {
-			return nil, fmt.Errorf("missing rootlb flavor")
+	// For managed-k8s platforms, ignore rootLB for resource calculation
+	if !isManagedK8s {
+		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			if rootLBFlavor == nil {
+				return nil, fmt.Errorf("missing rootlb flavor")
+			}
+			vmResources = append(vmResources, edgeproto.VMResource{
+				Key:      clusterInst.Key,
+				VmFlavor: rootLBFlavor,
+				Type:     VMTypeRootLB,
+			})
 		}
-		vmResources = append(vmResources, edgeproto.VMResource{
-			Key:      clusterInst.Key,
-			VmFlavor: rootLBFlavor,
-			Type:     VMTypeRootLB,
-		})
 	}
 	return vmResources, nil
 }
@@ -151,6 +171,32 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 	return vmResources, nil
 }
 
+func GetK8sAppRequirements(ctx context.Context, app *edgeproto.App) ([]edgeproto.VMResource, error) {
+	log.SpanLog(ctx, log.DebugLevelApi, "GetK8sAppRequirements", "app", app)
+	resources := []edgeproto.VMResource{}
+	if app.Deployment != DeploymentTypeKubernetes && app.Deployment != DeploymentTypeHelm {
+		return resources, nil
+	}
+	objs, _, err := DecodeK8SYaml(app.DeploymentManifest)
+	if err != nil {
+		return nil, fmt.Errorf("parse kubernetes deployment yaml failed for app %v, %v", app.Key, err)
+	}
+	for _, obj := range objs {
+		ksvc, ok := obj.(*v1.Service)
+		if !ok {
+			continue
+		}
+		if ksvc.Spec.Type != v1.ServiceTypeLoadBalancer {
+			continue
+		}
+		// add LB svc as a resource for public-cloud based platform validations
+		resources = append(resources, edgeproto.VMResource{
+			Type: ResourceTypeK8sLBSvc,
+		})
+	}
+	return resources, nil
+}
+
 func usageAlertWarningLabels(ctx context.Context, key *edgeproto.CloudletKey, alertname, warning string) map[string]string {
 	labels := make(map[string]string)
 	labels["alertname"] = alertname
@@ -180,15 +226,28 @@ func CloudletResourceUsageAlerts(ctx context.Context, key *edgeproto.CloudletKey
 	return alerts
 }
 
-func ValidateCloudletResourceQuotas(ctx context.Context, curRes map[string]edgeproto.InfraResource, resourceQuotas []edgeproto.ResourceQuota) error {
-	quotaNames := []string{}
-	for name, _ := range curRes {
-		quotaNames = append(quotaNames, name)
+func ValidateCloudletResourceQuotas(ctx context.Context, clSpecificProps *edgeproto.CloudletResourceQuotaProps, curRes map[string]edgeproto.InfraResource, resourceQuotas []edgeproto.ResourceQuota) error {
+	resPropsMap := make(map[string]struct{})
+	resPropsNames := []string{}
+	for _, prop := range clSpecificProps.Properties {
+		resPropsMap[prop.Name] = struct{}{}
+		resPropsNames = append(resPropsNames, prop.Name)
 	}
+	for resName, _ := range CommonCloudletResources {
+		resPropsMap[resName] = struct{}{}
+		resPropsNames = append(resPropsNames, resName)
+	}
+	sort.Strings(resPropsNames)
 	for _, resQuota := range resourceQuotas {
+		if _, ok := resPropsMap[resQuota.Name]; !ok {
+			return fmt.Errorf("Invalid quota name: %s, valid names are %s", resQuota.Name, strings.Join(resPropsNames, ", "))
+		}
+		if curRes == nil {
+			continue
+		}
 		infraRes, ok := curRes[resQuota.Name]
 		if !ok {
-			return fmt.Errorf("Invalid resource quota name: %s, valid names are %s", resQuota.Name, strings.Join(quotaNames, ","))
+			continue
 		}
 		if infraRes.InfraMaxValue > 0 && resQuota.Value > infraRes.InfraMaxValue {
 			return fmt.Errorf("Resource quota %s exceeded max supported value: %d", resQuota.Name, infraRes.InfraMaxValue)

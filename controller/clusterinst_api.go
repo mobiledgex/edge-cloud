@@ -467,6 +467,11 @@ func (s *ClusterInstApi) getAllCloudletResources(ctx context.Context, stm concur
 		snapshotVmAppInsts[aiKey] = struct{}{}
 	}
 
+	snapshotK8sAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
+	for _, aiKey := range cloudletInfo.ResourcesSnapshot.K8SAppInsts {
+		snapshotK8sAppInsts[aiKey] = struct{}{}
+	}
+
 	lbFlavor, err := s.GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
 	if err != nil {
 		return nil, nil, skipInfraCheck, err
@@ -491,7 +496,15 @@ func (s *ClusterInstApi) getAllCloudletResources(ctx context.Context, stm concur
 		if err != nil {
 			return nil, nil, skipInfraCheck, err
 		}
-		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
+		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err != nil {
+			return nil, nil, skipInfraCheck, fmt.Errorf("Failed to get features for platform: %s", err)
+		}
+		isManagedK8s := false
+		if features.KubernetesRequiresWorkerNodes {
+			isManagedK8s = true
+		}
+		ciRes, err := cloudcommon.GetClusterInstVMRequirements(ctx, &ci, nodeFlavorInfo, masterFlavorInfo, lbFlavor, isManagedK8s)
 		if err != nil {
 			return nil, nil, skipInfraCheck, err
 		}
@@ -561,6 +574,54 @@ func (s *ClusterInstApi) getAllCloudletResources(ctx context.Context, stm concur
 			break
 		}
 	}
+	// get all K8s app inst resources
+	ctrlK8sAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
+	for _, appInstRefKey := range cloudletRefs.K8SAppInsts {
+		appInst := edgeproto.AppInst{}
+		appInstKey := edgeproto.AppInstKey{}
+		appInstKey.FromAppInstRefKey(&appInstRefKey, &cloudlet.Key)
+		if !s.all.appInstApi.store.STMGet(stm, &appInstKey, &appInst) {
+			continue
+		}
+		ctrlK8sAppInsts[appInstRefKey] = struct{}{}
+		// Ignore state and consider all K8sAppInsts present in DB
+		// We are being conservative here. If K8sAppInst exists in DB, then we should
+		// assume it's taking up resources, or going to take up resources (CreateRequested),
+		// or may not actually be able to free up resources yet (DeleteRequested, etc)
+		app := edgeproto.App{}
+		if !s.all.appApi.store.STMGet(stm, &appInstKey.AppKey, &app) {
+			return nil, nil, skipInfraCheck, fmt.Errorf("App not found: %v", appInstKey.AppKey)
+		}
+		k8sRes, err := cloudcommon.GetK8sAppRequirements(ctx, &app)
+		if err != nil {
+			return nil, nil, skipInfraCheck, err
+		}
+		allVmResources = append(allVmResources, k8sRes...)
+
+		// maintain a diff of K8s appinsts reported by CRM and what is present in controller,
+		// this is done to get accurate resource information
+		aiRefKey := &edgeproto.AppInstRefKey{}
+		aiRefKey.FromAppInstKey(&appInstKey)
+		if _, ok := snapshotK8sAppInsts[*aiRefKey]; ok {
+			continue
+		}
+		diffVmResources = append(diffVmResources, k8sRes...)
+	}
+	if !skipInfraCheck {
+		// check infra resource usage as long as the infra instances set is
+		// equal to or a subset of the controller instances set
+		// use `skipInfraCheck` flag to skip infra resource usage
+		for appInstRefKey, _ := range snapshotK8sAppInsts {
+			if _, ok := ctrlK8sAppInsts[appInstRefKey]; ok {
+				continue
+			}
+			skipInfraCheck = true
+			break
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelApi, "GetAllCloudletResources", "key", cloudlet.Key,
+		"allVMResources", allVmResources, "diffVMResources", diffVmResources,
+		"SkipInfraCheck", skipInfraCheck)
 	return allVmResources, diffVmResources, skipInfraCheck, nil
 }
 
@@ -594,8 +655,8 @@ func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, stm conc
 	}
 }
 
-func (s *ClusterInstApi) validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, vmApp *edgeproto.App, vmAppInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs, genAlerts GenerateResourceAlerts) error {
-	log.SpanLog(ctx, log.DebugLevelApi, "validate resources", "cloudlet", cloudlet.Key, "clusterinst", clusterInst, "vmappinst", vmAppInst)
+func (s *ClusterInstApi) validateResources(ctx context.Context, stm concurrency.STM, clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, cloudletRefs *edgeproto.CloudletRefs, genAlerts GenerateResourceAlerts) error {
+	log.SpanLog(ctx, log.DebugLevelApi, "validate resources", "cloudlet", cloudlet.Key, "clusterinst", clusterInst, "appinst", appInst, "app", app)
 	lbFlavor, err := s.GetRootLBFlavorInfo(ctx, stm, cloudlet, cloudletInfo)
 	if err != nil {
 		return err
@@ -606,23 +667,40 @@ func (s *ClusterInstApi) validateResources(ctx context.Context, stm concurrency.
 		if err != nil {
 			return err
 		}
-		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor)
+		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err != nil {
+			return fmt.Errorf("Failed to get features for platform: %s", err)
+		}
+		isManagedK8s := false
+		if features.KubernetesRequiresWorkerNodes {
+			isManagedK8s = true
+		}
+		ciResources, err := cloudcommon.GetClusterInstVMRequirements(ctx, clusterInst, nodeFlavorInfo, masterFlavorInfo, lbFlavor, isManagedK8s)
 		if err != nil {
 			return err
 		}
 		reqdVmResources = append(reqdVmResources, ciResources...)
 	}
-	if vmAppInst != nil {
-		if vmApp == nil {
-			return fmt.Errorf("valid vmApp required with vmAppInst")
+	if appInst != nil {
+		if app == nil {
+			return fmt.Errorf("valid app required with appInst")
 		}
-		// appinst_api usage has vmApp, use it here
-		app := vmApp
-		vmAppResources, err := cloudcommon.GetVMAppRequirements(ctx, app, vmAppInst, cloudletInfo.Flavors, lbFlavor)
+		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			// appinst_api usage has app, use it here
+			appResources, err := cloudcommon.GetVMAppRequirements(ctx, app, appInst, cloudletInfo.Flavors, lbFlavor)
+			if err != nil {
+				return err
+			}
+			reqdVmResources = append(reqdVmResources, appResources...)
+		}
+	}
+	if app != nil && (app.Deployment == cloudcommon.DeploymentTypeKubernetes ||
+		app.Deployment == cloudcommon.DeploymentTypeHelm) {
+		appResources, err := cloudcommon.GetK8sAppRequirements(ctx, app)
 		if err != nil {
 			return err
 		}
-		reqdVmResources = append(reqdVmResources, vmAppResources...)
+		reqdVmResources = append(reqdVmResources, appResources...)
 	}
 
 	// get all cloudlet resources (platformVM, sharedRootLB, clusterVms, AppVMs, etc)
@@ -699,7 +777,7 @@ func (s *ClusterInstApi) getCloudletResourceMetric(ctx context.Context, stm conc
 	resMetric.AddTag("cloudlet", key.Name)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricRamMB, ramUsed)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricVcpus, vcpusUsed)
-	resMetric.AddIntVal(cloudcommon.ResourceMetricsGpus, gpusUsed)
+	resMetric.AddIntVal(cloudcommon.ResourceMetricGpus, gpusUsed)
 	resMetric.AddIntVal(cloudcommon.ResourceMetricExternalIPs, externalIPsUsed)
 
 	// get additional infra specific metric
