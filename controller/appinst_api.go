@@ -1328,12 +1328,25 @@ func (s *AppInstApi) updateCloudletResourcesMetric(ctx context.Context, in *edge
 	metrics := []*edgeproto.Metric{}
 	skipMetric := true
 	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		var cloudlet edgeproto.Cloudlet
+		if !s.all.cloudletApi.store.STMGet(stm, &in.Key.ClusterInstKey.CloudletKey, &cloudlet) {
+			return in.Key.ClusterInstKey.CloudletKey.NotFoundError()
+		}
 		var app edgeproto.App
 		if !s.all.appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return in.Key.AppKey.NotFoundError()
 		}
 		skipMetric = true
 		if app.Deployment == cloudcommon.DeploymentTypeVM {
+			metrics, err = s.all.clusterInstApi.getCloudletResourceMetric(ctx, stm, &in.Key.ClusterInstKey.CloudletKey)
+			skipMetric = false
+			return err
+		}
+		cloudletFeatures, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err != nil {
+			return fmt.Errorf("Failed to get features for platform: %s", err)
+		}
+		if platform.TrackK8sAppInst(ctx, &app, cloudletFeatures) {
 			metrics, err = s.all.clusterInstApi.getCloudletResourceMetric(ctx, stm, &in.Key.ClusterInstKey.CloudletKey)
 			skipMetric = false
 			return err

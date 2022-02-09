@@ -43,7 +43,7 @@ var (
 	ResourceMetricExternalIPs           = "externalIpsUsed"
 	ResourceMetricFloatingIPs           = "floatingIpsUsed"
 	ResourceMetricK8sClusters           = "k8sClustersUsed"
-	ResourceMetricMaxK8sNodesPerCluster = "MaxK8sNodesPerClusterUsed"
+	ResourceMetricMaxK8sNodesPerCluster = "maxK8sNodesPerClusterUsed"
 	ResourceMetricTotalK8sNodes         = "totalK8sNodesUsed"
 	ResourceMetricNetworkLBs            = "networkLBsUsed"
 
