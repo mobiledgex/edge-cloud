@@ -211,42 +211,42 @@ var AppInstClientApiCmds = []*cobra.Command{
 }
 
 var AppInstClientKeyRequiredArgs = []string{
-	"app-org",
+	"apporg",
 }
 var AppInstClientKeyOptionalArgs = []string{
 	"appname",
 	"appvers",
 	"cluster",
-	"cloudlet-org",
+	"cloudletorg",
 	"cloudlet",
-	"federated-org",
-	"cluster-org",
+	"federatedorg",
+	"clusterorg",
 	"uniqueid",
 	"uniqueidtype",
 }
 var AppInstClientKeyAliasArgs = []string{
-	"app-org=appinstkey.appkey.organization",
+	"apporg=appinstkey.appkey.organization",
 	"appname=appinstkey.appkey.name",
 	"appvers=appinstkey.appkey.version",
 	"cluster=appinstkey.clusterinstkey.clusterkey.name",
-	"cloudlet-org=appinstkey.clusterinstkey.cloudletkey.organization",
+	"cloudletorg=appinstkey.clusterinstkey.cloudletkey.organization",
 	"cloudlet=appinstkey.clusterinstkey.cloudletkey.name",
-	"federated-org=appinstkey.clusterinstkey.cloudletkey.federatedorganization",
-	"cluster-org=appinstkey.clusterinstkey.organization",
+	"federatedorg=appinstkey.clusterinstkey.cloudletkey.federatedorganization",
+	"clusterorg=appinstkey.clusterinstkey.organization",
 	"uniqueid=uniqueid",
 	"uniqueidtype=uniqueidtype",
 }
 var AppInstClientKeyComments = map[string]string{
-	"app-org":       "App developer organization",
-	"appname":       "App name",
-	"appvers":       "App version",
-	"cluster":       "Cluster name",
-	"cloudlet-org":  "Organization of the cloudlet site",
-	"cloudlet":      "Name of the cloudlet",
-	"federated-org": "Federated operator organization who shared this cloudlet",
-	"cluster-org":   "Name of Developer organization that this cluster belongs to",
-	"uniqueid":      "AppInstClient Unique Id",
-	"uniqueidtype":  "AppInstClient Unique Id Type",
+	"apporg":       "App developer organization",
+	"appname":      "App name",
+	"appvers":      "App version",
+	"cluster":      "Cluster name",
+	"cloudletorg":  "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"federatedorg": "Federated operator organization who shared this cloudlet",
+	"clusterorg":   "Name of Developer organization that this cluster belongs to",
+	"uniqueid":     "AppInstClient Unique Id",
+	"uniqueidtype": "AppInstClient Unique Id Type",
 }
 var AppInstClientKeySpecialArgs = map[string]string{}
 var AppInstClientRequiredArgs = []string{}

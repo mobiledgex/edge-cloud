@@ -116,31 +116,47 @@ type EventTag struct {
 }
 
 type EventMatch struct {
-	Names   []string          `json:"names"`
-	Orgs    []string          `json:"orgs"`
-	Types   []string          `json:"types"`
-	Regions []string          `json:"regions,omitempty"`
-	Error   string            `json:"error,omitempty"`
-	Tags    map[string]string `json:"tags"`
-	Failed  bool              `json:"failed,omitempty"`
+	// Names of events to match
+	Names []string `json:"names"`
+	// Organizations on events to match
+	Orgs []string `json:"orgs"`
+	// Types of events to match
+	Types []string `json:"types"`
+	// Regions on events to match
+	Regions []string `json:"regions,omitempty"`
+	// Error substring to match
+	Error string `json:"error,omitempty"`
+	// Tags on events to match
+	Tags map[string]string `json:"tags"`
+	// Failure status on event to match
+	Failed bool `json:"failed,omitempty"`
 }
 
 type EventSearch struct {
-	Match               EventMatch `json:"match,omitempty"`
-	NotMatch            EventMatch `json:"notmatch,omitempty"`
-	AllowedOrgs         []string   `json:"allowedorgs"` // to enforce rbac
+	// Fields that must match the event
+	Match EventMatch `json:"match,omitempty"`
+	// Fields that must not match the event
+	NotMatch EventMatch `json:"notmatch,omitempty"`
+	// Organizations allowed to access the event
+	AllowedOrgs []string `json:"allowedorgs"` // to enforce rbac
+	// Time range over which to seach for events
 	edgeproto.TimeRange `json:",inline"`
 	// Start offset if paging through results
-	From                int `json:"from,omitempty"`
+	From int `json:"from,omitempty"`
 	// Display the last X events
-	Limit               int `json:"limit,omitempty"`
+	Limit int `json:"limit,omitempty"`
 }
 
 type EventTerms struct {
-	Names   []AggrVal `json:"names,omitempty"`
-	Orgs    []AggrVal `json:"orgs,omitempty"`
-	Types   []AggrVal `json:"types,omitempty"`
+	// Names of events
+	Names []AggrVal `json:"names,omitempty"`
+	// Organizations on events
+	Orgs []AggrVal `json:"orgs,omitempty"`
+	// Types of events
+	Types []AggrVal `json:"types,omitempty"`
+	// Regions on events
 	Regions []AggrVal `json:"regions,omitempty"`
+	// Tag keys on events
 	TagKeys []AggrVal `json:"tagkeys,omitempty"`
 }
 

@@ -108,7 +108,7 @@ message VMPool {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.noconfig) = "Vms:#.GroupName,Vms:#.InternalName,Vms:#.UpdatedAt.Seconds,Vms:#.UpdatedAt.Nanos,State,Errors,Vms:#.Flavor";
-  option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
+  option (protogen.alias) = "vmpool=Key.Name,vmpoolorg=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.controller_api_struct) = "vmPoolApi";
 }
@@ -122,7 +122,7 @@ message VMPoolMember {
   // Override actions to CRM
   CRMOverride crm_override = 3;
   option (protogen.noconfig) = "Vm.GroupName,Vm.State,Vm.UpdatedAt.Seconds,Vm.UpdatedAt.Nanos,Vm.InternalName,Vm.Flavor";
-  option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
+  option (protogen.alias) = "vmpool=Key.Name,vmpoolorg=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
 }
 
@@ -234,6 +234,6 @@ message VMPoolInfo {
   option (protogen.generate_wait_for_state) = "TrackedState";
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
-  option (protogen.alias) = "vmpool=Key.Name,vmpool-org=Key.Organization";
+  option (protogen.alias) = "vmpool=Key.Name,vmpoolorg=Key.Organization";
   option (protogen.uses_org) = "none";
 }
