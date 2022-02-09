@@ -1965,40 +1965,21 @@ func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey 
 	return clusterInstFound
 }
 
-func (cd *ControllerData) clusterInstIsReservable(clusterInstKey *edgeproto.ClusterInstKey) bool {
-	return strings.HasPrefix(clusterInstKey.ClusterKey.Name, cloudcommon.ReservableClusterPrefix)
-}
-
 func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
 
-	lookupKey := edgeproto.AppInst{}
-	autocluster := cd.clusterInstIsReservable(clusterInstKey)
-	if autocluster {
-		lookupKey = edgeproto.AppInst{
-			Key: edgeproto.AppInstKey{
-				AppKey: *appKey,
-				ClusterInstKey: edgeproto.VirtualClusterInstKey{
-					CloudletKey:  clusterInstKey.CloudletKey,
-					Organization: clusterInstKey.Organization,
-				},
-			},
-			RealClusterName: clusterInstKey.ClusterKey.Name,
-		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInstFilter", lookupKey)
-	} else {
-		lookupKey = edgeproto.AppInst{
-			Key: edgeproto.AppInstKey{
-				AppKey:         *appKey,
-				ClusterInstKey: *clusterInstKey.Virtual(""),
-			},
-		}
+	lookupKey := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey: *appKey,
+		},
 	}
 	appInstFound := false
 	cd.AppInstCache.Show(&lookupKey, func(appInst *edgeproto.AppInst) error {
-		if appInst.State == edgeproto.TrackedState_READY {
+		if appInst.ClusterInstKey().Matches(clusterInstKey) && appInst.State == edgeproto.TrackedState_READY {
 			appInstFound = true
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe() matched state/cluster")
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe() state/cluster not matching", "appInst state", appInst.State.String(), "clusterInstKeyIn", clusterInstKey, "appInst.ClusterInstKey()", appInst.ClusterInstKey())
 		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
 		return nil
 	})
 
