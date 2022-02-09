@@ -42,7 +42,7 @@ message TrustPolicy {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
-  option (protogen.alias) = "name=Key.Name,cloudlet-org=Key.Organization";
+  option (protogen.alias) = "name=Key.Name,cloudletorg=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.noconfig) = "DeletePrepare";
 }
