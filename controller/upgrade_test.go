@@ -185,6 +185,11 @@ func TestAllUpgradeFuncs(t *testing.T) {
 		require.Nil(t, err, "Upgrade failed")
 		err = compareDbToExpected(&objStore, VersionHash_UpgradeFuncNames[ii])
 		require.Nil(t, err, "Unexpected result from upgrade function(%s)", VersionHash_UpgradeFuncNames[ii])
+		// Run the upgrade again to make sure it's idempotent
+		err = RunSingleUpgrade(ctx, &objStore, apis, fn)
+		require.Nil(t, err, "Upgrade second run failed")
+		err = compareDbToExpected(&objStore, VersionHash_UpgradeFuncNames[ii])
+		require.Nil(t, err, "Unexpected result from upgrade function second run (idempotency check) (%s)", VersionHash_UpgradeFuncNames[ii])
 		// Stop it, so it's re-created again
 		objStore.Stop()
 	}
