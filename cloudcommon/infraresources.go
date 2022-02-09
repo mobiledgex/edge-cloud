@@ -27,6 +27,7 @@ var (
 	ResourceFloatingIPs           = "Floating IPs"
 	ResourceK8sClusters           = "K8s Clusters"
 	ResourceMaxK8sNodesPerCluster = "Maximum K8s Nodes Per Cluster"
+	ResourceTotalK8sNodes         = "Total Number Of K8s Nodes"
 	ResourceNetworkLBs            = "Network Load Balancers"
 
 	// Resource units
@@ -43,6 +44,7 @@ var (
 	ResourceMetricFloatingIPs           = "floatingIpsUsed"
 	ResourceMetricK8sClusters           = "k8sClustersUsed"
 	ResourceMetricMaxK8sNodesPerCluster = "MaxK8sNodesPerClusterUsed"
+	ResourceMetricTotalK8sNodes         = "totalK8sNodesUsed"
 	ResourceMetricNetworkLBs            = "networkLBsUsed"
 
 	// Common cloudlet resources
@@ -64,6 +66,7 @@ var (
 		ResourceFloatingIPs:           "Limit on number of floating IPs that can be created",
 		ResourceK8sClusters:           "Limit on number of k8s clusters than can be created",
 		ResourceMaxK8sNodesPerCluster: "Limit on maximum number of k8s nodes that can be created as part of k8s cluster",
+		ResourceTotalK8sNodes:         "Limit on total number of k8s nodes that can be created altogether",
 		ResourceNetworkLBs:            "Limit on maximum number of application load balancers that can be created in a region",
 	}
 
@@ -77,6 +80,7 @@ var (
 		ResourceMetricFloatingIPs:           "Floating IP Usage",
 		ResourceMetricK8sClusters:           "K8s Cluster Usage",
 		ResourceMetricMaxK8sNodesPerCluster: "Maximum K8s Nodes Per Cluster Usage",
+		ResourceMetricTotalK8sNodes:         "Total K8s Nodes Usage",
 		ResourceMetricNetworkLBs:            "Network Load Balancer Usage",
 	}
 )
@@ -93,7 +97,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			Type:     VMTypeClusterDockerNode,
 		})
 	} else {
-		// Since it a managed-k8s platform, ignore master node for resource calculation
+		// For managed-k8s platforms, ignore master node for resource calculation
 		if !isManagedK8s {
 			for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
 				if clusterInst.MasterNodeFlavor == "" {
@@ -120,7 +124,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		}
 	}
 
-	// Since it a managed-k8s platform, ignore rootLB for resource calculation
+	// For managed-k8s platforms, ignore rootLB for resource calculation
 	if !isManagedK8s {
 		if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 			if rootLBFlavor == nil {

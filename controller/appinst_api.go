@@ -389,6 +389,28 @@ func (s *AppInstApi) checkPortOverlapDedicatedLB(appPorts []dme.AppPort, cluster
 	return err
 }
 
+func removeAppInstFromRefs(appInstKey *edgeproto.AppInstKey, appInstRefs *[]edgeproto.AppInstRefKey) bool {
+	ii := 0
+	refsChanged := false
+	for ; ii < len(*appInstRefs); ii++ {
+		aiKey := edgeproto.AppInstKey{}
+		aiKey.FromAppInstRefKey(&(*appInstRefs)[ii], &appInstKey.ClusterInstKey.CloudletKey)
+		if aiKey.Matches(appInstKey) {
+			break
+		}
+	}
+	if ii < len(*appInstRefs) {
+		// explicity zero out deleted item to
+		// pr*event memory leak
+		a := *appInstRefs
+		copy(a[ii:], a[ii+1:])
+		a[len(a)-1] = edgeproto.AppInstRefKey{}
+		*appInstRefs = a[:len(a)-1]
+		refsChanged = true
+	}
+	return refsChanged
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, inCb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -952,46 +974,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					if cloudcommon.IsClusterInstReqd(&app) {
 						s.all.clusterRefsApi.removeRef(stm, in)
 					}
-					if app.Deployment == cloudcommon.DeploymentTypeVM {
-						if refsFound {
-							ii := 0
-							for ; ii < len(refs.VmAppInsts); ii++ {
-								aiKey := edgeproto.AppInstKey{}
-								aiKey.FromAppInstRefKey(&refs.VmAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
-								if aiKey.Matches(&in.Key) {
-									break
-								}
-							}
-							if ii < len(refs.VmAppInsts) {
-								// explicity zero out deleted item to
-								// prevent memory leak
-								a := refs.VmAppInsts
-								copy(a[ii:], a[ii+1:])
-								a[len(a)-1] = edgeproto.AppInstRefKey{}
-								refs.VmAppInsts = a[:len(a)-1]
-								refsChanged = true
-							}
+					if refsFound {
+						if app.Deployment == cloudcommon.DeploymentTypeVM {
+							refsChanged = removeAppInstFromRefs(&in.Key, &refs.VmAppInsts)
 						}
-					}
-					if platform.TrackK8sAppInst(ctx, &app, cloudletFeatures) {
-						if refsFound {
-							ii := 0
-							for ; ii < len(refs.K8SAppInsts); ii++ {
-								aiKey := edgeproto.AppInstKey{}
-								aiKey.FromAppInstRefKey(&refs.K8SAppInsts[ii], &in.Key.ClusterInstKey.CloudletKey)
-								if aiKey.Matches(&in.Key) {
-									break
-								}
-							}
-							if ii < len(refs.K8SAppInsts) {
-								// explicity zero out deleted item to
-								// prevent memory leak
-								a := refs.K8SAppInsts
-								copy(a[ii:], a[ii+1:])
-								a[len(a)-1] = edgeproto.AppInstRefKey{}
-								refs.K8SAppInsts = a[:len(a)-1]
-								refsChanged = true
-							}
+						if platform.TrackK8sAppInst(ctx, &app, cloudletFeatures) {
+							refsChanged = removeAppInstFromRefs(&in.Key, &refs.K8SAppInsts)
 						}
 					}
 				}
