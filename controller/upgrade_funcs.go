@@ -297,7 +297,7 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 			return err2
 		}
 		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
-		if len(appV0.RequiredOutboundConnections) > 0 {
+		if len(appV0.RequiredOutboundConnections) > 0 && appV0.RequiredOutboundConnections[0].Port != 0 {
 			newReqdConns := []edgeproto.SecurityRule{}
 			for _, conn := range appV0.RequiredOutboundConnections {
 				secRule := edgeproto.SecurityRule{
