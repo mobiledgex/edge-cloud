@@ -133,4 +133,6 @@ message InfraResourcesSnapshot {
   repeated ClusterInstRefKey cluster_insts = 3 [(gogoproto.nullable) = false];
   // List of vm appinsts this resources snapshot represent
   repeated AppInstRefKey vm_app_insts = 4 [(gogoproto.nullable) = false];
+  // List of k8s appinsts this resources snapshot represent
+  repeated AppInstRefKey k8s_app_insts = 5 [(gogoproto.nullable) = false];
 }
