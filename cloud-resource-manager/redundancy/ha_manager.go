@@ -23,6 +23,7 @@ const MaxRedisUnreachableRetries = 3
 type HAWatcher interface {
 	ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error  // actions before setting PlatformInstanceActive
 	ActiveChangedPostSwitch(ctx context.Context, platformActive bool) error // actions after setting PlatformInstanceActive
+	PlatformActiveOnStartup(ctx context.Context)                            // actions if the platform is active on first
 }
 
 type HighAvailabilityManager struct {
@@ -54,6 +55,12 @@ func (s *HighAvailabilityManager) Init(ctx context.Context, nodeGroupKey string,
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid HA Role type")
 	}
+	defer func() {
+		if s.PlatformInstanceActive {
+			// perform any actions needed when the platform is active on start
+			s.haWatcher.PlatformActiveOnStartup(ctx)
+		}
+	}()
 	if !s.redisCfg.AddrSpecified() {
 		s.PlatformInstanceActive = true
 		return fmt.Errorf("%s Redis Addr for HA not specified", HighAvailabilityManagerDisabled)
@@ -142,9 +149,9 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 	return v, nil
 }
 
-func (s *HighAvailabilityManager) SetValue(ctx context.Context, key string, value string) error {
-	status := s.redisClient.Set(key, value, 0)
-	log.SpanLog(ctx, log.DebugLevelInfra, "SetValue Done", "err", status.Err())
+func (s *HighAvailabilityManager) SetValue(ctx context.Context, key string, value string, expiration time.Duration) error {
+	status := s.redisClient.Set(key, value, expiration)
+	log.SpanLog(ctx, log.DebugLevelInfra, "SetValue Done", "expiration", expiration, "err", status.Err())
 	return status.Err()
 }
 

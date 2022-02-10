@@ -53,6 +53,7 @@ type ControllerData struct {
 	ControllerWait                       chan bool
 	ControllerSyncInProgress             bool
 	ControllerSyncDone                   chan bool
+	WaitPlatformActive                   chan bool
 	settings                             edgeproto.Settings
 	NodeMgr                              *node.NodeMgr
 	VMPool                               edgeproto.VMPool
@@ -64,12 +65,15 @@ type ControllerData struct {
 	vmActionRefMux                       sync.Mutex
 	vmActionRefAction                    int
 	finishInfraResourceThread            chan struct{}
+	finishUpdateCloudletInfoHAThread     chan struct{}
 	vmActionLastUpdate                   time.Time
 	highAvailabilityManager              *redundancy.HighAvailabilityManager
-	PlatformInitComplete                 bool
+	PlatformCommonInitDone               bool
 }
 
 const CloudletInfoCacheKey = "cloudletInfo"
+const CloudletInfoUpdateExpireMultiple = 20 // relative to PlatformHaInstanceActiveExpireTime long cloudletInfo cache is valid
+const CloudletInfoUpdateRefreshMultiple = 9 // relative to PlatformHaInstanceActiveExpireTime how often to refresh cloudlet info
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
 	if cd.ControllerSyncInProgress {
@@ -128,6 +132,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 
 	cd.ControllerWait = make(chan bool, 1)
 	cd.ControllerSyncDone = make(chan bool, 1)
+	cd.WaitPlatformActive = make(chan bool, 1)
 
 	cd.NodeMgr = nodeMgr
 	cd.highAvailabilityManager = haMgr
@@ -1878,6 +1883,7 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 			select {
 			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
 				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
+				defer span.Finish()
 				ctx := log.ContextWithSpan(context.Background(), span)
 				if !cd.highAvailabilityManager.PlatformInstanceActive {
 					log.SpanLog(ctx, log.DebugLevelInfra, "skipping resource snapshot as platform not active")
@@ -1893,8 +1899,40 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 					count, "ThreadIdleTime", cd.settings.ResourceSnapshotThreadInterval)
 				cd.vmResourceActionBegin()
 				cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
-				span.Finish()
 			case <-cd.finishInfraResourceThread:
+				done = true
+			}
+		}
+	}()
+}
+
+func (cd *ControllerData) StartUpdateCloudletInfoHAThread(ctx context.Context) {
+	interval := cd.settings.PlatformHaInstanceActiveExpireTime.TimeDuration() * CloudletInfoUpdateRefreshMultiple
+	log.SpanLog(ctx, log.DebugLevelInfra, "StartUpdateCloudletInfoHAThread", "interval", interval)
+	cd.finishUpdateCloudletInfoHAThread = make(chan struct{})
+
+	go func() {
+		done := false
+		var cloudletInfo edgeproto.CloudletInfo
+		for !done {
+			select {
+			case <-time.After(interval):
+				span := log.StartSpan(log.DebugLevelApi, "StartUpdateCloudletInfoHAThread thread")
+				defer span.Finish()
+				ctx := log.ContextWithSpan(context.Background(), span)
+				if !cd.PlatformCommonInitDone {
+					continue
+				}
+				if !cd.highAvailabilityManager.PlatformInstanceActive {
+					continue
+				}
+				if !cd.CloudletInfoCache.Get(&cd.cloudletKey, &cloudletInfo) {
+					log.SpanLog(ctx, log.DebugLevelInfra, "failed to find cloudlet info in cache", "cloudletKey", cd.cloudletKey)
+					continue
+				}
+				cd.UpdateCloudletInfoHACache(ctx, &cloudletInfo)
+			case <-cd.finishUpdateCloudletInfoHAThread:
+				log.SpanLog(ctx, log.DebugLevelInfra, "StartUpdateCloudletInfoHAThread done")
 				done = true
 			}
 		}
@@ -1903,6 +1941,10 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 
 func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 	close(cd.finishInfraResourceThread)
+}
+
+func (cd *ControllerData) FinishUpdateCloudletInfoHAThread() {
+	close(cd.finishUpdateCloudletInfoHAThread)
 }
 
 // InitHAManager returns haEnabled, error
@@ -1936,14 +1978,24 @@ func (cd *ControllerData) UpdateCloudletInfo(ctx context.Context, cloudletInfo *
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfo", "HAEnabled", cd.highAvailabilityManager.HAEnabled, "haActive", cd.highAvailabilityManager.PlatformInstanceActive, "state", cloudletInfo.State, "activeCrm", cloudletInfo.ActiveCrmInstance, "standby", cloudletInfo.StandbyCrm)
 	cd.CloudletInfoCache.Update(ctx, cloudletInfo, 0)
 	if cd.highAvailabilityManager.HAEnabled && !cloudletInfo.StandbyCrm {
-		ciJson, err := json.Marshal(cloudletInfo)
+		err := cd.UpdateCloudletInfoHACache(ctx, cloudletInfo)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "cloudletinfo marshal fail", "cloudletInfo", cloudletInfo, "err", err)
-		} else {
-			// store the cloudletInfo so that if a switchover occurs, the newly active unit can retrieve it
-			cd.highAvailabilityManager.SetValue(ctx, CloudletInfoCacheKey, string(ciJson))
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoCache fail", "err", err)
 		}
 	}
+}
+
+// UpdateCloudletInfoHACache updates the value for cloudletInfo that HA Manager has cached in redis
+func (cd *ControllerData) UpdateCloudletInfoHACache(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoHACache")
+
+	expiration := cd.settings.PlatformHaInstanceActiveExpireTime.TimeDuration() * CloudletInfoUpdateExpireMultiple
+	ciJson, err := json.Marshal(cloudletInfo)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfra, "cloudletinfo marshal fail", "cloudletInfo", cloudletInfo, "err", err)
+		return fmt.Errorf("cloudletinfo marshal fail - %s", err)
+	}
+	return cd.highAvailabilityManager.SetValue(ctx, CloudletInfoCacheKey, string(ciJson), expiration)
 }
 
 func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {

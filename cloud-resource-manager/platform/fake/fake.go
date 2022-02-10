@@ -128,7 +128,7 @@ func UpdateResourcesMax() error {
 	return nil
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) InitActiveOrStandbyCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
@@ -151,6 +151,10 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	}
 	s.clusterTPEs = make(map[cloudcommon.TrustPolicyExceptionKeyClusterInstKey]struct{})
 
+	return nil
+}
+
+func (s *Platform) InitActive(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	return nil
 }
 

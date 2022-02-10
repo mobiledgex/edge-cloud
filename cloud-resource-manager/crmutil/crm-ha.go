@@ -10,7 +10,8 @@ import (
 )
 
 type CrmHAProcess struct {
-	controllerData *ControllerData
+	controllerData                 *ControllerData
+	FinishUpdateCloudletInfoThread chan struct{}
 }
 
 func (s *CrmHAProcess) ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error {
@@ -40,10 +41,10 @@ func (s *CrmHAProcess) ActiveChangedPostSwitch(ctx context.Context, platformActi
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to find cloudlet in cache", "cloudletKey", s.controllerData.cloudletKey)
 		return fmt.Errorf("cannot find in cloudlet in cache for key %s", s.controllerData.cloudletKey.String())
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChangedPostSwitch", "cloudletInfo", cloudletInfo, "cloudlet", cloudlet, "PlatformInitComplete", s.controllerData.PlatformInitComplete)
+	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChangedPostSwitch", "cloudletInfo", cloudletInfo, "cloudlet", cloudlet, "PlatformCommonInitDone", s.controllerData.PlatformCommonInitDone)
 
-	// if the platform is already initialized, copy the cloudlet info saved from the previously active unit. If not then the cloudletInfo will be rebuilt
-	if s.controllerData.PlatformInitComplete {
+	// if the platform is past the init phases common to active or standby, copy the cloudlet info saved from the previously active unit. If not then the cloudletInfo will be rebuilt
+	if s.controllerData.PlatformCommonInitDone {
 		val, err := s.controllerData.highAvailabilityManager.GetValue(ctx, CloudletInfoCacheKey)
 		if err != nil {
 			return err
@@ -60,5 +61,11 @@ func (s *CrmHAProcess) ActiveChangedPostSwitch(ctx context.Context, platformActi
 
 	cloudletInfo.ActiveCrmInstance = s.controllerData.highAvailabilityManager.HARole
 	s.controllerData.UpdateCloudletInfo(ctx, &cloudletInfo)
+	s.controllerData.WaitPlatformActive <- true
 	return nil
+}
+
+func (s *CrmHAProcess) PlatformActiveOnStartup(ctx context.Context) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "PlatformActiveOnStartup")
+	s.controllerData.WaitPlatformActive <- true
 }

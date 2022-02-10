@@ -13,8 +13,12 @@ type Platform struct {
 	xind.Xind
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
-	return s.Xind.Init(ctx, platformConfig, caches, s, updateCallback)
+func (s *Platform) InitActiveOrStandbyCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+	return s.Xind.InitActiveOrStandbyCommon(ctx, platformConfig, caches, s, updateCallback)
+}
+
+func (s *Platform) InitActive(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+	return s.Xind.InitActive(ctx, platformConfig, updateCallback)
 }
 
 func (s *Platform) GetFeatures() *platform.Features {
