@@ -564,19 +564,14 @@ func (cd *ControllerData) handleTrustPolicyExceptionRuleForCloudletPoolKey(ctx c
 		ckey = *clusterInstKey
 	}
 
-	tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
-		TpeKey:         tpeKey,
-		ClusterInstKey: ckey,
-	}
-
-	log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRuleForCloudletPoolKey() TrustPolicyException", "action", action.String())
+	log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRuleForCloudletPoolKey() TrustPolicyException", "action", action.String(), "tpeKey", tpeKey, "clusterInstKey", clusterInstKey)
 
 	err := cd.TrustPolicyExceptionCache.Show(&edgeproto.TrustPolicyException{Key: tpeKey}, func(tpe *edgeproto.TrustPolicyException) error {
 		// The platform-specific implementation will probably involve network calls, which could potentially have long timeouts if stalled/hung,
 		// and we don't want to starve the notify thread (which is the context here).
 		// Hence we use tasks.KeyWorkers object to spawn a worker thread to do the work
-		tpeKeyclusterInstKey.TpeKey = tpe.Key
-		cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
+		log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionRuleForCloudletPoolKey() calling dispatchTrustPolicyExceptionKeyWorkers()", "action", action.String(), "tpeKey", tpe.Key, "clusterInstKey", ckey)
+		cd.dispatchTrustPolicyExceptionKeyWorkers(ctx, &tpe.Key, &ckey)
 		return nil
 	})
 	return err
@@ -942,10 +937,14 @@ func (cd *ControllerData) handleTrustPolicyExceptionForAppInst(ctx context.Conte
 		log.SpanLog(ctx, log.DebugLevelInfra, "ClusterInst not found for AppInst", "key", appInst.Key)
 		return
 	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForAppInst() found", "clusterInst", clusterInst)
+
 	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 		// Handle TrustPolicyException rules for a given appInst and target clusterInst
 		log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForAppInst()", "key", appInst.Key, "action", action.String())
 		cd.handleTrustPolicyExceptionRules(ctx, appInst, &clusterInst.Key, action)
+	} else {
+		log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForAppInst() clusterInst not dedicated", "IpAccess", clusterInst.IpAccess.String(), "appInst key", appInst.Key, "action", action.String())
 	}
 }
 
@@ -1102,24 +1101,21 @@ func (cd *ControllerData) trustPolicyExceptionChanged(ctx context.Context, old *
 			return
 		}
 
-		log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionChanged", "new state", new.State.String())
+		log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionChanged", "new state", new.State.String(), "action", action.String())
 		tpeKey := new.Key
 		clusterInsts := cd.GetClusterInstsFromTrustPolicyExceptionKey(ctx, &tpeKey)
 		for _, clusterInst := range clusterInsts {
 			cloudletKey := clusterInst.Key.CloudletKey
 			hasTrustPolicy, tpErr := cd.CloudletHasTrustPolicy(ctx, &cloudletKey)
 			if tpErr != nil {
-				return
+				continue
 			}
 			if !hasTrustPolicy {
-				return
+				log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionChanged", "no trust policy on cloudlet", cloudletKey)
+				continue
 			}
-			tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
-				TpeKey:         tpeKey,
-				ClusterInstKey: clusterInst.Key,
-			}
-			log.SpanLog(ctx, log.DebugLevelInfra, "calling handleTrustPolicyExceptionKeyWorkers", "for cluster", clusterInst.Key, "action", action)
-			cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelInfra, "trustPolicyExceptionChanged() calling dispatchTrustPolicyExceptionKeyWorkers()", "action", action.String(), "tpeKey", tpeKey, "clusterInstKey", clusterInst.Key)
+			cd.dispatchTrustPolicyExceptionKeyWorkers(ctx, &tpeKey, &clusterInst.Key)
 		}
 	}
 }
@@ -1223,12 +1219,8 @@ func (cd *ControllerData) trustPolicyExceptionDeleted(ctx context.Context, old *
 		clusterInsts := cd.GetClusterInstsFromTrustPolicyExceptionKey(ctx, &tpeKey)
 		log.SpanLog(ctx, log.DebugLevelInfra, "getClusterInstsFromTrustPolicyExceptionKey() returned", "numclusterInsts", len(clusterInsts))
 		for _, clusterInst := range clusterInsts {
-			tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
-				TpeKey:         tpeKey,
-				ClusterInstKey: clusterInst.Key,
-			}
-			log.SpanLog(ctx, log.DebugLevelInfra, "calling delete handleTrustPolicyExceptionKeyWorkers", "tpeKeyclusterInstKey", tpeKeyclusterInstKey)
-			cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
+			log.SpanLog(ctx, log.DebugLevelInfra, "calling delete dispatchTrustPolicyExceptionKeyWorkers()")
+			cd.dispatchTrustPolicyExceptionKeyWorkers(ctx, &tpeKey, &clusterInst.Key)
 		}
 	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "done trustPolicyExceptionDeleted")
@@ -1271,11 +1263,8 @@ func (cd *ControllerData) handleTrustPolicyExceptionForCloudlets(ctx context.Con
 		for _, tpe := range tpeArray {
 			clusterInsts := cd.GetClusterInstsFromTrustPolicyExceptionKeyForCloudletKey(ctx, &tpe.Key, &cloudletKey, cloudletPoolKey)
 			for _, clusterInst := range clusterInsts {
-				tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
-					TpeKey:         tpe.Key,
-					ClusterInstKey: clusterInst.Key,
-				}
-				cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
+				log.SpanLog(ctx, log.DebugLevelInfra, "handleTrustPolicyExceptionForCloudlets() calling dispatchTrustPolicyExceptionKeyWorkers()", "action", action.String(), "tpeKey", tpe.Key, "clusterInstKey", clusterInst.Key)
+				cd.dispatchTrustPolicyExceptionKeyWorkers(ctx, &tpe.Key, &clusterInst.Key)
 			}
 		}
 	}
@@ -2015,20 +2004,23 @@ func (cd *ControllerData) clusterInstExists(ctx context.Context, clusterInstKey 
 
 func (cd *ControllerData) appInstExistsForTpe(ctx context.Context, appKey *edgeproto.AppKey, clusterInstKey *edgeproto.ClusterInstKey) bool {
 
-	appInst := edgeproto.AppInst{}
-	appInstKeyFilter := edgeproto.AppInstKey{
-		AppKey:         *appKey,
-		ClusterInstKey: *clusterInstKey.Virtual(""),
+	lookupKey := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey: *appKey,
+		},
 	}
-	appInstFound := cd.AppInstCache.Get(&appInstKeyFilter, &appInst)
-	if appInstFound {
-		if appInst.State != edgeproto.TrackedState_READY {
-			appInstFound = false
+	appInstFound := false
+	cd.AppInstCache.Show(&lookupKey, func(appInst *edgeproto.AppInst) error {
+		if appInst.ClusterInstKey().Matches(clusterInstKey) && appInst.State == edgeproto.TrackedState_READY {
+			appInstFound = true
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe() matched state/cluster")
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe() state/cluster not matching", "appInst state", appInst.State.String(), "clusterInstKeyIn", clusterInstKey, "appInst.ClusterInstKey()", appInst.ClusterInstKey())
 		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "appInst state", appInst.State.String())
-	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
+		return nil
+	})
 
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe()", "clusterInstKey", clusterInstKey, "appKey", appKey, "appInstFound", appInstFound)
 	return appInstFound
 }
 
@@ -2054,4 +2046,14 @@ func (cd *ControllerData) tpeNeeded(ctx context.Context, key *cloudcommon.TrustP
 		return false
 	}
 	return true
+}
+
+func (cd *ControllerData) dispatchTrustPolicyExceptionKeyWorkers(ctx context.Context, tpeKey *edgeproto.TrustPolicyExceptionKey, clusterInstKey *edgeproto.ClusterInstKey) {
+
+	tpeKeyclusterInstKey := cloudcommon.TrustPolicyExceptionKeyClusterInstKey{
+		TpeKey:         *tpeKey,
+		ClusterInstKey: *clusterInstKey,
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "dispatchTrustPolicyExceptionKeyWorkers() calling handleTrustPolicyExceptionKeyWorkers", "tpeKeyclusterInstKey", tpeKeyclusterInstKey)
+	cd.handleTrustPolicyExceptionKeyWorkers.NeedsWork(ctx, tpeKeyclusterInstKey)
 }
