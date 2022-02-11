@@ -159,9 +159,11 @@ func main() {
 	controllerCmd.AddCommand(createCmd.GenCmd())
 	controllerCmd.AddCommand(deleteCmd.GenCmd())
 	gencmd.RunCommandCmd.Run = runRunCommand
+	gencmd.RunCommandCmd.AddFlagsFunc = cli.AddTtyFlags
 	gencmd.ShowLogsCmd.Run = runShowLogs
 	gencmd.RunConsoleCmd.Run = runRunConsole
 	gencmd.AccessCloudletCmd.Run = runAccessCloudlet
+	gencmd.AccessCloudletCmd.AddFlagsFunc = cli.AddTtyFlags
 	controllerCmd.AddCommand(gencmd.RunCommandCmd.GenCmd(), gencmd.RunConsoleCmd.GenCmd(), gencmd.ShowLogsCmd.GenCmd(), gencmd.AccessCloudletCmd.GenCmd())
 
 	dmeCmd.AddCommand(gencmd.MatchEngineApiCmds...)
