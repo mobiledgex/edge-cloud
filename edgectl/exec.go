@@ -51,5 +51,9 @@ func runExecRequest(c *cli.Command, args []string, apiFunc execFunc) error {
 		}
 		return reply, nil
 	}
-	return edgecli.RunEdgeTurn(req, exchangeFunc)
+	options := &edgecli.ExecOptions{
+		Stdin: cli.Interactive,
+		Tty:   cli.Tty,
+	}
+	return edgecli.RunEdgeTurn(req, options, exchangeFunc)
 }
