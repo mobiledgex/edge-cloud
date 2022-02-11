@@ -23,6 +23,8 @@ var Debug bool
 var OutputStream bool
 var SilenceUsage bool
 var OutputFormat = OutputFormatYaml
+var Interactive bool
+var Tty bool
 
 func AddInputFlags(flagSet *pflag.FlagSet) {
 	flagSet.StringVar(&Data, "data", "", "json formatted input data, alternative to name=val args list")
@@ -39,6 +41,13 @@ func AddDebugFlag(flagSet *pflag.FlagSet) {
 	flagSet.BoolVar(&Debug, "debug", false, "debug")
 	flagSet.BoolVar(&SilenceUsage, "silence-usage", false, "silence-usage")
 }
+
+func AddTtyFlags(flagSet *pflag.FlagSet) {
+	flagSet.BoolVarP(&Interactive, "interactive", "i", false, "send stdin")
+	flagSet.BoolVarP(&Tty, "tty", "t", false, "treat stdin and stout as a tty")
+}
+
+var NoFlags func(flagSet *pflag.FlagSet) = nil
 
 // HideTags is a comma separated list of tag names that are matched
 // against the protocmd.hidetag field option. Fields that match will
@@ -70,6 +79,7 @@ type Command struct {
 	Run                  func(c *Command, args []string) error
 	UsageIsHelp          bool
 	Annotations          map[string]string
+	AddFlagsFunc         func(*pflag.FlagSet)
 }
 
 func (c *Command) GenCmd() *cobra.Command {
@@ -85,6 +95,9 @@ func (c *Command) GenCmd() *cobra.Command {
 
 	if c.Run != nil {
 		cmd.RunE = c.runE
+	}
+	if c.AddFlagsFunc != nil {
+		c.AddFlagsFunc(cmd.Flags())
 	}
 	return cmd
 }
