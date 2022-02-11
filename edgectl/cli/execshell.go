@@ -53,7 +53,12 @@ type WSStreamPayload struct {
 	Data interface{} `json:"data"`
 }
 
-func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func() (*edgeproto.ExecRequest, error)) error {
+type ExecOptions struct {
+	Stdin bool
+	Tty   bool
+}
+
+func RunEdgeTurn(req *edgeproto.ExecRequest, options *ExecOptions, exchangeFunc func() (*edgeproto.ExecRequest, error)) error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
@@ -80,7 +85,16 @@ func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func() (*edgeproto.Exe
 		}
 		defer ws.Close()
 
-		if terminal.IsTerminal(int(os.Stdin.Fd())) {
+		if options.Tty {
+			// force stdin
+			options.Stdin = true
+
+			if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+				return fmt.Errorf("Cannot use tty, input is not a terminal")
+			}
+			if !terminal.IsTerminal(int(os.Stdout.Fd())) {
+				return fmt.Errorf("Cannot use tty, output is not a terminal")
+			}
 			// Set stdin and Stdout to raw
 			sinOldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
 			if err != nil {
@@ -99,27 +113,29 @@ func RunEdgeTurn(req *edgeproto.ExecRequest, exchangeFunc func() (*edgeproto.Exe
 		}
 
 		errChan := make(chan error, 2)
-		go func() {
-			buf := make([]byte, 1500)
-			for {
-				n, err := os.Stdin.Read(buf)
-				if err != nil {
-					if err != io.EOF {
-						errChan <- err
+		if options.Stdin {
+			go func() {
+				buf := make([]byte, 1500)
+				for {
+					n, err := os.Stdin.Read(buf)
+					if err != nil {
+						if err != io.EOF {
+							errChan <- err
+						}
+						break
 					}
-					break
-				}
-				err = ws.WriteMessage(websocket.TextMessage, buf[:n])
-				if err != nil {
-					if _, ok := err.(*websocket.CloseError); ok {
-						errChan <- nil
-					} else {
-						errChan <- err
+					err = ws.WriteMessage(websocket.TextMessage, buf[:n])
+					if err != nil {
+						if _, ok := err.(*websocket.CloseError); ok {
+							errChan <- nil
+						} else {
+							errChan <- err
+						}
+						break
 					}
-					break
 				}
-			}
-		}()
+			}()
+		}
 		go func() {
 			for {
 				_, msg, err := ws.ReadMessage()
