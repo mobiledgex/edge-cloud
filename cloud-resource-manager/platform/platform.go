@@ -37,7 +37,6 @@ type PlatformConfig struct {
 	TrustPolicy         string
 	CacheDir            string
 	GPUConfig           *edgeproto.GPUConfig
-	FederationConfig    *edgeproto.FederationConfig
 }
 
 type Caches struct {
