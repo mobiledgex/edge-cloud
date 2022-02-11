@@ -81,30 +81,41 @@ func PruneplatosPlatformDevices(ctx context.Context, objStore objstore.KVStore, 
 func SetTrusted(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted")
 
-	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
-	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var app edgeproto.App
-		err2 := json.Unmarshal(val, &app)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
-			return err2
-		}
-		log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted found app", "appkey", app.Key.String(), "InternalPorts", app.InternalPorts)
-		if app.InternalPorts {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting PrivacyComplaint to true for internal ports app", "app", app)
-			app.Trusted = true
-			val, err2 = json.Marshal(app)
+	appKeys, err := getDbObjectKeys(objStore, "App")
+	if err != nil {
+		return err
+	}
+	for appKey, _ := range appKeys {
+		_, err := objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			appStr := stm.Get(appKey)
+			if appStr == "" {
+				// deleted in the meantime
+				return nil
+			}
+			var app edgeproto.App
+			err2 := json.Unmarshal([]byte(appStr), &app)
 			if err2 != nil {
-				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", appStr, "err", err2, "app", app)
 				return err2
 			}
-			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
-				return perr
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "SetTrusted found app", "appkey", app.Key.String(), "InternalPorts", app.InternalPorts)
+			if app.InternalPorts {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting PrivacyComplaint to true for internal ports app", "app", app)
+				app.Trusted = true
+				val, err2 := json.Marshal(app)
+				if err2 != nil {
+					log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+					return err2
+				}
+				stm.Put(appKey, string(val))
 			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
-		return nil
-	})
-	return err
+	}
+	return nil
 }
 
 // Handles following upgrade:
@@ -114,32 +125,42 @@ func SetTrusted(ctx context.Context, objStore objstore.KVStore, allApis *AllApis
 func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "CloudletResourceUpgradeFunc")
 
-	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("Cloudlet"))
-	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var cloudlet edgeproto.Cloudlet
-		err2 := json.Unmarshal(val, &cloudlet)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudlet", cloudlet)
-			return err2
-		}
-		log.SpanLog(ctx, log.DebugLevelUpgrade, "set defaultresourcealertthreshold for cloudlet", "cloudletkey", cloudlet.Key.String())
-		if cloudlet.DefaultResourceAlertThreshold == 0 {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting default alert threshold to 80 for cloudlet", "cloudlet", cloudlet)
-			cloudlet.DefaultResourceAlertThreshold = 80
-			val, err2 = json.Marshal(cloudlet)
+	cloudletKeys, err := getDbObjectKeys(objStore, "Cloudlet")
+	if err != nil {
+		return err
+	}
+	for key, _ := range cloudletKeys {
+		_, err := objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			cloudletStr := stm.Get(key)
+			if cloudletStr == "" {
+				return nil
+			}
+			var cloudlet edgeproto.Cloudlet
+			err2 := json.Unmarshal([]byte(cloudletStr), &cloudlet)
 			if err2 != nil {
-				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", cloudletStr, "err", err2, "cloudlet", cloudlet)
 				return err2
 			}
-			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
-				return perr
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "set defaultresourcealertthreshold for cloudlet", "cloudletkey", cloudlet.Key.String())
+			if cloudlet.DefaultResourceAlertThreshold == 0 {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Setting default alert threshold to 80 for cloudlet", "cloudlet", cloudlet)
+				cloudlet.DefaultResourceAlertThreshold = 80
+				val, err2 := json.Marshal(cloudlet)
+				if err2 != nil {
+					log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudlet", cloudlet)
+					return err2
+				}
+				stm.Put(key, string(val))
 			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
-		return nil
-	})
+	}
 
 	clusterMap := make(map[edgeproto.CloudletKey][]edgeproto.ClusterInstRefKey)
-	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
+	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
 	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
 		var clusterInst edgeproto.ClusterInst
 		err2 := json.Unmarshal(val, &clusterInst)
@@ -196,42 +217,85 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore,
 		return err
 	}
 
-	keystr = fmt.Sprintf("%s/", objstore.DbKeyPrefixString("CloudletRefs"))
-	err = objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var refs edgeproto.CloudletRefs
-		err2 := json.Unmarshal(val, &refs)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "cloudletrefs", refs)
-			return err2
-		}
-		log.SpanLog(ctx, log.DebugLevelUpgrade, "AddCloudletRefsClusterInstKeys found obj", "cloudletKey", refs.Key.String())
-		objChanged := false
-		clusterKeys, ok := clusterMap[refs.Key]
-		if !ok {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "No clusters found for cloudlet", "cloudlet key", refs.Key)
-		} else {
-			refs.ClusterInsts = clusterKeys
-			objChanged = true
-		}
-		vmAppInstKeys, ok := vmAppInstMap[refs.Key]
-		if !ok {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "No vm appinsts found for cloudlet", "cloudlet key", refs.Key)
-		} else {
-			refs.VmAppInsts = vmAppInstKeys
-			objChanged = true
-		}
-		if objChanged {
-			val, err2 = json.Marshal(refs)
+	cloudletRefsKeys, err := getDbObjectKeys(objStore, "CloudletRefs")
+	if err != nil {
+		return err
+	}
+	for refsKey, _ := range cloudletRefsKeys {
+		_, err := objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			refsStr := stm.Get(refsKey)
+			if refsStr == "" {
+				return nil
+			}
+			var refs edgeproto.CloudletRefs
+			err2 := json.Unmarshal([]byte(refsStr), &refs)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", refsStr, "err", err2, "cloudletrefs", refs)
+				return err2
+			}
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "AddCloudletRefsClusterInstKeys found obj", "cloudletKey", refs.Key.String())
+			curClusterInsts := make(map[edgeproto.ClusterInstRefKey]struct{})
+			for _, key := range refs.ClusterInsts {
+				curClusterInsts[key] = struct{}{}
+			}
+			curVmAppInsts := make(map[edgeproto.AppInstRefKey]struct{})
+			for _, key := range refs.VmAppInsts {
+				curVmAppInsts[key] = struct{}{}
+			}
+			objChanged := false
+			clusterKeys, ok := clusterMap[refs.Key]
+			if !ok {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "No clusters found for cloudlet", "cloudlet key", refs.Key)
+			} else {
+				for _, key := range clusterKeys {
+					if _, found := curClusterInsts[key]; found {
+						continue
+					}
+					// make sure it still exists
+					lookupKey := &edgeproto.ClusterInstKey{}
+					lookupKey.FromClusterInstRefKey(&key, &refs.Key)
+					str := stm.Get(objstore.DbKeyString("ClusterInst", lookupKey))
+					if str == "" {
+						continue
+					}
+					refs.ClusterInsts = append(refs.ClusterInsts, key)
+					objChanged = true
+				}
+			}
+			vmAppInstKeys, ok := vmAppInstMap[refs.Key]
+			if !ok {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "No vm appinsts found for cloudlet", "cloudlet key", refs.Key)
+			} else {
+				for _, key := range vmAppInstKeys {
+					if _, found := curVmAppInsts[key]; found {
+						continue
+					}
+					// make sure it still exists
+					lookupKey := &edgeproto.AppInstKey{}
+					lookupKey.FromAppInstRefKey(&key, &refs.Key)
+					str := stm.Get(objstore.DbKeyString("AppInst", lookupKey))
+					if str == "" {
+						continue
+					}
+					refs.VmAppInsts = append(refs.VmAppInsts, key)
+					objChanged = true
+				}
+			}
+			if !objChanged {
+				return nil
+			}
+			val, err2 := json.Marshal(refs)
 			if err2 != nil {
 				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "cloudletrefs", refs)
 				return err2
 			}
-			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
-				return perr
-			}
+			stm.Put(refsKey, string(val))
+			return nil
+		})
+		if err != nil {
+			return err
 		}
-		return nil
-	})
+	}
 	return err
 }
 
@@ -239,30 +303,47 @@ func CloudletResourceUpgradeFunc(ctx context.Context, objStore objstore.KVStore,
 func AppInstRefsDR(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "AppInstRefsDR")
 
+	refsKeys := make(map[string]struct{})
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInstRefs"))
 	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var refs edgeproto.AppInstRefs
-		err2 := json.Unmarshal(val, &refs)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "appinstrefs", refs)
-			return err2
-		}
-		if refs.DeleteRequestedInsts != nil {
-			return nil
-		}
-		log.SpanLog(ctx, log.DebugLevelUpgrade, "init DeletedRequestedInsts map on AppInstRefs", "refsKey", refs.Key.String())
-		refs.DeleteRequestedInsts = make(map[string]uint32)
-		val, err2 = json.Marshal(refs)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "AppInstRefs", refs)
-			return err2
-		}
-		if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
-			return perr
-		}
+		refsKeys[string(key)] = struct{}{}
 		return nil
 	})
-	return err
+	if err != nil {
+		return err
+	}
+	for key, _ := range refsKeys {
+		_, err := objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get refs
+			refsStr := stm.Get(key)
+			if refsStr == "" {
+				// deleted in the meantime
+				return nil
+			}
+			var refs edgeproto.AppInstRefs
+			err2 := json.Unmarshal([]byte(refsStr), &refs)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", refsStr, "err", err2, "appinstrefs", refs)
+				return err2
+			}
+			if refs.DeleteRequestedInsts != nil {
+				return nil
+			}
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "init DeletedRequestedInsts map on AppInstRefs", "refsKey", refs.Key.String())
+			refs.DeleteRequestedInsts = make(map[string]uint32)
+			val, err2 := json.Marshal(refs)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "AppInstRefs", refs)
+				return err2
+			}
+			stm.Put(key, string(val))
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // TrustPolicyException upgrade func
@@ -282,45 +363,57 @@ func TrustPolicyExceptionUpgradeFunc(ctx context.Context, objStore objstore.KVSt
 		RequiredOutboundConnections []*RemoteConnection `json:"required_outbound_connections,omitempty"`
 	}
 
-	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("App"))
-	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		var app edgeproto.App
-		err2 := json.Unmarshal(val, &app)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", string(val), "err", err2, "app", app)
-			return err2
-		}
-		var appV0 AppV0RemoteConn
-		err2 = json.Unmarshal(val, &appV0)
-		if err2 != nil {
-			log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal app old remote connection", "val", string(val), "err", err2, "app old", appV0)
-			return err2
-		}
-		log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
-		if len(appV0.RequiredOutboundConnections) > 0 && appV0.RequiredOutboundConnections[0].Port != 0 {
-			newReqdConns := []edgeproto.SecurityRule{}
-			for _, conn := range appV0.RequiredOutboundConnections {
-				secRule := edgeproto.SecurityRule{
-					Protocol:     conn.Protocol,
-					PortRangeMin: conn.Port,
-					PortRangeMax: conn.Port,
-					RemoteCidr:   conn.RemoteIp + "/32",
-				}
-				newReqdConns = append(newReqdConns, secRule)
+	appKeys, err := getDbObjectKeys(objStore, "App")
+	if err != nil {
+		return err
+	}
+
+	for key, _ := range appKeys {
+		_, err := objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			appStr := stm.Get(key)
+			if appStr == "" {
+				// deleted in the meantime
+				return nil
 			}
-			app.RequiredOutboundConnections = newReqdConns
-			val, err2 = json.Marshal(app)
+			var app edgeproto.App
+			err2 := json.Unmarshal([]byte(appStr), &app)
 			if err2 != nil {
-				log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal key", "val", appStr, "err", err2, "app", app)
 				return err2
 			}
-			if _, perr := objStore.Put(ctx, string(key), string(val)); perr != nil {
-				return perr
+			var appV0 AppV0RemoteConn
+			err2 = json.Unmarshal([]byte(appStr), &appV0)
+			if err2 != nil {
+				log.SpanLog(ctx, log.DebugLevelUpgrade, "Cannot unmarshal app old remote connection", "val", appStr, "err", err2, "app old", appV0)
+				return err2
 			}
+			log.SpanLog(ctx, log.DebugLevelUpgrade, "TrustPolicyExceptionUpgradeFunc found app", "required_outbound", appV0.RequiredOutboundConnections)
+			if len(appV0.RequiredOutboundConnections) > 0 && appV0.RequiredOutboundConnections[0].Port != 0 {
+				newReqdConns := []edgeproto.SecurityRule{}
+				for _, conn := range appV0.RequiredOutboundConnections {
+					secRule := edgeproto.SecurityRule{
+						Protocol:     conn.Protocol,
+						PortRangeMin: conn.Port,
+						PortRangeMax: conn.Port,
+						RemoteCidr:   conn.RemoteIp + "/32",
+					}
+					newReqdConns = append(newReqdConns, secRule)
+				}
+				app.RequiredOutboundConnections = newReqdConns
+				val, err2 := json.Marshal(app)
+				if err2 != nil {
+					log.SpanLog(ctx, log.DebugLevelUpgrade, "Failed to marshal obj", "app", app)
+					return err2
+				}
+				stm.Put(key, string(val))
+			}
+			return nil
+		})
+		if err != nil {
+			return err
 		}
-		return nil
-	})
-	return err
+	}
+	return nil
 }
 
 // Initiate and back-populate cluster refs objects for existing AppInsts
@@ -328,12 +421,7 @@ func AddClusterRefs(ctx context.Context, objStore objstore.KVStore, allApis *All
 	log.SpanLog(ctx, log.DebugLevelUpgrade, "ClusterRefs")
 
 	// Get all AppInsts
-	appInstKeys := make(map[string]struct{})
-	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
-	err := objStore.List(keystr, func(key, val []byte, rev, modRev int64) error {
-		appInstKeys[string(key)] = struct{}{}
-		return nil
-	})
+	appInstKeys, err := getDbObjectKeys(objStore, "AppInst")
 	if err != nil {
 		return err
 	}
