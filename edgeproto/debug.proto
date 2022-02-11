@@ -14,7 +14,7 @@ option (gogoproto.goproto_sizecache_all) = false;
 message DebugRequest {
   // Service node identifier (see NodeShow)
   NodeKey node = 1 [(gogoproto.nullable) = false];
-  // Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled
+  // Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled,fedapi
   string levels = 2;
   // Debug command (use "help" to see available commands)
   string cmd = 3;

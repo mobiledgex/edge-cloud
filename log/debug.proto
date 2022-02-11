@@ -16,4 +16,5 @@ enum DebugLevel {
   info = 9;
   sampled = 10;
   events = 11;
+  fedapi = 12;
 }
