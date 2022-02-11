@@ -25,38 +25,38 @@ func TestGetNodeInfos(t *testing.T) {
 	expNodes := []*edgeproto.NodeInfo{{
 		Name: "aks-agentpool-30520393-vmss000000",
 		Allocatable: map[string]*edgeproto.Udec64{
-			cloudcommon.ResourceVcpus: edgeproto.NewUdec64(1, 900*edgeproto.DecMillis),
-			cloudcommon.ResourceRamMb: edgeproto.NewUdec64(5368, 0),
-			cloudcommon.ResourceDisk:  edgeproto.NewUdec64(111, 0),
+			cloudcommon.ResourceVcpus:  edgeproto.NewUdec64(1, 900*edgeproto.DecMillis),
+			cloudcommon.ResourceRamMb:  edgeproto.NewUdec64(5368, 0),
+			cloudcommon.ResourceDiskGb: edgeproto.NewUdec64(111, 0),
 		},
 		Capacity: map[string]*edgeproto.Udec64{
-			cloudcommon.ResourceVcpus: edgeproto.NewUdec64(2, 0),
-			cloudcommon.ResourceRamMb: edgeproto.NewUdec64(7961, 0),
-			cloudcommon.ResourceDisk:  edgeproto.NewUdec64(123, 0),
+			cloudcommon.ResourceVcpus:  edgeproto.NewUdec64(2, 0),
+			cloudcommon.ResourceRamMb:  edgeproto.NewUdec64(7961, 0),
+			cloudcommon.ResourceDiskGb: edgeproto.NewUdec64(123, 0),
 		},
 	}, {
 		Name: "aks-agentpool-30520393-vmss000001",
 		Allocatable: map[string]*edgeproto.Udec64{
-			cloudcommon.ResourceVcpus: edgeproto.NewUdec64(1, 900*edgeproto.DecMillis),
-			cloudcommon.ResourceRamMb: edgeproto.NewUdec64(5368, 0),
-			cloudcommon.ResourceDisk:  edgeproto.NewUdec64(111, 0),
+			cloudcommon.ResourceVcpus:  edgeproto.NewUdec64(1, 900*edgeproto.DecMillis),
+			cloudcommon.ResourceRamMb:  edgeproto.NewUdec64(5368, 0),
+			cloudcommon.ResourceDiskGb: edgeproto.NewUdec64(111, 0),
 		},
 		Capacity: map[string]*edgeproto.Udec64{
-			cloudcommon.ResourceVcpus: edgeproto.NewUdec64(2, 0),
-			cloudcommon.ResourceRamMb: edgeproto.NewUdec64(7961, 0),
-			cloudcommon.ResourceDisk:  edgeproto.NewUdec64(123, 0),
+			cloudcommon.ResourceVcpus:  edgeproto.NewUdec64(2, 0),
+			cloudcommon.ResourceRamMb:  edgeproto.NewUdec64(7961, 0),
+			cloudcommon.ResourceDiskGb: edgeproto.NewUdec64(123, 0),
 		},
 	}, {
 		Name: "aks-agentpool-30520393-vmss000002",
 		Allocatable: map[string]*edgeproto.Udec64{
-			cloudcommon.ResourceVcpus: edgeproto.NewUdec64(1, 900*edgeproto.DecMillis),
-			cloudcommon.ResourceRamMb: edgeproto.NewUdec64(5368, 0),
-			cloudcommon.ResourceDisk:  edgeproto.NewUdec64(111, 0),
+			cloudcommon.ResourceVcpus:  edgeproto.NewUdec64(1, 900*edgeproto.DecMillis),
+			cloudcommon.ResourceRamMb:  edgeproto.NewUdec64(5368, 0),
+			cloudcommon.ResourceDiskGb: edgeproto.NewUdec64(111, 0),
 		},
 		Capacity: map[string]*edgeproto.Udec64{
-			cloudcommon.ResourceVcpus: edgeproto.NewUdec64(2, 0),
-			cloudcommon.ResourceRamMb: edgeproto.NewUdec64(7961, 0),
-			cloudcommon.ResourceDisk:  edgeproto.NewUdec64(123, 0),
+			cloudcommon.ResourceVcpus:  edgeproto.NewUdec64(2, 0),
+			cloudcommon.ResourceRamMb:  edgeproto.NewUdec64(7961, 0),
+			cloudcommon.ResourceDiskGb: edgeproto.NewUdec64(123, 0),
 		},
 	}}
 	require.Equal(t, expNodes, nodeInfos)

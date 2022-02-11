@@ -23,9 +23,9 @@ message VMResource {
   ClusterInstKey key = 1 [(gogoproto.nullable) = false];
   // Flavor requirement of the VM required by the cluster
   FlavorInfo vm_flavor = 2;
-  // Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
+  // Resource Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm, k8s-lb-svc
   string type = 3;
-  // Access type for resource of type App VM
+  // (deprecated) Access type for resource of type App VM
   AccessType app_access_type = 4;
 }
 
@@ -56,6 +56,8 @@ message CloudletRefs {
   repeated ClusterInstRefKey cluster_insts = 13 [(gogoproto.nullable) = false, (protogen.tracks_refs_by) = "ClusterInst"];
   // VM apps instantiated on the Cloudlet
   repeated AppInstRefKey vm_app_insts = 14 [(gogoproto.nullable) = false];
+  // K8s apps instantiated on the Cloudlet
+  repeated AppInstRefKey k8s_app_insts = 15 [(gogoproto.nullable) = false];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

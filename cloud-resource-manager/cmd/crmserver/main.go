@@ -297,59 +297,20 @@ func main() {
 			} else {
 				// need to perfom init steps for active
 				err = initPlatformActive(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
-				if err == nil {
-					myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
-					log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-					controllerData.ControllerSyncInProgress = true
-					controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-
-					// Wait for CRM to receive cluster and appinst data from notify
-					select {
-					case <-controllerData.ControllerSyncDone:
-						if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
-							log.FatalLog("failed to get sync data from controller")
-						}
-					case <-time.After(ControllerTimeout):
-						log.FatalLog("Timed out waiting for sync data from controller")
-					}
-					log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
-					myCloudletInfo.ControllerCacheReceived = true
-					controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-					err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
-					if err != nil {
-						log.FatalLog("Platform sync fail", "err", err)
-					}
-
-					// Update AppInst runtime info in case it has changed
-					controllerData.RefreshAppInstRuntime(ctx)
-
-					resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
-					if resources != nil {
-						resMap := make(map[string]edgeproto.InfraResource)
-						for _, resInfo := range resources.Info {
-							resMap[resInfo.Name] = resInfo
-						}
-						err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
-						if err != nil {
-							log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
-							err = nil
-						}
-						myCloudletInfo.ResourcesSnapshot = *resources
-					}
-					myCloudletInfo.Errors = nil
-					myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-					if cloudlet.TrustPolicy == "" {
-						myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
-					} else {
-						myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
-					}
-				}
 			}
 		}
 
 		if err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
+		} else {
+			myCloudletInfo.Errors = nil
+			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+			if cloudlet.TrustPolicy == "" {
+				myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+			} else {
+				myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
+			}
 		}
 		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
@@ -428,45 +389,62 @@ func initPlatformActiveStandbyCommon(ctx context.Context, cloudlet *edgeproto.Cl
 func initPlatformActive(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfo, "init steps for active")
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
-	updateCallback(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-	err := controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
-	if err != nil {
-		return err
-	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
-	err = platform.InitActive(ctx, platformConfig, updateCallback)
+	err := platform.InitActive(ctx, platformConfig, updateCallback)
 	if err != nil {
 		log.FatalLog("Platform InitActive fail", "err", err)
 	}
-	// Update AppInst runtime info in case it has changed
-	err = platform.SyncControllerCache(ctx, caches, myCloudletInfo.State)
+	log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
+	updateCallback(edgeproto.UpdateTask, "Gathering Cloudlet Info")
+	err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
+	log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
+
 	if err != nil {
-		log.FatalLog("Platform sync fail", "err", err)
-	}
-	controllerData.RefreshAppInstRuntime(ctx)
-	resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
-	if resources != nil {
-		resMap := make(map[string]edgeproto.InfraResource)
-		for _, resInfo := range resources.Info {
-			resMap[resInfo.Name] = resInfo
-		}
-		err = cloudcommon.ValidateCloudletResourceQuotas(ctx, resMap, cloudlet.ResourceQuotas)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
-			err = nil
-		}
-		myCloudletInfo.ResourcesSnapshot = *resources
-	}
-
-	myCloudletInfo.Errors = nil
-	myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-	if cloudlet.TrustPolicy == "" {
-		myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
+		myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
+		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 	} else {
-		myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
-	}
+		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
+		log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+		controllerData.ControllerSyncInProgress = true
+		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
 
+		// Wait for CRM to receive cluster and appinst data from notify
+		select {
+		case <-controllerData.ControllerSyncDone:
+			if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, cloudlet) {
+				log.FatalLog("failed to get sync data from controller")
+			}
+		case <-time.After(ControllerTimeout):
+			log.FatalLog("Timed out waiting for sync data from controller")
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
+		myCloudletInfo.ControllerCacheReceived = true
+		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
+		err := platform.SyncControllerCache(ctx, caches, myCloudletInfo.State)
+		if err != nil {
+			log.FatalLog("Platform sync fail", "err", err)
+		}
+
+		// Update AppInst runtime info in case it has changed
+		controllerData.RefreshAppInstRuntime(ctx)
+		resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
+		if resources != nil {
+			resMap := make(map[string]edgeproto.InfraResource)
+			for _, resInfo := range resources.Info {
+				resMap[resInfo.Name] = resInfo
+			}
+			quotaProps, err := platform.GetCloudletResourceQuotaProps(ctx)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "Failed to get cloudlet specific resource quota", "cloudlet", cloudlet.Key, "err", err)
+			} else {
+				err = cloudcommon.ValidateCloudletResourceQuotas(ctx, quotaProps, resMap, cloudlet.ResourceQuotas)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
+					err = nil
+				}
+			}
+			myCloudletInfo.ResourcesSnapshot = *resources
+		}
+	}
 	log.SpanLog(ctx, log.DebugLevelInfra, "initPlatformActive done", "cloudlet state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
 	return err
 }

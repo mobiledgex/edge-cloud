@@ -11749,6 +11749,15 @@ const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKey = "17.4.2"
 const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKey = "17.4.2.1"
 const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName = "17.4.2.1.1"
 const CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization = "17.4.2.2"
+const CloudletInfoFieldResourcesSnapshotK8SAppInsts = "17.5"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKey = "17.5.1"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyOrganization = "17.5.1.1"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyName = "17.5.1.2"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyVersion = "17.5.1.3"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKey = "17.5.2"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKey = "17.5.2.1"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKeyName = "17.5.2.1.1"
+const CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyOrganization = "17.5.2.2"
 const CloudletInfoFieldTrustPolicyState = "18"
 const CloudletInfoFieldCompatibilityVersion = "19"
 const CloudletInfoFieldProperties = "20"
@@ -11826,6 +11835,11 @@ var CloudletInfoAllFields = []string{
 	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion,
 	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName,
 	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization,
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyOrganization,
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyName,
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyVersion,
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKeyName,
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyOrganization,
 	CloudletInfoFieldTrustPolicyState,
 	CloudletInfoFieldCompatibilityVersion,
 	CloudletInfoFieldPropertiesKey,
@@ -11842,147 +11856,157 @@ var CloudletInfoAllFields = []string{
 }
 
 var CloudletInfoAllFieldsMap = map[string]struct{}{
-	CloudletInfoFieldKeyOrganization:                                         struct{}{},
-	CloudletInfoFieldKeyName:                                                 struct{}{},
-	CloudletInfoFieldKeyFederatedOrganization:                                struct{}{},
-	CloudletInfoFieldState:                                                   struct{}{},
-	CloudletInfoFieldNotifyId:                                                struct{}{},
-	CloudletInfoFieldController:                                              struct{}{},
-	CloudletInfoFieldOsMaxRam:                                                struct{}{},
-	CloudletInfoFieldOsMaxVcores:                                             struct{}{},
-	CloudletInfoFieldOsMaxVolGb:                                              struct{}{},
-	CloudletInfoFieldErrors:                                                  struct{}{},
-	CloudletInfoFieldFlavorsName:                                             struct{}{},
-	CloudletInfoFieldFlavorsVcpus:                                            struct{}{},
-	CloudletInfoFieldFlavorsRam:                                              struct{}{},
-	CloudletInfoFieldFlavorsDisk:                                             struct{}{},
-	CloudletInfoFieldFlavorsPropMapKey:                                       struct{}{},
-	CloudletInfoFieldFlavorsPropMapValue:                                     struct{}{},
-	CloudletInfoFieldStatusTaskNumber:                                        struct{}{},
-	CloudletInfoFieldStatusMaxTasks:                                          struct{}{},
-	CloudletInfoFieldStatusTaskName:                                          struct{}{},
-	CloudletInfoFieldStatusStepName:                                          struct{}{},
-	CloudletInfoFieldStatusMsgCount:                                          struct{}{},
-	CloudletInfoFieldStatusMsgs:                                              struct{}{},
-	CloudletInfoFieldContainerVersion:                                        struct{}{},
-	CloudletInfoFieldAvailabilityZonesName:                                   struct{}{},
-	CloudletInfoFieldAvailabilityZonesStatus:                                 struct{}{},
-	CloudletInfoFieldOsImagesName:                                            struct{}{},
-	CloudletInfoFieldOsImagesTags:                                            struct{}{},
-	CloudletInfoFieldOsImagesProperties:                                      struct{}{},
-	CloudletInfoFieldOsImagesDiskFormat:                                      struct{}{},
-	CloudletInfoFieldControllerCacheReceived:                                 struct{}{},
-	CloudletInfoFieldMaintenanceState:                                        struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                        struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                        struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                      struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                 struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:       struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:       struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:              struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:              struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:            struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:         struct{}{},
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:          struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoName:                               struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoValue:                              struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                      struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoDescription:                        struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoUnits:                              struct{}{},
-	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold:                     struct{}{},
-	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName:             struct{}{},
-	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization:               struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                   struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: struct{}{},
-	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   struct{}{},
-	CloudletInfoFieldTrustPolicyState:                                        struct{}{},
-	CloudletInfoFieldCompatibilityVersion:                                    struct{}{},
-	CloudletInfoFieldPropertiesKey:                                           struct{}{},
-	CloudletInfoFieldPropertiesValue:                                         struct{}{},
-	CloudletInfoFieldNodeInfosName:                                           struct{}{},
-	CloudletInfoFieldNodeInfosAllocatableKey:                                 struct{}{},
-	CloudletInfoFieldNodeInfosAllocatableValueWhole:                          struct{}{},
-	CloudletInfoFieldNodeInfosAllocatableValueNanos:                          struct{}{},
-	CloudletInfoFieldNodeInfosCapacityKey:                                    struct{}{},
-	CloudletInfoFieldNodeInfosCapacityValueWhole:                             struct{}{},
-	CloudletInfoFieldNodeInfosCapacityValueNanos:                             struct{}{},
-	CloudletInfoFieldActiveCrmInstance:                                       struct{}{},
-	CloudletInfoFieldStandbyCrm:                                              struct{}{},
+	CloudletInfoFieldKeyOrganization:                                          struct{}{},
+	CloudletInfoFieldKeyName:                                                  struct{}{},
+	CloudletInfoFieldKeyFederatedOrganization:                                 struct{}{},
+	CloudletInfoFieldState:                                                    struct{}{},
+	CloudletInfoFieldNotifyId:                                                 struct{}{},
+	CloudletInfoFieldController:                                               struct{}{},
+	CloudletInfoFieldOsMaxRam:                                                 struct{}{},
+	CloudletInfoFieldOsMaxVcores:                                              struct{}{},
+	CloudletInfoFieldOsMaxVolGb:                                               struct{}{},
+	CloudletInfoFieldErrors:                                                   struct{}{},
+	CloudletInfoFieldFlavorsName:                                              struct{}{},
+	CloudletInfoFieldFlavorsVcpus:                                             struct{}{},
+	CloudletInfoFieldFlavorsRam:                                               struct{}{},
+	CloudletInfoFieldFlavorsDisk:                                              struct{}{},
+	CloudletInfoFieldFlavorsPropMapKey:                                        struct{}{},
+	CloudletInfoFieldFlavorsPropMapValue:                                      struct{}{},
+	CloudletInfoFieldStatusTaskNumber:                                         struct{}{},
+	CloudletInfoFieldStatusMaxTasks:                                           struct{}{},
+	CloudletInfoFieldStatusTaskName:                                           struct{}{},
+	CloudletInfoFieldStatusStepName:                                           struct{}{},
+	CloudletInfoFieldStatusMsgCount:                                           struct{}{},
+	CloudletInfoFieldStatusMsgs:                                               struct{}{},
+	CloudletInfoFieldContainerVersion:                                         struct{}{},
+	CloudletInfoFieldAvailabilityZonesName:                                    struct{}{},
+	CloudletInfoFieldAvailabilityZonesStatus:                                  struct{}{},
+	CloudletInfoFieldOsImagesName:                                             struct{}{},
+	CloudletInfoFieldOsImagesTags:                                             struct{}{},
+	CloudletInfoFieldOsImagesProperties:                                       struct{}{},
+	CloudletInfoFieldOsImagesDiskFormat:                                       struct{}{},
+	CloudletInfoFieldControllerCacheReceived:                                  struct{}{},
+	CloudletInfoFieldMaintenanceState:                                         struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                         struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                         struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                       struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                  struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:        struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:               struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:               struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:             struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:          struct{}{},
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:           struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoName:                                struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoValue:                               struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                       struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue:                       struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoDescription:                         struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoUnits:                               struct{}{},
+	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold:                      struct{}{},
+	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName:              struct{}{},
+	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization:                struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:            struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                    struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                 struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName:  struct{}{},
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:    struct{}{},
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyOrganization:           struct{}{},
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyName:                   struct{}{},
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyVersion:                struct{}{},
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKeyName: struct{}{},
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyOrganization:   struct{}{},
+	CloudletInfoFieldTrustPolicyState:                                         struct{}{},
+	CloudletInfoFieldCompatibilityVersion:                                     struct{}{},
+	CloudletInfoFieldPropertiesKey:                                            struct{}{},
+	CloudletInfoFieldPropertiesValue:                                          struct{}{},
+	CloudletInfoFieldNodeInfosName:                                            struct{}{},
+	CloudletInfoFieldNodeInfosAllocatableKey:                                  struct{}{},
+	CloudletInfoFieldNodeInfosAllocatableValueWhole:                           struct{}{},
+	CloudletInfoFieldNodeInfosAllocatableValueNanos:                           struct{}{},
+	CloudletInfoFieldNodeInfosCapacityKey:                                     struct{}{},
+	CloudletInfoFieldNodeInfosCapacityValueWhole:                              struct{}{},
+	CloudletInfoFieldNodeInfosCapacityValueNanos:                              struct{}{},
+	CloudletInfoFieldActiveCrmInstance:                                        struct{}{},
+	CloudletInfoFieldStandbyCrm:                                               struct{}{},
 }
 
 var CloudletInfoAllFieldsStringMap = map[string]string{
-	CloudletInfoFieldKeyOrganization:                                         "Key Organization",
-	CloudletInfoFieldKeyName:                                                 "Key Name",
-	CloudletInfoFieldKeyFederatedOrganization:                                "Key Federated Organization",
-	CloudletInfoFieldState:                                                   "State",
-	CloudletInfoFieldNotifyId:                                                "Notify Id",
-	CloudletInfoFieldController:                                              "Controller",
-	CloudletInfoFieldOsMaxRam:                                                "Os Max Ram",
-	CloudletInfoFieldOsMaxVcores:                                             "Os Max Vcores",
-	CloudletInfoFieldOsMaxVolGb:                                              "Os Max Vol Gb",
-	CloudletInfoFieldErrors:                                                  "Errors",
-	CloudletInfoFieldFlavorsName:                                             "Flavors Name",
-	CloudletInfoFieldFlavorsVcpus:                                            "Flavors Vcpus",
-	CloudletInfoFieldFlavorsRam:                                              "Flavors Ram",
-	CloudletInfoFieldFlavorsDisk:                                             "Flavors Disk",
-	CloudletInfoFieldFlavorsPropMapKey:                                       "Flavors Prop Map Key",
-	CloudletInfoFieldFlavorsPropMapValue:                                     "Flavors Prop Map Value",
-	CloudletInfoFieldStatusTaskNumber:                                        "Status Task Number",
-	CloudletInfoFieldStatusMaxTasks:                                          "Status Max Tasks",
-	CloudletInfoFieldStatusTaskName:                                          "Status Task Name",
-	CloudletInfoFieldStatusStepName:                                          "Status Step Name",
-	CloudletInfoFieldStatusMsgCount:                                          "Status Msg Count",
-	CloudletInfoFieldStatusMsgs:                                              "Status Msgs",
-	CloudletInfoFieldContainerVersion:                                        "Container Version",
-	CloudletInfoFieldAvailabilityZonesName:                                   "Availability Zones Name",
-	CloudletInfoFieldAvailabilityZonesStatus:                                 "Availability Zones Status",
-	CloudletInfoFieldOsImagesName:                                            "Os Images Name",
-	CloudletInfoFieldOsImagesTags:                                            "Os Images Tags",
-	CloudletInfoFieldOsImagesProperties:                                      "Os Images Properties",
-	CloudletInfoFieldOsImagesDiskFormat:                                      "Os Images Disk Format",
-	CloudletInfoFieldControllerCacheReceived:                                 "Controller Cache Received",
-	CloudletInfoFieldMaintenanceState:                                        "Maintenance State",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                        "Resources Snapshot Platform Vms Name",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                        "Resources Snapshot Platform Vms Type",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                      "Resources Snapshot Platform Vms Status",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                 "Resources Snapshot Platform Vms Infra Flavor",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:       "Resources Snapshot Platform Vms Ipaddresses External Ip",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:       "Resources Snapshot Platform Vms Ipaddresses Internal Ip",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:              "Resources Snapshot Platform Vms Containers Name",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:              "Resources Snapshot Platform Vms Containers Type",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:            "Resources Snapshot Platform Vms Containers Status",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:         "Resources Snapshot Platform Vms Containers Clusterip",
-	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:          "Resources Snapshot Platform Vms Containers Restarts",
-	CloudletInfoFieldResourcesSnapshotInfoName:                               "Resources Snapshot Info Name",
-	CloudletInfoFieldResourcesSnapshotInfoValue:                              "Resources Snapshot Info Value",
-	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                      "Resources Snapshot Info Infra Max Value",
-	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue:                      "Resources Snapshot Info Quota Max Value",
-	CloudletInfoFieldResourcesSnapshotInfoDescription:                        "Resources Snapshot Info Description",
-	CloudletInfoFieldResourcesSnapshotInfoUnits:                              "Resources Snapshot Info Units",
-	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold:                     "Resources Snapshot Info Alert Threshold",
-	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName:             "Resources Snapshot Cluster Insts Cluster Key Name",
-	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization:               "Resources Snapshot Cluster Insts Organization",
-	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:           "Resources Snapshot Vm App Insts App Key Organization",
-	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                   "Resources Snapshot Vm App Insts App Key Name",
-	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                "Resources Snapshot Vm App Insts App Key Version",
-	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName: "Resources Snapshot Vm App Insts Cluster Inst Key Cluster Key Name",
-	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:   "Resources Snapshot Vm App Insts Cluster Inst Key Organization",
-	CloudletInfoFieldTrustPolicyState:                                        "Trust Policy State",
-	CloudletInfoFieldCompatibilityVersion:                                    "Compatibility Version",
-	CloudletInfoFieldPropertiesKey:                                           "Properties Key",
-	CloudletInfoFieldPropertiesValue:                                         "Properties Value",
-	CloudletInfoFieldNodeInfosName:                                           "Node Infos Name",
-	CloudletInfoFieldNodeInfosAllocatableKey:                                 "Node Infos Allocatable Key",
-	CloudletInfoFieldNodeInfosAllocatableValueWhole:                          "Node Infos Allocatable Value Whole",
-	CloudletInfoFieldNodeInfosAllocatableValueNanos:                          "Node Infos Allocatable Value Nanos",
-	CloudletInfoFieldNodeInfosCapacityKey:                                    "Node Infos Capacity Key",
-	CloudletInfoFieldNodeInfosCapacityValueWhole:                             "Node Infos Capacity Value Whole",
-	CloudletInfoFieldNodeInfosCapacityValueNanos:                             "Node Infos Capacity Value Nanos",
-	CloudletInfoFieldActiveCrmInstance:                                       "Active Crm Instance",
-	CloudletInfoFieldStandbyCrm:                                              "Standby Crm",
+	CloudletInfoFieldKeyOrganization:                                          "Key Organization",
+	CloudletInfoFieldKeyName:                                                  "Key Name",
+	CloudletInfoFieldKeyFederatedOrganization:                                 "Key Federated Organization",
+	CloudletInfoFieldState:                                                    "State",
+	CloudletInfoFieldNotifyId:                                                 "Notify Id",
+	CloudletInfoFieldController:                                               "Controller",
+	CloudletInfoFieldOsMaxRam:                                                 "Os Max Ram",
+	CloudletInfoFieldOsMaxVcores:                                              "Os Max Vcores",
+	CloudletInfoFieldOsMaxVolGb:                                               "Os Max Vol Gb",
+	CloudletInfoFieldErrors:                                                   "Errors",
+	CloudletInfoFieldFlavorsName:                                              "Flavors Name",
+	CloudletInfoFieldFlavorsVcpus:                                             "Flavors Vcpus",
+	CloudletInfoFieldFlavorsRam:                                               "Flavors Ram",
+	CloudletInfoFieldFlavorsDisk:                                              "Flavors Disk",
+	CloudletInfoFieldFlavorsPropMapKey:                                        "Flavors Prop Map Key",
+	CloudletInfoFieldFlavorsPropMapValue:                                      "Flavors Prop Map Value",
+	CloudletInfoFieldStatusTaskNumber:                                         "Status Task Number",
+	CloudletInfoFieldStatusMaxTasks:                                           "Status Max Tasks",
+	CloudletInfoFieldStatusTaskName:                                           "Status Task Name",
+	CloudletInfoFieldStatusStepName:                                           "Status Step Name",
+	CloudletInfoFieldStatusMsgCount:                                           "Status Msg Count",
+	CloudletInfoFieldStatusMsgs:                                               "Status Msgs",
+	CloudletInfoFieldContainerVersion:                                         "Container Version",
+	CloudletInfoFieldAvailabilityZonesName:                                    "Availability Zones Name",
+	CloudletInfoFieldAvailabilityZonesStatus:                                  "Availability Zones Status",
+	CloudletInfoFieldOsImagesName:                                             "Os Images Name",
+	CloudletInfoFieldOsImagesTags:                                             "Os Images Tags",
+	CloudletInfoFieldOsImagesProperties:                                       "Os Images Properties",
+	CloudletInfoFieldOsImagesDiskFormat:                                       "Os Images Disk Format",
+	CloudletInfoFieldControllerCacheReceived:                                  "Controller Cache Received",
+	CloudletInfoFieldMaintenanceState:                                         "Maintenance State",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsName:                         "Resources Snapshot Platform Vms Name",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsType:                         "Resources Snapshot Platform Vms Type",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsStatus:                       "Resources Snapshot Platform Vms Status",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsInfraFlavor:                  "Resources Snapshot Platform Vms Infra Flavor",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesExternalIp:        "Resources Snapshot Platform Vms Ipaddresses External Ip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsIpaddressesInternalIp:        "Resources Snapshot Platform Vms Ipaddresses Internal Ip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersName:               "Resources Snapshot Platform Vms Containers Name",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersType:               "Resources Snapshot Platform Vms Containers Type",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersStatus:             "Resources Snapshot Platform Vms Containers Status",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersClusterip:          "Resources Snapshot Platform Vms Containers Clusterip",
+	CloudletInfoFieldResourcesSnapshotPlatformVmsContainersRestarts:           "Resources Snapshot Platform Vms Containers Restarts",
+	CloudletInfoFieldResourcesSnapshotInfoName:                                "Resources Snapshot Info Name",
+	CloudletInfoFieldResourcesSnapshotInfoValue:                               "Resources Snapshot Info Value",
+	CloudletInfoFieldResourcesSnapshotInfoInfraMaxValue:                       "Resources Snapshot Info Infra Max Value",
+	CloudletInfoFieldResourcesSnapshotInfoQuotaMaxValue:                       "Resources Snapshot Info Quota Max Value",
+	CloudletInfoFieldResourcesSnapshotInfoDescription:                         "Resources Snapshot Info Description",
+	CloudletInfoFieldResourcesSnapshotInfoUnits:                               "Resources Snapshot Info Units",
+	CloudletInfoFieldResourcesSnapshotInfoAlertThreshold:                      "Resources Snapshot Info Alert Threshold",
+	CloudletInfoFieldResourcesSnapshotClusterInstsClusterKeyName:              "Resources Snapshot Cluster Insts Cluster Key Name",
+	CloudletInfoFieldResourcesSnapshotClusterInstsOrganization:                "Resources Snapshot Cluster Insts Organization",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyOrganization:            "Resources Snapshot Vm App Insts App Key Organization",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyName:                    "Resources Snapshot Vm App Insts App Key Name",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsAppKeyVersion:                 "Resources Snapshot Vm App Insts App Key Version",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyClusterKeyName:  "Resources Snapshot Vm App Insts Cluster Inst Key Cluster Key Name",
+	CloudletInfoFieldResourcesSnapshotVmAppInstsClusterInstKeyOrganization:    "Resources Snapshot Vm App Insts Cluster Inst Key Organization",
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyOrganization:           "Resources Snapshot K8 S App Insts App Key Organization",
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyName:                   "Resources Snapshot K8 S App Insts App Key Name",
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyVersion:                "Resources Snapshot K8 S App Insts App Key Version",
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKeyName: "Resources Snapshot K8 S App Insts Cluster Inst Key Cluster Key Name",
+	CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyOrganization:   "Resources Snapshot K8 S App Insts Cluster Inst Key Organization",
+	CloudletInfoFieldTrustPolicyState:                                         "Trust Policy State",
+	CloudletInfoFieldCompatibilityVersion:                                     "Compatibility Version",
+	CloudletInfoFieldPropertiesKey:                                            "Properties Key",
+	CloudletInfoFieldPropertiesValue:                                          "Properties Value",
+	CloudletInfoFieldNodeInfosName:                                            "Node Infos Name",
+	CloudletInfoFieldNodeInfosAllocatableKey:                                  "Node Infos Allocatable Key",
+	CloudletInfoFieldNodeInfosAllocatableValueWhole:                           "Node Infos Allocatable Value Whole",
+	CloudletInfoFieldNodeInfosAllocatableValueNanos:                           "Node Infos Allocatable Value Nanos",
+	CloudletInfoFieldNodeInfosCapacityKey:                                     "Node Infos Capacity Key",
+	CloudletInfoFieldNodeInfosCapacityValueWhole:                              "Node Infos Capacity Value Whole",
+	CloudletInfoFieldNodeInfosCapacityValueNanos:                              "Node Infos Capacity Value Nanos",
+	CloudletInfoFieldActiveCrmInstance:                                        "Active Crm Instance",
+	CloudletInfoFieldStandbyCrm:                                               "Standby Crm",
 }
 
 func (m *CloudletInfo) IsKeyField(s string) bool {
@@ -12353,6 +12377,44 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 			}
 		}
 	}
+	if len(m.ResourcesSnapshot.K8SAppInsts) != len(o.ResourcesSnapshot.K8SAppInsts) {
+		fields[CloudletInfoFieldResourcesSnapshotK8SAppInsts] = struct{}{}
+		fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+	} else {
+		for i1 := 0; i1 < len(m.ResourcesSnapshot.K8SAppInsts); i1++ {
+			if m.ResourcesSnapshot.K8SAppInsts[i1].AppKey.Organization != o.ResourcesSnapshot.K8SAppInsts[i1].AppKey.Organization {
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyOrganization] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.K8SAppInsts[i1].AppKey.Name != o.ResourcesSnapshot.K8SAppInsts[i1].AppKey.Name {
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.K8SAppInsts[i1].AppKey.Version != o.ResourcesSnapshot.K8SAppInsts[i1].AppKey.Version {
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKeyVersion] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsAppKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.K8SAppInsts[i1].ClusterInstKey.ClusterKey.Name != o.ResourcesSnapshot.K8SAppInsts[i1].ClusterInstKey.ClusterKey.Name {
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKeyName] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyClusterKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+			if m.ResourcesSnapshot.K8SAppInsts[i1].ClusterInstKey.Organization != o.ResourcesSnapshot.K8SAppInsts[i1].ClusterInstKey.Organization {
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKeyOrganization] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInstsClusterInstKey] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshotK8SAppInsts] = struct{}{}
+				fields[CloudletInfoFieldResourcesSnapshot] = struct{}{}
+			}
+		}
+	}
 	if m.TrustPolicyState != o.TrustPolicyState {
 		fields[CloudletInfoFieldTrustPolicyState] = struct{}{}
 	}
@@ -12648,6 +12710,15 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) int {
 				changed++
 			} else if m.ResourcesSnapshot.VmAppInsts != nil {
 				m.ResourcesSnapshot.VmAppInsts = nil
+				changed++
+			}
+		}
+		if _, set := fmap["17.5"]; set {
+			if src.ResourcesSnapshot.K8SAppInsts != nil {
+				m.ResourcesSnapshot.K8SAppInsts = src.ResourcesSnapshot.K8SAppInsts
+				changed++
+			} else if m.ResourcesSnapshot.K8SAppInsts != nil {
+				m.ResourcesSnapshot.K8SAppInsts = nil
 				changed++
 			}
 		}

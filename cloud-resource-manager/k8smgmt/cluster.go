@@ -277,7 +277,7 @@ func convertNodeResource(res v1.ResourceName, quantity resource.Quantity) (strin
 		name = cloudcommon.ResourceRamMb
 		scale = 1024 * 1024
 	case v1.ResourceEphemeralStorage:
-		name = cloudcommon.ResourceDisk
+		name = cloudcommon.ResourceDiskGb
 		scale = 1024 * 1024 * 1024
 	default:
 		// unsupported
