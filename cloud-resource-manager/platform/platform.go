@@ -193,6 +193,7 @@ type AccessApi interface {
 	GetSessionTokens(ctx context.Context, arg []byte) (map[string]string, error)
 	GetKafkaCreds(ctx context.Context) (*node.KafkaCreds, error)
 	GetGCSCreds(ctx context.Context) ([]byte, error)
+	GetFederationAPIKey(ctx context.Context, fedName string) (string, error)
 }
 
 var pfMaps = map[string]string{
