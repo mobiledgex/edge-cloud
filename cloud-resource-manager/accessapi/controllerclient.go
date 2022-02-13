@@ -27,6 +27,7 @@ const (
 	GetPublicCert           = "get-public-cert"
 	GetKafkaCreds           = "get-kafka-creds"
 	GetGCSCreds             = "get-gcs-creds"
+	GetFederationAPIKey     = "get-federation-apikey"
 )
 
 // ControllerClient implements platform.AccessApi for cloudlet
@@ -246,4 +247,16 @@ func (s *ControllerClient) GetGCSCreds(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 	return reply.Data, err
+}
+
+func (s *ControllerClient) GetFederationAPIKey(ctx context.Context, fedName string) (string, error) {
+	req := &edgeproto.AccessDataRequest{
+		Type: GetFederationAPIKey,
+		Data: []byte(fedName),
+	}
+	reply, err := s.client.GetAccessData(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	return string(reply.Data), err
 }

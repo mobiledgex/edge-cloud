@@ -183,7 +183,7 @@ func main() {
 			cloudletContainerVersion = *containerVersion
 		}
 		haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
-		haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey, platform)
+		haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey)
 		if err != nil {
 			log.FatalLog(err.Error())
 		}
@@ -215,25 +215,7 @@ func main() {
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
-		caches := pf.Caches{
-			FlavorCache:               &controllerData.FlavorCache,
-			TrustPolicyCache:          &controllerData.TrustPolicyCache,
-			TrustPolicyExceptionCache: &controllerData.TrustPolicyExceptionCache,
-			CloudletPoolCache:         controllerData.CloudletPoolCache,
-			ClusterInstCache:          &controllerData.ClusterInstCache,
-			ClusterInstInfoCache:      &controllerData.ClusterInstInfoCache,
-			AppCache:                  &controllerData.AppCache,
-			AppInstCache:              &controllerData.AppInstCache,
-			AppInstInfoCache:          &controllerData.AppInstInfoCache,
-			ResTagTableCache:          &controllerData.ResTagTableCache,
-			CloudletCache:             controllerData.CloudletCache,
-			CloudletInternalCache:     &controllerData.CloudletInternalCache,
-			VMPoolCache:               &controllerData.VMPoolCache,
-			VMPoolInfoCache:           &controllerData.VMPoolInfoCache,
-			GPUDriverCache:            &controllerData.GPUDriverCache,
-			NetworkCache:              &controllerData.NetworkCache,
-			CloudletInfoCache:         &controllerData.CloudletInfoCache,
-		}
+		caches := controllerData.GetCaches()
 
 		features := platform.GetFeatures()
 		if features.IsVMPool {
@@ -256,7 +238,7 @@ func main() {
 		}
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err != nil {
+		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
@@ -286,7 +268,7 @@ func main() {
 				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
 				myCloudletInfo.ControllerCacheReceived = true
 				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-				err := platform.SyncControllerCache(ctx, &caches, myCloudletInfo.State)
+				err := platform.SyncControllerCache(ctx, caches, myCloudletInfo.State)
 				if err != nil {
 					log.FatalLog("Platform sync fail", "err", err)
 				}
