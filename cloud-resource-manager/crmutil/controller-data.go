@@ -142,6 +142,28 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	return cd
 }
 
+func (cd *ControllerData) GetCaches() *platform.Caches {
+	return &platform.Caches{
+		FlavorCache:               &cd.FlavorCache,
+		TrustPolicyCache:          &cd.TrustPolicyCache,
+		TrustPolicyExceptionCache: &cd.TrustPolicyExceptionCache,
+		CloudletPoolCache:         cd.CloudletPoolCache,
+		ClusterInstCache:          &cd.ClusterInstCache,
+		ClusterInstInfoCache:      &cd.ClusterInstInfoCache,
+		AppCache:                  &cd.AppCache,
+		AppInstCache:              &cd.AppInstCache,
+		AppInstInfoCache:          &cd.AppInstInfoCache,
+		ResTagTableCache:          &cd.ResTagTableCache,
+		CloudletCache:             cd.CloudletCache,
+		CloudletInternalCache:     &cd.CloudletInternalCache,
+		VMPoolCache:               &cd.VMPoolCache,
+		VMPoolInfoCache:           &cd.VMPoolInfoCache,
+		GPUDriverCache:            &cd.GPUDriverCache,
+		NetworkCache:              &cd.NetworkCache,
+		CloudletInfoCache:         &cd.CloudletInfoCache,
+	}
+}
+
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
 func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
@@ -1329,7 +1351,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 
 	cloudletInfo := edgeproto.CloudletInfo{}
 	// for federated cloudlet, set cloudletinfo object if it is empty
-	if old == nil && new.State == edgeproto.TrackedState_CREATING && new.Key.FederatedOrganization != "" {
+	if old == nil && new.Key.FederatedOrganization != "" {
 		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 		if !found {
 			cloudletInfo.Key = new.Key
@@ -1928,7 +1950,7 @@ func (cd *ControllerData) FinishInfraResourceRefreshThread() {
 }
 
 // InitHAManager returns haEnabled, error
-func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
+func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string) (bool, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "InitHAManager", "haKey", haKey)
 	haEnabled := false
 	haCrm := CrmHAProcess{

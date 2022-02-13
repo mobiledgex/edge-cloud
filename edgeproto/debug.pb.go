@@ -36,7 +36,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type DebugRequest struct {
 	// Service node identifier (see NodeShow)
 	Node NodeKey `protobuf:"bytes,1,opt,name=node,proto3" json:"node"`
-	// Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled
+	// Comma separated list of debug level names: etcd,api,notify,dmereq,locapi,infra,metrics,upgrade,info,sampled,fedapi
 	Levels string `protobuf:"bytes,2,opt,name=levels,proto3" json:"levels,omitempty"`
 	// Debug command (use "help" to see available commands)
 	Cmd string `protobuf:"bytes,3,opt,name=cmd,proto3" json:"cmd,omitempty"`
