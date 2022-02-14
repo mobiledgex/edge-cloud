@@ -625,6 +625,10 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if err != nil {
 				return err
 			}
+		} else {
+			if in.SingleKubernetesClusterOwner != "" {
+				return fmt.Errorf("Single kubernetes cluster owner can only be set on a single cluster platform")
+			}
 		}
 
 		in.CreatedAt = dme.TimeToTimestamp(time.Now())
