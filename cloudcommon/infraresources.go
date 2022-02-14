@@ -67,7 +67,7 @@ var (
 		ResourceK8sClusters:           "Limit on number of k8s clusters than can be created",
 		ResourceMaxK8sNodesPerCluster: "Limit on maximum number of k8s nodes that can be created as part of k8s cluster",
 		ResourceTotalK8sNodes:         "Limit on total number of k8s nodes that can be created altogether",
-		ResourceNetworkLBs:            "Limit on maximum number of application load balancers that can be created in a region",
+		ResourceNetworkLBs:            "Limit on maximum number of network load balancers that can be created in a region",
 	}
 
 	ResourceMetricsDesc = map[string]string{
