@@ -72,7 +72,7 @@ type ControllerData struct {
 }
 
 const CloudletInfoCacheKey = "cloudletInfo"
-const CloudletInfoUpdateExpireMultiple = 20 // relative to PlatformHaInstanceActiveExpireTime long cloudletInfo cache is valid
+const CloudletInfoUpdateExpireMultiple = 20 // relative to PlatformHaInstanceActiveExpireTime how long cloudletInfo cache is valid
 const CloudletInfoUpdateRefreshMultiple = 9 // relative to PlatformHaInstanceActiveExpireTime how often to refresh cloudlet info
 
 func (cd *ControllerData) RecvAllEnd(ctx context.Context) {
@@ -1909,15 +1909,16 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 			select {
 			case <-time.After(cd.settings.ResourceSnapshotThreadInterval.TimeDuration()):
 				span := log.StartSpan(log.DebugLevelApi, "CloudletResourceRefresh thread")
-				defer span.Finish()
 				ctx := log.ContextWithSpan(context.Background(), span)
 				if !cd.highAvailabilityManager.PlatformInstanceActive {
 					log.SpanLog(ctx, log.DebugLevelInfra, "skipping resource snapshot as platform not active")
+					span.Finish()
 					continue
 				}
 				// Cloudlet creates can take many minutes, don't try and interrogate resources before platform is ready.
 				if cloudletInfo.State != dme.CloudletState_CLOUDLET_STATE_READY {
 					log.SpanLog(ctx, log.DebugLevelInfra, "CloudletResourceRefreshThread", "cloudlet not yet ready", cloudletInfo.Key, "curState", cloudletInfo.State)
+					span.Finish()
 					continue
 				}
 				count++
@@ -1925,6 +1926,7 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 					count, "ThreadIdleTime", cd.settings.ResourceSnapshotThreadInterval)
 				cd.vmResourceActionBegin()
 				cd.vmResourceActionEnd(ctx, &cloudletInfo.Key)
+				span.Finish()
 			case <-cd.finishInfraResourceThread:
 				done = true
 			}
@@ -1933,8 +1935,7 @@ func (cd *ControllerData) StartInfraResourceRefreshThread(cloudletInfo *edgeprot
 }
 
 func (cd *ControllerData) StartUpdateCloudletInfoHAThread(ctx context.Context) {
-	interval := cd.settings.PlatformHaInstanceActiveExpireTime.TimeDuration() * CloudletInfoUpdateRefreshMultiple
-	log.SpanLog(ctx, log.DebugLevelInfra, "StartUpdateCloudletInfoHAThread", "interval", interval)
+	log.SpanLog(ctx, log.DebugLevelInfra, "StartUpdateCloudletInfoHAThread", "interval", cd.settings.PlatformHaInstanceActiveExpireTime.TimeDuration()*CloudletInfoUpdateRefreshMultiple)
 	cd.finishUpdateCloudletInfoHAThread = make(chan struct{})
 
 	go func() {
@@ -1942,21 +1943,24 @@ func (cd *ControllerData) StartUpdateCloudletInfoHAThread(ctx context.Context) {
 		var cloudletInfo edgeproto.CloudletInfo
 		for !done {
 			select {
-			case <-time.After(interval):
+			case <-time.After(cd.settings.PlatformHaInstanceActiveExpireTime.TimeDuration() * CloudletInfoUpdateRefreshMultiple):
 				span := log.StartSpan(log.DebugLevelApi, "StartUpdateCloudletInfoHAThread thread")
-				defer span.Finish()
 				ctx := log.ContextWithSpan(context.Background(), span)
 				if !cd.PlatformCommonInitDone {
+					span.Finish()
 					continue
 				}
 				if !cd.highAvailabilityManager.PlatformInstanceActive {
+					span.Finish()
 					continue
 				}
 				if !cd.CloudletInfoCache.Get(&cd.cloudletKey, &cloudletInfo) {
 					log.SpanLog(ctx, log.DebugLevelInfra, "failed to find cloudlet info in cache", "cloudletKey", cd.cloudletKey)
+					span.Finish()
 					continue
 				}
 				cd.UpdateCloudletInfoHACache(ctx, &cloudletInfo)
+				span.Finish()
 			case <-cd.finishUpdateCloudletInfoHAThread:
 				log.SpanLog(ctx, log.DebugLevelInfra, "StartUpdateCloudletInfoHAThread done")
 				done = true

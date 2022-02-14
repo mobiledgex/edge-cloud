@@ -284,7 +284,7 @@ func main() {
 			log.SpanLog(ctx, log.DebugLevelInfo, "common init functions done, wait for active", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
 			controllerData.PlatformCommonInitDone = true
 
-			// wait for activity to be gained, This happens can happen on startup or on switchover
+			// wait for activity to be gained, This can happen on startup or on switchover
 			<-controllerData.WaitPlatformActive
 
 			// see if the cloudlet is ready, which can be the case on switchover
@@ -293,7 +293,7 @@ func main() {
 			}
 			log.SpanLog(ctx, log.DebugLevelInfo, "platform became active", "state", myCloudletInfo.State.String())
 			if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
-				log.SpanLog(ctx, log.DebugLevelInfo, "platform already is ready state due to switchover")
+				log.SpanLog(ctx, log.DebugLevelInfo, "platform already is in ready state due to switchover")
 			} else {
 				// need to perfom init steps for active
 				err = initPlatformActive(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)

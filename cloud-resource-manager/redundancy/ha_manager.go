@@ -150,9 +150,9 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 }
 
 func (s *HighAvailabilityManager) SetValue(ctx context.Context, key string, value string, expiration time.Duration) error {
-	status := s.redisClient.Set(key, value, expiration)
-	log.SpanLog(ctx, log.DebugLevelInfra, "SetValue Done", "expiration", expiration, "err", status.Err())
-	return status.Err()
+	result, err := s.redisClient.Set(key, value, expiration).Result()
+	log.SpanLog(ctx, log.DebugLevelInfra, "SetValue Done", "expiration", expiration, "result", result, "err", err)
+	return err
 }
 
 func (s *HighAvailabilityManager) GetValue(ctx context.Context, key string) (string, error) {

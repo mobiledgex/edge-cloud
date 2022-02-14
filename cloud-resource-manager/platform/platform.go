@@ -91,9 +91,9 @@ type Platform interface {
 	// Get platform features
 	GetFeatures() *Features
 	// InitActiveOrStandbyCommon is called once during CRM startup to do steps needed for both active or standby. If the platform does not support
-	// H/A and does not need separate steps for the active unit, then just this func can be implemented and InitActive left empty
+	// H/A and does not need separate steps for the active unit, then just this func can be implemented and InitActive can be left empty
 	InitActiveOrStandbyCommon(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error
-	// InitActive is only during active unit init.
+	// InitActive is only called during active unit init.
 	InitActive(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.

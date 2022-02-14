@@ -61,11 +61,25 @@ func (s *CrmHAProcess) ActiveChangedPostSwitch(ctx context.Context, platformActi
 
 	cloudletInfo.ActiveCrmInstance = s.controllerData.highAvailabilityManager.HARole
 	s.controllerData.UpdateCloudletInfo(ctx, &cloudletInfo)
-	s.controllerData.WaitPlatformActive <- true
+	select {
+	case s.controllerData.WaitPlatformActive <- true:
+	default:
+		// this is not expected because the channel should be filled either by transitioning from
+		// standby to active, or starting out active. But as there is no transition for the CRM to go
+		// active to standby without restarting, the channel should never be filled more than once
+		log.FatalLog("WaitPlatformActive channel already full")
+	}
 	return nil
 }
 
 func (s *CrmHAProcess) PlatformActiveOnStartup(ctx context.Context) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "PlatformActiveOnStartup")
-	s.controllerData.WaitPlatformActive <- true
+	select {
+	case s.controllerData.WaitPlatformActive <- true:
+	default:
+		// this is not expected because the channel should be filled either by transitioning from
+		// standby to active, or starting out active. But as there is no transition for the CRM to go
+		// active to standby without restarting, the channel should never be filled more than once
+		log.FatalLog("WaitPlatformActive channel already full")
+	}
 }
