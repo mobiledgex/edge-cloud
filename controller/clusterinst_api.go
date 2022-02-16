@@ -625,7 +625,7 @@ func (s *ClusterInstApi) getAllCloudletResources(ctx context.Context, stm concur
 	return allVmResources, diffVmResources, skipInfraCheck, nil
 }
 
-func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, stm concurrency.STM, key *edgeproto.CloudletKey, warnings []string) {
+func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, key *edgeproto.CloudletKey, warnings []string) {
 	alerts := cloudcommon.CloudletResourceUsageAlerts(ctx, key, warnings)
 	staleAlerts := make(map[edgeproto.AlertKey]struct{})
 	s.all.alertApi.cache.GetAllKeys(ctx, func(k *edgeproto.AlertKey, modRev int64) {
@@ -633,7 +633,7 @@ func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, stm conc
 	})
 	for _, alert := range alerts {
 		s.all.alertApi.setAlertMetadata(&alert)
-		s.all.alertApi.store.STMPut(stm, &alert)
+		s.all.alertApi.Update(ctx, &alert, 0)
 		delete(staleAlerts, alert.GetKeyVal())
 	}
 	delAlert := edgeproto.Alert{}
@@ -651,7 +651,9 @@ func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, stm conc
 			cloudletOrg != key.Organization {
 			continue
 		}
-		s.all.alertApi.store.STMDel(stm, &alertKey)
+		alertObj := edgeproto.Alert{}
+		edgeproto.AlertKeyStringParse(string(alertKey), &alertObj)
+		s.all.alertApi.Delete(ctx, &alertObj, 0)
 	}
 }
 
@@ -716,7 +718,7 @@ func (s *ClusterInstApi) validateResources(ctx context.Context, stm concurrency.
 	if genAlerts == GenResourceAlerts {
 		// generate alerts for these warnings
 		// clear off those alerts which are no longer firing
-		s.handleResourceUsageAlerts(ctx, stm, &cloudlet.Key, warnings)
+		s.handleResourceUsageAlerts(ctx, &cloudlet.Key, warnings)
 	}
 	return nil
 }

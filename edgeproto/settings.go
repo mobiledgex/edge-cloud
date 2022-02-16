@@ -149,6 +149,8 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 			v.CheckGTE(f, s.PlatformHaInstanceActiveExpireTime, Duration(500*time.Millisecond))
 		case SettingsFieldPlatformHaInstancePollInterval:
 			v.CheckGT(f, s.PlatformHaInstancePollInterval, Duration(10*time.Millisecond))
+		case SettingsFieldAlertKeepaliveRefreshInterval:
+			v.CheckGT(f, s.AlertKeepaliveRefreshInterval, Duration(30*time.Second))
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry

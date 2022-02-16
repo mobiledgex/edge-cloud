@@ -2,37 +2,52 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"strconv"
+	"strings"
+	"time"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/go-redis/redis"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 )
 
 type AlertApi struct {
 	all         *AllApis
 	sync        *Sync
-	store       edgeproto.AlertStore
 	cache       edgeproto.AlertCache
 	sourceCache edgeproto.AlertCache // source of truth from crm/etc
 }
 
-var ControllerCreatedAlerts = "ControllerCreatedAlerts"
+var (
+	ControllerCreatedAlerts = "ControllerCreatedAlerts"
+
+	AlertTTL = time.Duration(1 * time.Minute)
+)
 
 func NewAlertApi(sync *Sync, all *AllApis) *AlertApi {
 	alertApi := AlertApi{}
 	alertApi.all = all
 	alertApi.sync = sync
-	alertApi.store = edgeproto.NewAlertStore(sync.store)
 	edgeproto.InitAlertCache(&alertApi.cache)
 	edgeproto.InitAlertCache(&alertApi.sourceCache)
 	alertApi.sourceCache.SetUpdatedCb(alertApi.StoreUpdate)
 	alertApi.sourceCache.SetDeletedCb(alertApi.StoreDelete)
 	sync.RegisterCache(&alertApi.cache)
 	return &alertApi
+}
+
+func getAlertStoreKey(in *edgeproto.Alert) string {
+	return objstore.DbKeyString("Alert", in.GetKey())
+}
+
+func getAllAlertsKeyPattern() string {
+	return objstore.DbKeyPrefixString("Alert") + "/*"
 }
 
 // AppInstDown alert needs to set the HealthCheck in AppInst
@@ -127,11 +142,21 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 }
 
 func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
-	_, err := s.store.Put(ctx, new, nil, objstore.WithLease(s.all.syncLeaseData.ControllerAliveLease()))
+	// Alerts are stored in redis cache, instead of etcd for the following reasons:
+	// * They are transient in nature, this causes etcd fragmentation and hinders scalability
+	// * It can be re-triggered/re-computed and hence it doesn't need a persistent storage
+	key := getAlertStoreKey(new)
+	val, err := json.Marshal(new)
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to store alert in objstore", "key", new.GetKeyVal(), "err", err)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to marshal alert object", "key", new.GetKeyVal(), "err", err)
 		return
 	}
+	_, err = redisClient.Set(key, val, AlertTTL).Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to store alert in rediscache", "key", new.GetKeyVal(), "err", err)
+		return
+	}
+
 	name, ok := new.Labels["alertname"]
 	if !ok {
 		return
@@ -160,7 +185,6 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	_, ok := ctx.Value(ControllerCreatedAlerts).(*string)
 	if ok {
 		s.sourceCache.Delete(ctx, in, rev)
-		s.store.Delete(ctx, in, s.sync.syncWait)
 		// Reset HealthCheck state back to OK
 		name, ok := in.Labels["alertname"]
 		if ok && name == cloudcommon.AlertAppInstDown {
@@ -181,21 +205,33 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 func (s *AlertApi) StoreDelete(ctx context.Context, in *edgeproto.Alert) {
 	buf := edgeproto.Alert{}
 	var foundAlert bool
-	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, in.GetKey(), &buf) {
+	key := getAlertStoreKey(in)
+	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+		alertVal, err := pipe.Get(key).Result()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to get alert from redis", "key", in.GetKeyVal(), "err", err)
+			return nil
+		}
+		err = json.Unmarshal([]byte(alertVal), &buf)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to unmarshal alert from redis", "alert", alertVal, "err", err)
 			return nil
 		}
 		if buf.NotifyId != in.NotifyId || buf.Controller != ControllerId {
 			// updated by another thread or controller
 			return nil
 		}
-		s.store.STMDel(stm, in.GetKey())
 		foundAlert = true
+		_, err = pipe.Del(key).Result()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to delete alert from redis", "key", in.GetKeyVal(), "err", err)
+		}
 		return nil
 	})
 	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelNotify, "notify delete Alert", "key", in.GetKeyVal(), "err", err)
+		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to delete alert from redis", "key", in.GetKeyVal(), "err", err)
 	}
+
 	// Reset HealthCheck state back to OK
 	name, ok := in.Labels["alertname"]
 	if ok && foundAlert && name == cloudcommon.AlertAppInstDown {
@@ -237,7 +273,6 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
 		s.sourceCache.Delete(ctx, val, 0)
-		s.store.Delete(ctx, val, s.sync.syncWait)
 	}
 }
 
@@ -263,7 +298,6 @@ func (s *AlertApi) CleanupAppInstAlerts(ctx context.Context, key *edgeproto.AppI
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
 		s.sourceCache.Delete(ctx, val, 0)
-		s.store.Delete(ctx, val, s.sync.syncWait)
 	}
 }
 
@@ -293,7 +327,6 @@ func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
 		s.sourceCache.Delete(ctx, val, 0)
-		s.store.Delete(ctx, val, s.sync.syncWait)
 	}
 }
 
@@ -313,4 +346,86 @@ func (s *AlertApi) syncSourceData(ctx context.Context) error {
 		s.StoreUpdate(ctx, nil, alert)
 	}
 	return nil
+}
+
+func (s *AlertApi) refreshAlertKeepAliveThread() {
+	for {
+		refreshInterval := s.all.settingsApi.Get().AlertKeepaliveRefreshInterval.TimeDuration()
+		time.Sleep(refreshInterval)
+		span := log.StartSpan(log.DebugLevelApi, "Alert keepalive refresh thread")
+		ctx := log.ContextWithSpan(context.Background(), span)
+		s.refreshAlertKeepAlive(ctx)
+		span.Finish()
+	}
+}
+
+func (s *AlertApi) refreshAlertKeepAlive(ctx context.Context) {
+	alerts := make([]*edgeproto.Alert, 0)
+	s.sourceCache.Mux.Lock()
+	for _, data := range s.sourceCache.Objs {
+		alert := edgeproto.Alert{}
+		alert.DeepCopyIn(data.Obj)
+		alerts = append(alerts, &alert)
+	}
+	s.sourceCache.Mux.Unlock()
+	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+		for _, alert := range alerts {
+			if alert.Controller != ControllerId {
+				// not owned by this controller
+				continue
+			}
+			alertKey := getAlertStoreKey(alert)
+			_, err := pipe.Expire(alertKey, AlertTTL).Result()
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Refresh alert TTL failed", "alertKey", alertKey, "err", err)
+				continue
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to refresh alert keepalive", "err", err)
+	}
+	return
+}
+
+func (s *AlertApi) syncRedisWithControllerCache(ctx context.Context) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "Sync redis data with controller cache")
+	// this is telling redis to publish events since it's off by default.
+	_, err := redisClient.ConfigSet("notify-keyspace-events", "Kg$").Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "unable to set keyspace events", "err", err.Error())
+		return
+	}
+
+	pubsub := redisClient.PSubscribe(fmt.Sprintf("__keyspace@*__:%s", getAllAlertsKeyPattern()))
+	// Go channel to receives messages.
+	ch := pubsub.Channel()
+	for {
+		select {
+		case chObj := <-ch:
+			parts := strings.Split(chObj.Channel, ":")
+			alertKey := parts[1]
+			alertVal, err := redisClient.Get(alertKey).Result()
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to get alert from redis", "alertKey", alertKey, "err", err)
+				continue
+			}
+			var obj edgeproto.Alert
+			err = json.Unmarshal([]byte(alertVal), &obj)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to unmarshal alert from redis", "alert", alertVal, "err", err)
+				continue
+			}
+			event := chObj.Payload
+			switch event {
+			case rediscache.RedisEventSet:
+				s.cache.Update(ctx, &obj, 0)
+			case rediscache.RedisEventDel:
+				s.cache.Delete(ctx, &obj, 0)
+			}
+
+		}
+	}
+
 }
