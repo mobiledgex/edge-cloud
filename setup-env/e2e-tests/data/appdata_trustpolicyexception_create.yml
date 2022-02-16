@@ -109,6 +109,7 @@ cloudletpools:
     name: cloudlet2-pool
   cloudlets:
   - name: cloudlet2
+    organization: tmus
 
 trustpolicyexceptions:
 - key:

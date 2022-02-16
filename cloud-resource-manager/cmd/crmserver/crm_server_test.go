@@ -223,6 +223,7 @@ cloudletpools:
     name: cloud2-pool
   cloudlets:
   - name: cloud2
+    organization: TMUS
 
 networks:
 - key:

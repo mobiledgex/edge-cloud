@@ -756,7 +756,10 @@ func AddCloudletKeyToCloudletPool(ctx context.Context, objStore objstore.KVStore
 			}
 			newCloudletPool.Cloudlets = []edgeproto.CloudletKey{}
 			for _, clName := range oldCloudletPool.Cloudlets {
-				newCloudletPool.Cloudlets = append(newCloudletPool.Cloudlets, edgeproto.CloudletKey{Name: clName})
+				newCloudletPool.Cloudlets = append(newCloudletPool.Cloudlets, edgeproto.CloudletKey{
+					Name:         clName,
+					Organization: newCloudletPool.Key.Organization,
+				})
 			}
 			allApis.cloudletPoolApi.store.STMPut(stm, &newCloudletPool)
 			return nil

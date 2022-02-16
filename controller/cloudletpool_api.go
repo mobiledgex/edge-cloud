@@ -39,6 +39,9 @@ func (s *CloudletPoolApi) CreateCloudletPool(ctx context.Context, in *edgeproto.
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return in.Key.ExistsError()
 		}
+		for ii, _ := range in.Cloudlets {
+			in.Cloudlets[ii].Organization = in.Key.Organization
+		}
 		if err := s.checkCloudletsExist(stm, in); err != nil {
 			return err
 		}
@@ -104,6 +107,9 @@ func (s *CloudletPoolApi) UpdateCloudletPool(ctx context.Context, in *edgeproto.
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
+		for ii, _ := range in.Cloudlets {
+			in.Cloudlets[ii].Organization = in.Key.Organization
+		}
 		changed := cur.CopyInFields(in)
 		if err := cur.Validate(nil); err != nil {
 			return err
@@ -130,11 +136,7 @@ func (s *CloudletPoolApi) checkCloudletsExist(stm concurrency.STM, in *edgeproto
 		key.Organization = in.Key.Organization
 		cloudlet := edgeproto.Cloudlet{}
 		if !s.all.cloudletApi.store.STMGet(stm, &key, &cloudlet) {
-			str := key.Name
-			if key.FederatedOrganization != "" {
-				str += "/" + key.FederatedOrganization
-			}
-			notFound = append(notFound, str)
+			notFound = append(notFound, key.GetKeyString())
 		}
 		if cloudlet.DeletePrepare {
 			return key.BeingDeletedError()
@@ -160,8 +162,9 @@ func (s *CloudletPoolApi) AddCloudletPoolMember(ctx context.Context, in *edgepro
 		if !s.store.STMGet(stm, &in.Key, &cur) {
 			return in.Key.NotFoundError()
 		}
-		for _, cl := range cur.Cloudlets {
-			if cl.Matches(&in.Cloudlet) {
+		in.Cloudlet.Organization = in.Key.Organization
+		for _, clKey := range cur.Cloudlets {
+			if clKey.Matches(&in.Cloudlet) {
 				return fmt.Errorf("Cloudlet already part of pool")
 			}
 		}
@@ -182,6 +185,7 @@ func (s *CloudletPoolApi) RemoveCloudletPoolMember(ctx context.Context, in *edge
 			return in.Key.NotFoundError()
 		}
 		changed := false
+		in.Cloudlet.Organization = in.Key.Organization
 		for ii, _ := range cur.Cloudlets {
 			if cur.Cloudlets[ii].Matches(&in.Cloudlet) {
 				cur.Cloudlets = append(cur.Cloudlets[:ii], cur.Cloudlets[ii+1:]...)
@@ -220,7 +224,7 @@ func (s *CloudletPoolApi) UsesCloudlet(key *edgeproto.CloudletKey) []edgeproto.C
 		}
 		pool := data.Obj
 		for _, cloudletKey := range pool.Cloudlets {
-			if cloudletKey.Name == key.Name && cloudletKey.FederatedOrganization == key.FederatedOrganization {
+			if cloudletKey.Matches(key) {
 				cpKeys = append(cpKeys, cpKey)
 				break
 			}

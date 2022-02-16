@@ -1268,19 +1268,13 @@ func (cd *ControllerData) GetTrustPolicyExceptionsForCloudletPoolKey(ctx context
 }
 
 func (cd *ControllerData) handleTrustPolicyExceptionForCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]struct{}, cloudletPoolKey *edgeproto.CloudletPoolKey, action cloudcommon.Action) {
-	for cloudlet, _ := range cloudlets {
-		log.SpanLog(ctx, log.DebugLevelInfra, "In handleTrustPolicyExceptionForCloudlets()", "cloudlet", cloudlet, "action", action.String())
+	for cloudletKey, _ := range cloudlets {
+		log.SpanLog(ctx, log.DebugLevelInfra, "In handleTrustPolicyExceptionForCloudlets()", "cloudletKey", cloudletKey, "action", action.String())
 
 		tpeArray := cd.GetTrustPolicyExceptionsForCloudletPoolKey(ctx, *cloudletPoolKey)
 		if len(tpeArray) == 0 {
-			log.SpanLog(ctx, log.DebugLevelInfra, "No trust policy exceptions", "cloudlet", cloudlet, "action", action.String())
+			log.SpanLog(ctx, log.DebugLevelInfra, "No trust policy exceptions", "cloudletKey", cloudletKey, "action", action.String())
 			return
-		}
-
-		cloudletKey := edgeproto.CloudletKey{
-			Name:                  cloudlet.Name,
-			Organization:          cloudletPoolKey.Organization,
-			FederatedOrganization: cloudlet.FederatedOrganization,
 		}
 
 		for _, tpe := range tpeArray {

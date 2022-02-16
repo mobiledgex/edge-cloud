@@ -1,4 +1,6 @@
-1/CloudletPool/{"organization":"TDG","name":"cloudletpool-tdg"}
-{"key":{"organization":"TDG","name":"cloudletpool-tdg"},"cloudlets":["bonn-stage","munich-stage"]}
 1/CloudletPool/{"organization":"Telefonica","name":"Telefonica-Pool"}
-{"key":{"organization":"Telefonica","name":"Telefonica-Pool"}}
+{"key":{"organization":"Telefonica","name":"Telefonica-Pool"}, "created_at":"2022-02-14T09:29:57.129582495Z"}
+1/CloudletPool/{"organization":"TDG","name":"cloudletpool-tdg-stage"}
+{"key":{"organization":"TDG","name":"cloudletpool-tdg-stage"},"cloudlets":["bonn-stage","munich-stage"], "created_at":"2022-02-14T09:29:57.129582495Z"}
+1/CloudletPool/{"organization":"TDG","name":"cloudletpool-tdg-main"}
+{"key":{"organization":"TDG","name":"cloudletpool-tdg-main"},"cloudlets":["berlin-main"], "updated_at":"2022-02-14T09:29:57.129582495Z"}

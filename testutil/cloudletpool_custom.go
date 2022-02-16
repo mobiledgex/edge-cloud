@@ -35,8 +35,8 @@ func (s *DummyServer) RemoveCloudletPoolMember(ctx context.Context, in *edgeprot
 	if !found {
 		return &edgeproto.Result{}, in.Key.NotFoundError()
 	}
-	for ii, cloudlet := range data.Obj.Cloudlets {
-		if cloudlet.Matches(&in.Cloudlet) {
+	for ii, cloudletKey := range data.Obj.Cloudlets {
+		if cloudletKey.Matches(&in.Cloudlet) {
 			data.Obj.Cloudlets = append(data.Obj.Cloudlets[:ii], data.Obj.Cloudlets[ii+1:]...)
 			break
 		}
