@@ -19,6 +19,9 @@ const (
 	RedisGreatestId = "+"
 	RedisLastId     = "$"
 
+	RedisEventDel = "del"
+	RedisEventSet = "set"
+
 	DefaultCfgRedisOptional int = iota
 	DefaultCfgRedisStandalone
 	DefaultCfgRedisHA

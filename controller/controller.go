@@ -262,6 +262,9 @@ func startServices() error {
 
 	allApis.Start(ctx)
 
+	// Sync data from redis with controller cache
+	syncRedisData(ctx, allApis)
+
 	initDebug(ctx, &nodeMgr, allApis)
 
 	err = allApis.settingsApi.initDefaults(ctx)
@@ -270,6 +273,8 @@ func startServices() error {
 	}
 	// cleanup thread must start after settings are loaded
 	go allApis.clusterInstApi.cleanupThread()
+	// alert keepalive refresh thread
+	go allApis.alertApi.refreshAlertKeepAliveThread()
 
 	err = allApis.flowRateLimitSettingsApi.initDefaultRateLimitSettings(ctx)
 	if err != nil {

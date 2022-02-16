@@ -54,12 +54,16 @@ func TestController(t *testing.T) {
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
 
+	redisSyncData := initRedisSyncData(t, ctx)
+
 	err := startServices()
 	defer stopServices()
 	require.Nil(t, err, "start")
 	apis := services.allApis
 
 	reduceInfoTimeouts(t, ctx, apis)
+
+	testRedisSync(t, ctx, apis, redisSyncData)
 
 	testservices.CheckNotifySendOrder(t, notify.ServerMgrOne.GetSendOrder())
 
@@ -640,4 +644,37 @@ func testFlavorDeleteChecks(t *testing.T, ctx context.Context, apis1, apis2 *All
 		err = nil
 	}
 	require.Nil(t, err)
+}
+
+type testRedisSyncData struct {
+	alertCount int
+}
+
+func initRedisSyncData(t *testing.T, ctx context.Context) *testRedisSyncData {
+	out := testRedisSyncData{}
+
+	// Store alerts in redis
+	for _, alert := range testutil.AlertData {
+		key := getAlertStoreKey(&alert)
+		val, err := json.Marshal(alert)
+		require.Nil(t, err, "marshal alert data")
+		_, err = redisClient.Set(key, val, 0).Result()
+		require.Nil(t, err, "add alert data to redis")
+	}
+	out.alertCount = len(testutil.AlertData)
+
+	return &out
+}
+
+func testRedisSync(t *testing.T, ctx context.Context, apis *AllApis, expectedData *testRedisSyncData) {
+	// ensure that alerts are synced from redis
+	alertCount := len(apis.alertApi.cache.Objs)
+	require.Equal(t, expectedData.alertCount, alertCount)
+
+	// ensure that flush deletes all the alerts from redis cache
+	apis.alertApi.Flush(ctx, 0)
+	pattern := getAllAlertsKeyPattern()
+	alertKeys, err := redisClient.Keys(pattern).Result()
+	require.Nil(t, err, "get all alert keys")
+	require.Equal(t, 0, len(alertKeys), "no alerts present")
 }
