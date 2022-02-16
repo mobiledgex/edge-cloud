@@ -1,0 +1,4 @@
+1/CloudletPool/{"organization":"TDG","name":"cloudletpool-tdg"}
+{"key":{"organization":"TDG","name":"cloudletpool-tdg"},"cloudlets":[{"name":"bonn-stage"},{"name":"munich-stage"}],"created_at":"","updated_at":""}
+1/CloudletPool/{"organization":"Telefonica","name":"Telefonica-Pool"}
+{"key":{"organization":"Telefonica","name":"Telefonica-Pool"}}

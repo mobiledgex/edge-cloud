@@ -36,7 +36,7 @@ func TestCloudletPoolApi(t *testing.T) {
 	testutil.InternalCloudletPoolTest(t, "cud", apis.cloudletPoolApi, testutil.CloudletPoolData)
 
 	// create test cloudlet
-	cloudlet := edgeproto.Cloudlet{
+	testcloudlet := edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
 			Name:         "testcloudlet",
 			Organization: testutil.CloudletPoolData[0].Key.Organization,
@@ -48,46 +48,68 @@ func TestCloudletPoolApi(t *testing.T) {
 		},
 		CrmOverride: edgeproto.CRMOverride_IGNORE_CRM,
 	}
-	err := apis.cloudletApi.CreateCloudlet(&cloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	err := apis.cloudletApi.CreateCloudlet(&testcloudlet, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	fedcloudlet := edgeproto.Cloudlet{
+		Key: edgeproto.CloudletKey{
+			Name:                  "testfedcloudlet",
+			Organization:          testutil.CloudletPoolData[0].Key.Organization,
+			FederatedOrganization: "FedOrg",
+		},
+		NumDynamicIps: 100,
+		Location: dme.Loc{
+			Latitude:  40.712776,
+			Longitude: -74.005974,
+		},
+		CrmOverride: edgeproto.CRMOverride_IGNORE_CRM,
+	}
+	err = apis.cloudletApi.CreateCloudlet(&fedcloudlet, testutil.NewCudStreamoutCloudlet(ctx))
 	require.Nil(t, err)
 
-	// set up test data
-	poolKey := testutil.CloudletPoolData[0].Key
-	member := edgeproto.CloudletPoolMember{}
-	member.Key = poolKey
-	member.CloudletName = cloudlet.Key.Name
-	pool := edgeproto.CloudletPool{}
+	testcloudlets := []edgeproto.Cloudlet{testcloudlet, fedcloudlet}
 
-	// add member to pool
-	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
-	require.Nil(t, err)
-	found := apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
-	require.True(t, found, "get pool %v", poolKey)
-	require.Equal(t, 2, len(pool.Cloudlets))
+	count := 1
+	for _, cloudlet := range testcloudlets {
+		// set up test data
+		poolKey := testutil.CloudletPoolData[0].Key
+		member := edgeproto.CloudletPoolMember{}
+		member.Key = poolKey
+		member.Cloudlet = cloudlet.Key
+		pool := edgeproto.CloudletPool{}
 
-	// add duplicate should fail
-	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
-	require.NotNil(t, err)
+		// add member to pool
+		_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+		require.Nil(t, err)
+		count++
+		found := apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
+		require.True(t, found, "get pool %v", poolKey)
+		require.Equal(t, count, len(pool.Cloudlets))
 
-	// remove member from pool
-	_, err = apis.cloudletPoolApi.RemoveCloudletPoolMember(ctx, &member)
-	require.Nil(t, err)
-	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
-	require.True(t, found, "get pool %v", poolKey)
-	require.Equal(t, 1, len(pool.Cloudlets))
+		// add duplicate should fail
+		_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+		require.NotNil(t, err)
 
-	// use update to set members for next test
-	poolUpdate := testutil.CloudletPoolData[0]
-	poolUpdate.Cloudlets = append(poolUpdate.Cloudlets, member.CloudletName)
-	poolUpdate.Fields = []string{edgeproto.CloudletPoolFieldCloudlets}
-	require.Equal(t, 2, len(poolUpdate.Cloudlets))
-	_, err = apis.cloudletPoolApi.UpdateCloudletPool(ctx, &poolUpdate)
-	require.Nil(t, err)
-	found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
-	require.True(t, found, "get pool %v", poolKey)
-	require.Equal(t, 2, len(pool.Cloudlets))
+		// remove member from pool
+		_, err = apis.cloudletPoolApi.RemoveCloudletPoolMember(ctx, &member)
+		require.Nil(t, err)
+		count--
+		found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
+		require.True(t, found, "get pool %v", poolKey)
+		require.Equal(t, count, len(pool.Cloudlets))
 
-	// add cloudlet that doesn't exist, should fail
-	_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
-	require.NotNil(t, err)
+		// use update to set members for next test
+		poolUpdate := pool
+		poolUpdate.Cloudlets = append(poolUpdate.Cloudlets, member.Cloudlet)
+		poolUpdate.Fields = []string{edgeproto.CloudletPoolFieldCloudlets}
+		_, err = apis.cloudletPoolApi.UpdateCloudletPool(ctx, &poolUpdate)
+		require.Nil(t, err)
+		count++
+		found = apis.cloudletPoolApi.cache.Get(&poolKey, &pool)
+		require.True(t, found, "get pool %v", poolKey)
+		require.Equal(t, count, len(pool.Cloudlets))
+
+		// add cloudlet that doesn't exist, should fail
+		_, err = apis.cloudletPoolApi.AddCloudletPoolMember(ctx, &member)
+		require.NotNil(t, err)
+	}
 }

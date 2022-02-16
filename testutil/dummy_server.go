@@ -104,7 +104,7 @@ func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string,
 		pool := edgeproto.CloudletPool{}
 		pool.Key.Name = name
 		pool.Key.Organization = org
-		pool.Cloudlets = []string{"cloudlet1", "cloudlet2", "cloudlet3"}
+		pool.Cloudlets = []edgeproto.CloudletKey{{Name: "cloudlet1"}, {Name: "cloudlet2"}, {Name: "cloudlet3"}}
 		if a == Create {
 			s.CloudletPoolCache.Update(ctx, &pool, int64(ii))
 		} else if a == Delete {
