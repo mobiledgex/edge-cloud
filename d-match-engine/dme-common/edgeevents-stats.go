@@ -51,6 +51,7 @@ func NewEdgeEventStats(interval time.Duration, numShards uint, send func(ctx con
 	for ii, _ := range e.shards {
 		e.shards[ii].latencyStatMap = make(map[LatencyStatKey]*LatencyStat)
 		e.shards[ii].deviceStatMap = make(map[DeviceStatKey]*DeviceStat)
+		e.shards[ii].ecnStatMap = make(map[EcnStatKey]*EcnStat)
 		e.shards[ii].customStatMap = make(map[CustomStatKey]*CustomStat)
 	}
 	e.interval = interval
@@ -139,6 +140,23 @@ func (e *EdgeEventStats) RecordEdgeEventStatCall(call *EdgeEventStatCall) {
 			return
 		}
 		idx := util.GetShardIndex(key, e.numShards)
+
+		shard := &e.shards[idx]
+		shard.mux.Lock()
+		defer shard.mux.Unlock()
+		stat, found := shard.ecnStatMap[key]
+		if !found {
+			stat = NewEcnStat()
+		}
+		stat.Update(call.EcnStatInfo)
+		shard.ecnStatMap[key] = stat
+	} else if call.Metric == cloudcommon.EcnMetric {
+		key := call.EcnStatKey
+		emptyStatKey := EcnStatKey{}
+		if key == emptyStatKey {
+			return
+		}
+		idx := util.GetShardIndex(call.EcnStatKey, e.numShards)
 
 		shard := &e.shards[idx]
 		shard.mux.Lock()
