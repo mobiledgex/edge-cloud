@@ -621,11 +621,23 @@ func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 			return fmt.Errorf("Error in deleting namespace: %s - %v", out, err)
 		}
 	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespaced kconf", "name", names.KconfName)
+
 	// delete namespaced kconf
 	err = pc.DeleteFile(client, names.KconfName, pc.NoSudo)
 	if err != nil {
 		// just log the error
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespaced kconf", "err", err)
+	}
+
+	configYamlFile := names.MultitenantNamespace + ".yaml"
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespaced configYamlFile", "name", configYamlFile)
+
+	err = pc.DeleteFile(client, configYamlFile, pc.NoSudo)
+	if err != nil {
+		// just log the error
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespace configYamlFile", "err", err)
 	}
 	return nil
 }
