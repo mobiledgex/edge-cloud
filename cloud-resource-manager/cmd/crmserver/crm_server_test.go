@@ -222,7 +222,8 @@ cloudletpools:
     organization: DMUUS
     name: cloud2-pool
   cloudlets:
-  - cloud2
+  - name: cloud2
+    organization: DMUUS
 
 networks:
 - key:
@@ -879,7 +880,7 @@ func testTrustPolicyExceptionUpdates3(t *testing.T, ctx context.Context, ctrlHan
 	count := fakePlatform.TrustPolicyExceptionCount(ctx)
 	require.Equal(t, 4, count)
 
-	var CloudletsSaved [][]string
+	var CloudletsSaved [][]edgeproto.CloudletKey
 
 	for ii := range data.CloudletPools {
 		cloudletPool := &data.CloudletPools[ii]
