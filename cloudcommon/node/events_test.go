@@ -138,7 +138,7 @@ func TestEvents(t *testing.T) {
 			Organization: operOrg,
 			Name:         "pool1",
 		},
-		Cloudlets: []string{cloudlet1Name},
+		Cloudlets: []edgeproto.CloudletKey{cloudletKey},
 	}
 	nodeMgr.CloudletPoolLookup.GetCloudletPoolCache(NoRegion).Update(ctx, &pool, 0)
 	cpc, ok := nodeMgr.CloudletPoolLookup.(*CloudletPoolCache)
