@@ -455,7 +455,7 @@ func (s *CloudletPoolCache) GetPoolsForCloudletKey(in *CloudletKey) ([]CloudletP
 	}
 	cloudletPoolFilter := CloudletPool{
 		Key:       cloudletPoolKeyFilter,
-		Cloudlets: []string{in.Name},
+		Cloudlets: []CloudletKey{*in},
 	}
 	s.Show(&cloudletPoolFilter, func(obj *CloudletPool) error {
 		cloudletPoolKeys = append(cloudletPoolKeys, obj.Key)

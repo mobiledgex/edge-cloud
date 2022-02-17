@@ -1299,8 +1299,8 @@ var CloudletPoolData = []edgeproto.CloudletPool{
 			Organization: OperatorData[1],
 			Name:         "private",
 		},
-		Cloudlets: []string{
-			cloudletData[2].Key.Name,
+		Cloudlets: []edgeproto.CloudletKey{
+			cloudletData[2].Key,
 		},
 	},
 	edgeproto.CloudletPool{
@@ -1308,8 +1308,8 @@ var CloudletPoolData = []edgeproto.CloudletPool{
 			Organization: OperatorData[2],
 			Name:         "test-and-dev",
 		},
-		Cloudlets: []string{
-			cloudletData[3].Key.Name,
+		Cloudlets: []edgeproto.CloudletKey{
+			cloudletData[3].Key,
 		},
 	},
 	edgeproto.CloudletPool{
@@ -1317,8 +1317,8 @@ var CloudletPoolData = []edgeproto.CloudletPool{
 			Organization: OperatorData[2],
 			Name:         "enterprise",
 		},
-		Cloudlets: []string{
-			cloudletData[3].Key.Name,
+		Cloudlets: []edgeproto.CloudletKey{
+			cloudletData[3].Key,
 		},
 	},
 }
