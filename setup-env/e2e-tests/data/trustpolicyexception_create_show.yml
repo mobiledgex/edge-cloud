@@ -131,7 +131,8 @@ cloudletpools:
     organization: dmuus
     name: cloudlet2-pool
   cloudlets:
-  - cloudlet2
+  - organization: dmuus
+    name: cloudlet2
 clusterinsts:
 - key:
     clusterkey:

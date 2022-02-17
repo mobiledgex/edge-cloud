@@ -120,7 +120,7 @@ func (s *DeleteDataGen) GetAutoProvPolicyCloudletsRef(key *edgeproto.CloudletKey
 func (s *DeleteDataGen) GetCloudletPoolCloudletsRef(key *edgeproto.CloudletKey) (*edgeproto.CloudletPool, *testSupportData) {
 	ref := testutil.CloudletPoolData[0]
 	ref.Key.Organization = key.Organization
-	ref.Cloudlets = []string{key.Name}
+	ref.Cloudlets = []edgeproto.CloudletKey{*key}
 	return &ref, noSupportData
 }
 func (s *DeleteDataGen) GetNetworkKeyCloudletKeyRef(key *edgeproto.CloudletKey) (*edgeproto.Network, *testSupportData) {

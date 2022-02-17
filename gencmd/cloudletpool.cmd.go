@@ -35,6 +35,8 @@ func CloudletPoolHideTags(in *edgeproto.CloudletPool) {
 	for _, tag := range strings.Split(cli.HideTags, ",") {
 		tags[tag] = struct{}{}
 	}
+	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
+	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
@@ -433,24 +435,28 @@ var CloudletPoolRequiredArgs = []string{
 	"name",
 }
 var CloudletPoolOptionalArgs = []string{
-	"cloudlets",
+	"cloudlets:empty",
+	"cloudlets:#.name",
+	"cloudlets:#.federatedorganization",
 }
 var CloudletPoolAliasArgs = []string{
 	"org=key.organization",
 	"name=key.name",
 }
 var CloudletPoolComments = map[string]string{
-	"fields":        "Fields are used for the Update API to specify which fields to apply",
-	"org":           "Name of the organization this pool belongs to",
-	"name":          "CloudletPool Name",
-	"cloudlets":     "Cloudlets part of the pool, specify cloudlets:empty=true to clear",
-	"createdat":     "Created at time",
-	"updatedat":     "Updated at time",
-	"deleteprepare": "Preparing to be deleted",
+	"fields":                            "Fields are used for the Update API to specify which fields to apply",
+	"org":                               "Name of the organization this pool belongs to",
+	"name":                              "CloudletPool Name",
+	"cloudlets:empty":                   "Cloudlets part of the pool, specify cloudlets:empty=true to clear",
+	"cloudlets:#.organization":          "Organization of the cloudlet site",
+	"cloudlets:#.name":                  "Name of the cloudlet",
+	"cloudlets:#.federatedorganization": "Federated operator organization who shared this cloudlet",
+	"createdat":                         "Created at time",
+	"updatedat":                         "Updated at time",
+	"deleteprepare":                     "Preparing to be deleted",
 }
 var CloudletPoolSpecialArgs = map[string]string{
-	"cloudlets": "StringArray",
-	"fields":    "StringArray",
+	"fields": "StringArray",
 }
 var CloudletPoolMemberRequiredArgs = []string{
 	"org",
@@ -458,16 +464,20 @@ var CloudletPoolMemberRequiredArgs = []string{
 }
 var CloudletPoolMemberOptionalArgs = []string{
 	"cloudlet",
+	"federatedorg",
 }
 var CloudletPoolMemberAliasArgs = []string{
 	"org=key.organization",
 	"pool=key.name",
-	"cloudlet=cloudletname",
+	"cloudlet=cloudlet.name",
+	"federatedorg=cloudlet.federatedorganization",
 }
 var CloudletPoolMemberComments = map[string]string{
-	"org":      "Name of the organization this pool belongs to",
-	"pool":     "CloudletPool Name",
-	"cloudlet": "Cloudlet name",
+	"org":                   "Name of the organization this pool belongs to",
+	"pool":                  "CloudletPool Name",
+	"cloudlet.organization": "Organization of the cloudlet site",
+	"cloudlet":              "Name of the cloudlet",
+	"federatedorg":          "Federated operator organization who shared this cloudlet",
 }
 var CloudletPoolMemberSpecialArgs = map[string]string{}
 var AddCloudletPoolMemberRequiredArgs = []string{
@@ -475,10 +485,14 @@ var AddCloudletPoolMemberRequiredArgs = []string{
 	"pool",
 	"cloudlet",
 }
-var AddCloudletPoolMemberOptionalArgs = []string{}
+var AddCloudletPoolMemberOptionalArgs = []string{
+	"federatedorg",
+}
 var RemoveCloudletPoolMemberRequiredArgs = []string{
 	"org",
 	"pool",
 	"cloudlet",
 }
-var RemoveCloudletPoolMemberOptionalArgs = []string{}
+var RemoveCloudletPoolMemberOptionalArgs = []string{
+	"federatedorg",
+}
