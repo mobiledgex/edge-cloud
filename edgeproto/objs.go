@@ -1162,11 +1162,7 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 
 func (s *CloudletPool) GetCloudletKeys() map[CloudletKey]struct{} {
 	keys := make(map[CloudletKey]struct{})
-	for _, name := range s.Cloudlets {
-		key := CloudletKey{
-			Organization: s.Key.Organization,
-			Name:         name,
-		}
+	for _, key := range s.Cloudlets {
 		keys[key] = struct{}{}
 	}
 	return keys
