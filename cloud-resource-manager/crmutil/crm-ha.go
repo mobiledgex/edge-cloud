@@ -17,6 +17,7 @@ func (s *CrmHAProcess) ActiveChangedPreSwitch(ctx context.Context, platformActiv
 	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChangedPreSwitch", "platformActive", platformActive)
 	if !platformActive {
 		// not supported, CRM should have been killed within HA manager
+		log.SpanFromContext(ctx).Finish()
 		log.FatalLog("Error: Unexpected CRM transition to inactive", "cloudletKey", s.controllerData.cloudletKey)
 	}
 	if s.controllerData.platform != nil {

@@ -123,6 +123,7 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 	if !s.RedisConnectionFailed {
 		if s.PlatformInstanceActive || s.ActiveTransitionInProgress {
 			// this should not happen. Only 1 thread should be doing tryActive
+			log.SpanFromContext(ctx).Finish()
 			log.FatalLog("Platform already active", "PlatformInstanceActive", s.PlatformInstanceActive, "ActiveTransitionInProgress", s.ActiveTransitionInProgress)
 		}
 		// see if we are already active, which can happen if the process just died and was restarted quickly
@@ -282,12 +283,14 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				switchoverStartTime := time.Now()
 				err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
 				if err != nil {
+					log.SpanFromContext(ctx).Finish()
 					log.FatalLog("ActiveChangedPreSwitch failed", "err", err)
 				}
 				s.PlatformInstanceActive = true
 				s.ActiveTransitionInProgress = false
 				s.haWatcher.ActiveChangedPostSwitch(ctx, true)
 				if err != nil {
+					log.SpanFromContext(ctx).Finish()
 					log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
 				}
 				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
