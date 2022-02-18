@@ -279,27 +279,54 @@ func main() {
 			TrustPolicy:         cloudlet.TrustPolicy,
 			CacheDir:            *cacheDir,
 		}
-		// Perform init steps that are common for both active and standby
-		if err = initPlatformActiveStandbyCommon(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err == nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "common init functions done, wait for active", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
-			controllerData.PlatformCommonInitDone = true
 
+		conditionalInitRequired := true
+		currentInitVersion := platform.GetInitHAConditionalCompatibilityVersion(ctx)
+
+		// Perform init steps that are common in all cases
+		if err = initPlatformCommon(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err == nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "common init functions done", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
+			controllerData.PlatformCommonInitDone = true
+			// get caches from controller
+			waitControllerSync(ctx, &cloudlet, &myCloudletInfo, &caches, updateCloudletStatus)
+
+			log.SpanLog(ctx, log.DebugLevelInfo, "waiting for platform to become active", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
 			// wait for activity to be gained, This can happen on startup or on switchover
 			<-controllerData.WaitPlatformActive
 
-			// see if the cloudlet is ready, which can be the case on switchover
-			if !controllerData.CloudletInfoCache.Get(&myCloudletInfo.Key, &myCloudletInfo) {
-				log.FatalLog("failed to get cloudletInfo from controller after becoming active")
+			if highAvailabilityManager.HAEnabled {
+				// see if we can avoid full initialzation after switchover
+				prevInitVersion, err := highAvailabilityManager.GetValue(ctx, crmutil.InitCompatibilityVersionKey)
+				if err != nil {
+					log.FatalLog("unexpected error getting InitCompatibilityVersionKey from haMgr", "err", err)
+				}
+				versionMatch := prevInitVersion == currentInitVersion
+				log.SpanLog(ctx, log.DebugLevelInfo, "comparing previous and new init versions", "prevInitVersion", prevInitVersion, "currentInitVersion", currentInitVersion, "versionMatch", versionMatch)
+				if versionMatch {
+					// version matches now see if the cloudletInfo can be found
+					err = controllerData.GetCloudletInfoFromHACache(ctx, &myCloudletInfo)
+					if err != nil {
+						log.FatalLog("unexpected error getting cloudlet info from HA cache", "err", err)
+					}
+					if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
+						log.SpanLog(ctx, log.DebugLevelInfo, "conditional init not required as cloudlet was previously ready and versions match")
+						conditionalInitRequired = false
+					}
+				} else {
+					log.SpanLog(ctx, log.DebugLevelInfo, "version mismatch, full init required")
+				}
+
 			}
 			log.SpanLog(ctx, log.DebugLevelInfo, "platform became active", "state", myCloudletInfo.State.String())
-			if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
-				log.SpanLog(ctx, log.DebugLevelInfo, "platform already is in ready state due to switchover")
-			} else {
-				// need to perfom init steps for active
-				err = initPlatformActive(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
+		}
+		if err == nil {
+			if conditionalInitRequired {
+				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
 			}
 		}
-
+		if err == nil && highAvailabilityManager.HAEnabled {
+			err = highAvailabilityManager.SetValue(ctx, crmutil.InitCompatibilityVersionKey, currentInitVersion, 0)
+		}
 		if err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
@@ -370,8 +397,8 @@ func main() {
 	fmt.Println(sig)
 }
 
-//initPlatformActiveStandbyCommon does common init functions whether active or standby
-func initPlatformActiveStandbyCommon(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+//initPlatformCommon does common init functions whether active or standby
+func initPlatformCommon(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
 
@@ -381,17 +408,39 @@ func initPlatformActiveStandbyCommon(ctx context.Context, cloudlet *edgeproto.Cl
 	pfType := pf.GetType(cloudlet.PlatformType.String())
 
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
-	err := platform.InitActiveOrStandbyCommon(ctx, platformConfig, caches, haMgr, updateCallback)
+	err := platform.InitCommon(ctx, platformConfig, caches, haMgr, updateCallback)
 	return err
 }
 
-//initPlatformActiveCommon does init functions only for the active
-func initPlatformActive(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
-	log.SpanLog(ctx, log.DebugLevelInfo, "init steps for active")
+func waitControllerSync(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, caches *pf.Caches, updateCallback edgeproto.CacheUpdateCallback) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "waitControllerSync")
 
-	err := platform.InitActive(ctx, platformConfig, updateCallback)
+	myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+	controllerData.ControllerSyncInProgress = true
+	controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
+
+	// Wait for CRM to receive cluster and appinst data from notify
+	select {
+	case <-controllerData.ControllerSyncDone:
+		if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, cloudlet) {
+			log.FatalLog("failed to get sync data from controller")
+		}
+	case <-time.After(ControllerTimeout):
+		log.FatalLog("Timed out waiting for sync data from controller")
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
+	myCloudletInfo.ControllerCacheReceived = true
+	controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
+}
+
+//initPlatformHAConditionalCommon does init functions for first startup, or a switchover which requires full initialization
+func initPlatformHAConditional(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.SpanLog(ctx, log.DebugLevelInfo, "initPlatformHAConditional")
+
+	err := platform.InitHAConditional(ctx, platformConfig, updateCallback)
 	if err != nil {
-		log.FatalLog("Platform InitActive fail", "err", err)
+		log.FatalLog("Platform InitHAConditional fail", "err", err)
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
 	updateCallback(edgeproto.UpdateTask, "Gathering Cloudlet Info")
@@ -402,28 +451,6 @@ func initPlatformActive(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloud
 		myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 	} else {
-		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
-		log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-		controllerData.ControllerSyncInProgress = true
-		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-
-		// Wait for CRM to receive cluster and appinst data from notify
-		select {
-		case <-controllerData.ControllerSyncDone:
-			if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, cloudlet) {
-				log.FatalLog("failed to get sync data from controller")
-			}
-		case <-time.After(ControllerTimeout):
-			log.FatalLog("Timed out waiting for sync data from controller")
-		}
-		log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
-		myCloudletInfo.ControllerCacheReceived = true
-		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-		err := platform.SyncControllerCache(ctx, caches, myCloudletInfo.State)
-		if err != nil {
-			log.FatalLog("Platform sync fail", "err", err)
-		}
-
 		// Update AppInst runtime info in case it has changed
 		controllerData.RefreshAppInstRuntime(ctx)
 		resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
@@ -445,7 +472,13 @@ func initPlatformActive(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloud
 			myCloudletInfo.ResourcesSnapshot = *resources
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "initPlatformActive done", "cloudlet state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+	if err == nil {
+		err = platform.PerformUpgrades(ctx, caches, myCloudletInfo.State)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Platform upgrades failed", "err", err)
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "initPlatformHAConditional done", "cloudlet state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo, "err", err)
 	return err
 }
 

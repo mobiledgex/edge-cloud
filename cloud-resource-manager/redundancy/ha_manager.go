@@ -279,19 +279,24 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				timeLastBumpActive = time.Now()
 				// switchover is handled in a separate thread so we do not miss polling redis
 				s.ActiveTransitionInProgress = true
-				go func() {
-					err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
-					if err != nil {
-						log.FatalLog("ActiveChangedPreSwitch failed", "err", err)
-					}
-					s.PlatformInstanceActive = true
-					s.ActiveTransitionInProgress = false
-					s.haWatcher.ActiveChangedPostSwitch(ctx, true)
-					if err != nil {
-						log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
-					}
-					s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
-				}()
+				switchoverStartTime := time.Now()
+				err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
+				if err != nil {
+					log.FatalLog("ActiveChangedPreSwitch failed", "err", err)
+				}
+				s.PlatformInstanceActive = true
+				s.ActiveTransitionInProgress = false
+				s.haWatcher.ActiveChangedPostSwitch(ctx, true)
+				if err != nil {
+					log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
+				}
+				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
+				switchoverDuration := time.Since(switchoverStartTime)
+				log.SpanLog(ctx, log.DebugLevelInfra, "switchover done", "switchoverDuration", switchoverDuration)
+				if switchoverDuration > s.activePollInterval {
+					// indicates some long running task was done by the watcher in ActiveChangedPreSwitch or ActiveChangedPostSwitch
+					log.SpanLog(ctx, log.DebugLevelInfra, "Warning: switchover took excessive time", "switchoverDuration", switchoverDuration)
+				}
 			} else {
 				time.Sleep(s.activePollInterval)
 				continue

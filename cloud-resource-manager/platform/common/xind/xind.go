@@ -19,13 +19,17 @@ type Xind struct {
 	clusterManager ClusterManager
 }
 
-func (s *Xind) InitActiveOrStandbyCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, clusterManager ClusterManager, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Xind) InitCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, clusterManager ClusterManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	s.Caches = caches
 	s.clusterManager = clusterManager
 	return nil
 }
-func (s *Xind) InitActive(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Xind) InitHAConditional(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	return nil
+}
+
+func (s *Xind) GetInitHAConditionalCompatibilityVersion(ctx context.Context) string {
+	return "xind-1.0"
 }
 
 func (s *Xind) GetFeatures() *platform.Features {

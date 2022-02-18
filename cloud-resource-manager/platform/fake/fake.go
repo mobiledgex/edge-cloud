@@ -128,7 +128,7 @@ func UpdateResourcesMax() error {
 	return nil
 }
 
-func (s *Platform) InitActiveOrStandbyCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) InitCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
@@ -154,8 +154,12 @@ func (s *Platform) InitActiveOrStandbyCommon(ctx context.Context, platformConfig
 	return nil
 }
 
-func (s *Platform) InitActive(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) InitHAConditional(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
 	return nil
+}
+
+func (s *Platform) GetInitHAConditionalCompatibilityVersion(ctx context.Context) string {
+	return "fake-1.0"
 }
 
 func (s *Platform) GetFeatures() *platform.Features {
@@ -705,8 +709,8 @@ func (s *Platform) runDebug(ctx context.Context, req *edgeproto.DebugRequest) st
 	return "ran some debug"
 }
 
-func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Caches, cloudletState dme.CloudletState) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerCache", "state", cloudletState)
+func (s *Platform) PerformUpgrades(ctx context.Context, caches *platform.Caches, cloudletState dme.CloudletState) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "PerformUpgrades", "state", cloudletState)
 	if caches == nil {
 		return fmt.Errorf("caches is nil")
 	}
