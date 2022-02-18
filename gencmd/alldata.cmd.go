@@ -125,6 +125,8 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		}
 	}
 	for i0 := 0; i0 < len(in.CloudletPools); i0++ {
+		for i1 := 0; i1 < len(in.CloudletPools[i0].Cloudlets); i1++ {
+		}
 		if _, found := tags["timestamp"]; found {
 			in.CloudletPools[i0].CreatedAt = distributed_match_engine.Timestamp{}
 		}
@@ -398,6 +400,11 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.secondarynotifysrvaddr",
 	"cloudlets:#.dnslabel",
 	"cloudlets:#.rootlbfqdn",
+	"cloudlets:#.federationconfig.federationname",
+	"cloudlets:#.federationconfig.selffederationid",
+	"cloudlets:#.federationconfig.partnerfederationid",
+	"cloudlets:#.federationconfig.zonecountrycode",
+	"cloudlets:#.federationconfig.partnerfederationaddr",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -468,7 +475,9 @@ var AllDataOptionalArgs = []string{
 	"cloudletpools:#.fields",
 	"cloudletpools:#.key.organization",
 	"cloudletpools:#.key.name",
-	"cloudletpools:#.cloudlets",
+	"cloudletpools:#.cloudlets:#.organization",
+	"cloudletpools:#.cloudlets:#.name",
+	"cloudletpools:#.cloudlets:#.federatedorganization",
 	"cloudletpools:#.createdat",
 	"cloudletpools:#.updatedat",
 	"cloudletpools:#.deleteprepare",
@@ -912,6 +921,11 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.secondarynotifysrvaddr":                                             "Address for the secondary CRM notify listener to run on",
 	"cloudlets:#.dnslabel":                                                           "DNS label that is unique within the region",
 	"cloudlets:#.rootlbfqdn":                                                         "Root LB FQDN which is globally unique",
+	"cloudlets:#.federationconfig.federationname":                                    "Federation name",
+	"cloudlets:#.federationconfig.selffederationid":                                  "Self federation ID",
+	"cloudlets:#.federationconfig.partnerfederationid":                               "Partner federation ID",
+	"cloudlets:#.federationconfig.zonecountrycode":                                   "Cloudlet zone country code",
+	"cloudlets:#.federationconfig.partnerfederationaddr":                             "Partner federation address",
 	"cloudletinfos:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                               "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                       "Name of the cloudlet",
@@ -976,7 +990,9 @@ var AllDataComments = map[string]string{
 	"cloudletpools:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"cloudletpools:#.key.organization":                                               "Name of the organization this pool belongs to",
 	"cloudletpools:#.key.name":                                                       "CloudletPool Name",
-	"cloudletpools:#.cloudlets":                                                      "Cloudlets part of the pool",
+	"cloudletpools:#.cloudlets:#.organization":                                       "Organization of the cloudlet site",
+	"cloudletpools:#.cloudlets:#.name":                                               "Name of the cloudlet",
+	"cloudletpools:#.cloudlets:#.federatedorganization":                              "Federated operator organization who shared this cloudlet",
 	"cloudletpools:#.createdat":                                                      "Created at time",
 	"cloudletpools:#.updatedat":                                                      "Updated at time",
 	"cloudletpools:#.deleteprepare":                                                  "Preparing to be deleted",
@@ -1278,7 +1294,6 @@ var AllDataSpecialArgs = map[string]string{
 	"cloudletinfos:#.flavors:#.propmap":       "StringToString",
 	"cloudletinfos:#.properties":              "StringToString",
 	"cloudletinfos:#.status.msgs":             "StringArray",
-	"cloudletpools:#.cloudlets":               "StringArray",
 	"cloudletpools:#.fields":                  "StringArray",
 	"cloudlets:#.accessvars":                  "StringToString",
 	"cloudlets:#.allianceorgs":                "StringArray",

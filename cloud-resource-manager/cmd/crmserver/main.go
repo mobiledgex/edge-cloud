@@ -170,7 +170,7 @@ func main() {
 	defer notifyClient.Stop()
 
 	haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
-	haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey, platform)
+	haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey)
 	if err != nil {
 		log.FatalLog(err.Error())
 	}
@@ -218,25 +218,7 @@ func main() {
 		}
 		log.SpanLog(ctx, log.DebugLevelInfo, "fetched cloudlet cache from controller", "cloudlet", cloudlet)
 
-		caches := pf.Caches{
-			FlavorCache:               &controllerData.FlavorCache,
-			TrustPolicyCache:          &controllerData.TrustPolicyCache,
-			TrustPolicyExceptionCache: &controllerData.TrustPolicyExceptionCache,
-			CloudletPoolCache:         controllerData.CloudletPoolCache,
-			ClusterInstCache:          &controllerData.ClusterInstCache,
-			ClusterInstInfoCache:      &controllerData.ClusterInstInfoCache,
-			AppCache:                  &controllerData.AppCache,
-			AppInstCache:              &controllerData.AppInstCache,
-			AppInstInfoCache:          &controllerData.AppInstInfoCache,
-			ResTagTableCache:          &controllerData.ResTagTableCache,
-			CloudletCache:             controllerData.CloudletCache,
-			CloudletInternalCache:     &controllerData.CloudletInternalCache,
-			VMPoolCache:               &controllerData.VMPoolCache,
-			VMPoolInfoCache:           &controllerData.VMPoolInfoCache,
-			GPUDriverCache:            &controllerData.GPUDriverCache,
-			NetworkCache:              &controllerData.NetworkCache,
-			CloudletInfoCache:         &controllerData.CloudletInfoCache,
-		}
+		caches := controllerData.GetCaches()
 
 		features := platform.GetFeatures()
 		if features.IsVMPool {
@@ -284,11 +266,11 @@ func main() {
 		currentInitVersion := platform.GetInitHAConditionalCompatibilityVersion(ctx)
 
 		// Perform init steps that are common in all cases
-		if err = initPlatformCommon(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err == nil {
+		if err = initPlatformCommon(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err == nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "common init functions done", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
 			controllerData.PlatformCommonInitDone = true
 			// get caches from controller
-			waitControllerSync(ctx, &cloudlet, &myCloudletInfo, &caches, updateCloudletStatus)
+			waitControllerSync(ctx, &cloudlet, &myCloudletInfo, caches, updateCloudletStatus)
 
 			log.SpanLog(ctx, log.DebugLevelInfo, "waiting for platform to become active", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
 			// wait for activity to be gained, This can happen on startup or on switchover
@@ -321,7 +303,7 @@ func main() {
 		}
 		if err == nil {
 			if conditionalInitRequired {
-				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, &caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
+				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
 			}
 		}
 		if err == nil && highAvailabilityManager.HAEnabled {

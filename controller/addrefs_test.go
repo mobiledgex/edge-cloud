@@ -85,8 +85,8 @@ func (s *AddRefsDataGen) GetAddCloudletPoolMemberTestObj() (*edgeproto.CloudletP
 	cloudletPool.Cloudlets = nil
 
 	testObj := edgeproto.CloudletPoolMember{
-		Key:          cloudletPool.Key,
-		CloudletName: cloudlet.Key.Name,
+		Key:      cloudletPool.Key,
+		Cloudlet: cloudlet.Key,
 	}
 	supportData := &testSupportData{}
 	supportData.Cloudlets = []edgeproto.Cloudlet{cloudlet}
@@ -204,7 +204,7 @@ func (s *AddRefsDataGen) GetCreateCloudletPoolTestObj() (*edgeproto.CloudletPool
 
 	cloudletPool := testutil.CloudletPoolData[0]
 	cloudletPool.Key.Organization = cloudlet.Key.Organization
-	cloudletPool.Cloudlets = []string{cloudlet.Key.Name}
+	cloudletPool.Cloudlets = []edgeproto.CloudletKey{cloudlet.Key}
 
 	supportData := &testSupportData{}
 	supportData.Cloudlets = []edgeproto.Cloudlet{cloudlet}

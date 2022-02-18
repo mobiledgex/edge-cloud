@@ -130,6 +130,23 @@ func GetAuthToken(ctx context.Context, host string, authApi RegistryAuthApi, use
 	return tokResp.AccessToken, nil
 }
 
+func GetQueryArgsFromObj(obj interface{}) (string, error) {
+	out, err := json.Marshal(&obj)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get query args from obj %v, marshal error: %v", obj, err)
+	}
+	kv := make(map[string]string)
+	err = json.Unmarshal(out, &kv)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get query args from obj %v, unmarshal error: %v", string(out), err)
+	}
+	val := url.Values{}
+	for k, v := range kv {
+		val.Set(k, v)
+	}
+	return val.Encode(), nil
+}
+
 func SendHTTPReqAuth(ctx context.Context, method, regUrl string, auth *RegistryAuth, reqConfig *RequestConfig, body io.Reader) (*http.Response, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "send http request", "method", method, "url", regUrl, "reqConfig", reqConfig)
 

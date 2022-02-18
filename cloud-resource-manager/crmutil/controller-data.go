@@ -152,6 +152,28 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 	return cd
 }
 
+func (cd *ControllerData) GetCaches() *platform.Caches {
+	return &platform.Caches{
+		FlavorCache:               &cd.FlavorCache,
+		TrustPolicyCache:          &cd.TrustPolicyCache,
+		TrustPolicyExceptionCache: &cd.TrustPolicyExceptionCache,
+		CloudletPoolCache:         cd.CloudletPoolCache,
+		ClusterInstCache:          &cd.ClusterInstCache,
+		ClusterInstInfoCache:      &cd.ClusterInstInfoCache,
+		AppCache:                  &cd.AppCache,
+		AppInstCache:              &cd.AppInstCache,
+		AppInstInfoCache:          &cd.AppInstInfoCache,
+		ResTagTableCache:          &cd.ResTagTableCache,
+		CloudletCache:             cd.CloudletCache,
+		CloudletInternalCache:     &cd.CloudletInternalCache,
+		VMPoolCache:               &cd.VMPoolCache,
+		VMPoolInfoCache:           &cd.VMPoolInfoCache,
+		GPUDriverCache:            &cd.GPUDriverCache,
+		NetworkCache:              &cd.NetworkCache,
+		CloudletInfoCache:         &cd.CloudletInfoCache,
+	}
+}
+
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
 func (cd *ControllerData) GatherCloudletInfo(ctx context.Context, info *edgeproto.CloudletInfo) error {
@@ -598,8 +620,8 @@ func (cd *ControllerData) handleTrustPolicyExceptionForCloudlet(ctx context.Cont
 		return err
 	}
 
-	cloudlets := make(map[string]struct{})
-	cloudlets[cloudletKey.Name] = struct{}{}
+	cloudlets := make(map[edgeproto.CloudletKey]struct{})
+	cloudlets[*cloudletKey] = struct{}{}
 
 	for _, cloudletPoolKey := range cloudletPoolList {
 		cd.handleTrustPolicyExceptionForCloudlets(ctx, cloudlets, &cloudletPoolKey, action)
@@ -1257,19 +1279,14 @@ func (cd *ControllerData) GetTrustPolicyExceptionsForCloudletPoolKey(ctx context
 	return tpeArray
 }
 
-func (cd *ControllerData) handleTrustPolicyExceptionForCloudlets(ctx context.Context, cloudlets map[string]struct{}, cloudletPoolKey *edgeproto.CloudletPoolKey, action cloudcommon.Action) {
-	for cloudletName, _ := range cloudlets {
-		log.SpanLog(ctx, log.DebugLevelInfra, "In handleTrustPolicyExceptionForCloudlets()", "cloudletName:", cloudletName, "action", action.String())
+func (cd *ControllerData) handleTrustPolicyExceptionForCloudlets(ctx context.Context, cloudlets map[edgeproto.CloudletKey]struct{}, cloudletPoolKey *edgeproto.CloudletPoolKey, action cloudcommon.Action) {
+	for cloudletKey, _ := range cloudlets {
+		log.SpanLog(ctx, log.DebugLevelInfra, "In handleTrustPolicyExceptionForCloudlets()", "cloudletKey", cloudletKey, "action", action.String())
 
 		tpeArray := cd.GetTrustPolicyExceptionsForCloudletPoolKey(ctx, *cloudletPoolKey)
 		if len(tpeArray) == 0 {
-			log.SpanLog(ctx, log.DebugLevelInfra, "No trust policy exceptions", "cloudletName:", cloudletName, "action", action.String())
+			log.SpanLog(ctx, log.DebugLevelInfra, "No trust policy exceptions", "cloudletKey", cloudletKey, "action", action.String())
 			return
-		}
-
-		cloudletKey := edgeproto.CloudletKey{
-			Name:         cloudletName,
-			Organization: cloudletPoolKey.Organization,
 		}
 
 		for _, tpe := range tpeArray {
@@ -1289,11 +1306,11 @@ func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeprot
 		log.SpanLog(ctx, log.DebugLevelInfra, "In cloudletPoolChanged() no old cloudletpool")
 		return
 	}
-	cloudletsOld := make(map[string]struct{})
-	cloudletsNew := make(map[string]struct{})
+	cloudletsOld := make(map[edgeproto.CloudletKey]struct{})
+	cloudletsNew := make(map[edgeproto.CloudletKey]struct{})
 
-	cloudletsAdded := make(map[string]struct{})
-	cloudletsRemoved := make(map[string]struct{})
+	cloudletsAdded := make(map[edgeproto.CloudletKey]struct{})
+	cloudletsRemoved := make(map[edgeproto.CloudletKey]struct{})
 
 	for _, oldCloudlet := range old.Cloudlets {
 		cloudletsOld[oldCloudlet] = struct{}{}
@@ -1303,7 +1320,7 @@ func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeprot
 	}
 
 	for _, oldCloudlet := range old.Cloudlets {
-		if oldCloudlet == "" {
+		if oldCloudlet.Name == "" {
 			continue
 		}
 		_, ok := cloudletsNew[oldCloudlet]
@@ -1314,7 +1331,7 @@ func (cd *ControllerData) cloudletPoolChanged(ctx context.Context, old *edgeprot
 	}
 
 	for _, newCloudlet := range new.Cloudlets {
-		if newCloudlet == "" {
+		if newCloudlet.Name == "" {
 			continue
 		}
 		_, ok := cloudletsOld[newCloudlet]
@@ -1341,7 +1358,7 @@ func (cd *ControllerData) cloudletChanged(ctx context.Context, old *edgeproto.Cl
 
 	cloudletInfo := edgeproto.CloudletInfo{}
 	// for federated cloudlet, set cloudletinfo object if it is empty
-	if old == nil && new.State == edgeproto.TrackedState_CREATING && new.Key.FederatedOrganization != "" {
+	if old == nil && new.Key.FederatedOrganization != "" {
 		found := cd.CloudletInfoCache.Get(&new.Key, &cloudletInfo)
 		if !found {
 			cloudletInfo.Key = new.Key
@@ -1976,7 +1993,7 @@ func (cd *ControllerData) FinishUpdateCloudletInfoHAThread() {
 }
 
 // InitHAManager returns haEnabled, error
-func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string, platform platform.Platform) (bool, error) {
+func (cd *ControllerData) InitHAManager(ctx context.Context, haMgr *redundancy.HighAvailabilityManager, haKey string) (bool, error) {
 	log.SpanLog(ctx, log.DebugLevelInfra, "InitHAManager", "haKey", haKey)
 	haEnabled := false
 	haCrm := CrmHAProcess{
