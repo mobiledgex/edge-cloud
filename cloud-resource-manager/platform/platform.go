@@ -97,7 +97,7 @@ type Platform interface {
 	// 2) in a switchover case if the previouly-active unit is running a different version as specified by GetInitHAConditionalCompatibilityVersion
 	InitHAConditional(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
 	// GetInitializationCompatibilityVersion returns a version as a string. When doing switchovers, if the new version matches the previous version, then InitHAConditional
-	// is not called again. If there is a mismatch,
+	// is not called again. If there is a mismatch, then InitHAConditional will be called again.
 	GetInitHAConditionalCompatibilityVersion(ctx context.Context) string
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
