@@ -90,8 +90,15 @@ type Platform interface {
 	GetVersionProperties() map[string]string
 	// Get platform features
 	GetFeatures() *Features
-	// Init is called once during CRM startup.
-	Init(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error
+	// InitCommon is called once during CRM startup to do steps needed for both active or standby. If the platform does not support
+	// H/A and does not need separate steps for the active unit, then just this func can be implemented and InitHAConditional can be left empty
+	InitCommon(ctx context.Context, platformConfig *PlatformConfig, caches *Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error
+	// InitHAConditional is only needed for platforms which support H/A. It is called in the following cases: 1) when platform initially starts in a non-switchover case
+	// 2) in a switchover case if the previouly-active unit is running a different version as specified by GetInitHAConditionalCompatibilityVersion
+	InitHAConditional(ctx context.Context, platformConfig *PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error
+	// GetInitializationCompatibilityVersion returns a version as a string. When doing switchovers, if the new version matches the previous version, then InitHAConditional
+	// is not called again. If there is a mismatch, then InitHAConditional will be called again.
+	GetInitHAConditionalCompatibilityVersion(ctx context.Context) string
 	// Gather information about the cloudlet platform.
 	// This includes available resources, flavors, etc.
 	// Returns true if sync with controller is required
@@ -141,8 +148,8 @@ type Platform interface {
 	SaveCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, accessVarsIn map[string]string, pfConfig *edgeproto.PlatformConfig, vaultConfig *vault.Config, updateCallback edgeproto.CacheUpdateCallback) error
 	// Delete Cloudlet AccessVars
 	DeleteCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, vaultConfig *vault.Config, updateCallback edgeproto.CacheUpdateCallback) error
-	// Sync data with controller
-	SyncControllerCache(ctx context.Context, caches *Caches, cloudletState dme.CloudletState) error
+	// Performs Upgrades for things like k8s config
+	PerformUpgrades(ctx context.Context, caches *Caches, cloudletState dme.CloudletState) error
 	// Get Cloudlet Manifest Config
 	GetCloudletManifest(ctx context.Context, cloudlet *edgeproto.Cloudlet, pfConfig *edgeproto.PlatformConfig, accessApi AccessApi, flavor *edgeproto.Flavor, caches *Caches) (*edgeproto.CloudletManifest, error)
 	// Verify VM
