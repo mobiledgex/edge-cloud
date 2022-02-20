@@ -9,13 +9,15 @@ import (
 )
 
 type CrmHAProcess struct {
-	controllerData *ControllerData
+	controllerData                 *ControllerData
+	FinishUpdateCloudletInfoThread chan struct{}
 }
 
 func (s *CrmHAProcess) ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChangedPreSwitch", "platformActive", platformActive)
 	if !platformActive {
 		// not supported, CRM should have been killed within HA manager
+		log.SpanFromContext(ctx).Finish()
 		log.FatalLog("Error: Unexpected CRM transition to inactive", "cloudletKey", s.controllerData.cloudletKey)
 	}
 	if s.controllerData.platform != nil {
@@ -33,6 +35,29 @@ func (s *CrmHAProcess) ActiveChangedPostSwitch(ctx context.Context, platformActi
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to find cloudlet info in cache", "cloudletKey", s.controllerData.cloudletKey)
 		return fmt.Errorf("cannot find in cloudlet info in cache for key %s", s.controllerData.cloudletKey.String())
 	}
-	s.controllerData.UpdateCloudletInfo(ctx, &cloudletInfo)
+	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChangedPostSwitch", "PlatformCommonInitDone", s.controllerData.PlatformCommonInitDone)
+
+	select {
+	case s.controllerData.WaitPlatformActive <- true:
+	default:
+		// this is not expected because the channel should be filled either by transitioning from
+		// standby to active, or starting out active. But as there is no transition for the CRM to go
+		// active to standby without restarting, the channel should never be filled more than once
+		log.SpanFromContext(ctx).Finish()
+		log.FatalLog("WaitPlatformActive channel already full")
+	}
 	return nil
+}
+
+func (s *CrmHAProcess) PlatformActiveOnStartup(ctx context.Context) {
+	log.SpanLog(ctx, log.DebugLevelInfra, "PlatformActiveOnStartup")
+	select {
+	case s.controllerData.WaitPlatformActive <- true:
+	default:
+		// this is not expected because the channel should be filled either by transitioning from
+		// standby to active, or starting out active. But as there is no transition for the CRM to go
+		// active to standby without restarting, the channel should never be filled more than once
+		log.SpanFromContext(ctx).Finish()
+		log.FatalLog("WaitPlatformActive channel already full")
+	}
 }
