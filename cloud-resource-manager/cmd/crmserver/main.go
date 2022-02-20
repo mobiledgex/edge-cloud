@@ -169,10 +169,24 @@ func main() {
 	notifyClient.Start()
 	defer notifyClient.Stop()
 
+	haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
+	haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey)
+	if err != nil {
+		log.FatalLog(err.Error())
+	}
+	if haEnabled {
+		log.SpanLog(ctx, log.DebugLevelInfra, "HA enabled", "role", highAvailabilityManager.HARole)
+		if highAvailabilityManager.PlatformInstanceActive {
+			log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is active", "role", highAvailabilityManager.HARole)
+			myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
+		} else {
+			log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is not active", "role", highAvailabilityManager.HARole)
+		}
+		controllerData.StartHAManagerActiveCheck(ctx, &highAvailabilityManager)
+	}
 	go func() {
 		cspan := log.StartSpan(log.DebugLevelInfo, "cloudlet init thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
 		log.SpanLog(ctx, log.DebugLevelInfo, "starting to init platform")
-
 		cloudletContainerVersion := ""
 		if *containerVersion == "" {
 			cloudletContainerVersion, err = cloudcommon.GetDockerBaseImageVersion()
@@ -182,21 +196,10 @@ func main() {
 		} else {
 			cloudletContainerVersion = *containerVersion
 		}
-		haKey := fmt.Sprintf("nodeType: %s cloudlet: %s", "CRM", nodeMgr.MyNode.Key.CloudletKey.String())
-		haEnabled, err := controllerData.InitHAManager(ctx, &highAvailabilityManager, haKey)
-		if err != nil {
-			log.FatalLog(err.Error())
-		}
-		if haEnabled {
-			log.SpanLog(ctx, log.DebugLevelInfra, "HA enabled", "role", highAvailabilityManager.HARole)
-			if highAvailabilityManager.PlatformInstanceActive {
-				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is active", "role", highAvailabilityManager.HARole)
-				myCloudletInfo.ActiveCrmInstance = highAvailabilityManager.HARole
-			} else {
-				log.SpanLog(ctx, log.DebugLevelInfra, "HA instance is not active", "role", highAvailabilityManager.HARole)
-			}
-			controllerData.StartHAManagerActiveCheck(ctx, &highAvailabilityManager)
-		}
+		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion
+		getMexReleaseInfo(ctx)
+		nodeMgr.UpdateMyNode(ctx)
+
 		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_INIT
 		myCloudletInfo.ContainerVersion = cloudletContainerVersion
 		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
@@ -238,77 +241,87 @@ func main() {
 		}
 
 		updateCloudletStatus(edgeproto.UpdateTask, "Initializing platform")
-		if err = initPlatform(ctx, &cloudlet, &myCloudletInfo, *physicalName, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err != nil {
-			myCloudletInfo.Errors = append(myCloudletInfo.Errors, fmt.Sprintf("Failed to init platform: %v", err))
+
+		accessApi := accessapi.NewControllerClient(nodeMgr.AccessApiClient)
+		pc := pf.PlatformConfig{
+			CloudletKey:         &myCloudletInfo.Key,
+			PhysicalName:        *physicalName,
+			Region:              *region,
+			TestMode:            *testMode,
+			CloudletVMImagePath: *cloudletVMImagePath,
+			VMImageVersion:      *vmImageVersion,
+			PackageVersion:      *packageVersion,
+			EnvVars:             cloudlet.EnvVar,
+			NodeMgr:             &nodeMgr,
+			AppDNSRoot:          *appDNSRoot,
+			RootLBFQDN:          cloudlet.RootLbFqdn,
+			DeploymentTag:       nodeMgr.DeploymentTag,
+			Upgrade:             *upgrade,
+			AccessApi:           accessApi,
+			TrustPolicy:         cloudlet.TrustPolicy,
+			CacheDir:            *cacheDir,
+		}
+
+		conditionalInitRequired := true
+		currentInitVersion := platform.GetInitHAConditionalCompatibilityVersion(ctx)
+
+		// Perform init steps that are common in all cases
+		if err = initPlatformCommon(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus); err == nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "common init functions done", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
+			controllerData.PlatformCommonInitDone = true
+			// get caches from controller
+			waitControllerSync(ctx, &cloudlet, &myCloudletInfo, caches, updateCloudletStatus)
+
+			log.SpanLog(ctx, log.DebugLevelInfo, "waiting for platform to become active", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
+			// wait for activity to be gained, This can happen on startup or on switchover
+			<-controllerData.WaitPlatformActive
+
+			if highAvailabilityManager.HAEnabled {
+				// see if we can avoid full initialzation after switchover
+				prevInitVersion, err := highAvailabilityManager.GetValue(ctx, crmutil.InitCompatibilityVersionKey)
+				if err != nil {
+					log.FatalLog("unexpected error getting InitCompatibilityVersionKey from haMgr", "err", err)
+				}
+				versionMatch := prevInitVersion == currentInitVersion
+				log.SpanLog(ctx, log.DebugLevelInfo, "comparing previous and new init versions", "prevInitVersion", prevInitVersion, "currentInitVersion", currentInitVersion, "versionMatch", versionMatch)
+				if versionMatch {
+					// version matches now see if the cloudletInfo can be found
+					err = controllerData.GetCloudletInfoFromHACache(ctx, &myCloudletInfo)
+					if err != nil {
+						log.FatalLog("unexpected error getting cloudlet info from HA cache", "err", err)
+					}
+					if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
+						log.SpanLog(ctx, log.DebugLevelInfo, "conditional init not required as cloudlet was previously ready and versions match")
+						conditionalInitRequired = false
+					}
+				} else {
+					log.SpanLog(ctx, log.DebugLevelInfo, "version mismatch, full init required")
+				}
+
+			}
+			log.SpanLog(ctx, log.DebugLevelInfo, "platform became active", "state", myCloudletInfo.State.String())
+		}
+		if err == nil {
+			if conditionalInitRequired {
+				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
+			}
+		}
+		if err == nil && highAvailabilityManager.HAEnabled {
+			err = highAvailabilityManager.SetValue(ctx, crmutil.InitCompatibilityVersionKey, currentInitVersion, 0)
+		}
+		if err != nil {
+			myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
-			log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
-			updateCloudletStatus(edgeproto.UpdateTask, "Gathering Cloudlet Info")
-			err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
-			log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
-
-			if err != nil {
-				myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
-				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
+			myCloudletInfo.Errors = nil
+			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
+			if cloudlet.TrustPolicy == "" {
+				myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
 			} else {
-				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
-				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
-				controllerData.ControllerSyncInProgress = true
-				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-
-				// Wait for CRM to receive cluster and appinst data from notify
-				select {
-				case <-controllerData.ControllerSyncDone:
-					if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, &cloudlet) {
-						log.FatalLog("failed to get sync data from controller")
-					}
-				case <-time.After(ControllerTimeout):
-					log.FatalLog("Timed out waiting for sync data from controller")
-				}
-				log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
-				myCloudletInfo.ControllerCacheReceived = true
-				controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-				err := platform.SyncControllerCache(ctx, caches, myCloudletInfo.State)
-				if err != nil {
-					log.FatalLog("Platform sync fail", "err", err)
-				}
-
-				// Update AppInst runtime info in case it has changed
-				controllerData.RefreshAppInstRuntime(ctx)
-				resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
-				if resources != nil {
-					resMap := make(map[string]edgeproto.InfraResource)
-					for _, resInfo := range resources.Info {
-						resMap[resInfo.Name] = resInfo
-					}
-					quotaProps, err := platform.GetCloudletResourceQuotaProps(ctx)
-					if err != nil {
-						log.SpanLog(ctx, log.DebugLevelInfra, "Failed to get cloudlet specific resource quota", "cloudlet", cloudlet.Key, "err", err)
-					} else {
-						err = cloudcommon.ValidateCloudletResourceQuotas(ctx, quotaProps, resMap, cloudlet.ResourceQuotas)
-						if err != nil {
-							log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
-							err = nil
-						}
-					}
-					myCloudletInfo.ResourcesSnapshot = *resources
-				}
-
-				myCloudletInfo.Errors = nil
-				myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
-				if cloudlet.TrustPolicy == "" {
-					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_NOT_PRESENT
-				} else {
-					myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
-				}
-				log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet state", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+				myCloudletInfo.TrustPolicyState = edgeproto.TrackedState_READY
 			}
 		}
 		controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
-
-		nodeMgr.MyNode.ContainerVersion = cloudletContainerVersion
-		getMexReleaseInfo(ctx)
-		nodeMgr.UpdateMyNode(ctx)
 		log.SpanLog(ctx, log.DebugLevelInfo, "sent cloudletinfocache update")
 		cspan.Finish()
 
@@ -351,6 +364,11 @@ func main() {
 	controllerData.StartInfraResourceRefreshThread(&myCloudletInfo)
 	defer controllerData.FinishInfraResourceRefreshThread()
 
+	if haEnabled {
+		controllerData.StartUpdateCloudletInfoHAThread(ctx)
+		defer controllerData.FinishUpdateCloudletInfoHAThread()
+	}
+
 	span.Finish()
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
@@ -361,36 +379,88 @@ func main() {
 	fmt.Println(sig)
 }
 
-//initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+//initPlatformCommon does common init functions whether active or standby
+func initPlatformCommon(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	loc := util.DNSSanitize(cloudletInfo.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudletInfo.Key.Organization)
-	accessApi := accessapi.NewControllerClient(accessClient)
 
-	pc := pf.PlatformConfig{
-		CloudletKey:         &cloudletInfo.Key,
-		PhysicalName:        physicalName,
-		Region:              *region,
-		TestMode:            *testMode,
-		CloudletVMImagePath: *cloudletVMImagePath,
-		VMImageVersion:      *vmImageVersion,
-		PackageVersion:      *packageVersion,
-		EnvVars:             cloudlet.EnvVar,
-		NodeMgr:             &nodeMgr,
-		AppDNSRoot:          *appDNSRoot,
-		RootLBFQDN:          cloudlet.RootLbFqdn,
-		DeploymentTag:       nodeMgr.DeploymentTag,
-		Upgrade:             *upgrade,
-		AccessApi:           accessApi,
-		TrustPolicy:         cloudlet.TrustPolicy,
-		CacheDir:            *cacheDir,
-	}
 	if cloudlet.GpuConfig.Driver.Name != "" {
-		pc.GPUConfig = &cloudlet.GpuConfig
+		platformConfig.GPUConfig = &cloudlet.GpuConfig
 	}
 	pfType := pf.GetType(cloudlet.PlatformType.String())
+
 	log.SpanLog(ctx, log.DebugLevelInfra, "init platform", "location(cloudlet.key.name)", loc, "operator", oper, "Platform type", pfType)
-	err := platform.Init(ctx, &pc, caches, haMgr, updateCallback)
+	err := platform.InitCommon(ctx, platformConfig, caches, haMgr, updateCallback)
+	return err
+}
+
+func waitControllerSync(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, caches *pf.Caches, updateCallback edgeproto.CacheUpdateCallback) {
+	log.SpanLog(ctx, log.DebugLevelInfo, "waitControllerSync")
+
+	myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_NEED_SYNC
+	log.SpanLog(ctx, log.DebugLevelInfra, "cloudlet needs sync data", "state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo)
+	controllerData.ControllerSyncInProgress = true
+	controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
+
+	// Wait for CRM to receive cluster and appinst data from notify
+	select {
+	case <-controllerData.ControllerSyncDone:
+		if !controllerData.CloudletCache.Get(&myCloudletInfo.Key, cloudlet) {
+			log.FatalLog("failed to get sync data from controller")
+		}
+	case <-time.After(ControllerTimeout):
+		log.FatalLog("Timed out waiting for sync data from controller")
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "controller sync data received")
+	myCloudletInfo.ControllerCacheReceived = true
+	controllerData.UpdateCloudletInfo(ctx, &myCloudletInfo)
+}
+
+//initPlatformHAConditionalCommon does init functions for first startup, or a switchover which requires full initialization
+func initPlatformHAConditional(ctx context.Context, cloudlet *edgeproto.Cloudlet, cloudletInfo *edgeproto.CloudletInfo, physicalName string, platformConfig *pf.PlatformConfig, caches *pf.Caches, accessClient edgeproto.CloudletAccessApiClient, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+	log.SpanLog(ctx, log.DebugLevelInfo, "initPlatformHAConditional")
+
+	err := platform.InitHAConditional(ctx, platformConfig, updateCallback)
+	if err != nil {
+		log.FatalLog("Platform InitHAConditional fail", "err", err)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfo, "gathering cloudlet info")
+	updateCallback(edgeproto.UpdateTask, "Gathering Cloudlet Info")
+	err = controllerData.GatherCloudletInfo(ctx, &myCloudletInfo)
+	log.SpanLog(ctx, log.DebugLevelInfra, "GatherCloudletInfo done", "state", myCloudletInfo.State)
+
+	if err != nil {
+		myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
+		myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
+	} else {
+		// Update AppInst runtime info in case it has changed
+		controllerData.RefreshAppInstRuntime(ctx)
+		resources := controllerData.CaptureResourcesSnapshot(ctx, &cloudlet.Key)
+		if resources != nil {
+			resMap := make(map[string]edgeproto.InfraResource)
+			for _, resInfo := range resources.Info {
+				resMap[resInfo.Name] = resInfo
+			}
+			quotaProps, err := platform.GetCloudletResourceQuotaProps(ctx)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelInfra, "Failed to get cloudlet specific resource quota", "cloudlet", cloudlet.Key, "err", err)
+			} else {
+				err = cloudcommon.ValidateCloudletResourceQuotas(ctx, quotaProps, resMap, cloudlet.ResourceQuotas)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelInfra, "Failed to validate cloudlet resource quota", "cloudlet", cloudlet.Key, "err", err)
+					err = nil
+				}
+			}
+			myCloudletInfo.ResourcesSnapshot = *resources
+		}
+	}
+	if err == nil {
+		err = platform.PerformUpgrades(ctx, caches, myCloudletInfo.State)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfra, "Platform upgrades failed", "err", err)
+		}
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "initPlatformHAConditional done", "cloudlet state", myCloudletInfo.State, "myCloudletInfo", myCloudletInfo, "err", err)
 	return err
 }
 
