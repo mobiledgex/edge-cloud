@@ -74,7 +74,7 @@ func (s *Xind) GetCloudletAccessVars(ctx context.Context, cloudlet *edgeproto.Cl
 	return map[string]string{}, nil
 }
 
-func (s *Xind) SyncControllerCache(ctx context.Context, caches *platform.Caches, cloudletState dme.CloudletState) error {
+func (s *Xind) PerformUpgrades(ctx context.Context, caches *platform.Caches, cloudletState dme.CloudletState) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerData", "state", cloudletState)
 	return nil
 }
