@@ -29,13 +29,7 @@ func (s *TrustPolicyApi) CreateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 	ctx := cb.Context()
 	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicy", "policy", in)
 
-	// port range max is optional, set it to min if min is present but not max
-	for i, o := range in.OutboundSecurityRules {
-		if o.PortRangeMax == 0 {
-			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
-			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
-		}
-	}
+	in.FixupSecurityRules(ctx)
 	if err := in.Validate(nil); err != nil {
 		return err
 	}
@@ -49,13 +43,7 @@ func (s *TrustPolicyApi) UpdateTrustPolicy(in *edgeproto.TrustPolicy, cb edgepro
 	cur := edgeproto.TrustPolicy{}
 	changed := 0
 
-	// port range max is optional, set it to min if min is present but not max
-	for i, o := range in.OutboundSecurityRules {
-		if o.PortRangeMax == 0 {
-			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin, "TrustPolicy:", in.GetKey().Name)
-			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
-		}
-	}
+	in.FixupSecurityRules(ctx)
 
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &cur) {
