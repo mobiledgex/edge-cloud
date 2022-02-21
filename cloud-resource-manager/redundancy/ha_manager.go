@@ -313,9 +313,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					s.updateRedisFailed(ctx, false, nil)
 					if !active {
 						// activity was stolen when redis came back. This is possible but unlikely as the secondary should give the primary time to remain active
-						log.SpanLog(ctx, log.DebugLevelInfra, "activity lost when redis connection re-established", "role", s.HARole)
-						s.PlatformInstanceActive = false
-						continue
+						log.SpanFromContext(ctx).Finish()
+						log.FatalLog("activity lost when redis connection re-established", "role", s.HARole)
 					}
 					elapsedSinceBumpActive = time.Since(time.Now())
 				} else {
@@ -345,15 +344,16 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 							if s.HARole == string(process.HARolePrimary) {
 								log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
 							} else {
-								s.PlatformInstanceActive = false
-								log.SpanLog(ctx, log.DebugLevelInfra, "secondary unit lost activity due to redis error")
+								log.SpanFromContext(ctx).Finish()
+								log.FatalLog("secondary unit lost activity due to redis error")
 							}
 							time.Sleep(s.activePollInterval)
 							continue // bypass bumpActive this pass since redis is down
 						} else {
 							// this is unexpected
 							log.SpanLog(ctx, log.DebugLevelInfra, "Activity Lost Unexpectedly")
-							s.PlatformInstanceActive = false
+							log.SpanFromContext(ctx).Finish()
+							log.FatalLog("secondary unit lost activity due to redis error")
 						}
 					}
 					timeLastCheckActive = time.Now()
@@ -373,8 +373,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					if s.HARole == string(process.HARolePrimary) {
 						log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
 					} else {
-						s.PlatformInstanceActive = false
-						log.SpanLog(ctx, log.DebugLevelInfra, "Standby going inactive due to redis error", "err", err)
+						log.SpanFromContext(ctx).Finish()
+						log.FatalLog("standby going down due to redis error", "err", err)
 					}
 				}
 			}
