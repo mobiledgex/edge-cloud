@@ -387,7 +387,7 @@ trustpolicyexceptions:
     name: tpe1
   state: Rejected
   outboundsecurityrules:
-  - protocol: tcp
+  - protocol: TCP
     portrangemin: 2
     portrangemax: 222
     remotecidr: 2.2.2.2/16
