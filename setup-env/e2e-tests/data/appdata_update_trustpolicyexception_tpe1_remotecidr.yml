@@ -11,7 +11,7 @@ trustpolicyexceptions:
     name: tpe1
   state: Active
   outboundsecurityrules:
-    - protocol: tcp
+    - protocol: TCP
       remotecidr: "3.3.3.3/16"
       portrangemin: 2
       portrangemax: 222
