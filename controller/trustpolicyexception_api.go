@@ -27,23 +27,13 @@ func NewTrustPolicyExceptionApi(sync *Sync, all *AllApis) *TrustPolicyExceptionA
 	return &trustPolicyExceptionApi
 }
 
-func (s *TrustPolicyExceptionApi) fixupPortRangeMax(ctx context.Context, in *edgeproto.TrustPolicyException) {
-	// port range max is optional, set it to min if min is present but not max
-	for i, o := range in.OutboundSecurityRules {
-		if o.PortRangeMax == 0 {
-			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
-			in.OutboundSecurityRules[i].PortRangeMax = o.PortRangeMin
-		}
-	}
-}
-
 func (s *TrustPolicyExceptionApi) CreateTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 
 	log.SpanLog(ctx, log.DebugLevelApi, "CreateTrustPolicyException", "policy", in)
 	if len(in.OutboundSecurityRules) == 0 {
 		return nil, fmt.Errorf("Security rules must be specified")
 	}
-	s.fixupPortRangeMax(ctx, in)
+	in.FixupSecurityRules(ctx)
 	if err := in.Validate(nil); err != nil {
 		return nil, err
 	}
@@ -130,7 +120,7 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 			log.SpanLog(ctx, log.DebugLevelApi, "UpdateTrustPolicyException no changes", "state", cur.State.String())
 			return nil // no changes
 		}
-		s.fixupPortRangeMax(ctx, &cur)
+		cur.FixupSecurityRules(ctx)
 		if err := cur.Validate(nil); err != nil {
 			return err
 		}

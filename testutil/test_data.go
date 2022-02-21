@@ -1539,13 +1539,13 @@ var TrustPolicyData = []edgeproto.TrustPolicy{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "8.100.0.0/16",
 				PortRangeMin: 443,
 				PortRangeMax: 443,
 			},
 			edgeproto.SecurityRule{
-				Protocol:     "udp",
+				Protocol:     "UDP",
 				RemoteCidr:   "0.0.0.0/0",
 				PortRangeMin: 53,
 				PortRangeMax: 53,
@@ -1559,13 +1559,13 @@ var TrustPolicyData = []edgeproto.TrustPolicy{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "8.100.0.0/16",
 				PortRangeMin: 443,
 				PortRangeMax: 443,
 			},
 			edgeproto.SecurityRule{
-				Protocol:     "udp",
+				Protocol:     "UDP",
 				RemoteCidr:   "0.0.0.0/0",
 				PortRangeMin: 53,
 				PortRangeMax: 53,
@@ -1579,11 +1579,11 @@ var TrustPolicyData = []edgeproto.TrustPolicy{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:   "icmp",
+				Protocol:   "ICMP",
 				RemoteCidr: "0.0.0.0/0",
 			},
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.0.0.0/8",
 				PortRangeMin: 1,
 				PortRangeMax: 65535,
@@ -1601,7 +1601,7 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.1.0.0/16",
 				PortRangeMin: 201,
 				PortRangeMax: 110,
@@ -1616,7 +1616,7 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.0.0.0/50",
 				PortRangeMin: 22,
 				PortRangeMax: 22,
@@ -1631,7 +1631,7 @@ var TrustPolicyErrorData = []edgeproto.TrustPolicy{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMax: 22,
 			},
@@ -1656,7 +1656,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.1.0.0/16",
 				PortRangeMin: 201,
 				PortRangeMax: 210,
@@ -1679,7 +1679,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.0.0.0/8",
 				PortRangeMin: 22,
 				PortRangeMax: 22,
@@ -1702,7 +1702,7 @@ var TrustPolicyExceptionData = []edgeproto.TrustPolicyException{
 		State: edgeproto.TrustPolicyExceptionState_TRUST_POLICY_EXCEPTION_STATE_APPROVAL_REQUESTED,
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMin: 22,
 				PortRangeMax: 22,
@@ -1728,7 +1728,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.1.0.0/16",
 				PortRangeMin: 201,
 				PortRangeMax: 110,
@@ -1751,7 +1751,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "10.0.0.0/50",
 				PortRangeMin: 22,
 				PortRangeMax: 22,
@@ -1774,7 +1774,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMax: 22,
 			},
@@ -1796,7 +1796,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMin: 22,
 				PortRangeMax: 22,
@@ -1819,7 +1819,7 @@ var TrustPolicyExceptionErrorData = []edgeproto.TrustPolicyException{
 		},
 		OutboundSecurityRules: []edgeproto.SecurityRule{
 			edgeproto.SecurityRule{
-				Protocol:     "tcp",
+				Protocol:     "TCP",
 				RemoteCidr:   "47.186.0.0/16",
 				PortRangeMin: 22,
 				PortRangeMax: 22,
