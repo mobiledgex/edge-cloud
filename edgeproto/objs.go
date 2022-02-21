@@ -746,11 +746,11 @@ func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 func ValidateSecurityRules(rules []SecurityRule) error {
 	for _, r := range rules {
 		if r.Protocol != "TCP" && r.Protocol != "UDP" && r.Protocol != "ICMP" {
-			return fmt.Errorf("Protocol must be one of: (tcp,udp,icmp)")
+			return fmt.Errorf("Protocol must be one of: (TCP,UDP,ICMP)")
 		}
 		if r.Protocol == "ICMP" {
 			if r.PortRangeMin != 0 || r.PortRangeMax != 0 {
-				return fmt.Errorf("Port range must be empty for icmp")
+				return fmt.Errorf("Port range must be empty for ICMP")
 			}
 		} else {
 			log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "rule", r)
