@@ -72,6 +72,9 @@ const (
 	envMexBuildFlavor = "MEX_BUILD_FLAVOR"
 )
 
+// do not change this string as the chef startup recipe looks for it during H/A upgrades
+const waitingForPlatformActiveLog = "waiting for platform to become active"
+
 func main() {
 	nodeMgr.InitFlags()
 	nodeMgr.AccessKeyClient.InitFlags()
@@ -272,7 +275,7 @@ func main() {
 			// get caches from controller
 			waitControllerSync(ctx, &cloudlet, &myCloudletInfo, caches, updateCloudletStatus)
 
-			log.SpanLog(ctx, log.DebugLevelInfo, "waiting for platform to become active", "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
+			log.SpanLog(ctx, log.DebugLevelInfo, waitingForPlatformActiveLog, "PlatformInstanceActive", highAvailabilityManager.PlatformInstanceActive)
 			// wait for activity to be gained, This can happen on startup or on switchover
 			<-controllerData.WaitPlatformActive
 
@@ -280,7 +283,9 @@ func main() {
 				// see if we can avoid full initialzation after switchover
 				prevInitVersion, err := highAvailabilityManager.GetValue(ctx, crmutil.InitCompatibilityVersionKey)
 				if err != nil {
-					log.FatalLog("unexpected error getting InitCompatibilityVersionKey from haMgr", "err", err)
+					// redis may be down, a full init is needed
+					log.SpanLog(ctx, log.DebugLevelInfo, "error getting InitCompatibilityVersionKey from haMgr", "err", err)
+					conditionalInitRequired = true
 				}
 				versionMatch := prevInitVersion == currentInitVersion
 				log.SpanLog(ctx, log.DebugLevelInfo, "comparing previous and new init versions", "prevInitVersion", prevInitVersion, "currentInitVersion", currentInitVersion, "versionMatch", versionMatch)
@@ -288,6 +293,8 @@ func main() {
 					// version matches now see if the cloudletInfo can be found
 					err = controllerData.GetCloudletInfoFromHACache(ctx, &myCloudletInfo)
 					if err != nil {
+						// if we got this far then redis must be OK because the version matches. So this is unexpected.
+						cspan.Finish()
 						log.FatalLog("unexpected error getting cloudlet info from HA cache", "err", err)
 					}
 					if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
@@ -305,9 +312,6 @@ func main() {
 			if conditionalInitRequired {
 				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
 			}
-		}
-		if err == nil && highAvailabilityManager.HAEnabled {
-			err = highAvailabilityManager.SetValue(ctx, crmutil.InitCompatibilityVersionKey, currentInitVersion, 0)
 		}
 		if err != nil {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
