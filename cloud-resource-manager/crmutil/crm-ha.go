@@ -61,3 +61,7 @@ func (s *CrmHAProcess) PlatformActiveOnStartup(ctx context.Context) {
 		log.FatalLog("WaitPlatformActive channel already full")
 	}
 }
+
+func (s *CrmHAProcess) DumpWatcher(ctx context.Context) string {
+	return fmt.Sprintf("CRM HA Process - PlatformCommonInitDone: %t ControllerSyncInProgress: %t", s.controllerData.PlatformCommonInitDone, s.controllerData.ControllerSyncInProgress)
+}

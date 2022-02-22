@@ -147,7 +147,7 @@ func NewControllerData(pf platform.Platform, key *edgeproto.CloudletKey, nodeMgr
 
 	// debug functions
 	nodeMgr.Debug.AddDebugFunc(GetEnvoyVersionCmd, cd.GetClusterEnvoyVersion)
-	nodeMgr.Debug.AddDebugFunc("show-platform-active", haMgr.DumpActive)
+	nodeMgr.Debug.AddDebugFunc("show-ha-status", haMgr.DumpHAManager)
 
 	return cd
 }

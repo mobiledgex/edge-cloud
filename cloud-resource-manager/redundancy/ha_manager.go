@@ -24,6 +24,7 @@ type HAWatcher interface {
 	ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error  // actions before setting PlatformInstanceActive
 	ActiveChangedPostSwitch(ctx context.Context, platformActive bool) error // actions after setting PlatformInstanceActive
 	PlatformActiveOnStartup(ctx context.Context)                            // actions if the platform is active on first
+	DumpWatcher(ctx context.Context) string
 }
 
 type HighAvailabilityManager struct {
@@ -383,6 +384,6 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 	}
 }
 
-func (s *HighAvailabilityManager) DumpActive(ctx context.Context, req *edgeproto.DebugRequest) string {
-	return fmt.Sprintf("PlatformActive: %t", s.PlatformInstanceActive)
+func (s *HighAvailabilityManager) DumpHAManager(ctx context.Context, req *edgeproto.DebugRequest) string {
+	return fmt.Sprintf("HighAvailability Status - HAEnabled: %t HARole: %s PlatformInstanceActive: %t RedisConnectionFailed: %t\n -- %s", s.HAEnabled, s.HARole, s.PlatformInstanceActive, s.RedisConnectionFailed, s.haWatcher.DumpWatcher(ctx))
 }
