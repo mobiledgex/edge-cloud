@@ -92,6 +92,7 @@ var redisClient *redis.Client
 type Services struct {
 	etcdLocal                 *process.Etcd
 	sync                      *Sync
+	redisSync                 *RedisSync
 	influxQ                   *influxq.InfluxQ
 	events                    *influxq.InfluxQ
 	edgeEventsInfluxQ         *influxq.InfluxQ
@@ -263,7 +264,9 @@ func startServices() error {
 	allApis.Start(ctx)
 
 	// Sync data from redis with controller cache
-	syncRedisData(ctx, allApis)
+	redisSync := InitRedisSync(allApis)
+	redisSync.Start(ctx)
+	services.redisSync = redisSync
 
 	initDebug(ctx, &nodeMgr, allApis)
 
@@ -594,6 +597,9 @@ func stopServices() {
 	}
 	if services.etcdLocal != nil {
 		services.etcdLocal.StopLocal()
+	}
+	if services.redisSync != nil {
+		services.redisSync.Done()
 	}
 	for _, lis := range services.listeners {
 		lis.Close()

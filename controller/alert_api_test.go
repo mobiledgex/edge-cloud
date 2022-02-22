@@ -35,6 +35,10 @@ func TestAlertApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
+	redisSync := InitRedisSync(apis)
+	redisSync.Start(ctx)
+	defer redisSync.Done()
+
 	for _, alert := range testutil.AlertData {
 		apis.alertApi.Update(ctx, &alert, 0)
 	}
@@ -98,6 +102,11 @@ func TestAppInstDownAlert(t *testing.T) {
 	apis := NewAllApis(sync)
 	sync.Start()
 	defer sync.Done()
+
+	redisSync := InitRedisSync(apis)
+	redisSync.Start(ctx)
+	defer redisSync.Done()
+
 	dummyResponder := DummyInfoResponder{
 		AppInstCache:        &apis.appInstApi.cache,
 		ClusterInstCache:    &apis.clusterInstApi.cache,

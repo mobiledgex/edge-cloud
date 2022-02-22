@@ -18,6 +18,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/assert"
@@ -143,7 +144,7 @@ func TestController(t *testing.T) {
 	if false {
 		CheckCloudletInfo(t, cloudletInfoClient, testutil.CloudletInfoData)
 	}
-	testKeepAliveRecovery(t, ctx, apis)
+	testKeepAliveRecovery(t, ctx, apis, testSvcs.DummyRedisSrv, start)
 
 	// test that delete checks disallow deletes of dependent objects
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &cloudletData[0])
@@ -350,7 +351,7 @@ func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, dat
 	require.Equal(t, len(data), len(show.Data), "show count")
 }
 
-func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis) {
+func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis, server *rediscache.DummyRedis, start time.Time) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "testKeepAliveRecovery")
 	// already some alerts from non-crm sources
 	numPrevAlerts := len(apis.alertApi.cache.Objs)
@@ -364,32 +365,27 @@ func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis) {
 	totalAlerts := numPrevAlerts + numCrmAlerts
 	WaitForAlerts(t, apis, totalAlerts)
 	require.Equal(t, numCrmAlerts, len(apis.alertApi.sourceCache.Objs))
-	leaseID := apis.syncLeaseData.ControllerAliveLease()
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "grab sync lease data lock")
-	// grab syncLeaseData lock to prevent it restoring any
-	// source data, so that we can verify data was flushed from etcd
-	apis.syncLeaseData.mux.Lock()
+	log.SpanLog(ctx, log.DebugLevelInfo, "grab redis sync data lock")
+	// grab syncMux lock to prevent it restoring any
+	// source data, so that we can verify data was flushed from redis
+	apis.alertApi.syncMux.Lock()
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "revoke lease")
-	// revoke lease to simulate timed out keepalives
-	err := apis.syncLeaseData.sync.store.Revoke(ctx, apis.syncLeaseData.leaseID)
-	require.Nil(t, err)
-	// wait for lease timeout (so etcd KeepAlive function returns)
-	time.Sleep(time.Duration(leaseTimeoutSec) * time.Second)
+	// Since miniredis doesn't support timer, manually reduce TTL
+	// value for alerts, so that they expire and are deleted from redis
+	log.SpanLog(ctx, log.DebugLevelInfo, "fastforward in time so that redis cleans up alerts")
+	server.FastForward(2 * AlertTTL)
 
-	// data should have been flushed from etcd
+	// data should have been flushed from redis
 	WaitForAlerts(t, apis, numPrevAlerts)
 	// data should still be in source cache
 	require.Equal(t, numCrmAlerts, len(apis.alertApi.sourceCache.Objs))
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "release sync lease data lock")
+	log.SpanLog(ctx, log.DebugLevelInfo, "release redis sync data lock")
 	// release sync lock
-	apis.syncLeaseData.mux.Unlock()
+	apis.alertApi.syncMux.Unlock()
 	// alerts should be re-sync'd
 	WaitForAlerts(t, apis, totalAlerts)
-	// make sure there is a new lease ID
-	require.NotEqual(t, leaseID, apis.syncLeaseData.leaseID)
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "delete alerts")
 	// delete alerts
@@ -671,10 +667,8 @@ func testRedisSync(t *testing.T, ctx context.Context, apis *AllApis, expectedDat
 	alertCount := len(apis.alertApi.cache.Objs)
 	require.Equal(t, expectedData.alertCount, alertCount)
 
-	// ensure that flush deletes all the alerts from redis cache
-	apis.alertApi.Flush(ctx, 0)
-	pattern := getAllAlertsKeyPattern()
-	alertKeys, err := redisClient.Keys(pattern).Result()
-	require.Nil(t, err, "get all alert keys")
-	require.Equal(t, 0, len(alertKeys), "no alerts present")
+	// clear stored alerts
+	for _, val := range apis.alertApi.cache.Objs {
+		apis.alertApi.Delete(ctx, val.Obj, 0)
+	}
 }

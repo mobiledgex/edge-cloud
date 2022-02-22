@@ -633,7 +633,7 @@ func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, key *edg
 	})
 	for _, alert := range alerts {
 		s.all.alertApi.setAlertMetadata(&alert)
-		s.all.alertApi.Update(ctx, &alert, 0)
+		s.all.alertApi.StoreUpdate(ctx, nil, &alert)
 		delete(staleAlerts, alert.GetKeyVal())
 	}
 	delAlert := edgeproto.Alert{}
@@ -653,7 +653,7 @@ func (s *ClusterInstApi) handleResourceUsageAlerts(ctx context.Context, key *edg
 		}
 		alertObj := edgeproto.Alert{}
 		edgeproto.AlertKeyStringParse(string(alertKey), &alertObj)
-		s.all.alertApi.Delete(ctx, &alertObj, 0)
+		s.all.alertApi.StoreDelete(ctx, &alertObj)
 	}
 }
 
