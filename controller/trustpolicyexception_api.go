@@ -136,9 +136,65 @@ func (s *TrustPolicyExceptionApi) UpdateTrustPolicyException(ctx context.Context
 	return &edgeproto.Result{}, nil
 }
 
+func (s *TrustPolicyExceptionApi) appInstExistsForTpe(ctx context.Context, in *edgeproto.TrustPolicyException) *edgeproto.AppInst {
+
+	// Get all appInsts in READY state corresponding to the AppKey of the tpe key
+	tpeKey := in.Key
+	appInstFilter := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey: tpeKey.AppKey,
+		},
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe", "tpeKey", tpeKey)
+
+	appInsts := []edgeproto.AppInst{}
+	s.all.appInstApi.cache.Show(&appInstFilter, func(appInst *edgeproto.AppInst) error {
+		if appInst.State != edgeproto.TrackedState_READY {
+			log.SpanLog(ctx, log.DebugLevelInfra, "found appInst", "appInst", appInst, "skipping because state", appInst.State)
+			return nil
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "found appInst in TrackedState_READY", "appInst", appInst)
+		appInsts = append(appInsts, *appInst)
+		return nil
+	})
+	if len(appInsts) == 0 {
+		log.SpanLog(ctx, log.DebugLevelInfra, "No appInsts found", "tpeKey", tpeKey)
+		return nil
+	}
+
+	// Get all cloudlets corresponding to the cloudletPoolKey of the tpe key
+	cloudletPool := edgeproto.CloudletPool{}
+	if !s.all.cloudletPoolApi.cache.Get(&in.Key.CloudletPoolKey, &cloudletPool) {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Not found", "CloudletPoolKey", in.Key.CloudletPoolKey)
+		return nil
+	}
+
+	cloudlets := make(map[edgeproto.CloudletKey]struct{})
+	for _, cloudletKey := range cloudletPool.Cloudlets {
+		cloudlets[cloudletKey] = struct{}{}
+		log.SpanLog(ctx, log.DebugLevelInfra, "cloudlets:", "adding cloudletKey", cloudletKey)
+	}
+
+	// Check whether appInst's clusterInstKey's cloudletKey matches any of the cloudletPoolKey of the tpe key
+	for _, appInst := range appInsts {
+		appCloudletKey := appInst.Key.ClusterInstKey.CloudletKey
+		_, ok := cloudlets[appCloudletKey]
+		if ok {
+			log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe() matched", "cloudletKey", appCloudletKey.Name)
+			return &appInst
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "appInstExistsForTpe() no match", "cloudletKey", appCloudletKey.Name)
+	}
+	return nil
+}
+
 func (s *TrustPolicyExceptionApi) DeleteTrustPolicyException(ctx context.Context, in *edgeproto.TrustPolicyException) (*edgeproto.Result, error) {
 	if !s.cache.HasKey(&in.Key) {
 		return nil, in.Key.NotFoundError()
+	}
+	appInst := s.appInstExistsForTpe(ctx, in)
+	if appInst != nil {
+		return nil, fmt.Errorf("TrustPolicyException in use by appInst:%s", appInst.Key.GetKeyString())
 	}
 	_, err := s.store.Delete(ctx, in, s.sync.syncWait)
 	return &edgeproto.Result{}, err
