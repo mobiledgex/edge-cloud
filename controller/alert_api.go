@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-redis/redis"
@@ -14,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/rediscache"
 )
 
 type AlertApi struct {
@@ -22,12 +21,15 @@ type AlertApi struct {
 	sync        *Sync
 	cache       edgeproto.AlertCache
 	sourceCache edgeproto.AlertCache // source of truth from crm/etc
+	syncMux     sync.Mutex           // for unit-testing
 }
 
 var (
 	ControllerCreatedAlerts = "ControllerCreatedAlerts"
 
-	AlertTTL = time.Duration(1 * time.Minute)
+	AlertTTL          = time.Duration(1 * time.Minute)
+	RedisTxMaxRetries = 10
+	RedisSyncTimeout  = time.Duration(10 * time.Second)
 )
 
 func NewAlertApi(sync *Sync, all *AllApis) *AlertApi {
@@ -139,6 +141,22 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// Note that any further actions should done as part of StoreUpdate.
 	// This is because if the keep-alive is lost and we resync, then
 	// these additional actions should be performed again as part of StoreUpdate.
+
+	// Wait for alerts to synced with controller cache
+	recvdCache := make(chan bool, 1)
+	watchCancel := s.cache.WatchKey(in.GetKey(), func(ctx context.Context) {
+		recvdCache <- true
+	})
+	defer watchCancel()
+	// check if object is already synced with cache
+	if s.cache.Get(in.GetKey(), &edgeproto.Alert{}) {
+		return
+	}
+	select {
+	case <-recvdCache:
+	case <-time.After(RedisSyncTimeout):
+		log.SpanLog(ctx, log.DebugLevelNotify, "Timed out waiting to sync alerts from redis to cache", "key", in.GetKeyVal())
+	}
 }
 
 func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
@@ -199,6 +217,25 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 			return true
 		})
 	}
+
+	// Wait for alerts to synced with controller cache
+	syncedCache := make(chan bool, 1)
+	watchCancel := s.cache.WatchKey(in.GetKey(), func(ctx context.Context) {
+		if !s.cache.Get(in.GetKey(), &edgeproto.Alert{}) {
+			syncedCache <- true
+		}
+	})
+	defer watchCancel()
+	// check if object is already synced with cache
+	if !s.cache.Get(in.GetKey(), &edgeproto.Alert{}) {
+		return
+	}
+	select {
+	case <-syncedCache:
+	case <-time.After(RedisSyncTimeout):
+		log.SpanLog(ctx, log.DebugLevelNotify, "Timed out waiting to sync alerts from redis to cache", "key", in.GetKeyVal())
+	}
+
 	// Note that any further actions should done as part of StoreDelete.
 }
 
@@ -206,29 +243,44 @@ func (s *AlertApi) StoreDelete(ctx context.Context, in *edgeproto.Alert) {
 	buf := edgeproto.Alert{}
 	var foundAlert bool
 	key := getAlertStoreKey(in)
-	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		alertVal, err := pipe.Get(key).Result()
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to get alert from redis", "key", in.GetKeyVal(), "err", err)
-			return nil
+
+	// Transactional function.
+	txf := func(tx *redis.Tx) error {
+		// Get the current value or zero.
+		alertVal, err := tx.Get(key).Result()
+		if err != nil && err != redis.Nil {
+			return err
 		}
 		err = json.Unmarshal([]byte(alertVal), &buf)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelInfo, "Failed to unmarshal alert from redis", "alert", alertVal, "err", err)
-			return nil
+			return fmt.Errorf("Failed to unmarshal alert from redis: %s, %v", alertVal, err)
 		}
 		if buf.NotifyId != in.NotifyId || buf.Controller != ControllerId {
 			// updated by another thread or controller
 			return nil
 		}
 		foundAlert = true
-		_, err = pipe.Del(key).Result()
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to delete alert from redis", "key", in.GetKeyVal(), "err", err)
+
+		// Operation is commited only if the watched keys remain unchanged.
+		_, err = tx.TxPipelined(func(pipe redis.Pipeliner) error {
+			pipe.Del(key)
+			return nil
+		})
+		return err
+	}
+
+	// Retry if the key has been changed.
+	for i := 0; i < RedisTxMaxRetries; i++ {
+		err := redisClient.Watch(txf, key)
+		if err == nil {
+			// Success.
+			break
 		}
-		return nil
-	})
-	if err != nil {
+		if err == redis.TxFailedErr {
+			// Optimistic lock lost. Retry.
+			continue
+		}
+		// Return any other error.
 		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to delete alert from redis", "key", in.GetKeyVal(), "err", err)
 	}
 
@@ -272,7 +324,8 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		s.sourceCache.Delete(ctx, val, 0)
+		// s.sourceCache.Delete(ctx, val, 0)
+		s.Delete(ctx, val, 0)
 	}
 }
 
@@ -330,24 +383,6 @@ func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.
 	}
 }
 
-func (s *AlertApi) syncSourceData(ctx context.Context) error {
-	// Note that we don't need to delete "stale" data, because
-	// if the lease expired, it will be deleted automatically.
-	alerts := make([]*edgeproto.Alert, 0)
-	s.sourceCache.Mux.Lock()
-	for _, data := range s.sourceCache.Objs {
-		alert := edgeproto.Alert{}
-		alert.DeepCopyIn(data.Obj)
-		alerts = append(alerts, &alert)
-	}
-	s.sourceCache.Mux.Unlock()
-
-	for _, alert := range alerts {
-		s.StoreUpdate(ctx, nil, alert)
-	}
-	return nil
-}
-
 func (s *AlertApi) refreshAlertKeepAliveThread() {
 	for {
 		refreshInterval := s.all.settingsApi.Get().AlertKeepaliveRefreshInterval.TimeDuration()
@@ -360,6 +395,8 @@ func (s *AlertApi) refreshAlertKeepAliveThread() {
 }
 
 func (s *AlertApi) refreshAlertKeepAlive(ctx context.Context) {
+	s.syncMux.Lock()
+	defer s.syncMux.Unlock()
 	alerts := make([]*edgeproto.Alert, 0)
 	s.sourceCache.Mux.Lock()
 	for _, data := range s.sourceCache.Objs {
@@ -368,64 +405,25 @@ func (s *AlertApi) refreshAlertKeepAlive(ctx context.Context) {
 		alerts = append(alerts, &alert)
 	}
 	s.sourceCache.Mux.Unlock()
-	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+	cmdOuts, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
 		for _, alert := range alerts {
 			if alert.Controller != ControllerId {
 				// not owned by this controller
 				continue
 			}
 			alertKey := getAlertStoreKey(alert)
-			_, err := pipe.Expire(alertKey, AlertTTL).Result()
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Refresh alert TTL failed", "alertKey", alertKey, "err", err)
-				continue
-			}
+			pipe.Expire(alertKey, AlertTTL)
 		}
 		return nil
 	})
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to refresh alert keepalive", "err", err)
 	}
-	return
-}
 
-func (s *AlertApi) syncRedisWithControllerCache(ctx context.Context) {
-	log.SpanLog(ctx, log.DebugLevelInfo, "Sync redis data with controller cache")
-	// this is telling redis to publish events since it's off by default.
-	_, err := redisClient.ConfigSet("notify-keyspace-events", "Kg$").Result()
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelInfo, "unable to set keyspace events", "err", err.Error())
-		return
-	}
-
-	pubsub := redisClient.PSubscribe(fmt.Sprintf("__keyspace@*__:%s", getAllAlertsKeyPattern()))
-	// Go channel to receives messages.
-	ch := pubsub.Channel()
-	for {
-		select {
-		case chObj := <-ch:
-			parts := strings.Split(chObj.Channel, ":")
-			alertKey := parts[1]
-			alertVal, err := redisClient.Get(alertKey).Result()
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to get alert from redis", "alertKey", alertKey, "err", err)
-				continue
-			}
-			var obj edgeproto.Alert
-			err = json.Unmarshal([]byte(alertVal), &obj)
-			if err != nil {
-				log.SpanLog(ctx, log.DebugLevelInfo, "Failed to unmarshal alert from redis", "alert", alertVal, "err", err)
-				continue
-			}
-			event := chObj.Payload
-			switch event {
-			case rediscache.RedisEventSet:
-				s.cache.Update(ctx, &obj, 0)
-			case rediscache.RedisEventDel:
-				s.cache.Delete(ctx, &obj, 0)
-			}
-
+	for _, cmdOut := range cmdOuts {
+		if err := cmdOut.(*redis.BoolCmd).Err(); err != nil {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Refresh alert TTL failed", "err", err)
 		}
 	}
-
+	return
 }

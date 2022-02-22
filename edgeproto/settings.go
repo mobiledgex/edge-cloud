@@ -219,6 +219,7 @@ func GetDefaultSettings() *Settings {
 	s.ResourceSnapshotThreadInterval = Duration(10 * time.Minute)
 	s.PlatformHaInstanceActiveExpireTime = Duration(1 * time.Second)
 	s.PlatformHaInstancePollInterval = Duration(300 * time.Millisecond)
+	s.AlertKeepaliveRefreshInterval = Duration(30 * time.Second)
 
 	return &s
 }

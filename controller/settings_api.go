@@ -147,6 +147,10 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.PlatformHaInstancePollInterval = edgeproto.GetDefaultSettings().PlatformHaInstancePollInterval
 			modified = true
 		}
+		if cur.AlertKeepaliveRefreshInterval == 0 {
+			cur.AlertKeepaliveRefreshInterval = edgeproto.GetDefaultSettings().AlertKeepaliveRefreshInterval
+			modified = true
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
