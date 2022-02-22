@@ -294,6 +294,7 @@ func main() {
 					err = controllerData.GetCloudletInfoFromHACache(ctx, &myCloudletInfo)
 					if err != nil {
 						// if we got this far then redis must be OK because the version matches. So this is unexpected.
+						cspan.Finish()
 						log.FatalLog("unexpected error getting cloudlet info from HA cache", "err", err)
 					}
 					if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
