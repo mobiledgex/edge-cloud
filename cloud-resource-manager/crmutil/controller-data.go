@@ -1974,7 +1974,7 @@ func (cd *ControllerData) StartUpdateCloudletInfoHAThread(ctx context.Context) {
 					span.Finish()
 					continue
 				}
-				cd.UpdateCloudletInfoHACache(ctx, &cloudletInfo)
+				cd.UpdateCloudletInfoAndVersionHACache(ctx, &cloudletInfo)
 				span.Finish()
 			case <-cd.finishUpdateCloudletInfoHAThread:
 				log.SpanLog(ctx, log.DebugLevelInfra, "StartUpdateCloudletInfoHAThread done")
@@ -2023,7 +2023,7 @@ func (cd *ControllerData) UpdateCloudletInfo(ctx context.Context, cloudletInfo *
 	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfo", "HAEnabled", cd.highAvailabilityManager.HAEnabled, "haActive", cd.highAvailabilityManager.PlatformInstanceActive, "state", cloudletInfo.State, "activeCrm", cloudletInfo.ActiveCrmInstance, "standby", cloudletInfo.StandbyCrm)
 	cd.CloudletInfoCache.Update(ctx, cloudletInfo, 0)
 	if cd.highAvailabilityManager.HAEnabled && !cloudletInfo.StandbyCrm {
-		err := cd.UpdateCloudletInfoHACache(ctx, cloudletInfo)
+		err := cd.UpdateCloudletInfoAndVersionHACache(ctx, cloudletInfo)
 		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoCache fail", "err", err)
 		}
@@ -2050,9 +2050,9 @@ func (cd *ControllerData) GetCloudletInfoFromHACache(ctx context.Context, cloudl
 	return nil
 }
 
-// UpdateCloudletInfoHACache updates the value for cloudletInfo that HA Manager has cached in redis
-func (cd *ControllerData) UpdateCloudletInfoHACache(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoHACache", "cloudletInfo state", cloudletInfo.State.String())
+// UpdateCloudletInfoAndVersionHACache updates the value for cloudletInfo and init version that HA Manager has cached in redis
+func (cd *ControllerData) UpdateCloudletInfoAndVersionHACache(ctx context.Context, cloudletInfo *edgeproto.CloudletInfo) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateCloudletInfoAndVersionHACache", "cloudletInfo state", cloudletInfo.State.String())
 
 	expiration := cd.settings.PlatformHaInstanceActiveExpireTime.TimeDuration() * CloudletInfoUpdateExpireMultiple
 	ciJson, err := json.Marshal(cloudletInfo)
@@ -2060,7 +2060,11 @@ func (cd *ControllerData) UpdateCloudletInfoHACache(ctx context.Context, cloudle
 		log.SpanLog(ctx, log.DebugLevelInfra, "cloudletinfo marshal fail", "cloudletInfo", cloudletInfo, "err", err)
 		return fmt.Errorf("cloudletinfo marshal fail - %s", err)
 	}
-	return cd.highAvailabilityManager.SetValue(ctx, CloudletInfoCacheKey, string(ciJson), expiration)
+	err = cd.highAvailabilityManager.SetValue(ctx, CloudletInfoCacheKey, string(ciJson), expiration)
+	if err != nil {
+		return err
+	}
+	return cd.highAvailabilityManager.SetValue(ctx, InitCompatibilityVersionKey, cd.platform.GetInitHAConditionalCompatibilityVersion(ctx), expiration)
 }
 
 func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {
