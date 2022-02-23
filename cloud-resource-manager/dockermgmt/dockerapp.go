@@ -426,7 +426,10 @@ func GetAppInstRuntime(ctx context.Context, client ssh.Client, app *edgeproto.Ap
 	rt.ContainerIds = make([]string, 0)
 
 	// try to get the container names from the runtime environment
-	cmd := `docker ps --format "{{.Names}}"`
+	nameLabelVal := util.DNSSanitize(app.Key.Name)
+	versionLabelVal := util.DNSSanitize(app.Key.Version)
+	cmd := fmt.Sprintf(`docker ps --format "{{.Names}}" --filter "label=%s=%s" --filter "label=%s=%s"`,
+		cloudcommon.MexAppNameLabel, nameLabelVal, cloudcommon.MexAppVersionLabel, versionLabelVal)
 	out, err := client.Output(cmd)
 	if err == nil {
 		for _, name := range strings.Split(out, "\n") {
