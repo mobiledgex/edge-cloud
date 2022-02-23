@@ -118,7 +118,9 @@ func (cd *ControllerData) GetClusterEnvoyVersion(ctx context.Context, req *edgep
 
 func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) (reterr error) {
 	var err error
-
+	if !cd.highAvailabilityManager.PlatformInstanceActive {
+		return nil
+	}
 	run := &RunExec{
 		req: req,
 	}

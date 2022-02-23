@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/rediscache"
+	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 const RedisPingFail string = "Redis Ping Fail"
@@ -24,6 +25,7 @@ type HAWatcher interface {
 	ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error  // actions before setting PlatformInstanceActive
 	ActiveChangedPostSwitch(ctx context.Context, platformActive bool) error // actions after setting PlatformInstanceActive
 	PlatformActiveOnStartup(ctx context.Context)                            // actions if the platform is active on first
+	DumpWatcherFields(ctx context.Context) map[string]interface{}
 }
 
 type HighAvailabilityManager struct {
@@ -383,6 +385,18 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 	}
 }
 
-func (s *HighAvailabilityManager) DumpActive(ctx context.Context, req *edgeproto.DebugRequest) string {
-	return fmt.Sprintf("PlatformActive: %t", s.PlatformInstanceActive)
+func (s *HighAvailabilityManager) DumpHAManager(ctx context.Context, req *edgeproto.DebugRequest) string {
+	result := make(map[string]map[string]interface{})
+	haMgrFields := make(map[string]interface{})
+	result["haManager"] = haMgrFields
+	haMgrFields["HAEnabled"] = s.HAEnabled
+	haMgrFields["HARole"] = s.HARole
+	haMgrFields["PlatformInstanceActive"] = s.PlatformInstanceActive
+	haMgrFields["RedisConnectionFailed"] = s.RedisConnectionFailed
+	haMgrFields["haWatcher"] = s.haWatcher.DumpWatcherFields(ctx)
+	haStatusOut, err := yaml.Marshal(result)
+	if err != nil {
+		return err.Error()
+	}
+	return string(haStatusOut)
 }
