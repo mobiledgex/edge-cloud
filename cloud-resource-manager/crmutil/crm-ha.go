@@ -61,3 +61,11 @@ func (s *CrmHAProcess) PlatformActiveOnStartup(ctx context.Context) {
 		log.FatalLog("WaitPlatformActive channel already full")
 	}
 }
+
+func (s *CrmHAProcess) DumpWatcherFields(ctx context.Context) map[string]interface{} {
+	watcherStatus := make(map[string]interface{})
+	watcherStatus["Type"] = "CrmHAProcess"
+	watcherStatus["PlatformCommonInitDone"] = s.controllerData.PlatformCommonInitDone
+	watcherStatus["ControllerSyncInProgress"] = s.controllerData.ControllerSyncInProgress
+	return watcherStatus
+}
