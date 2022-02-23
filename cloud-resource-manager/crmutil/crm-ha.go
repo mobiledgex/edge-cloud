@@ -62,6 +62,10 @@ func (s *CrmHAProcess) PlatformActiveOnStartup(ctx context.Context) {
 	}
 }
 
-func (s *CrmHAProcess) DumpWatcher(ctx context.Context) string {
-	return fmt.Sprintf("CRM HA Process - PlatformCommonInitDone: %t ControllerSyncInProgress: %t", s.controllerData.PlatformCommonInitDone, s.controllerData.ControllerSyncInProgress)
+func (s *CrmHAProcess) DumpWatcherFields(ctx context.Context) map[string]interface{} {
+	watcherStatus := make(map[string]interface{})
+	watcherStatus["Type"] = "CrmHAProcess"
+	watcherStatus["PlatformCommonInitDone"] = s.controllerData.PlatformCommonInitDone
+	watcherStatus["ControllerSyncInProgress"] = s.controllerData.ControllerSyncInProgress
+	return watcherStatus
 }
