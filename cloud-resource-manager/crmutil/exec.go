@@ -19,6 +19,8 @@ import (
 	"github.com/xtaci/smux"
 )
 
+const ExecRequestIgnoredPlatformInactive = "ExecRequestIgnoredPlatformInactive"
+
 // ExecReqHandler just satisfies the Recv() function for the
 // ExecRequest receive notify interface, and calls into the
 // controller data which has all the cached information about the
@@ -38,6 +40,10 @@ func (s *ExecReqHandler) RecvExecRequest(ctx context.Context, msg *edgeproto.Exe
 		defer cspan.Finish()
 		err := s.cd.ProcessExecReq(ctx, msg)
 		if err != nil {
+			if err.Error() == ExecRequestIgnoredPlatformInactive {
+				// send nothing in response as the controller only looks for one response
+				return
+			}
 			msg.Err = err.Error()
 		}
 		s.cd.ExecReqSend.Update(ctx, msg)
@@ -118,8 +124,10 @@ func (cd *ControllerData) GetClusterEnvoyVersion(ctx context.Context, req *edgep
 
 func (cd *ControllerData) ProcessExecReq(ctx context.Context, req *edgeproto.ExecRequest) (reterr error) {
 	var err error
+	log.SpanLog(ctx, log.DebugLevelApi, "ProcessExecReq", "req", req, "PlatformInstanceActive", cd.highAvailabilityManager.PlatformInstanceActive)
+
 	if !cd.highAvailabilityManager.PlatformInstanceActive {
-		return nil
+		return fmt.Errorf(ExecRequestIgnoredPlatformInactive)
 	}
 	run := &RunExec{
 		req: req,
