@@ -319,7 +319,7 @@ func main() {
 		} else {
 			// at this point we are ok to do periodic refresh of the platform init compatibility version in the HA Manager
 			// because we have either matched the version from a switchover or have done a conditional init
-			controllerData.PlatformCompatibilityVersionUpdateReady = true
+			controllerData.UpdateHACompatibilityVersion = true
 			myCloudletInfo.Errors = nil
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_READY
 			if cloudlet.TrustPolicy == "" {
