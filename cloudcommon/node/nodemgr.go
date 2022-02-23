@@ -90,7 +90,11 @@ func (s *NodeMgr) Init(nodeType, tlsClientIssuer string, ops ...NodeOp) (context
 	if opts.name != "" {
 		s.MyNode.Key.Name = opts.name
 	} else {
-		s.MyNode.Key.Name = cloudcommon.Hostname() + "-" + string(opts.haRole)
+		roleSuffix := ""
+		if string(opts.haRole) != "" {
+			roleSuffix = "-" + string(opts.haRole)
+		}
+		s.MyNode.Key.Name = cloudcommon.Hostname() + roleSuffix
 	}
 	s.MyNode.Key.Region = opts.region
 	s.MyNode.Key.CloudletKey = opts.cloudletKey
