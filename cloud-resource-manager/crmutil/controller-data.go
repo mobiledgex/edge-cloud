@@ -24,51 +24,52 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	platform                             platform.Platform
-	cloudletKey                          edgeproto.CloudletKey
-	AppCache                             edgeproto.AppCache
-	AppInstCache                         edgeproto.AppInstCache
-	CloudletCache                        *edgeproto.CloudletCache
-	CloudletInternalCache                edgeproto.CloudletInternalCache
-	VMPoolCache                          edgeproto.VMPoolCache
-	FlavorCache                          edgeproto.FlavorCache
-	ClusterInstCache                     edgeproto.ClusterInstCache
-	AppInstInfoCache                     edgeproto.AppInstInfoCache
-	CloudletInfoCache                    edgeproto.CloudletInfoCache
-	VMPoolInfoCache                      edgeproto.VMPoolInfoCache
-	ClusterInstInfoCache                 edgeproto.ClusterInstInfoCache
-	TrustPolicyCache                     edgeproto.TrustPolicyCache
-	TrustPolicyExceptionCache            edgeproto.TrustPolicyExceptionCache
-	CloudletPoolCache                    *edgeproto.CloudletPoolCache
-	AutoProvPolicyCache                  edgeproto.AutoProvPolicyCache
-	AutoScalePolicyCache                 edgeproto.AutoScalePolicyCache
-	AlertCache                           edgeproto.AlertCache
-	SettingsCache                        edgeproto.SettingsCache
-	ResTagTableCache                     edgeproto.ResTagTableCache
-	GPUDriverCache                       edgeproto.GPUDriverCache
-	AlertPolicyCache                     edgeproto.AlertPolicyCache
-	NetworkCache                         edgeproto.NetworkCache
-	ExecReqHandler                       *ExecReqHandler
-	ExecReqSend                          *notify.ExecRequestSend
-	ControllerWait                       chan bool
-	ControllerSyncInProgress             bool
-	ControllerSyncDone                   chan bool
-	WaitPlatformActive                   chan bool
-	settings                             edgeproto.Settings
-	NodeMgr                              *node.NodeMgr
-	VMPool                               edgeproto.VMPool
-	VMPoolMux                            sync.Mutex
-	VMPoolUpdateMux                      sync.Mutex
-	updateVMWorkers                      tasks.KeyWorkers
-	updateTrustPolicyKeyworkers          tasks.KeyWorkers
-	handleTrustPolicyExceptionKeyWorkers tasks.KeyWorkers
-	vmActionRefMux                       sync.Mutex
-	vmActionRefAction                    int
-	finishInfraResourceThread            chan struct{}
-	finishUpdateCloudletInfoHAThread     chan struct{}
-	vmActionLastUpdate                   time.Time
-	highAvailabilityManager              *redundancy.HighAvailabilityManager
-	PlatformCommonInitDone               bool
+	platform                                platform.Platform
+	cloudletKey                             edgeproto.CloudletKey
+	AppCache                                edgeproto.AppCache
+	AppInstCache                            edgeproto.AppInstCache
+	CloudletCache                           *edgeproto.CloudletCache
+	CloudletInternalCache                   edgeproto.CloudletInternalCache
+	VMPoolCache                             edgeproto.VMPoolCache
+	FlavorCache                             edgeproto.FlavorCache
+	ClusterInstCache                        edgeproto.ClusterInstCache
+	AppInstInfoCache                        edgeproto.AppInstInfoCache
+	CloudletInfoCache                       edgeproto.CloudletInfoCache
+	VMPoolInfoCache                         edgeproto.VMPoolInfoCache
+	ClusterInstInfoCache                    edgeproto.ClusterInstInfoCache
+	TrustPolicyCache                        edgeproto.TrustPolicyCache
+	TrustPolicyExceptionCache               edgeproto.TrustPolicyExceptionCache
+	CloudletPoolCache                       *edgeproto.CloudletPoolCache
+	AutoProvPolicyCache                     edgeproto.AutoProvPolicyCache
+	AutoScalePolicyCache                    edgeproto.AutoScalePolicyCache
+	AlertCache                              edgeproto.AlertCache
+	SettingsCache                           edgeproto.SettingsCache
+	ResTagTableCache                        edgeproto.ResTagTableCache
+	GPUDriverCache                          edgeproto.GPUDriverCache
+	AlertPolicyCache                        edgeproto.AlertPolicyCache
+	NetworkCache                            edgeproto.NetworkCache
+	ExecReqHandler                          *ExecReqHandler
+	ExecReqSend                             *notify.ExecRequestSend
+	ControllerWait                          chan bool
+	ControllerSyncInProgress                bool
+	ControllerSyncDone                      chan bool
+	WaitPlatformActive                      chan bool
+	settings                                edgeproto.Settings
+	NodeMgr                                 *node.NodeMgr
+	VMPool                                  edgeproto.VMPool
+	VMPoolMux                               sync.Mutex
+	VMPoolUpdateMux                         sync.Mutex
+	updateVMWorkers                         tasks.KeyWorkers
+	updateTrustPolicyKeyworkers             tasks.KeyWorkers
+	handleTrustPolicyExceptionKeyWorkers    tasks.KeyWorkers
+	vmActionRefMux                          sync.Mutex
+	vmActionRefAction                       int
+	finishInfraResourceThread               chan struct{}
+	finishUpdateCloudletInfoHAThread        chan struct{}
+	vmActionLastUpdate                      time.Time
+	highAvailabilityManager                 *redundancy.HighAvailabilityManager
+	PlatformCommonInitDone                  bool
+	PlatformCompatibilityVersionUpdateReady bool
 }
 
 const CloudletInfoCacheKey = "cloudletInfo"
@@ -2064,7 +2065,10 @@ func (cd *ControllerData) UpdateCloudletInfoAndVersionHACache(ctx context.Contex
 	if err != nil {
 		return err
 	}
-	return cd.highAvailabilityManager.SetValue(ctx, InitCompatibilityVersionKey, cd.platform.GetInitHAConditionalCompatibilityVersion(ctx), expiration)
+	if cd.PlatformCompatibilityVersionUpdateReady {
+		err = cd.highAvailabilityManager.SetValue(ctx, InitCompatibilityVersionKey, cd.platform.GetInitHAConditionalCompatibilityVersion(ctx), expiration)
+	}
+	return err
 }
 
 func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {

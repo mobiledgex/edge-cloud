@@ -66,6 +66,7 @@ func (s *CrmHAProcess) DumpWatcherFields(ctx context.Context) map[string]interfa
 	watcherStatus := make(map[string]interface{})
 	watcherStatus["Type"] = "CrmHAProcess"
 	watcherStatus["PlatformCommonInitDone"] = s.controllerData.PlatformCommonInitDone
+	watcherStatus["PlatformCompatibilityVersionUpdateReady"] = s.controllerData.PlatformCompatibilityVersionUpdateReady
 	watcherStatus["ControllerSyncInProgress"] = s.controllerData.ControllerSyncInProgress
 	return watcherStatus
 }
