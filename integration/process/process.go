@@ -172,9 +172,9 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 		pgrepCommand = "pgrep -f '" + processName + " .*" + processArgs + ".*'"
 	}
 	log.Printf("Running pgrep %v\n", pgrepCommand)
-	out, perr := exec.Command("sh", "-c", pgrepCommand).Output()
+	out, perr := exec.Command("sh", "-c", pgrepCommand).CombinedOutput()
 	if perr != nil {
-		log.Printf("Process not found for: %s\n", pgrepCommand)
+		log.Printf("Process not found for: %s: %s, %s\n", pgrepCommand, string(out), perr.Error())
 		pinfo := ProcessInfo{alive: false}
 		processes = append(processes, pinfo)
 		return processes
