@@ -69,6 +69,7 @@ type ControllerData struct {
 	vmActionLastUpdate                   time.Time
 	highAvailabilityManager              *redundancy.HighAvailabilityManager
 	PlatformCommonInitDone               bool
+	UpdateHACompatibilityVersion         bool
 }
 
 const CloudletInfoCacheKey = "cloudletInfo"
@@ -2064,7 +2065,10 @@ func (cd *ControllerData) UpdateCloudletInfoAndVersionHACache(ctx context.Contex
 	if err != nil {
 		return err
 	}
-	return cd.highAvailabilityManager.SetValue(ctx, InitCompatibilityVersionKey, cd.platform.GetInitHAConditionalCompatibilityVersion(ctx), expiration)
+	if cd.UpdateHACompatibilityVersion {
+		err = cd.highAvailabilityManager.SetValue(ctx, InitCompatibilityVersionKey, cd.platform.GetInitHAConditionalCompatibilityVersion(ctx), expiration)
+	}
+	return err
 }
 
 func (cd *ControllerData) StartHAManagerActiveCheck(ctx context.Context, haMgr *redundancy.HighAvailabilityManager) {
