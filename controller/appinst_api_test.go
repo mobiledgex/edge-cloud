@@ -964,6 +964,22 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		"ST auto clust name dedicated",
 		0, &cloudletST, "autocluster", stOrg, "", dedicatedIp,
 		"pillimogo100-atlanticinc.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"VM App",
+		11, &cloudletST, "clust", stOrg, "", notDedicatedIp, "",
+		"Cannot deploy vm app to single kubernetes cloudlet",
+	}, {
+		"VM App",
+		11, &cloudletMT, "clust", mtOrg, "", notDedicatedIp, "",
+		"Cannot deploy vm app to single kubernetes cloudlet",
+	}, {
+		"Docker App",
+		17, &cloudletST, "clust", stOrg, "", notDedicatedIp, "",
+		"Cannot deploy docker app to single kubernetes cloudlet",
+	}, {
+		"Docker App",
+		17, &cloudletMT, "clust", mtOrg, "", notDedicatedIp, "",
+		"Cannot deploy docker app to single kubernetes cloudlet",
 	}}
 	for _, test := range appInstCreateTests {
 		ai := testutil.AppInstData[test.aiIdx]
