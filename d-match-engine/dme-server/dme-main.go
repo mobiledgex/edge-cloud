@@ -271,6 +271,8 @@ func (s *server) QosPrioritySessionCreate(ctx context.Context, req *dme.QosPrior
 		sesReplyToLog := *sesReply // Copy so we can redact session Id in log
 		sesReplyToLog.SessionId = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 		log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.CreatePrioritySession() returned", "sesReply", sesReplyToLog, "sesErr", sesErr)
+	} else {
+		return nil, status.Errorf(codes.InvalidArgument, "Cannot create session because qosSesAddr not defined.")
 	}
 	return reply, nil
 }
@@ -293,7 +295,7 @@ func (s *server) QosPrioritySessionDelete(ctx context.Context, req *dme.QosPrior
 		log.SpanLog(ctx, log.DebugLevelDmereq, "QOS Priority Session will be deleted", "sesId", sesId)
 		sesReply, sesErr := operatorApiGw.DeletePrioritySession(ctx, req)
 		if sesErr != nil {
-			log.SpanLog(ctx, log.DebugLevelDmereq, "CreatePrioritySession failed.", "sesErr", sesErr)
+			log.SpanLog(ctx, log.DebugLevelDmereq, "DeletePrioritySession failed.", "sesErr", sesErr)
 			return nil, sesErr
 		}
 		log.SpanLog(ctx, log.DebugLevelDmereq, "operatorApiGw.DeletePrioritySession() successful")
