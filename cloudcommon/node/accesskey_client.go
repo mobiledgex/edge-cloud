@@ -106,31 +106,24 @@ func (s *AccessKeyClient) init(ctx context.Context, nodeType, tlsClientIssuer st
 		// go through upgrade process. If correct key is backup key,
 		// CRM should restore it to the primary key file for Shepherd/DME
 		// to pick up.
-		loaded := false
-		for !loaded {
-			err = s.loadAccessKey(ctx, s.AccessKeyFile)
-			log.SpanLog(ctx, log.DebugLevelInfo, "access key upgrade load", "err", err)
-			// Upgrade access key
-			_, err = s.upgradeAccessKey(ctx, AccessKeyUpgrade, PrimaryKey, haRole)
-			if err != nil {
-				// attempt to upgrade using backup key
-				log.SpanLog(ctx, log.DebugLevelInfo, "upgrade failed, try backup key", "err", err)
-				bkerr := s.loadAccessKey(ctx, s.backupKeyFile())
-				log.SpanLog(ctx, log.DebugLevelInfo, "backup key load", "err", bkerr)
-				if bkerr == nil {
-					upgraded, err := s.upgradeAccessKey(ctx, AccessKeyUpgrade, BackupKey, haRole)
-					if err == nil && !upgraded {
-						// backup key is valid and key was not
-						// upgraded, move backup to primary.
-						log.SpanLog(ctx, log.DebugLevelInfo, "restore backup key")
-						err = os.Rename(s.backupKeyFile(), s.AccessKeyFile)
-					}
+		err = s.loadAccessKey(ctx, s.AccessKeyFile)
+		log.SpanLog(ctx, log.DebugLevelInfo, "access key upgrade load", "err", err)
+		// Upgrade access key
+		_, err = s.upgradeAccessKey(ctx, AccessKeyUpgrade, PrimaryKey, haRole)
+		if err != nil {
+			// attempt to upgrade using backup key
+			log.SpanLog(ctx, log.DebugLevelInfo, "upgrade failed, try backup key", "err", err)
+			bkerr := s.loadAccessKey(ctx, s.backupKeyFile())
+			log.SpanLog(ctx, log.DebugLevelInfo, "backup key load", "err", bkerr)
+			if bkerr == nil {
+				upgraded, err := s.upgradeAccessKey(ctx, AccessKeyUpgrade, BackupKey, haRole)
+				if err == nil && !upgraded {
+					// backup key is valid and key was not
+					// upgraded, move backup to primary.
+					log.SpanLog(ctx, log.DebugLevelInfo, "restore backup key")
+					err = os.Rename(s.backupKeyFile(), s.AccessKeyFile)
 				}
-			} else {
-				log.SpanLog(ctx, log.DebugLevelInfo, "access key loaded")
-				loaded = true
 			}
-			time.Sleep(10 * time.Second)
 		}
 	} else {
 		// DME/Shepherd and CRM share access key, but it may take time for
