@@ -260,6 +260,30 @@ func TestAppApi(t *testing.T) {
 	_, err = apis.appApi.DeleteApp(ctx, &app)
 	require.Nil(t, err)
 
+	app = testutil.AppData[12]
+	require.Equal(t, app.Deployment, cloudcommon.DeploymentTypeVM)
+	app.Key.Name = "vm serverless"
+	app.AllowServerless = true
+	app.ServerlessConfig = &edgeproto.ServerlessConfig{}
+	app.ServerlessConfig.Vcpus = *edgeproto.NewUdec64(5, 0)
+	app.ServerlessConfig.Ram = 24
+	app.ServerlessConfig.MinReplicas = 1
+	_, err = apis.appApi.CreateApp(ctx, &app)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Allow serverless only supported for deployment type Kubernetes")
+
+	app = testutil.AppData[15]
+	require.Equal(t, app.Deployment, cloudcommon.DeploymentTypeDocker)
+	app.Key.Name = "docker serverless"
+	app.AllowServerless = true
+	app.ServerlessConfig = &edgeproto.ServerlessConfig{}
+	app.ServerlessConfig.Vcpus = *edgeproto.NewUdec64(5, 0)
+	app.ServerlessConfig.Ram = 24
+	app.ServerlessConfig.MinReplicas = 1
+	_, err = apis.appApi.CreateApp(ctx, &app)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Allow serverless only supported for deployment type Kubernetes")
+
 	// test updating app with a list of alertpolicies
 	alertPolicyApp := testutil.AppData[1]
 	alertPolicyApp.Deployment = cloudcommon.DeploymentTypeKubernetes
