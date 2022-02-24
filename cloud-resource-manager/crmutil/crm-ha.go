@@ -20,11 +20,6 @@ func (s *CrmHAProcess) ActiveChangedPreSwitch(ctx context.Context, platformActiv
 		log.SpanFromContext(ctx).Finish()
 		log.FatalLog("Error: Unexpected CRM transition to inactive", "cloudletKey", s.controllerData.cloudletKey)
 	}
-	if s.controllerData.platform != nil {
-		s.controllerData.platform.ActiveChanged(ctx, platformActive)
-	} else {
-		return fmt.Errorf("CRM HA platform is nil - %v", s.controllerData.cloudletKey)
-	}
 	return nil
 }
 

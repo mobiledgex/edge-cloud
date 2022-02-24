@@ -21,9 +21,10 @@ func (s *Platform) InitHAConditional(ctx context.Context, platformConfig *platfo
 	return s.Xind.InitHAConditional(ctx, platformConfig, updateCallback)
 }
 
-func (s *Platform)  GetInitHAConditionalCompatibilityVersion(ctx context.Context) string {
+func (s *Platform) GetInitHAConditionalCompatibilityVersion(ctx context.Context) string {
 	return s.Xind.GetInitHAConditionalCompatibilityVersion(ctx)
 }
 
-func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) {
+func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) error {
+	return nil
 }

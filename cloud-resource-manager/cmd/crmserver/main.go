@@ -311,6 +311,9 @@ func main() {
 		if err == nil {
 			if conditionalInitRequired {
 				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
+			} else {
+				// notify the platform that activity changed
+				err = platform.ActiveChanged(ctx, true)
 			}
 		}
 		if err != nil {
