@@ -82,6 +82,9 @@ var ClusterKeys = []edgeproto.ClusterKey{
 	edgeproto.ClusterKey{
 		Name: "defaultmtclust", // cloudcommon.DefaultMultiTenantCluster
 	},
+	edgeproto.ClusterKey{
+		Name: "dockerCluster",
+	},
 }
 
 var AppData = []edgeproto.App{
@@ -279,6 +282,18 @@ var AppData = []edgeproto.App{
 			Vcpus: *edgeproto.NewUdec64(0, 500*edgeproto.DecMillis),
 			Ram:   20,
 		},
+	},
+	edgeproto.App{ // 15
+		Key: edgeproto.AppKey{
+			Organization: DevData[0],
+			Name:         "Pillimo Docker!",
+			Version:      "1.0.1",
+		},
+		Deployment:    "docker", // cloudcommon.DeploymentTypeDocker
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:   "tcp:80,tcp:443,tcp:81:tls",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor: FlavorData[0].Key,
 	},
 }
 var OperatorData = []string{
@@ -520,6 +535,16 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		MasterNodeFlavor: FlavorData[2].Key.Name, // medium
 		MultiTenant:      true,
 	},
+	edgeproto.ClusterInst{ // 9
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:   ClusterKeys[6],
+			CloudletKey:  cloudletData[1].Key,
+			Organization: DevData[0],
+		},
+		Deployment: "docker", // cloudcommon.DeploymentTypeDocker
+		Flavor:     FlavorData[0].Key,
+		IpAccess:   edgeproto.IpAccess_IP_ACCESS_DEDICATED,
+	},
 }
 
 // These are the cluster insts that will be created automatically
@@ -720,6 +745,13 @@ var AppInstData = []edgeproto.AppInst{
 		},
 		CloudletLoc: cloudletData[0].Location,
 	},
+	edgeproto.AppInst{ // 17
+		Key: edgeproto.AppInstKey{
+			AppKey:         AppData[15].Key,
+			ClusterInstKey: *ClusterInstData[9].Key.Virtual(""),
+		},
+		CloudletLoc: cloudletData[0].Location,
+	},
 }
 
 var AppInstInfoData = []edgeproto.AppInstInfo{
@@ -837,6 +869,12 @@ func GetAppInstRefsData() []edgeproto.AppInstRefs {
 			Key: AppData[14].Key,
 			Insts: map[string]uint32{
 				AppInstData[16].Key.GetKeyString(): 1,
+			},
+		},
+		edgeproto.AppInstRefs{
+			Key: AppData[15].Key,
+			Insts: map[string]uint32{
+				AppInstData[17].Key.GetKeyString(): 1,
 			},
 		},
 	}
@@ -1146,7 +1184,7 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 		},
 		UsedDynamicIps: 2,
 	},
-	// ClusterInstData[1,4]:
+	// ClusterInstData[1,4,9]:
 	edgeproto.CloudletRefs{
 		Key: cloudletData[1].Key,
 		ClusterInsts: []edgeproto.ClusterInstRefKey{
@@ -1158,7 +1196,12 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 				ClusterKey:   ClusterInstData[4].Key.ClusterKey,
 				Organization: ClusterInstData[4].Key.Organization,
 			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[9].Key.ClusterKey,
+				Organization: ClusterInstData[9].Key.Organization,
+			},
 		},
+		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[2,5]:
 	edgeproto.CloudletRefs{
@@ -1226,7 +1269,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		},
 		UsedDynamicIps: 2,
 	},
-	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
+	// ClusterInstData[1,4,9], ClusterInstAutoData[0]: (shared,shared,dedicated,shared)
 	// AppInstData[2,3] -> ports[tcp:443;tcp:80,tcp:443,tcp:81,udp:10002]
 	edgeproto.CloudletRefs{
 		Key: cloudletData[1].Key,
@@ -1243,9 +1286,14 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 				ClusterKey:   ClusterInstAutoData[0].Key.ClusterKey,
 				Organization: ClusterInstAutoData[0].Key.Organization,
 			},
+			edgeproto.ClusterInstRefKey{
+				ClusterKey:   ClusterInstData[9].Key.ClusterKey,
+				Organization: ClusterInstData[9].Key.Organization,
+			},
 		},
 		RootLbPorts:            map[int32]int32{80: 1, 81: 1, 443: 1, 10000: 1, 10002: 3},
 		ReservedAutoClusterIds: 1,
+		UsedDynamicIps:         1,
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1,2]: (shared,dedicated,shared,shared)
 	// AppInstData[4,5,6] -> ports[tcp:443,udp:11111;udp:2024;tcp:80,udp:8001,tcp:65535]
