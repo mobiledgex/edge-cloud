@@ -84,6 +84,7 @@ var getRootLBCertsTrigger chan bool
 func Init(ctx context.Context, inPlatform pf.Platform, inAccessApi *accessapi.ControllerClient) {
 	accessApi = inAccessApi
 	platform = inPlatform
+	getRootLBCertsTrigger = make(chan bool)
 }
 
 // get certs from vault for rootlb, and pull a new one once a month, should only be called once by CRM
@@ -107,32 +108,41 @@ func GetRootLbCerts(ctx context.Context, key *edgeproto.CloudletKey, commonName 
 		return
 	}
 	certsDir, certFile, keyFile := cloudcommon.GetCertsDirAndFiles(string(out))
-	getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts, haMgr)
+	lastCertsUsed := getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts, haMgr, nil)
 	go func() {
-		// refresh every 30 days
+		// load certs and refresh all the rootlb certs only if certs have changed
 		for {
 			select {
-			case <-time.After(30 * 24 * time.Hour):
+			case <-time.After(1 * 24 * time.Hour):
 			case <-getRootLBCertsTrigger:
+				// since it is a force trigger, ignore last certs check
+				lastCertsUsed = nil
 			}
 			lbCertsSpan := log.StartSpan(log.DebugLevelInfo, "get rootlb certs thread", opentracing.ChildOf(log.SpanFromContext(ctx).Context()))
-			getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts, haMgr)
+			lastCertsUsed = getRootLbCertsHelper(ctx, key, commonName, nodeMgr, certsDir, certFile, keyFile, commercialCerts, haMgr, lastCertsUsed)
 			lbCertsSpan.Finish()
 		}
 	}()
 }
 
-func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool, haMgr *redundancy.HighAvailabilityManager) {
+func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commonName string, nodeMgr *node.NodeMgr, certsDir, certFile, keyFile string, commercialCerts bool, haMgr *redundancy.HighAvailabilityManager, lastCertsUsed *access.TLSCert) *access.TLSCert {
 	var err error
 	tls := access.TLSCert{}
 	if !haMgr.PlatformInstanceActive {
 		log.SpanLog(ctx, log.DebugLevelInfra, "skipping lb certs update for standby CRM")
-		return
+		return nil
 	}
 	if commercialCerts {
 		err = getCertFromVault(ctx, &tls, commonName)
 	} else {
 		err = getSelfSignedCerts(ctx, &tls, commonName)
+	}
+	if lastCertsUsed != nil {
+		if *lastCertsUsed == tls {
+			// certs did not change, perform no action
+			log.SpanLog(ctx, log.DebugLevelInfo, "Ignore rootlb certs update as certs have not changed since last update")
+			return lastCertsUsed
+		}
 	}
 	if err == nil {
 		client, err := platform.GetNodePlatformClient(ctx, &edgeproto.CloudletMgmtNode{Type: cloudcommon.CloudletNodeSharedRootLB})
@@ -171,6 +181,7 @@ func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commo
 		log.SpanLog(ctx, log.DebugLevelInfo, "Unable to get certs", "err", err)
 		nodeMgr.Event(ctx, "TLS certs error", key.Organization, key.GetTags(), fmt.Errorf("Unable to get certs: %v", err))
 	}
+	return &tls
 }
 
 func writeCertToRootLb(ctx context.Context, tls *access.TLSCert, client ssh.Client, certsDir, certFile, keyFile string) error {
