@@ -195,8 +195,17 @@ func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *Ku
 	if err != nil {
 		return err
 	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap", "names.MultitenantNamespace", names.MultitenantNamespace)
+
 	for _, s := range services {
 		lbip := ""
+		if names.MultitenantNamespace != "" {
+			svcNamespace := s.ObjectMeta.Namespace
+			if svcNamespace != names.MultitenantNamespace {
+				continue
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap match", "svcNamespace", svcNamespace)
+		}
 		for _, ing := range s.Status.LoadBalancer.Ingress {
 			if strings.Contains(ing.IP, "pending") || ing.IP == "" {
 				continue
@@ -220,6 +229,7 @@ func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *Ku
 		for _, p := range ports {
 			portString := LbServicePortToString(&p)
 			portMap[portString] = lbip
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap settting for ", "portString", portString, "lbip", lbip)
 		}
 	}
 	return nil
@@ -243,7 +253,7 @@ func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, name
 			}
 			lbip, ok := appinst.InternalPortToLbIp[portString]
 			if ok {
-				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip)
+				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip, "names.MultitenantNamespace", names.MultitenantNamespace)
 				appinst.InternalPortToLbIp[portString] = lbip
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "did not find load balancer ip for port", "portString", portString)
