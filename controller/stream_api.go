@@ -199,6 +199,9 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	// Start subscription to redis channel identified by stream key.
 	// Objects from CRM will be published to this channel and hence,
 	// will be received by intended receiver
+	// Note that this method does not wait on a response from redis, so the
+	// subscription may not be active immediately. To force the connection to wait,
+	// we call the Receive() method on the returned *PubSub
 	pubsub := redisClient.Subscribe(streamKey)
 
 	// Wait for confirmation that subscription is created before publishing anything.
