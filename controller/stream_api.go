@@ -183,9 +183,8 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
 
-	// * If called as part of autocluster undo, then proceed as it was called
-	//   from the context of appInst action
-	// * Else, don't proceed because caller will perform the same operation
+	// If this is undo, but not an autocluster, then caller has already performed
+	// the same operation, so reuse the existing callback.
 	if !cctx.AutoCluster && cctx.Undo {
 		streamSendObj := streamSend{cb: inCb}
 		outCb := &CbWrapper{
@@ -285,9 +284,8 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 		return nil
 	}
 
-	// * If called as part of autocluster undo, then proceed as it was called
-	//   from the context of appInst action
-	// * Else, don't proceed because caller will perform the same operation
+	// If this is undo, but not an autocluster, then caller has already performed
+	// the same operation, so skip performing any cleanup
 	if !cctx.AutoCluster && cctx.Undo {
 		return nil
 	}
