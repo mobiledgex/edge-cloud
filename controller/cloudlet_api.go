@@ -1418,6 +1418,8 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}()
 
+	updatecb := updateCloudletCallback{in, cb}
+
 	var dynInsts map[edgeproto.AppInstKey]struct{}
 	var clDynInsts map[edgeproto.ClusterInstKey]struct{}
 
@@ -1502,6 +1504,17 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	// ready check because it's not ready - it's being deleted.
 	cctx.SkipCloudletReadyCheck = true
 
+	pfConfig, err := s.getPlatformConfig(ctx, in)
+	if err != nil {
+		return err
+	}
+
+	var cloudletPlatform pf.Platform
+	cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
+	if err != nil {
+		return err
+	}
+
 	autoProvPolicies := s.all.autoProvPolicyApi.UsesCloudlet(&in.Key)
 	if len(autoProvPolicies) > 0 {
 		strs := []string{}
@@ -1583,6 +1596,17 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
+	cloudletKeys := make([]edgeproto.CloudletKey, 0)
+	if in.PhysicalName != "" {
+		samePhysNameCloudletFilter := edgeproto.Cloudlet{
+			PhysicalName: in.PhysicalName,
+		}
+		s.cache.Show(&samePhysNameCloudletFilter, func(obj *edgeproto.Cloudlet) error {
+			cloudletKeys = append(cloudletKeys, obj.Key)
+			return nil
+		})
+	}
+
 	// Delete cloudlet from database
 	updateCloudlet := edgeproto.Cloudlet{}
 	err1 := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
@@ -1594,6 +1618,16 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			s.store.STMPut(stm, &updateCloudlet)
 			return nil
 		}
+
+		// If this is the last cloudlet using the physicalname, then delete accessvars if present
+		// we have no way to figure out if access vars were present for this cloudlet or not, so ignore any err
+		if len(cloudletKeys) == 1 && cloudletKeys[0].Matches(&in.Key) {
+			err = cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup cloudlet access vars", "err", err)
+			}
+		}
+
 		s.store.STMDel(stm, &in.Key)
 		s.dnsLabelStore.STMDel(stm, updateCloudlet.DnsLabel)
 		s.all.cloudletRefsApi.store.STMDel(stm, &in.Key)
