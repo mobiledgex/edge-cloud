@@ -128,7 +128,7 @@ func UpdateResourcesMax() error {
 	return nil
 }
 
-func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
+func (s *Platform) InitCommon(ctx context.Context, platformConfig *platform.PlatformConfig, caches *platform.Caches, haMgr *redundancy.HighAvailabilityManager, updateCallback edgeproto.CacheUpdateCallback) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "running in fake cloudlet mode")
 	platformConfig.NodeMgr.Debug.AddDebugFunc("fakecmd", s.runDebug)
 
@@ -152,6 +152,14 @@ func (s *Platform) Init(ctx context.Context, platformConfig *platform.PlatformCo
 	s.clusterTPEs = make(map[cloudcommon.TrustPolicyExceptionKeyClusterInstKey]struct{})
 
 	return nil
+}
+
+func (s *Platform) InitHAConditional(ctx context.Context, platformConfig *platform.PlatformConfig, updateCallback edgeproto.CacheUpdateCallback) error {
+	return s.updateResourceCounts(ctx)
+}
+
+func (s *Platform) GetInitHAConditionalCompatibilityVersion(ctx context.Context) string {
+	return "fake-1.0"
 }
 
 func (s *Platform) GetFeatures() *platform.Features {
@@ -700,10 +708,13 @@ func (s *Platform) SetPowerState(ctx context.Context, app *edgeproto.App, appIns
 func (s *Platform) runDebug(ctx context.Context, req *edgeproto.DebugRequest) string {
 	return "ran some debug"
 }
+func (s *Platform) PerformUpgrades(ctx context.Context, caches *platform.Caches, cloudletState dme.CloudletState) error {
+	return nil
+}
 
-func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Caches, cloudletState dme.CloudletState) error {
-	log.SpanLog(ctx, log.DebugLevelInfra, "SyncControllerCache", "state", cloudletState)
-	if caches == nil {
+func (s *Platform) updateResourceCounts(ctx context.Context) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "updateResourceCounts")
+	if s.caches == nil {
 		return fmt.Errorf("caches is nil")
 	}
 	// Because the fake cloudlet doesn't have it's own internal database of
@@ -711,25 +722,25 @@ func (s *Platform) SyncControllerCache(ctx context.Context, caches *platform.Cac
 	// what the Controller says is supposed to be here. This handles the CRM
 	// restart case.
 	clusterInstKeys := []edgeproto.ClusterInstKey{}
-	caches.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
+	s.caches.ClusterInstCache.GetAllKeys(ctx, func(k *edgeproto.ClusterInstKey, modRev int64) {
 		clusterInstKeys = append(clusterInstKeys, *k)
 	})
 	for _, k := range clusterInstKeys {
 		var clusterInst edgeproto.ClusterInst
-		if caches.ClusterInstCache.Get(&k, &clusterInst) {
+		if s.caches.ClusterInstCache.Get(&k, &clusterInst) {
 			updateClusterResCount(&clusterInst)
 		}
 	}
 
 	appInstKeys := []edgeproto.AppInstKey{}
-	caches.AppInstCache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
+	s.caches.AppInstCache.GetAllKeys(ctx, func(k *edgeproto.AppInstKey, modRev int64) {
 		appInstKeys = append(appInstKeys, *k)
 	})
 	for _, k := range appInstKeys {
 		var appInst edgeproto.AppInst
-		if caches.AppInstCache.Get(&k, &appInst) {
+		if s.caches.AppInstCache.Get(&k, &appInst) {
 			var app edgeproto.App
-			if caches.AppCache.Get(&k.AppKey, &app) {
+			if s.caches.AppCache.Get(&k.AppKey, &app) {
 				if app.Deployment == cloudcommon.DeploymentTypeVM {
 					var clusterInst = edgeproto.ClusterInst{
 						Key: *appInst.ClusterInstKey(),

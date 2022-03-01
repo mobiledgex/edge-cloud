@@ -46,17 +46,17 @@ trustpolicies:
       organization: dmuus
       name: TrustPolicy1
    outboundsecurityrules:
-    - protocol:  tcp
+    - protocol:  TCP
       portrangemin: 443
       remotecidr: "35.247.68.151/32"
-    - protocol:  tcp
+    - protocol:  TCP
       portrangemin: 8080
       portrangemax: 8088
       remotecidr: "0.0.0.0/0"
-    - protocol: udp
+    - protocol: UDP
       portrangemin: 53
       remotecidr: "0.0.0.0/0"
-    - protocol: icmp
+    - protocol: ICMP
       remotecidr: "8.0.0.0/8"
 
 cloudlets:
@@ -107,6 +107,6 @@ apps:
   accessports: "tcp:80"
   trusted: true
   requiredoutboundconnections:
-  - protocol: tcp
+  - protocol: TCP
     remotecidr: "35.247.68.151/24"
     portrangemin: 2222

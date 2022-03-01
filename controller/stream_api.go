@@ -183,10 +183,31 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
 
+	// If this is undo, but not an autocluster, then caller has already performed
+	// the same operation, so reuse the existing callback.
+	if !cctx.AutoCluster && cctx.Undo {
+		streamSendObj := streamSend{cb: inCb}
+		outCb := &CbWrapper{
+			GenericCb: inCb,
+			ctx:       ctx,
+			streamKey: streamKey,
+		}
+		return &streamSendObj, outCb, nil
+	}
+
 	// Start subscription to redis channel identified by stream key.
 	// Objects from CRM will be published to this channel and hence,
 	// will be received by intended receiver
+	// Note that this method does not wait on a response from redis, so the
+	// subscription may not be active immediately. To force the connection to wait,
+	// we call the Receive() method on the returned *PubSub
 	pubsub := redisClient.Subscribe(streamKey)
+
+	// Wait for confirmation that subscription is created before publishing anything.
+	_, err := pubsub.Receive()
+	if err != nil {
+		return nil, nil, fmt.Errorf("Failed to subscribe to stream %s, %v", streamKey, err)
+	}
 
 	// Go channel to receives messages.
 	ch := pubsub.Channel()
@@ -263,9 +284,8 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 		return nil
 	}
 
-	// * If called as part of autocluster undo, then proceed as it was called
-	//   from the context of appInst action
-	// * Else, don't proceed because caller will perform the same operation
+	// If this is undo, but not an autocluster, then caller has already performed
+	// the same operation, so skip performing any cleanup
 	if !cctx.AutoCluster && cctx.Undo {
 		return nil
 	}

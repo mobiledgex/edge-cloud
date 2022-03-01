@@ -278,11 +278,7 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 	if err := validateAppConfigsForDeployment(ctx, in.Configs, in.Deployment); err != nil {
 		return err
 	}
-	for i, r := range in.RequiredOutboundConnections {
-		if r.PortRangeMax == 0 {
-			in.RequiredOutboundConnections[i].PortRangeMax = r.PortRangeMin
-		}
-	}
+	in.FixupSecurityRules(ctx)
 	if err := validateRequiredOutboundConnections(in.RequiredOutboundConnections); err != nil {
 		return err
 	}
