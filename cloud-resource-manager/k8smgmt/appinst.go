@@ -195,8 +195,17 @@ func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *Ku
 	if err != nil {
 		return err
 	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap", "names.MultitenantNamespace", names.MultitenantNamespace)
+
 	for _, s := range services {
 		lbip := ""
+		if names.MultitenantNamespace != "" {
+			svcNamespace := s.ObjectMeta.Namespace
+			if svcNamespace != names.MultitenantNamespace {
+				continue
+			}
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap match", "svcNamespace", svcNamespace)
+		}
 		for _, ing := range s.Status.LoadBalancer.Ingress {
 			if strings.Contains(ing.IP, "pending") || ing.IP == "" {
 				continue
@@ -220,6 +229,7 @@ func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *Ku
 		for _, p := range ports {
 			portString := LbServicePortToString(&p)
 			portMap[portString] = lbip
+			log.SpanLog(ctx, log.DebugLevelInfra, "UpdateLoadBalancerPortMap settting for ", "portString", portString, "lbip", lbip)
 		}
 	}
 	return nil
@@ -243,7 +253,7 @@ func PopulateAppInstLoadBalancerIps(ctx context.Context, client ssh.Client, name
 			}
 			lbip, ok := appinst.InternalPortToLbIp[portString]
 			if ok {
-				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip)
+				log.SpanLog(ctx, log.DebugLevelInfra, "found load balancer ip for port", "portString", portString, "lbip", lbip, "names.MultitenantNamespace", names.MultitenantNamespace)
 				appinst.InternalPortToLbIp[portString] = lbip
 			} else {
 				log.SpanLog(ctx, log.DebugLevelInfra, "did not find load balancer ip for port", "portString", portString)
@@ -621,11 +631,23 @@ func DeleteNamespace(ctx context.Context, client ssh.Client, names *KubeNames) e
 			return fmt.Errorf("Error in deleting namespace: %s - %v", out, err)
 		}
 	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespaced kconf", "name", names.KconfName)
+
 	// delete namespaced kconf
 	err = pc.DeleteFile(client, names.KconfName, pc.NoSudo)
 	if err != nil {
 		// just log the error
 		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespaced kconf", "err", err)
+	}
+
+	configYamlFile := names.MultitenantNamespace + ".yaml"
+
+	log.SpanLog(ctx, log.DebugLevelInfra, "deleting namespaced configYamlFile", "name", configYamlFile)
+
+	err = pc.DeleteFile(client, configYamlFile, pc.NoSudo)
+	if err != nil {
+		// just log the error
+		log.SpanLog(ctx, log.DebugLevelInfra, "failed to clean up namespace configYamlFile", "err", err)
 	}
 	return nil
 }

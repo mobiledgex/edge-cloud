@@ -1,0 +1,6 @@
+1/CloudletPool/{"organization":"Sonoral","name":"Sonoral-Pool"}
+{"key":{"organization":"Sonoral","name":"Sonoral-Pool"}, "created_at":"2022-02-14T09:29:57.129582495Z"}
+1/CloudletPool/{"organization":"GDDT","name":"cloudletpool-gddt-stage"}
+{"key":{"organization":"GDDT","name":"cloudletpool-gddt-stage"},"cloudlets":[{"organization":"GDDT","name":"buckhorn-stage"},{"organization":"GDDT","name":"sunnydale-stage"}],"created_at":"2022-02-14T09:29:57.129582495Z","updated_at":""}
+1/CloudletPool/{"organization":"GDDT","name":"cloudletpool-gddt-main"}
+{"key":{"organization":"GDDT","name":"cloudletpool-gddt-main"},"cloudlets":[{"organization":"GDDT","name":"beacon-main"}],"created_at":"","updated_at":"2022-02-14T09:29:57.129582495Z"}

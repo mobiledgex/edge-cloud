@@ -108,7 +108,8 @@ cloudletpools:
     organization: dmuus
     name: cloudlet2-pool
   cloudlets:
-  - cloudlet2
+  - organization: dmuus
+    name: cloudlet2
 
 trustpolicyexceptions:
 - key:
@@ -121,7 +122,7 @@ trustpolicyexceptions:
         name: cloudlet2-pool
     name: tpe1
   outboundsecurityrules:
-    - protocol: tcp
+    - protocol: TCP
       remotecidr: "1.1.1.1/32"
       portrangemin: 1
       portrangemax: 111

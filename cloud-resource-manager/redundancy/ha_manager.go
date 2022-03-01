@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/rediscache"
+	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 const RedisPingFail string = "Redis Ping Fail"
@@ -23,6 +24,8 @@ const MaxRedisUnreachableRetries = 3
 type HAWatcher interface {
 	ActiveChangedPreSwitch(ctx context.Context, platformActive bool) error  // actions before setting PlatformInstanceActive
 	ActiveChangedPostSwitch(ctx context.Context, platformActive bool) error // actions after setting PlatformInstanceActive
+	PlatformActiveOnStartup(ctx context.Context)                            // actions if the platform is active on first
+	DumpWatcherFields(ctx context.Context) map[string]interface{}
 }
 
 type HighAvailabilityManager struct {
@@ -54,6 +57,12 @@ func (s *HighAvailabilityManager) Init(ctx context.Context, nodeGroupKey string,
 	if s.HARole != string(process.HARolePrimary) && s.HARole != string(process.HARoleSecondary) {
 		return fmt.Errorf("invalid HA Role type")
 	}
+	defer func() {
+		if s.PlatformInstanceActive {
+			// perform any actions needed when the platform is active on start
+			s.haWatcher.PlatformActiveOnStartup(ctx)
+		}
+	}()
 	if !s.redisCfg.AddrSpecified() {
 		s.PlatformInstanceActive = true
 		return fmt.Errorf("%s Redis Addr for HA not specified", HighAvailabilityManagerDisabled)
@@ -116,6 +125,7 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 	if !s.RedisConnectionFailed {
 		if s.PlatformInstanceActive || s.ActiveTransitionInProgress {
 			// this should not happen. Only 1 thread should be doing tryActive
+			log.SpanFromContext(ctx).Finish()
 			log.FatalLog("Platform already active", "PlatformInstanceActive", s.PlatformInstanceActive, "ActiveTransitionInProgress", s.ActiveTransitionInProgress)
 		}
 		// see if we are already active, which can happen if the process just died and was restarted quickly
@@ -140,6 +150,24 @@ func (s *HighAvailabilityManager) tryActive(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	return v, nil
+}
+
+func (s *HighAvailabilityManager) SetValue(ctx context.Context, key string, value string, expiration time.Duration) error {
+	result, err := s.redisClient.Set(key, value, expiration).Result()
+	log.SpanLog(ctx, log.DebugLevelInfra, "SetValue Done", "expiration", expiration, "result", result, "err", err)
+	return err
+}
+
+func (s *HighAvailabilityManager) GetValue(ctx context.Context, key string) (string, error) {
+	val, err := s.redisClient.Get(key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", nil
+		}
+		return "", fmt.Errorf("Error getting value from redis: %v", err)
+	}
+	log.SpanLog(ctx, log.DebugLevelInfra, "GetValue Done", "val", val)
+	return val, nil
 }
 
 func (s *HighAvailabilityManager) CheckActive(ctx context.Context) (bool, error) {
@@ -254,19 +282,26 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 				timeLastBumpActive = time.Now()
 				// switchover is handled in a separate thread so we do not miss polling redis
 				s.ActiveTransitionInProgress = true
-				go func() {
-					err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
-					if err != nil {
-						log.FatalLog("ActiveChangedPreSwitch failed", "err", err)
-					}
-					s.PlatformInstanceActive = true
-					s.ActiveTransitionInProgress = false
-					s.haWatcher.ActiveChangedPostSwitch(ctx, true)
-					if err != nil {
-						log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
-					}
-					s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
-				}()
+				switchoverStartTime := time.Now()
+				err := s.haWatcher.ActiveChangedPreSwitch(ctx, true)
+				if err != nil {
+					log.SpanFromContext(ctx).Finish()
+					log.FatalLog("ActiveChangedPreSwitch failed", "err", err)
+				}
+				s.PlatformInstanceActive = true
+				s.ActiveTransitionInProgress = false
+				s.haWatcher.ActiveChangedPostSwitch(ctx, true)
+				if err != nil {
+					log.SpanFromContext(ctx).Finish()
+					log.FatalLog("ActiveChangedPostSwitch failed", "err", err)
+				}
+				s.nodeMgr.Event(ctx, "High Availability Node Active", s.nodeMgr.MyNode.Key.CloudletKey.Organization, s.nodeMgr.MyNode.Key.CloudletKey.GetTags(), nil, "Node Type", s.nodeMgr.MyNode.Key.Type, "HARole", s.HARole)
+				switchoverDuration := time.Since(switchoverStartTime)
+				log.SpanLog(ctx, log.DebugLevelInfra, "switchover done", "switchoverDuration", switchoverDuration)
+				if switchoverDuration > s.activePollInterval {
+					// indicates some long running task was done by the watcher in ActiveChangedPreSwitch or ActiveChangedPostSwitch
+					log.SpanLog(ctx, log.DebugLevelInfra, "Warning: switchover took excessive time", "switchoverDuration", switchoverDuration)
+				}
 			} else {
 				time.Sleep(s.activePollInterval)
 				continue
@@ -280,9 +315,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					s.updateRedisFailed(ctx, false, nil)
 					if !active {
 						// activity was stolen when redis came back. This is possible but unlikely as the secondary should give the primary time to remain active
-						log.SpanLog(ctx, log.DebugLevelInfra, "activity lost when redis connection re-established", "role", s.HARole)
-						s.PlatformInstanceActive = false
-						continue
+						log.SpanFromContext(ctx).Finish()
+						log.FatalLog("activity lost when redis connection re-established", "role", s.HARole)
 					}
 					elapsedSinceBumpActive = time.Since(time.Now())
 				} else {
@@ -312,15 +346,16 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 							if s.HARole == string(process.HARolePrimary) {
 								log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
 							} else {
-								s.PlatformInstanceActive = false
-								log.SpanLog(ctx, log.DebugLevelInfra, "secondary unit lost activity due to redis error")
+								log.SpanFromContext(ctx).Finish()
+								log.FatalLog("secondary unit lost activity due to redis error")
 							}
 							time.Sleep(s.activePollInterval)
 							continue // bypass bumpActive this pass since redis is down
 						} else {
 							// this is unexpected
 							log.SpanLog(ctx, log.DebugLevelInfra, "Activity Lost Unexpectedly")
-							s.PlatformInstanceActive = false
+							log.SpanFromContext(ctx).Finish()
+							log.FatalLog("secondary unit lost activity due to redis error")
 						}
 					}
 					timeLastCheckActive = time.Now()
@@ -340,8 +375,8 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 					if s.HARole == string(process.HARolePrimary) {
 						log.SpanLog(ctx, log.DebugLevelInfra, "Maintaining active status for primary due to redis error", "err", err)
 					} else {
-						s.PlatformInstanceActive = false
-						log.SpanLog(ctx, log.DebugLevelInfra, "Standby going inactive due to redis error", "err", err)
+						log.SpanFromContext(ctx).Finish()
+						log.FatalLog("standby going down due to redis error", "err", err)
 					}
 				}
 			}
@@ -350,6 +385,18 @@ func (s *HighAvailabilityManager) CheckActiveLoop(ctx context.Context) {
 	}
 }
 
-func (s *HighAvailabilityManager) DumpActive(ctx context.Context, req *edgeproto.DebugRequest) string {
-	return fmt.Sprintf("PlatformActive: %t", s.PlatformInstanceActive)
+func (s *HighAvailabilityManager) DumpHAManager(ctx context.Context, req *edgeproto.DebugRequest) string {
+	result := make(map[string]map[string]interface{})
+	haMgrFields := make(map[string]interface{})
+	result["haManager"] = haMgrFields
+	haMgrFields["HAEnabled"] = s.HAEnabled
+	haMgrFields["HARole"] = s.HARole
+	haMgrFields["PlatformInstanceActive"] = s.PlatformInstanceActive
+	haMgrFields["RedisConnectionFailed"] = s.RedisConnectionFailed
+	haMgrFields["haWatcher"] = s.haWatcher.DumpWatcherFields(ctx)
+	haStatusOut, err := yaml.Marshal(result)
+	if err != nil {
+		return err.Error()
+	}
+	return string(haStatusOut)
 }

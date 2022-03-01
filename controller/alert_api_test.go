@@ -190,13 +190,13 @@ func testinit(ctx context.Context, t *testing.T) *testServices {
 }
 
 func testfinish(s *testServices) {
-	if s.DummyRedisSrv != nil {
-		s.DummyRedisSrv.Close()
-		s.DummyRedisSrv = nil
-	}
 	if redisClient != nil {
 		redisClient.Close()
 		redisClient = nil
+	}
+	if s.DummyRedisSrv != nil {
+		s.DummyRedisSrv.Close()
+		s.DummyRedisSrv = nil
 	}
 	services = Services{}
 }

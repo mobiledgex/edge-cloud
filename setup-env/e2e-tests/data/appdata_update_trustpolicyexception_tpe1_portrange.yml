@@ -10,7 +10,7 @@ trustpolicyexceptions:
         name: cloudlet2-pool
     name: tpe1
   outboundsecurityrules:
-    - protocol: tcp
+    - protocol: TCP
       remotecidr: "2.2.2.2/16"
       portrangemin: 2
       portrangemax: 222

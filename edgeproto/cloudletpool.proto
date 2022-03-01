@@ -6,6 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
+import "cloudletkey.proto";
 import "gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
@@ -33,7 +34,7 @@ message CloudletPool {
   // CloudletPool key
   CloudletPoolKey key = 2 [(gogoproto.nullable) = false];
   // Cloudlets part of the pool
-  repeated string cloudlets = 3 [(protogen.refers_to) = "Cloudlet"];
+  repeated CloudletKey cloudlets = 3 [(protogen.refers_to) = "Cloudlet", (gogoproto.nullable) = false];
     // Created at time
   distributed_match_engine.Timestamp created_at = 4 [(gogoproto.nullable) = false, (protogen.backend) = true, (protogen.hidetag) = "timestamp"];
     // Updated at time
@@ -45,7 +46,7 @@ message CloudletPool {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_test_update) = false;
   option (protogen.generate_cache) = true;
-  option (protogen.noconfig) = "Members,CreatedAt,UpdatedAt,DeletePrepare";
+  option (protogen.noconfig) = "Members,CreatedAt,UpdatedAt,DeletePrepare,Cloudlets:#.Organization";
   option (protogen.alias) = "name=Key.Name,org=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
   option (protogen.notify_cache) = true;
@@ -57,8 +58,9 @@ message CloudletPoolMember {
   // CloudletPool key
   CloudletPoolKey key = 1 [(gogoproto.nullable) = false, (protogen.refers_to) = "CloudletPool"];
   // Cloudlet name
-  string cloudlet_name = 2 [(protogen.refers_to) = "Cloudlet"];
-  option (protogen.alias) = "pool=Key.Name,cloudlet=CloudletName,org=Key.Organization";
+  CloudletKey cloudlet = 2 [(protogen.refers_to) = "Cloudlet", (gogoproto.nullable) = false];
+  option (protogen.alias) = "pool=Key.Name,org=Key.Organization,cloudlet=Cloudlet.Name,federatedorg=Cloudlet.FederatedOrganization";
+  option (protogen.noconfig) = "Cloudlet.Organization";
 }
 
 service CloudletPoolApi {
@@ -106,7 +108,7 @@ service CloudletPoolApi {
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
     option (protogen.mc2_custom_authz) = true;
-    option (protogen.method_also_required) = "CloudletName";
+    option (protogen.method_also_required) = "Cloudlet.Name";
   }
   // Remove a Cloudlet from a CloudletPool
   rpc RemoveCloudletPoolMember(CloudletPoolMember) returns (Result) {
@@ -115,6 +117,6 @@ service CloudletPoolApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletPools,ActionManage,Key.Organization";
-    option (protogen.method_also_required) = "CloudletName";
+    option (protogen.method_also_required) = "Cloudlet.Name";
   }
 }

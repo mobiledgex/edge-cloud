@@ -745,12 +745,12 @@ func (s *AutoProvInfo) Validate(fields map[string]struct{}) error {
 
 func ValidateSecurityRules(rules []SecurityRule) error {
 	for _, r := range rules {
-		if r.Protocol != "tcp" && r.Protocol != "udp" && r.Protocol != "icmp" {
-			return fmt.Errorf("Protocol must be one of: (tcp,udp,icmp)")
+		if r.Protocol != "TCP" && r.Protocol != "UDP" && r.Protocol != "ICMP" {
+			return fmt.Errorf("Protocol must be one of: (TCP,UDP,ICMP)")
 		}
-		if r.Protocol == "icmp" {
+		if r.Protocol == "ICMP" {
 			if r.PortRangeMin != 0 || r.PortRangeMax != 0 {
-				return fmt.Errorf("Port range must be empty for icmp")
+				return fmt.Errorf("Port range must be empty for ICMP")
 			}
 		} else {
 			log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "rule", r)
@@ -1162,11 +1162,7 @@ func (s *AutoProvPolicy) GetCloudletKeys() map[CloudletKey]struct{} {
 
 func (s *CloudletPool) GetCloudletKeys() map[CloudletKey]struct{} {
 	keys := make(map[CloudletKey]struct{})
-	for _, name := range s.Cloudlets {
-		key := CloudletKey{
-			Organization: s.Key.Organization,
-			Name:         name,
-		}
+	for _, key := range s.Cloudlets {
 		keys[key] = struct{}{}
 	}
 	return keys
@@ -1368,4 +1364,26 @@ func (s *TrustPolicyException) Validate(fields map[string]struct{}) error {
 	}
 	log.DebugLog(log.DebugLevelInfra, "ValidateSecurityRules()", "TrustPolicyException:", s.GetKey().Name)
 	return ValidateSecurityRules(s.OutboundSecurityRules)
+}
+
+func fixupSecurityRules(ctx context.Context, rules []SecurityRule) {
+	// port range max is optional, set it to min if min is present but not max
+	for i, o := range rules {
+		if o.PortRangeMax == 0 {
+			log.SpanLog(ctx, log.DebugLevelApi, "Setting PortRangeMax equal to min", "PortRangeMin", o.PortRangeMin)
+			rules[i].PortRangeMax = o.PortRangeMin
+		}
+		rules[i].Protocol = strings.ToUpper(o.Protocol)
+	}
+}
+func (s *TrustPolicy) FixupSecurityRules(ctx context.Context) {
+	fixupSecurityRules(ctx, s.OutboundSecurityRules)
+}
+
+func (s *TrustPolicyException) FixupSecurityRules(ctx context.Context) {
+	fixupSecurityRules(ctx, s.OutboundSecurityRules)
+}
+
+func (s *App) FixupSecurityRules(ctx context.Context) {
+	fixupSecurityRules(ctx, s.RequiredOutboundConnections)
 }

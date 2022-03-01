@@ -590,6 +590,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		if cloudletFeatures.IsSingleKubernetesCluster {
+			if app.Deployment != cloudcommon.DeploymentTypeKubernetes && app.Deployment != cloudcommon.DeploymentTypeHelm {
+				return fmt.Errorf("Cannot deploy %s app to single kubernetes cloudlet", app.Deployment)
+			}
 			// disable autocluster logic, since there's only one cluster
 			autoClusterSpecified = false
 			// Virtual cluster name is ignored (can be anything)

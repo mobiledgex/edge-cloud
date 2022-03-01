@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	fmt "fmt"
+	"regexp"
 	"sort"
 	strings "strings"
 
@@ -701,6 +702,66 @@ func AddDnsLabels(ctx context.Context, objStore objstore.KVStore, allApis *AllAp
 			}
 			allApis.appInstApi.store.STMPut(stm, &appInst)
 			allApis.appInstApi.dnsLabelStore.STMPut(stm, &appInst.Key.ClusterInstKey.CloudletKey, appInst.DnsLabel)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type OldCloudletPool struct {
+	Key       edgeproto.CloudletPoolKey
+	Cloudlets []string
+}
+
+func AddCloudletKeyToCloudletPool(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
+	cloudletPoolKeys, err := getDbObjectKeys(objStore, "CloudletPool")
+	if err != nil {
+		return err
+	}
+	for key, _ := range cloudletPoolKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// Get cloudlet pool
+			cloudletPoolStr := stm.Get(key)
+			if cloudletPoolStr == "" {
+				return nil // was deleted
+			}
+
+			// Check if cloudlet pool is already upgraded
+			newCloudletPool := edgeproto.CloudletPool{}
+			err = json.Unmarshal([]byte(cloudletPoolStr), &newCloudletPool)
+			if err == nil {
+				return nil // already upgraded
+			}
+
+			// Get data in old cloudlet pool format
+			oldCloudletPool := OldCloudletPool{}
+			err := json.Unmarshal([]byte(cloudletPoolStr), &oldCloudletPool)
+			if err != nil {
+				return fmt.Errorf("Unmarshal CloudletPool %s failed: %s", key, err)
+			}
+			if len(oldCloudletPool.Cloudlets) == 0 {
+				return nil // nothing to upgrade
+			}
+
+			// Fix cloudlet pool object upgrade using regex
+			var re = regexp.MustCompile(`"cloudlets":\[.*?\]`)
+			emptyCloudletsPoolStr := re.ReplaceAllString(cloudletPoolStr, `"cloudlets":[]`)
+			newCloudletPool = edgeproto.CloudletPool{}
+			err = json.Unmarshal([]byte(emptyCloudletsPoolStr), &newCloudletPool)
+			if err != nil {
+				return fmt.Errorf("Unmarshal CloudletPool %s failed: %s", key, err)
+			}
+			newCloudletPool.Cloudlets = []edgeproto.CloudletKey{}
+			for _, clName := range oldCloudletPool.Cloudlets {
+				newCloudletPool.Cloudlets = append(newCloudletPool.Cloudlets, edgeproto.CloudletKey{
+					Name:         clName,
+					Organization: newCloudletPool.Key.Organization,
+				})
+			}
+			allApis.cloudletPoolApi.store.STMPut(stm, &newCloudletPool)
 			return nil
 		})
 		if err != nil {
