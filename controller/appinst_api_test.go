@@ -343,6 +343,10 @@ func TestAppInstApi(t *testing.T) {
 		require.Nil(t, err, "Delete app %d: %s failed", ii, obj.Key.GetKeyString())
 	}
 	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, []edgeproto.AppInstRefs{})
+	// ensure that no open channels exist and all stream channels were cleaned up
+	chs, err := redisClient.PubSubChannels("*").Result()
+	require.Nil(t, err, "get pubsub channels")
+	require.Equal(t, 0, len(chs), "all chans are cleaned up")
 }
 
 func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testutil.AppCommonApi, cCloudletApi *testutil.CloudletCommonApi, cAppInstApi *testutil.AppInstCommonApi) {
