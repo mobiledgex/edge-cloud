@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -135,12 +136,22 @@ from this software. These licenses are listed below.`
 		fmt.Printf("%s\n\n", text)
 	}
 
+	errors := []error{}
 	for _, dep := range deps {
 		if *gennotice {
-			genNotice(dep)
+			err := genNotice(dep)
+			if err != nil {
+				errors = append(errors, err)
+			}
 		} else {
 			genRef(dep)
 		}
+	}
+	if len(errors) > 0 {
+		for _, err := range errors {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+		os.Exit(1)
 	}
 }
 
@@ -172,15 +183,55 @@ func getLicensePath(pkgDir string) string {
 	return ""
 }
 
-func genNotice(dep *PkgDep) {
+func getSourceMirror(pkgDir string) (string, error) {
+	repo := strings.TrimPrefix(pkgDir, os.Getenv("HOME")+"/go/pkg/mod/")
+	repo = strings.Replace(repo, "!", "", -1)
+	localDir := repo
+	for to, from := range pathXlat {
+		repo = strings.Replace(repo, to, from, -1)
+	}
+	repo = strings.Replace(repo, "/", "-", -1)
+	repo = strings.Replace(repo, "@", ".", -1)
+	repo += ".tar"
+	tarFile := path.Base(repo)
+	repo = "https://storage.googleapis.com/mobiledgex-downloads/open-source-mirror/" + repo
+	// make sure mirror exists
+	resp, err := http.Get(repo)
+	if err != nil {
+		err = fmt.Errorf("Failed to retrieve mirrored code at %s: %s", repo, err)
+	}
+	if err == nil && resp.StatusCode == http.StatusNotFound {
+		// create a tar file to upload
+		tarCmd := exec.Command("tar", "-cvf", tarFile, localDir)
+		tarCmd.Dir = os.Getenv("HOME") + "/go/pkg/mod"
+		out, cmdErr := tarCmd.CombinedOutput()
+		if cmdErr != nil {
+			log.Fatal(fmt.Sprintf(`tar command "(cd %s; %s)" failed: %s, %s`, tarCmd.Dir, tarCmd.String(), string(out), cmdErr))
+		}
+		err = fmt.Errorf("Please upload %s/%s to online storage at %s for mirroring", tarCmd.Dir, tarFile, repo)
+	}
+	if err == nil && resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNotFound {
+		err = fmt.Errorf("Get %s failed: %d\n", repo, resp.StatusCode)
+	}
+	return repo, err
+}
+
+func genNotice(dep *PkgDep) error {
+	var mirrorErr error
 	fmt.Printf("---------------------------------------------------\n")
 	fmt.Printf("License notice for %s\n", dep.pkg.PkgPath)
+	if licRequiresSourceMirror(dep.licType) {
+		mirrorPath, merr := getSourceMirror(dep.dir)
+		fmt.Printf("A copy of the source code can be found at %s\n\n", mirrorPath)
+		mirrorErr = merr
+	}
 	fmt.Printf("---------------------------------------------------\n\n")
 	lic, err := ioutil.ReadFile(dep.license)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	fmt.Printf("%s\n\n", string(lic))
+	return mirrorErr
 }
 
 // trailing API version which is present on disk, but not in the URL
@@ -332,4 +383,11 @@ func getLicType(matcher *LicenseMatcher, licFile string) (string, float32) {
 		log.Fatal(err.Error())
 	}
 	return matcher.Match(string(contents))
+}
+
+func licRequiresSourceMirror(licType string) bool {
+	if licType == MozillaPublicLicense2 {
+		return true
+	}
+	return false
 }
