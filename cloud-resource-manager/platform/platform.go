@@ -69,6 +69,7 @@ type Features struct {
 	SupportsSharedVolume                     bool
 	SupportsTrustPolicy                      bool
 	SupportsKubernetesOnly                   bool // does not support docker/VM
+	SupportsNativeFlavors                    bool // avoid crm running flavor refresh thread on platforms not supporting native flavors
 	KubernetesRequiresWorkerNodes            bool // k8s cluster cannot be master only
 	CloudletServicesLocal                    bool // cloudlet services running locally to controller
 	IPAllocatedPerService                    bool // Every k8s service gets a public IP (GCP/etc)

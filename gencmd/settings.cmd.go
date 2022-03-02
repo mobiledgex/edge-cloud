@@ -238,6 +238,7 @@ var SettingsOptionalArgs = []string{
 	"resourcesnapshotthreadinterval",
 	"platformhainstancepollinterval",
 	"platformhainstanceactiveexpiretime",
+	"flavorrefreshthreadinterval",
 }
 var SettingsAliasArgs = []string{}
 var SettingsComments = map[string]string{
@@ -284,6 +285,7 @@ var SettingsComments = map[string]string{
 	"resourcesnapshotthreadinterval":                                    "ResourceSnapshot Refresh thread run interval",
 	"platformhainstancepollinterval":                                    "Platform HA instance poll interval",
 	"platformhainstanceactiveexpiretime":                                "Platform HA instance active time",
+	"flavorrefreshthreadinterval":                                       "Flavor refresh thread cadence",
 }
 var SettingsSpecialArgs = map[string]string{
 	"fields": "StringArray",

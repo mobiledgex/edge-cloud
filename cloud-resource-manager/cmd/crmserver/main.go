@@ -371,6 +371,13 @@ func main() {
 	controllerData.StartInfraResourceRefreshThread(&myCloudletInfo)
 	defer controllerData.FinishInfraResourceRefreshThread()
 
+	features := platform.GetFeatures()
+	if features.SupportsNativeFlavors {
+		log.SpanLog(ctx, log.DebugLevelInfra, "Starting flavor refresh thread", "cloudlet", myCloudletInfo.Key, "platform", platformName, "test mode", features.IsFake)
+		controllerData.StartFlavorUpdateThread(&myCloudletInfo, features.IsFake)
+		defer controllerData.FinishFlavorRefreshThread()
+	}
+
 	if haEnabled {
 		controllerData.StartUpdateCloudletInfoHAThread(ctx)
 		defer controllerData.FinishUpdateCloudletInfoHAThread()

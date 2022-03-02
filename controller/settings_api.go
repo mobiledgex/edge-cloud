@@ -147,6 +147,9 @@ func (s *SettingsApi) initDefaults(ctx context.Context) error {
 			cur.PlatformHaInstancePollInterval = edgeproto.GetDefaultSettings().PlatformHaInstancePollInterval
 			modified = true
 		}
+		if cur.FlavorRefreshThreadInterval == 0 {
+			cur.FlavorRefreshThreadInterval = edgeproto.GetDefaultSettings().FlavorRefreshThreadInterval
+		}
 		if modified {
 			s.store.STMPut(stm, cur)
 		}
