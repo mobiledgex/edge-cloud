@@ -945,12 +945,20 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		0, &cloudletMT, "autocluster", mtOrg, "", notDedicatedIp,
 		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
 	}, {
+		"MT auto clust name blank org",
+		0, &cloudletMT, "autocluster", "", "", notDedicatedIp,
+		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
+	}, {
 		"ST any clust name",
 		0, &cloudletST, "clust", stOrg, "", notDedicatedIp,
 		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"ST auto clust name",
 		0, &cloudletST, "autocluster", stOrg, "", notDedicatedIp,
+		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"ST auto clust name blank org",
+		0, &cloudletST, "autocluster", "", "", notDedicatedIp,
 		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"MT any clust name dedicated",
