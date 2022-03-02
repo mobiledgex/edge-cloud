@@ -42,8 +42,8 @@ func NewExecApi(all *AllApis) *ExecApi {
 	return &execApi
 }
 
-func (s *ExecApi) getApp(req *edgeproto.ExecRequest, app *edgeproto.App) error {
-	cloudcommon.SetAppInstKeyDefaults(&req.AppInstKey)
+func (s *ExecApi) getApp(ctx context.Context, req *edgeproto.ExecRequest, app *edgeproto.App) error {
+	SetAppInstKeyDefaults(ctx, &req.AppInstKey, s.all)
 	if !s.all.appApi.Get(&req.AppInstKey.AppKey, app) {
 		return req.AppInstKey.AppKey.NotFoundError()
 	}
@@ -77,7 +77,7 @@ func (s *ExecApi) ShowLogs(ctx context.Context, req *edgeproto.ExecRequest) (*ed
 		req.Log = &edgeproto.ShowLog{}
 	}
 	app := edgeproto.App{}
-	if err := s.getApp(req, &app); err != nil {
+	if err := s.getApp(ctx, req, &app); err != nil {
 		return nil, err
 	}
 	req.Timeout = ShortTimeout
@@ -105,7 +105,7 @@ func (s *ExecApi) RunCommand(ctx context.Context, req *edgeproto.ExecRequest) (*
 		return nil, fmt.Errorf("No run command specified")
 	}
 	app := edgeproto.App{}
-	if err := s.getApp(req, &app); err != nil {
+	if err := s.getApp(ctx, req, &app); err != nil {
 		return nil, err
 	}
 	if app.Deployment == cloudcommon.DeploymentTypeVM {
@@ -142,7 +142,7 @@ func (s *ExecApi) RunConsole(ctx context.Context, req *edgeproto.ExecRequest) (*
 	req.Console = &edgeproto.RunVMConsole{}
 
 	app := edgeproto.App{}
-	if err := s.getApp(req, &app); err != nil {
+	if err := s.getApp(ctx, req, &app); err != nil {
 		return nil, err
 	}
 	req.Timeout = LongTimeout
