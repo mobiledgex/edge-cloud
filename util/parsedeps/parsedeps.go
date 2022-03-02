@@ -198,7 +198,7 @@ func getSourceMirror(pkgDir string) (string, error) {
 	// make sure mirror exists
 	resp, err := http.Get(repo)
 	if err != nil {
-		err = fmt.Errorf("Failed to retreive mirrored code at %s: %s", repo, err)
+		err = fmt.Errorf("Failed to retrieve mirrored code at %s: %s", repo, err)
 	}
 	if err == nil && resp.StatusCode == http.StatusNotFound {
 		// create a tar file to upload
@@ -206,7 +206,7 @@ func getSourceMirror(pkgDir string) (string, error) {
 		tarCmd.Dir = os.Getenv("HOME") + "/go/pkg/mod"
 		out, cmdErr := tarCmd.CombinedOutput()
 		if cmdErr != nil {
-			log.Fatal(fmt.Sprintf(`tar command "(cd %s; tar -cvf %s %s)" failed: %s, %s`, tarCmd.Dir, tarFile, localDir, string(out), cmdErr))
+			log.Fatal(fmt.Sprintf(`tar command "(cd %s; %s)" failed: %s, %s`, tarCmd.Dir, tarCmd.String(), string(out), cmdErr))
 		}
 		err = fmt.Errorf("Please upload %s/%s to online storage at %s for mirroring", tarCmd.Dir, tarFile, repo)
 	}
