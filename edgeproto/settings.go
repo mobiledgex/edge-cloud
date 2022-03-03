@@ -150,7 +150,7 @@ func (s *Settings) Validate(fields map[string]struct{}) error {
 		case SettingsFieldPlatformHaInstancePollInterval:
 			v.CheckGT(f, s.PlatformHaInstancePollInterval, Duration(10*time.Millisecond))
 		case SettingsFieldAlertKeepaliveRefreshInterval:
-			v.CheckGT(f, s.AlertKeepaliveRefreshInterval, Duration(30*time.Second))
+			v.CheckGT(f, s.AlertKeepaliveRefreshInterval, dur0)
 		default:
 			// If this is a setting field (and not "fields"), ensure there is an entry in the switch
 			// above.  If no validation is to be done for a field, make an empty case entry

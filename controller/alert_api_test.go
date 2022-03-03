@@ -10,6 +10,7 @@ import (
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/rediscache"
@@ -24,7 +25,11 @@ func TestAlertApi(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	testSvcs := testinit(ctx, t)
+	// To sync alerts stored in redis with controller cache, we use redis
+	// keyspace notification. But miniredis (dummy redis server) doesn't
+	// support his feature. And hence for alerts testing, start local
+	// redis server
+	testSvcs := testinit(ctx, t, WithLocalRedis())
 	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
@@ -92,7 +97,11 @@ func TestAppInstDownAlert(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	testSvcs := testinit(ctx, t)
+	// To sync alerts stored in redis with controller cache, we use redis
+	// keyspace notification. But miniredis (dummy redis server) doesn't
+	// support his feature. And hence for alerts testing, start local
+	// redis server
+	testSvcs := testinit(ctx, t, WithLocalRedis())
 	defer testfinish(testSvcs)
 
 	dummy := dummyEtcd{}
@@ -166,11 +175,28 @@ func TestAppInstDownAlert(t *testing.T) {
 }
 
 type testServices struct {
-	DummyRedisSrv *rediscache.DummyRedis
+	DummyRedisSrv  *rediscache.DummyRedis
+	RedisLocalSrv  *process.RedisCache
+	oldSyncTimeout time.Duration
+}
+
+type TestOptions struct {
+	// Start local redis server
+	LocalRedis bool
+}
+
+type TestOp func(op *TestOptions)
+
+func WithLocalRedis() TestOp {
+	return func(op *TestOptions) { op.LocalRedis = true }
 }
 
 // Set up globals for API unit tests
-func testinit(ctx context.Context, t *testing.T) *testServices {
+func testinit(ctx context.Context, t *testing.T, opts ...TestOp) *testServices {
+	options := TestOptions{}
+	for _, op := range opts {
+		op(&options)
+	}
 	svcs := &testServices{}
 	objstore.InitRegion(1)
 	tMode := true
@@ -188,13 +214,33 @@ func testinit(ctx context.Context, t *testing.T) *testServices {
 	cloudletLookup := &node.CloudletCache{}
 	cloudletLookup.Init()
 	nodeMgr.CloudletLookup = cloudletLookup
-	redisServer, err := rediscache.NewMockRedisServer()
-	require.Nil(t, err, "start mock redis server")
-	svcs.DummyRedisSrv = redisServer
-	redisClient, err = rediscache.NewClient(ctx, &rediscache.RedisConfig{
-		SentinelAddrs: redisServer.GetSentinelAddr(),
-	})
-	require.Nil(t, err, "setup redis client")
+
+	if options.LocalRedis {
+		procOpts := []process.StartOp{process.WithCleanStartup()}
+		redisLocal, err := StartLocalRedisServer(procOpts...)
+		require.Nil(t, err, "start redis server")
+		svcs.RedisLocalSrv = redisLocal
+		redisCfg = rediscache.RedisConfig{
+			StandaloneAddr: rediscache.DefaultRedisStandaloneAddr,
+		}
+		redisClient, err = rediscache.NewClient(ctx, &redisCfg)
+		require.Nil(t, err, "setup redis client")
+	} else {
+		redisServer, err := rediscache.NewMockRedisServer()
+		require.Nil(t, err, "start mock redis server")
+		svcs.DummyRedisSrv = redisServer
+		redisCfg = rediscache.RedisConfig{
+			SentinelAddrs: redisServer.GetSentinelAddr(),
+		}
+		redisClient, err = rediscache.NewClient(ctx, &redisCfg)
+		require.Nil(t, err, "setup redis client")
+
+		// Since mock redis server doesn't support keyspace notification,
+		// set RedisSyncTimeout to 0-sec so alert sync from redis with ctrl
+		// cache is skipped immediately
+		svcs.oldSyncTimeout = RedisSyncTimeout
+		RedisSyncTimeout = 0
+	}
 	return svcs
 }
 
@@ -206,6 +252,12 @@ func testfinish(s *testServices) {
 	if s.DummyRedisSrv != nil {
 		s.DummyRedisSrv.Close()
 		s.DummyRedisSrv = nil
+		// restore RedisSyncTimeout
+		RedisSyncTimeout = s.oldSyncTimeout
+	}
+	if s.RedisLocalSrv != nil {
+		s.RedisLocalSrv.StopLocal()
+		s.RedisLocalSrv = nil
 	}
 	services = Services{}
 }

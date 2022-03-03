@@ -36,7 +36,12 @@ func (s *RedisSync) Start(ctx context.Context) {
 	}
 
 	// this is telling redis to publish events since it's off by default.
-	_, err = redisClient.ConfigSet("notify-keyspace-events", "Kg$").Result()
+	// set appropriate config options to listen for alert events:
+	// - K: Keyspace events, published with __keyspace@<db>__ prefix.
+	// - g: Generic commands (non-type specific) like DEL, EXPIRE, RENAME, ...
+	// - x: Expired events (events generated every time a key expires)
+	// - $: String commands
+	_, err = redisClient.ConfigSet("notify-keyspace-events", "Kgx$").Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "unable to set keyspace events", "err", err.Error())
 		return
@@ -102,25 +107,19 @@ func (s *RedisSync) syncAlertCache(ctx context.Context) {
 func (s *RedisSync) syncWithNotifyCache(ctx context.Context) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "Sync redis data with controller cache")
 
-	pubsub := redisClient.PSubscribe(fmt.Sprintf("__keyspace@*__:%s", getAllAlertsKeyPattern()))
-
-	// Go channel to receives messages.
-	ch := pubsub.Channel()
-
 	// PSubscribe subscribes the client to the specified channels based on pattern specified.
 	// Note that this method does not wait on a response from Redis, so the
 	// subscription may not be active immediately. To force the connection to wait,
-	// call the Receive() method on the returned *PubSub like so:
-
-	iface, err := pubsub.Receive()
+	// we call the Receive() method on the returned *PubSub
+	pubsub := redisClient.PSubscribe(fmt.Sprintf("__keyspace@*__:%s", getAllAlertsKeyPattern()))
+	_, err := pubsub.Receive()
 	if err != nil {
-		panic(err)
+		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to subscribe to keyspace notification stream", "err", err)
+		return
 	}
-	switch iface.(type) {
-	case *redis.Subscription:
-		// subscribe succeeded
-	default:
-	}
+
+	// Go channel to receives messages.
+	ch := pubsub.Channel()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	s.syncCancel = cancel
@@ -153,12 +152,12 @@ func (s *RedisSync) syncWithNotifyCache(ctx context.Context) {
 					}
 					s.allApis.alertApi.cache.Update(ctx, &obj, 0)
 				case rediscache.RedisEventDel:
+					fallthrough
+				case rediscache.RedisEventExpired:
 					var obj edgeproto.Alert
 					aKey := objstore.DbKeyPrefixRemove(alertKey)
 					edgeproto.AlertKeyStringParse(aKey, &obj)
 					s.allApis.alertApi.cache.Delete(ctx, &obj, 0)
-				default:
-					log.SpanLog(ctx, log.DebugLevelInfo, "Unknown redis event", "event", event)
 				}
 				span.Finish()
 			case <-s.syncDone:

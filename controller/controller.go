@@ -727,6 +727,9 @@ func (s *AllApis) Stop() {
 	if s.syncLeaseData.stop != nil {
 		s.syncLeaseData.Stop()
 	}
+	if s.alertApi.triggerKeepaliveRefresh != nil {
+		s.alertApi.StopAlertKeepAliveRefresh()
+	}
 }
 
 func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.InfluxQ, clientQ notify.RecvAppInstClientHandler, allApis *AllApis) {

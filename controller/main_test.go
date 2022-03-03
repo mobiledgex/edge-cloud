@@ -18,7 +18,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/testutil/testservices"
 	"github.com/stretchr/testify/assert"
@@ -32,6 +31,24 @@ func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 	return grpc.Dial("127.0.0.1:55001", grpc.WithInsecure())
 }
 
+func reduceAlertTTLKeepaliveRefreshInterval(t *testing.T, ctx context.Context, apis *AllApis) {
+	apis.settingsApi.initDefaults(ctx)
+
+	settings, err := apis.settingsApi.ShowSettings(ctx, &edgeproto.Settings{})
+	require.Nil(t, err)
+
+	settings.AlertKeepaliveRefreshInterval = edgeproto.Duration(1 * time.Second)
+
+	settings.Fields = []string{
+		edgeproto.SettingsFieldAlertKeepaliveRefreshInterval,
+	}
+	_, err = apis.settingsApi.UpdateSettings(ctx, settings)
+	require.Nil(t, err)
+
+	// Also, reduce AlertTTL
+	AlertTTL = time.Duration(2 * settings.AlertKeepaliveRefreshInterval)
+}
+
 func TestController(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi | log.DebugLevelUpgrade)
 	log.InitTracer(nil)
@@ -41,10 +58,12 @@ func TestController(t *testing.T) {
 	*localEtcd = true
 	*initLocalEtcd = true
 
-	testSvcs := testinit(ctx, t)
+	// To sync alerts stored in redis with controller cache, we use redis
+	// keyspace notification. But miniredis (dummy redis server) doesn't
+	// support his feature. And hence for alerts testing, start local
+	// redis server
+	testSvcs := testinit(ctx, t, WithLocalRedis())
 	defer testfinish(testSvcs)
-
-	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
 
 	// avoid dummy influxQs created by testinit() since we're calling startServices
 	services = Services{}
@@ -63,6 +82,7 @@ func TestController(t *testing.T) {
 	apis := services.allApis
 
 	reduceInfoTimeouts(t, ctx, apis)
+	reduceAlertTTLKeepaliveRefreshInterval(t, ctx, apis)
 
 	testRedisSync(t, ctx, apis, redisSyncData)
 
@@ -144,7 +164,7 @@ func TestController(t *testing.T) {
 	if false {
 		CheckCloudletInfo(t, cloudletInfoClient, testutil.CloudletInfoData)
 	}
-	testKeepAliveRecovery(t, ctx, apis, testSvcs.DummyRedisSrv, start)
+	testKeepAliveRecovery(t, ctx, apis)
 
 	// test that delete checks disallow deletes of dependent objects
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &cloudletData[0])
@@ -227,8 +247,6 @@ func TestEdgeCloudBug26(t *testing.T) {
 
 	*localEtcd = true
 	*initLocalEtcd = true
-
-	redisCfg.SentinelAddrs = testSvcs.DummyRedisSrv.GetSentinelAddr()
 
 	influxUsageUnitTestSetup(t)
 	defer influxUsageUnitTestStop()
@@ -351,11 +369,11 @@ func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, dat
 	require.Equal(t, len(data), len(show.Data), "show count")
 }
 
-func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis, server *rediscache.DummyRedis, start time.Time) {
+func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis) {
 	log.SpanLog(ctx, log.DebugLevelInfo, "testKeepAliveRecovery")
 	// already some alerts from non-crm sources
 	numPrevAlerts := len(apis.alertApi.cache.Objs)
-	require.Equal(t, 0, len(apis.alertApi.sourceCache.Objs))
+	require.Equal(t, numPrevAlerts, len(apis.alertApi.sourceCache.Objs))
 
 	// add some alerts from crm, will go into source cache
 	for _, alert := range testutil.AlertData {
@@ -364,36 +382,47 @@ func testKeepAliveRecovery(t *testing.T, ctx context.Context, apis *AllApis, ser
 	numCrmAlerts := len(testutil.AlertData)
 	totalAlerts := numPrevAlerts + numCrmAlerts
 	WaitForAlerts(t, apis, totalAlerts)
-	require.Equal(t, numCrmAlerts, len(apis.alertApi.sourceCache.Objs))
+	require.Equal(t, totalAlerts, len(apis.alertApi.sourceCache.Objs))
 
 	log.SpanLog(ctx, log.DebugLevelInfo, "grab redis sync data lock")
 	// grab syncMux lock to prevent it restoring any
 	// source data, so that we can verify data was flushed from redis
 	apis.alertApi.syncMux.Lock()
 
-	// Since miniredis doesn't support timer, manually reduce TTL
-	// value for alerts, so that they expire and are deleted from redis
-	log.SpanLog(ctx, log.DebugLevelInfo, "fastforward in time so that redis cleans up alerts")
-	server.FastForward(2 * AlertTTL)
+	// Wait for alerts to expire
+	log.SpanLog(ctx, log.DebugLevelInfo, "wait for alerts to expire")
+	time.Sleep(2 * AlertTTL)
 
 	// data should have been flushed from redis
-	WaitForAlerts(t, apis, numPrevAlerts)
+	WaitForAlerts(t, apis, 0)
 	// data should still be in source cache
-	require.Equal(t, numCrmAlerts, len(apis.alertApi.sourceCache.Objs))
+	require.Equal(t, totalAlerts, len(apis.alertApi.sourceCache.Objs))
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "release redis sync data lock")
+	// Delete a key so that refreshKeepAlive thread will fail to refresh its TTL
+	// This should trigger re-sync of all the alerts
+	for _, valData := range apis.alertApi.sourceCache.Objs {
+		key := getAlertStoreKey(valData.Obj)
+		_, err := redisClient.Del(key).Result()
+		require.Nil(t, err)
+	}
+
 	// release sync lock
+	log.SpanLog(ctx, log.DebugLevelInfo, "release redis sync data lock")
 	apis.alertApi.syncMux.Unlock()
+
+	// manually trigger refreshKeepAlive
+	apis.alertApi.triggerKeepaliveRefresh <- true
+
 	// alerts should be re-sync'd
 	WaitForAlerts(t, apis, totalAlerts)
 
-	log.SpanLog(ctx, log.DebugLevelInfo, "delete alerts")
 	// delete alerts
+	log.SpanLog(ctx, log.DebugLevelInfo, "delete alerts")
 	for _, alert := range testutil.AlertData {
 		apis.alertApi.Delete(ctx, &alert, 0)
 	}
 	WaitForAlerts(t, apis, numPrevAlerts)
-	require.Equal(t, 0, len(apis.alertApi.sourceCache.Objs))
+	require.Equal(t, numPrevAlerts, len(apis.alertApi.sourceCache.Objs))
 }
 
 func WaitForAlerts(t *testing.T, apis *AllApis, count int) {
@@ -651,10 +680,11 @@ func initRedisSyncData(t *testing.T, ctx context.Context) *testRedisSyncData {
 
 	// Store alerts in redis
 	for _, alert := range testutil.AlertData {
+		setAlertMetadata(&alert)
 		key := getAlertStoreKey(&alert)
 		val, err := json.Marshal(alert)
 		require.Nil(t, err, "marshal alert data")
-		_, err = redisClient.Set(key, val, 0).Result()
+		_, err = redisClient.Set(key, string(val), 0).Result()
 		require.Nil(t, err, "add alert data to redis")
 	}
 	out.alertCount = len(testutil.AlertData)
@@ -664,11 +694,20 @@ func initRedisSyncData(t *testing.T, ctx context.Context) *testRedisSyncData {
 
 func testRedisSync(t *testing.T, ctx context.Context, apis *AllApis, expectedData *testRedisSyncData) {
 	// ensure that alerts are synced from redis
-	alertCount := len(apis.alertApi.cache.Objs)
-	require.Equal(t, expectedData.alertCount, alertCount)
+	WaitForAlerts(t, apis, expectedData.alertCount)
+
+	delAlerts := []edgeproto.Alert{}
+	for _, val := range apis.alertApi.cache.Objs {
+		delAlerts = append(delAlerts, *val.Obj)
+	}
 
 	// clear stored alerts
-	for _, val := range apis.alertApi.cache.Objs {
-		apis.alertApi.Delete(ctx, val.Obj, 0)
+	for _, val := range delAlerts {
+		key := getAlertStoreKey(&val)
+		_, err := redisClient.Del(key).Result()
+		require.Nil(t, err, "delete alert data from redis")
 	}
+
+	// ensure that cache is synced with redis
+	WaitForAlerts(t, apis, 0)
 }
