@@ -17,11 +17,13 @@ import (
 )
 
 type AlertApi struct {
-	all         *AllApis
-	sync        *Sync
-	cache       edgeproto.AlertCache
-	sourceCache edgeproto.AlertCache // source of truth from crm/etc
-	syncMux     sync.Mutex           // for unit-testing
+	all                     *AllApis
+	sync                    *Sync
+	cache                   edgeproto.AlertCache
+	sourceCache             edgeproto.AlertCache // source of truth from crm/etc
+	syncMux                 sync.Mutex           // for unit-testing
+	doneKeepaliveRefresh    bool
+	triggerKeepaliveRefresh chan bool
 }
 
 var (
@@ -36,6 +38,7 @@ func NewAlertApi(sync *Sync, all *AllApis) *AlertApi {
 	alertApi := AlertApi{}
 	alertApi.all = all
 	alertApi.sync = sync
+	alertApi.triggerKeepaliveRefresh = make(chan bool, 1)
 	edgeproto.InitAlertCache(&alertApi.cache)
 	edgeproto.InitAlertCache(&alertApi.sourceCache)
 	alertApi.sourceCache.SetUpdatedCb(alertApi.StoreUpdate)
@@ -112,7 +115,7 @@ func (s *AlertApi) appInstSetStateFromHealthCheckAlert(ctx context.Context, aler
 
 }
 
-func (s *AlertApi) setAlertMetadata(in *edgeproto.Alert) {
+func setAlertMetadata(in *edgeproto.Alert) {
 	in.Controller = ControllerId
 	// Add a region label
 	in.Labels["region"] = *region
@@ -129,7 +132,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "ignoring alert", "name", name)
 		return
 	}
-	s.setAlertMetadata(in)
+	setAlertMetadata(in)
 	// The CRM is the source of truth for Alerts.
 	// We keep a local copy (sourceCache) of all alerts sent by the CRM.
 	// If we lose the keep-alive lease with etcd and it deletes all these
@@ -169,7 +172,7 @@ func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to marshal alert object", "key", new.GetKeyVal(), "err", err)
 		return
 	}
-	_, err = redisClient.Set(key, val, AlertTTL).Result()
+	_, err = redisClient.Set(key, string(val), AlertTTL).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelNotify, "Failed to store alert in rediscache", "key", new.GetKeyVal(), "err", err)
 		return
@@ -350,7 +353,7 @@ func (s *AlertApi) CleanupAppInstAlerts(ctx context.Context, key *edgeproto.AppI
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		s.sourceCache.Delete(ctx, val, 0)
+		s.Delete(ctx, val, 0)
 	}
 }
 
@@ -379,22 +382,41 @@ func (s *AlertApi) CleanupClusterInstAlerts(ctx context.Context, key *edgeproto.
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		s.sourceCache.Delete(ctx, val, 0)
+		s.Delete(ctx, val, 0)
 	}
 }
 
 func (s *AlertApi) refreshAlertKeepAliveThread() {
+	s.doneKeepaliveRefresh = false
 	for {
-		refreshInterval := s.all.settingsApi.Get().AlertKeepaliveRefreshInterval.TimeDuration()
-		time.Sleep(refreshInterval)
+		select {
+		case <-time.After(s.all.settingsApi.Get().AlertKeepaliveRefreshInterval.TimeDuration()):
+		case <-s.triggerKeepaliveRefresh:
+		}
 		span := log.StartSpan(log.DebugLevelApi, "Alert keepalive refresh thread")
 		ctx := log.ContextWithSpan(context.Background(), span)
-		s.refreshAlertKeepAlive(ctx)
+		if s.doneKeepaliveRefresh {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Alert keepalive refresh done")
+			span.Finish()
+			break
+		}
+		err := s.refreshAlertKeepAlive(ctx)
+		if err != nil {
+			s.syncAllAlerts(ctx)
+		}
 		span.Finish()
 	}
 }
 
-func (s *AlertApi) refreshAlertKeepAlive(ctx context.Context) {
+func (s *AlertApi) StopAlertKeepAliveRefresh() {
+	s.doneKeepaliveRefresh = true
+	select {
+	case s.triggerKeepaliveRefresh <- true:
+	default:
+	}
+}
+
+func (s *AlertApi) refreshAlertKeepAlive(ctx context.Context) error {
 	s.syncMux.Lock()
 	defer s.syncMux.Unlock()
 	alerts := make([]*edgeproto.Alert, 0)
@@ -418,12 +440,72 @@ func (s *AlertApi) refreshAlertKeepAlive(ctx context.Context) {
 	})
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to refresh alert keepalive", "err", err)
+		return err
 	}
 
+	// return error on failure so that we can perform a complete refresh of all the alerts
 	for _, cmdOut := range cmdOuts {
-		if err := cmdOut.(*redis.BoolCmd).Err(); err != nil {
+		out, ok := cmdOut.(*redis.BoolCmd)
+		if !ok {
+			// not possible, as `Expire()` will always return BoolCmd
+			return fmt.Errorf("Invalid command output type: %v", cmdOut)
+		}
+		expiryRefreshed, err := out.Result()
+		if err != nil {
 			log.SpanLog(ctx, log.DebugLevelInfo, "Refresh alert TTL failed", "err", err)
+			return fmt.Errorf("Refresh alert TTL failed: %v", err)
+		}
+		if !expiryRefreshed {
+			log.SpanLog(ctx, log.DebugLevelInfo, "Refresh alert TTL failed")
+			return fmt.Errorf("Refresh alert TTL failed")
 		}
 	}
-	return
+	return nil
+}
+
+func (s *AlertApi) syncAllAlerts(ctx context.Context) error {
+	log.SpanLog(ctx, log.DebugLevelNotify, "Sync all alerts")
+	alerts := make(map[string]string)
+	s.sourceCache.Mux.Lock()
+	for _, data := range s.sourceCache.Objs {
+		alertObj := data.Obj
+		key := getAlertStoreKey(alertObj)
+		val, err := json.Marshal(alertObj)
+		if err != nil {
+			s.sourceCache.Mux.Unlock()
+			log.SpanLog(ctx, log.DebugLevelNotify, "Failed to marshal alert object", "key", alertObj.GetKeyVal(), "err", err)
+			return fmt.Errorf("Failed to marshal alert object %v, %v", alertObj, err)
+		}
+		alerts[key] = string(val)
+	}
+	s.sourceCache.Mux.Unlock()
+	cmdOuts, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
+		for key, val := range alerts {
+			pipe.Set(key, val, AlertTTL)
+		}
+		return nil
+	})
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelInfo, "Failed to refresh alert keepalive", "err", err)
+		return err
+	}
+
+	syncCount := 0
+	errors := []error{}
+	for _, cmdOut := range cmdOuts {
+		out, ok := cmdOut.(*redis.StatusCmd)
+		if !ok {
+			// not possible, as `Set()` will always return StatusCmd
+			errors = append(errors, fmt.Errorf("Invalid command output type: %v", cmdOut))
+			continue
+		}
+		_, err := out.Result()
+		if err != nil {
+			errors = append(errors, fmt.Errorf("Failed to set alert: %v", err))
+			continue
+		}
+		syncCount++
+	}
+	log.SpanLog(ctx, log.DebugLevelNotify, "Synced all alerts", "sync count", syncCount, "errors", errors)
+	return nil
 }
