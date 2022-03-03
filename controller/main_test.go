@@ -403,6 +403,7 @@ func WaitForAlerts(t *testing.T, apis *AllApis, count int) {
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
+	fmt.Printf("\n\nTEST WaitForAlerts count: %d cache objs now: %d\n\n", count, len(apis.alertApi.cache.Objs))
 	require.Equal(t, count, len(apis.alertApi.cache.Objs), "timed out waiting for alerts")
 }
 

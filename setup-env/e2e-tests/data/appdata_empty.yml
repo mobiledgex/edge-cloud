@@ -43,6 +43,7 @@ settings:
   resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
+  flavorrefreshthreadinterval: 1h0m0s
 flowratelimitsettings:
 - key:
     flowsettingsname: dmeglobalallreqs1

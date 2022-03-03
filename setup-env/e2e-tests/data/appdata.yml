@@ -31,6 +31,7 @@ settings:
   resourcesnapshotthreadinterval: 10m
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
+  flavorrefreshthreadinterval: 1h0m0s
 flavors:
 - key:
     name: x1.tiny
