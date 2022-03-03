@@ -60,6 +60,7 @@ settings:
   resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
+  alertkeepaliverefreshinterval: 30s
 cloudlets:
 - key:
     organization: dmuus

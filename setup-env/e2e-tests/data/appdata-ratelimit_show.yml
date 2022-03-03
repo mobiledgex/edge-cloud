@@ -55,6 +55,7 @@ settings:
   resourcesnapshotthreadinterval: 10m0s
   platformhainstancepollinterval: 300ms
   platformhainstanceactiveexpiretime: 1s
+  alertkeepaliverefreshinterval: 30s
 operatorcodes:
 - code: "31026"
   organization: dmuus
