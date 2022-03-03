@@ -2173,7 +2173,6 @@ func (cd *ControllerData) dispatchTrustPolicyExceptionKeyWorkers(ctx context.Con
 
 func (cd *ControllerData) StartFlavorUpdateThread(cloudletInfo *edgeproto.CloudletInfo, testmode bool) {
 	cd.finishFlavorRefreshThread = make(chan struct{})
-	var interval = cd.settings.FlavorRefreshThreadInterval
 	if testmode {
 		cd.settings.FlavorRefreshThreadInterval = edgeproto.Duration(time.Second * 1)
 	}
@@ -2184,17 +2183,13 @@ func (cd *ControllerData) StartFlavorUpdateThread(cloudletInfo *edgeproto.Cloudl
 			case <-time.After(cd.settings.FlavorRefreshThreadInterval.TimeDuration()):
 				span := log.StartSpan(log.DebugLevelApi, "FlavorResourceRefresh thread")
 				ctx := log.ContextWithSpan(context.Background(), span)
-				if !testmode {
-					log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh", "testmode", cloudletInfo, "interval:", interval)
-				}
+				log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh", "testmode", cloudletInfo, "interval:", cd.settings.FlavorRefreshThreadInterval)
 				err := cd.GatherCloudletInfo(ctx, cloudletInfo)
 				if err != nil {
 					log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh error gathering current cloudlet info", "cloudlet", cloudletInfo.Key, "error:", err)
 					continue
 				}
-				if !testmode {
-					span.Finish()
-				}
+				span.Finish()
 			case <-cd.finishFlavorRefreshThread:
 				done = true
 			}

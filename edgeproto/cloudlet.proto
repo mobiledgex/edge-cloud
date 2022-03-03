@@ -796,6 +796,10 @@ message FlavorInfo {
   uint64 disk = 4;
   // OS Flavor Properties, if any
   map<string,string> prop_map = 5 [(protogen.backend) = true];
+  // True if this infra flavor has been deleted while in use
+  bool deprecated = 6;
+
+
 }
 
 message OSAZone {

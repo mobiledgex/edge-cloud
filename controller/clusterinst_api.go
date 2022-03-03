@@ -1510,6 +1510,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		s.updateCloudletResourcesMetric(ctx, in)
 	}
 	s.all.alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
+	s.cleanupDeletedInfraFlavorAlerts(ctx, in)
 	return err
 }
 
@@ -1943,4 +1944,14 @@ func (s *ClusterInstApi) deleteCloudletSingularCluster(stm concurrency.STM, key 
 	s.store.STMDel(stm, clusterInstKey)
 	s.dnsLabelStore.STMDel(stm, key, clusterInst.DnsLabel)
 	s.all.clusterRefsApi.deleteRef(stm, clusterInstKey)
+}
+
+func (s *ClusterInstApi) cleanupDeletedInfraFlavorAlerts(ctx context.Context, clusterInst *edgeproto.ClusterInst) {
+	workerKey := HandleFlavorAlertWorkerKey{
+		cloudletKey: edgeproto.CloudletKey{
+			Organization: clusterInst.Key.CloudletKey.Organization,
+			Name:         clusterInst.Key.CloudletKey.Name,
+		},
+	}
+	s.all.cloudletInfoApi.infraFlavorAlertTask.NeedsWork(ctx, workerKey)
 }

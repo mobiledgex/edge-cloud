@@ -1427,6 +1427,10 @@ func (m *VM) CopyInFields(src *VM) int {
 			m.Flavor.PropMap = nil
 			changed++
 		}
+		if m.Flavor.Deprecated != src.Flavor.Deprecated {
+			m.Flavor.Deprecated = src.Flavor.Deprecated
+			changed++
+		}
 	} else if m.Flavor != nil {
 		m.Flavor = nil
 		changed++
@@ -1661,6 +1665,7 @@ const VMPoolFieldVmsFlavorDisk = "3.7.4"
 const VMPoolFieldVmsFlavorPropMap = "3.7.5"
 const VMPoolFieldVmsFlavorPropMapKey = "3.7.5.1"
 const VMPoolFieldVmsFlavorPropMapValue = "3.7.5.2"
+const VMPoolFieldVmsFlavorDeprecated = "3.7.6"
 const VMPoolFieldState = "4"
 const VMPoolFieldErrors = "5"
 const VMPoolFieldCrmOverride = "7"
@@ -1683,6 +1688,7 @@ var VMPoolAllFields = []string{
 	VMPoolFieldVmsFlavorDisk,
 	VMPoolFieldVmsFlavorPropMapKey,
 	VMPoolFieldVmsFlavorPropMapValue,
+	VMPoolFieldVmsFlavorDeprecated,
 	VMPoolFieldState,
 	VMPoolFieldErrors,
 	VMPoolFieldCrmOverride,
@@ -1706,6 +1712,7 @@ var VMPoolAllFieldsMap = map[string]struct{}{
 	VMPoolFieldVmsFlavorDisk:         struct{}{},
 	VMPoolFieldVmsFlavorPropMapKey:   struct{}{},
 	VMPoolFieldVmsFlavorPropMapValue: struct{}{},
+	VMPoolFieldVmsFlavorDeprecated:   struct{}{},
 	VMPoolFieldState:                 struct{}{},
 	VMPoolFieldErrors:                struct{}{},
 	VMPoolFieldCrmOverride:           struct{}{},
@@ -1729,6 +1736,7 @@ var VMPoolAllFieldsStringMap = map[string]string{
 	VMPoolFieldVmsFlavorDisk:         "Vms Flavor Disk",
 	VMPoolFieldVmsFlavorPropMapKey:   "Vms Flavor Prop Map Key",
 	VMPoolFieldVmsFlavorPropMapValue: "Vms Flavor Prop Map Value",
+	VMPoolFieldVmsFlavorDeprecated:   "Vms Flavor Deprecated",
 	VMPoolFieldState:                 "State",
 	VMPoolFieldErrors:                "Errors",
 	VMPoolFieldCrmOverride:           "Crm Override",
@@ -1836,6 +1844,11 @@ func (m *VMPool) DiffFields(o *VMPool, fields map[string]struct{}) {
 					fields[VMPoolFieldVmsFlavor] = struct{}{}
 					fields[VMPoolFieldVms] = struct{}{}
 				}
+				if m.Vms[i0].Flavor.Deprecated != o.Vms[i0].Flavor.Deprecated {
+					fields[VMPoolFieldVmsFlavorDeprecated] = struct{}{}
+					fields[VMPoolFieldVmsFlavor] = struct{}{}
+					fields[VMPoolFieldVms] = struct{}{}
+				}
 			} else if (m.Vms[i0].Flavor != nil && o.Vms[i0].Flavor == nil) || (m.Vms[i0].Flavor == nil && o.Vms[i0].Flavor != nil) {
 				fields[VMPoolFieldVmsFlavor] = struct{}{}
 				fields[VMPoolFieldVms] = struct{}{}
@@ -1882,6 +1895,7 @@ var UpdateVMPoolFieldsMap = map[string]struct{}{
 	VMPoolFieldVmsFlavorDisk:         struct{}{},
 	VMPoolFieldVmsFlavorPropMap:      struct{}{},
 	VMPoolFieldVmsFlavorPropMapValue: struct{}{},
+	VMPoolFieldVmsFlavorDeprecated:   struct{}{},
 	VMPoolFieldCrmOverride:           struct{}{},
 	VMPoolFieldDeletePrepare:         struct{}{},
 }
@@ -2680,6 +2694,10 @@ func (m *VMPoolMember) CopyInFields(src *VMPoolMember) int {
 			m.Vm.Flavor.PropMap = nil
 			changed++
 		}
+		if m.Vm.Flavor.Deprecated != src.Vm.Flavor.Deprecated {
+			m.Vm.Flavor.Deprecated = src.Vm.Flavor.Deprecated
+			changed++
+		}
 	} else if m.Vm.Flavor != nil {
 		m.Vm.Flavor = nil
 		changed++
@@ -2898,6 +2916,7 @@ const VMPoolInfoFieldVmsFlavorDisk = "4.7.4"
 const VMPoolInfoFieldVmsFlavorPropMap = "4.7.5"
 const VMPoolInfoFieldVmsFlavorPropMapKey = "4.7.5.1"
 const VMPoolInfoFieldVmsFlavorPropMapValue = "4.7.5.2"
+const VMPoolInfoFieldVmsFlavorDeprecated = "4.7.6"
 const VMPoolInfoFieldState = "5"
 const VMPoolInfoFieldErrors = "6"
 const VMPoolInfoFieldStatus = "7"
@@ -2926,6 +2945,7 @@ var VMPoolInfoAllFields = []string{
 	VMPoolInfoFieldVmsFlavorDisk,
 	VMPoolInfoFieldVmsFlavorPropMapKey,
 	VMPoolInfoFieldVmsFlavorPropMapValue,
+	VMPoolInfoFieldVmsFlavorDeprecated,
 	VMPoolInfoFieldState,
 	VMPoolInfoFieldErrors,
 	VMPoolInfoFieldStatusTaskNumber,
@@ -2954,6 +2974,7 @@ var VMPoolInfoAllFieldsMap = map[string]struct{}{
 	VMPoolInfoFieldVmsFlavorDisk:         struct{}{},
 	VMPoolInfoFieldVmsFlavorPropMapKey:   struct{}{},
 	VMPoolInfoFieldVmsFlavorPropMapValue: struct{}{},
+	VMPoolInfoFieldVmsFlavorDeprecated:   struct{}{},
 	VMPoolInfoFieldState:                 struct{}{},
 	VMPoolInfoFieldErrors:                struct{}{},
 	VMPoolInfoFieldStatusTaskNumber:      struct{}{},
@@ -2982,6 +3003,7 @@ var VMPoolInfoAllFieldsStringMap = map[string]string{
 	VMPoolInfoFieldVmsFlavorDisk:         "Vms Flavor Disk",
 	VMPoolInfoFieldVmsFlavorPropMapKey:   "Vms Flavor Prop Map Key",
 	VMPoolInfoFieldVmsFlavorPropMapValue: "Vms Flavor Prop Map Value",
+	VMPoolInfoFieldVmsFlavorDeprecated:   "Vms Flavor Deprecated",
 	VMPoolInfoFieldState:                 "State",
 	VMPoolInfoFieldErrors:                "Errors",
 	VMPoolInfoFieldStatusTaskNumber:      "Status Task Number",
@@ -3093,6 +3115,11 @@ func (m *VMPoolInfo) DiffFields(o *VMPoolInfo, fields map[string]struct{}) {
 					}
 				} else if (m.Vms[i0].Flavor.PropMap != nil && o.Vms[i0].Flavor.PropMap == nil) || (m.Vms[i0].Flavor.PropMap == nil && o.Vms[i0].Flavor.PropMap != nil) {
 					fields[VMPoolInfoFieldVmsFlavorPropMap] = struct{}{}
+					fields[VMPoolInfoFieldVmsFlavor] = struct{}{}
+					fields[VMPoolInfoFieldVms] = struct{}{}
+				}
+				if m.Vms[i0].Flavor.Deprecated != o.Vms[i0].Flavor.Deprecated {
+					fields[VMPoolInfoFieldVmsFlavorDeprecated] = struct{}{}
 					fields[VMPoolInfoFieldVmsFlavor] = struct{}{}
 					fields[VMPoolInfoFieldVms] = struct{}{}
 				}
