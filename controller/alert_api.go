@@ -145,7 +145,7 @@ func (s *AlertApi) Update(ctx context.Context, in *edgeproto.Alert, rev int64) {
 	// This is because if the keep-alive is lost and we resync, then
 	// these additional actions should be performed again as part of StoreUpdate.
 
-	// Wait for alerts to synced with controller cache
+	// Wait for alerts to be synced with controller cache
 	recvdCache := make(chan bool, 1)
 	watchCancel := s.cache.WatchKey(in.GetKey(), func(ctx context.Context) {
 		recvdCache <- true
@@ -221,7 +221,7 @@ func (s *AlertApi) Delete(ctx context.Context, in *edgeproto.Alert, rev int64) {
 		})
 	}
 
-	// Wait for alerts to synced with controller cache
+	// Wait for alerts to be synced with controller cache
 	syncedCache := make(chan bool, 1)
 	watchCancel := s.cache.WatchKey(in.GetKey(), func(ctx context.Context) {
 		if !s.cache.Get(in.GetKey(), &edgeproto.Alert{}) {
@@ -327,7 +327,6 @@ func (s *AlertApi) CleanupCloudletAlerts(ctx context.Context, key *edgeproto.Clo
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range matches {
-		// s.sourceCache.Delete(ctx, val, 0)
 		s.Delete(ctx, val, 0)
 	}
 }
