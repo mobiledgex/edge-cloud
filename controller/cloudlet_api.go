@@ -704,6 +704,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if err != nil {
 			return err
 		}
+		// NOTE: If accessvars is successfully stored then do not delete it on cleanup
+		//       as it can be shared amongst other cloudlets
 	}
 
 	if in.DeploymentLocal {
@@ -1416,18 +1418,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}()
 
-	pfConfig, err := s.getPlatformConfig(ctx, in)
-	if err != nil {
-		return err
-	}
-
-	var cloudletPlatform pf.Platform
-	cloudletPlatform, err = pfutils.GetPlatform(ctx, in.PlatformType.String(), nodeMgr.UpdateNodeProps)
-	if err != nil {
-		return err
-	}
-	updatecb := updateCloudletCallback{in, cb}
-
 	var dynInsts map[edgeproto.AppInstKey]struct{}
 	var clDynInsts map[edgeproto.ClusterInstKey]struct{}
 
@@ -1486,6 +1476,12 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if in.State == edgeproto.TrackedState_DELETE_PREPARE {
 				// restore previous state since we failed pre-delete actions
 				in.State = prevState
+				changed = true
+			} else if in.State != edgeproto.TrackedState_DELETE_ERROR {
+				// since deletion has failed, it will require manual intervention
+				// and hence set state to error so that user can take appropriate
+				// actions
+				in.State = edgeproto.TrackedState_DELETE_ERROR
 				changed = true
 			}
 			if in.DeletePrepare {
@@ -1627,11 +1623,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		} else {
 			log.SpanLog(ctx, log.DebugLevelApi, "Failed to login in to vault to delete kafka credentials", "key", in.Key, "err", err)
 		}
-	}
-	// we have no way to figure out if access vars were present for this cloudlet or not, so ignore any err
-	err = cloudletPlatform.DeleteCloudletAccessVars(ctx, in, pfConfig, nodeMgr.VaultConfig, updatecb.cb)
-	if err != nil {
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup cloudlet access vars", "err", err)
 	}
 
 	if updateCloudlet.GpuConfig.LicenseConfig != "" {

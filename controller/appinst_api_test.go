@@ -343,6 +343,10 @@ func TestAppInstApi(t *testing.T) {
 		require.Nil(t, err, "Delete app %d: %s failed", ii, obj.Key.GetKeyString())
 	}
 	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, []edgeproto.AppInstRefs{})
+	// ensure that no open channels exist and all stream channels were cleaned up
+	chs, err := redisClient.PubSubChannels("*").Result()
+	require.Nil(t, err, "get pubsub channels")
+	require.Equal(t, 0, len(chs), "all chans are cleaned up")
 }
 
 func appInstCachedFieldsTest(t *testing.T, ctx context.Context, cAppApi *testutil.AppCommonApi, cCloudletApi *testutil.CloudletCommonApi, cAppInstApi *testutil.AppInstCommonApi) {
@@ -941,12 +945,20 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		0, &cloudletMT, "autocluster", mtOrg, "", notDedicatedIp,
 		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
 	}, {
+		"MT auto clust name blank org",
+		0, &cloudletMT, "autocluster", "", "", notDedicatedIp,
+		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
+	}, {
 		"ST any clust name",
 		0, &cloudletST, "clust", stOrg, "", notDedicatedIp,
 		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"ST auto clust name",
 		0, &cloudletST, "autocluster", stOrg, "", notDedicatedIp,
+		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"ST auto clust name blank org",
+		0, &cloudletST, "autocluster", "", "", notDedicatedIp,
 		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"MT any clust name dedicated",
@@ -964,6 +976,22 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		"ST auto clust name dedicated",
 		0, &cloudletST, "autocluster", stOrg, "", dedicatedIp,
 		"pokemongo100-nianticinc.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"VM App",
+		11, &cloudletST, "clust", stOrg, "", notDedicatedIp, "",
+		"Cannot deploy vm app to single kubernetes cloudlet",
+	}, {
+		"VM App",
+		11, &cloudletMT, "clust", mtOrg, "", notDedicatedIp, "",
+		"Cannot deploy vm app to single kubernetes cloudlet",
+	}, {
+		"Docker App",
+		17, &cloudletST, "clust", stOrg, "", notDedicatedIp, "",
+		"Cannot deploy docker app to single kubernetes cloudlet",
+	}, {
+		"Docker App",
+		17, &cloudletMT, "clust", mtOrg, "", notDedicatedIp, "",
+		"Cannot deploy docker app to single kubernetes cloudlet",
 	}}
 	for _, test := range appInstCreateTests {
 		ai := testutil.AppInstData[test.aiIdx]
