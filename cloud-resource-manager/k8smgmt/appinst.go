@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 	ssh "github.com/mobiledgex/golang-ssh"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -549,7 +550,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 			containerCmd = fmt.Sprintf("-c %s ", containerName)
 		}
 		cmdStr := fmt.Sprintf("%s kubectl exec -n %s -it %s%s -- %s",
-			names.KconfEnv, namespace, containerCmd, podName, req.Cmd.Command)
+			names.KconfEnv, namespace, containerCmd, podName, util.QuoteArgs(req.Cmd.Command))
 		return cmdStr, nil
 	}
 	if req.Log != nil {

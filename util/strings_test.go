@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type StringMap struct {
@@ -75,5 +76,24 @@ func TestCamelCase(t *testing.T) {
 		for ii, _ := range out {
 			require.Equal(t, out[ii], camelSplit[ii], camelCaseStr)
 		}
+	}
+}
+
+func TestQuoteArgs(t *testing.T) {
+	tests := []StringMap{{
+		from: "hostname;  hostname",
+		to:   `"hostname;" "hostname"`,
+	}, {
+		from: "ls -ltrh",
+		to:   `"ls" "-ltrh"`,
+	}, {
+		from: `echo "newpassword" > /var/etc/password`,
+		to:   `"echo" "newpassword" ">" "/var/etc/password"`,
+	}, {
+		from: `bash -c "ls -ltrh"`,
+		to:   `"bash" "-c" "ls -ltrh"`,
+	}}
+	for _, test := range tests {
+		require.Equal(t, test.to, QuoteArgs(test.from), "convert %s --> %s", test.from, test.to)
 	}
 }

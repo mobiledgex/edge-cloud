@@ -492,7 +492,7 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 		}
 	}
 	if req.Cmd != nil {
-		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, req.Cmd.Command)
+		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, util.QuoteArgs(req.Cmd.Command))
 		return cmdStr, nil
 	}
 	if req.Log != nil {

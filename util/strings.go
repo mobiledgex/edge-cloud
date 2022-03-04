@@ -1,6 +1,8 @@
 package util
 
 import (
+	"encoding/csv"
+	"strconv"
 	"strings"
 )
 
@@ -106,4 +108,16 @@ func UnCamelCase(name string) string {
 		parts[ii] = strings.ToLower(parts[ii])
 	}
 	return strings.Join(parts, "_")
+}
+
+func QuoteArgs(cmd string) string {
+	cmd = strings.TrimSpace(cmd)
+	r := csv.NewReader(strings.NewReader(cmd))
+	r.Comma = ' '
+	r.TrimLeadingSpace = true
+	args, _ := r.Read()
+	for i := range args {
+		args[i] = strconv.Quote(args[i])
+	}
+	return strings.Join(args, " ")
 }
