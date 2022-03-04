@@ -793,6 +793,7 @@ func (s *Platform) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, erro
 	return &RootLBFlavor, nil
 }
 
-func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) {
+func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) error {
 	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChanged", "platformActive", platformActive)
+	return nil
 }
