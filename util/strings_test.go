@@ -79,21 +79,49 @@ func TestCamelCase(t *testing.T) {
 	}
 }
 
+type StringMapError struct {
+	from string
+	to   string
+	err  string
+}
+
 func TestQuoteArgs(t *testing.T) {
-	tests := []StringMap{{
+	tests := []StringMapError{{
 		from: "hostname;  hostname",
 		to:   `"hostname;" "hostname"`,
 	}, {
 		from: "ls -ltrh",
 		to:   `"ls" "-ltrh"`,
 	}, {
+		from: `"ab","cd"`,
+		to:   `"ab,cd"`,
+	}, {
 		from: `echo "newpassword" > /var/etc/password`,
 		to:   `"echo" "newpassword" ">" "/var/etc/password"`,
 	}, {
 		from: `bash -c "ls -ltrh"`,
 		to:   `"bash" "-c" "ls -ltrh"`,
+	}, {
+		from: `bash -c 'ls -ltrh'`,
+		to:   `"bash" "-c" "ls -ltrh"`,
+	}, {
+		from: `bash -c "ls -ltrh`,
+		err:  "Unterminated double-quoted string",
+	}, {
+		from: `bash -c 'ls -ltrh`,
+		err:  "Unterminated single-quoted string",
+	}, {
+		from: `bash -c \`,
+		err:  "Unterminated backslash-escape",
 	}}
 	for _, test := range tests {
-		require.Equal(t, test.to, QuoteArgs(test.from), "convert %s --> %s", test.from, test.to)
+		quoted, err := QuoteArgs(test.from)
+		if test.err == "" {
+			require.Nil(t, err)
+			require.Equal(t, test.to, quoted, "convert %s --> %s", test.from, test.to)
+		} else {
+			require.NotNil(t, err)
+			require.Contains(t, err.Error(), test.err, "quote %s", test.to)
+		}
 	}
 }

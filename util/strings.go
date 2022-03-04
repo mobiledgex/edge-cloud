@@ -1,9 +1,10 @@
 package util
 
 import (
-	"encoding/csv"
 	"strconv"
 	"strings"
+
+	"github.com/kballard/go-shellquote"
 )
 
 func isASCIILower(c byte) bool {
@@ -110,14 +111,14 @@ func UnCamelCase(name string) string {
 	return strings.Join(parts, "_")
 }
 
-func QuoteArgs(cmd string) string {
+func QuoteArgs(cmd string) (string, error) {
 	cmd = strings.TrimSpace(cmd)
-	r := csv.NewReader(strings.NewReader(cmd))
-	r.Comma = ' '
-	r.TrimLeadingSpace = true
-	args, _ := r.Read()
+	args, err := shellquote.Split(cmd)
+	if err != nil {
+		return "", err
+	}
 	for i := range args {
 		args[i] = strconv.Quote(args[i])
 	}
-	return strings.Join(args, " ")
+	return strings.Join(args, " "), nil
 }
