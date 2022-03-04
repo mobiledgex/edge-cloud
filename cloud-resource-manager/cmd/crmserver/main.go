@@ -306,11 +306,16 @@ func main() {
 				}
 
 			}
-			log.SpanLog(ctx, log.DebugLevelInfo, "platform became active", "state", myCloudletInfo.State.String())
+			log.SpanLog(ctx, log.DebugLevelInfo, "platform became active", "conditionalInitRequired", conditionalInitRequired, "state", myCloudletInfo.State.String())
 		}
 		if err == nil {
-			if conditionalInitRequired {
-				err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
+
+			err = platform.ActiveChanged(ctx, true)
+			log.SpanLog(ctx, log.DebugLevelInfo, "ActiveChanged done", "err", err)
+			if err == nil {
+				if conditionalInitRequired {
+					err = initPlatformHAConditional(ctx, &cloudlet, &myCloudletInfo, *physicalName, &pc, caches, nodeMgr.AccessApiClient, &highAvailabilityManager, updateCloudletStatus)
+				}
 			}
 		}
 		if err != nil {
