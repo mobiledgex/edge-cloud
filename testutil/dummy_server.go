@@ -95,6 +95,11 @@ func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string,
 		cloudletInfo.Key.Organization = org
 		cloudletInfo.Key.Name = name
 		cloudletInfo.ContainerVersion = "xyz"
+		cloudletInfo.ResourcesSnapshot = edgeproto.InfraResourcesSnapshot{
+			PlatformVms: []edgeproto.VmInfo{
+				{Name: "test"},
+			},
+		}
 		if a == Create {
 			s.CloudletInfoCache.Update(ctx, &cloudletInfo, int64(ii))
 		} else if a == Delete {
