@@ -886,6 +886,7 @@ service CloudletInfoApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Key.Organization";
+    option (protogen.mc2_custom_authz) = true;
   }
   // Inject (create) a CloudletInfo for regression testing
   rpc InjectCloudletInfo(CloudletInfo) returns (Result) {
