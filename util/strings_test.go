@@ -1,8 +1,9 @@
 package util
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type StringMap struct {
@@ -74,6 +75,53 @@ func TestCamelCase(t *testing.T) {
 		require.Equal(t, len(out), len(camelSplit), camelCaseStr)
 		for ii, _ := range out {
 			require.Equal(t, out[ii], camelSplit[ii], camelCaseStr)
+		}
+	}
+}
+
+type StringMapError struct {
+	from string
+	to   string
+	err  string
+}
+
+func TestQuoteArgs(t *testing.T) {
+	tests := []StringMapError{{
+		from: "hostname;  hostname",
+		to:   `"hostname;" "hostname"`,
+	}, {
+		from: "ls -ltrh",
+		to:   `"ls" "-ltrh"`,
+	}, {
+		from: `"ab","cd"`,
+		to:   `"ab,cd"`,
+	}, {
+		from: `echo "newpassword" > /var/etc/password`,
+		to:   `"echo" "newpassword" ">" "/var/etc/password"`,
+	}, {
+		from: `bash -c "ls -ltrh"`,
+		to:   `"bash" "-c" "ls -ltrh"`,
+	}, {
+		from: `bash -c 'ls -ltrh'`,
+		to:   `"bash" "-c" "ls -ltrh"`,
+	}, {
+		from: `bash -c "ls -ltrh`,
+		err:  "Unterminated double-quoted string",
+	}, {
+		from: `bash -c 'ls -ltrh`,
+		err:  "Unterminated single-quoted string",
+	}, {
+		from: `bash -c \`,
+		err:  "Unterminated backslash-escape",
+	}}
+	for _, test := range tests {
+		quoted, err := QuoteArgs(test.from)
+		if test.err == "" {
+			require.Nil(t, err)
+			require.Equal(t, test.to, quoted, "convert %s --> %s", test.from, test.to)
+		} else {
+			require.NotNil(t, err)
+			require.Contains(t, err.Error(), test.err, "quote %s", test.to)
 		}
 	}
 }
