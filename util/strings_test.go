@@ -96,6 +96,9 @@ func TestQuoteArgs(t *testing.T) {
 		from: `"ab","cd"`,
 		to:   `"ab,cd"`,
 	}, {
+		from: ``,
+		to:   ``,
+	}, {
 		from: `echo "newpassword" > /var/etc/password`,
 		to:   `"echo" "newpassword" ">" "/var/etc/password"`,
 	}, {
@@ -113,6 +116,9 @@ func TestQuoteArgs(t *testing.T) {
 	}, {
 		from: `bash -c \`,
 		err:  "Unterminated backslash-escape",
+	}, {
+		to:   `"bash" "-c" "ls -ltrh"`, // see if func is idempotent
+		from: `"bash" "-c" "ls -ltrh"`,
 	}}
 	for _, test := range tests {
 		quoted, err := QuoteArgs(test.from)

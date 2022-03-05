@@ -178,6 +178,8 @@ extend google.protobuf.MethodOptions {
   string mc2_api_requires_org = 51045;
   // Override CLI command name
   string cli_cmd = 51050;
+  // Custom input validator for mc
+  bool mc2_custom_validate_input = 51061;
 }
 
 extend google.protobuf.ServiceOptions {

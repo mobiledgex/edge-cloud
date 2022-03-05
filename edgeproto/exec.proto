@@ -78,6 +78,7 @@ service ExecApi {
     option (protogen.method_noconfig) = "Offer,Answer,Err,Timeout,Log,Console,AccessUrl,EdgeTurnAddr,Cmd.CloudletMgmtNode";
     option (protogen.method_also_required) = "AppInstKey,Cmd.Command";
     option (protogen.method_not_required) = "AppInstKey.ClusterInstKey.Organization,AppInstKey.ClusterInstKey.CloudletKey.FederatedOrganization";
+    option (protogen.mc2_custom_validate_input) = true;
   }
   // Run console on a VM
   rpc RunConsole(ExecRequest) returns (ExecRequest) {
