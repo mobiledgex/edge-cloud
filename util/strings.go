@@ -1,7 +1,10 @@
 package util
 
 import (
+	"strconv"
 	"strings"
+
+	"github.com/kballard/go-shellquote"
 )
 
 func isASCIILower(c byte) bool {
@@ -106,4 +109,16 @@ func UnCamelCase(name string) string {
 		parts[ii] = strings.ToLower(parts[ii])
 	}
 	return strings.Join(parts, "_")
+}
+
+func QuoteArgs(cmd string) (string, error) {
+	cmd = strings.TrimSpace(cmd)
+	args, err := shellquote.Split(cmd)
+	if err != nil {
+		return "", err
+	}
+	for i := range args {
+		args[i] = strconv.Quote(args[i])
+	}
+	return strings.Join(args, " "), nil
 }
