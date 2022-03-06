@@ -492,7 +492,7 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 		}
 	}
 	if req.Cmd != nil {
-		userCmd, err := util.QuoteArgs(req.Cmd.Command)
+		userCmd, err := util.RunCommandSanitize(req.Cmd.Command)
 		if err != nil {
 			return "", fmt.Errorf("bad command: %s", err)
 		}
