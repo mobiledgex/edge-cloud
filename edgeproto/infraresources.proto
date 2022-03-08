@@ -46,7 +46,7 @@ message IpAddr{
 message VmInfo{
   // Virtual machine name
   string name = 1;
-  // Type can be platform, rootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
+  // Type can be platformvm, platform-cluster-master, platform-cluster-primary-node, platform-cluster-secondary-node, sharedrootlb, dedicatedrootlb, cluster-master, cluster-k8s-node, cluster-docker-node, appvm
   string type = 2;
   // Runtime status of the VM
   string status = 3;

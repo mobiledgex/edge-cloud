@@ -94,7 +94,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      clusterInst.Key,
 			VmFlavor: nodeFlavor,
-			Type:     VMTypeClusterDockerNode,
+			Type:     NodeTypeClusterDockerNode,
 		})
 	} else {
 		// For managed-k8s platforms, ignore master node for resource calculation
@@ -104,13 +104,13 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 					vmResources = append(vmResources, edgeproto.VMResource{
 						Key:      clusterInst.Key,
 						VmFlavor: nodeFlavor,
-						Type:     VMTypeClusterMaster,
+						Type:     NodeTypeClusterMaster,
 					})
 				} else {
 					vmResources = append(vmResources, edgeproto.VMResource{
 						Key:      clusterInst.Key,
 						VmFlavor: masterNodeFlavor,
-						Type:     VMTypeClusterMaster,
+						Type:     NodeTypeClusterMaster,
 					})
 				}
 			}
@@ -119,7 +119,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			vmResources = append(vmResources, edgeproto.VMResource{
 				Key:      clusterInst.Key,
 				VmFlavor: nodeFlavor,
-				Type:     VMTypeClusterK8sNode,
+				Type:     NodeTypeClusterK8sNode,
 			})
 		}
 	}
@@ -133,7 +133,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			vmResources = append(vmResources, edgeproto.VMResource{
 				Key:      clusterInst.Key,
 				VmFlavor: rootLBFlavor,
-				Type:     VMTypeRootLB,
+				Type:     NodeTypeDedicatedRootLB,
 			})
 		}
 	}
@@ -159,13 +159,13 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      *appInst.ClusterInstKey(),
 			VmFlavor: rootLBFlavor,
-			Type:     VMTypeRootLB,
+			Type:     NodeTypeDedicatedRootLB,
 		})
 	}
 	vmResources = append(vmResources, edgeproto.VMResource{
 		Key:           *appInst.ClusterInstKey(),
 		VmFlavor:      vmFlavor,
-		Type:          VMTypeAppVM,
+		Type:          NodeTypeAppVM,
 		AppAccessType: app.AccessType,
 	})
 	return vmResources, nil

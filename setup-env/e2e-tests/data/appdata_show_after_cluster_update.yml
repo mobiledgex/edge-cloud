@@ -173,13 +173,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -219,13 +219,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -265,13 +265,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -325,13 +325,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -384,13 +384,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -503,7 +503,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: smallcluster-acmeappco.dmuus-cloud-2-dmuus.local.localtest.net
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
   networks:
