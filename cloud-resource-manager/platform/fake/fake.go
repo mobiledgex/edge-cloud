@@ -231,14 +231,14 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 	}
 	newcVMs := []edgeproto.VmInfo{}
 	for _, vmInfo := range cVMs {
-		if vmInfo.Type == cloudcommon.VMTypeClusterK8sNode {
+		if vmInfo.Type == cloudcommon.NodeTypeClusterK8sNode {
 			if _, ok := fakeNodes[vmInfo.Name]; ok {
 				delete(fakeNodes, vmInfo.Name)
 				newcVMs = append(newcVMs, vmInfo)
 			} else {
 				UpdateCommonResourcesUsed(clusterInst.NodeFlavor, ResourceRemove)
 			}
-		} else if vmInfo.Type == cloudcommon.VMTypeClusterMaster {
+		} else if vmInfo.Type == cloudcommon.NodeTypeClusterMaster {
 			if _, ok := fakeMasters[vmInfo.Name]; ok {
 				delete(fakeMasters, vmInfo.Name)
 				newcVMs = append(newcVMs, vmInfo)
@@ -254,7 +254,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 	for vmName, _ := range fakeNodes {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
-			Type:        cloudcommon.VMTypeClusterK8sNode,
+			Type:        cloudcommon.NodeTypeClusterK8sNode,
 			InfraFlavor: clusterInst.NodeFlavor,
 			Status:      "ACTIVE",
 		})
@@ -263,7 +263,7 @@ func (s *Platform) UpdateClusterInst(ctx context.Context, clusterInst *edgeproto
 	for vmName, _ := range fakeMasters {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        vmName,
-			Type:        cloudcommon.VMTypeClusterMaster,
+			Type:        cloudcommon.NodeTypeClusterMaster,
 			InfraFlavor: clusterInst.MasterNodeFlavor,
 			Status:      "ACTIVE",
 		})
@@ -283,7 +283,7 @@ func updateClusterResCount(clusterInst *edgeproto.ClusterInst) {
 	for ii := uint32(0); ii < clusterInst.NumMasters; ii++ {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-master-%d-%s", ii+1, vmNameSuffix),
-			Type:        cloudcommon.VMTypeClusterMaster,
+			Type:        cloudcommon.NodeTypeClusterMaster,
 			InfraFlavor: clusterInst.MasterNodeFlavor,
 			Status:      "ACTIVE",
 		})
@@ -292,7 +292,7 @@ func updateClusterResCount(clusterInst *edgeproto.ClusterInst) {
 	for ii := uint32(0); ii < clusterInst.NumNodes; ii++ {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        fmt.Sprintf("fake-node-%d-%s", ii+1, vmNameSuffix),
-			Type:        cloudcommon.VMTypeClusterK8sNode,
+			Type:        cloudcommon.NodeTypeClusterK8sNode,
 			InfraFlavor: clusterInst.NodeFlavor,
 			Status:      "ACTIVE",
 		})
@@ -301,7 +301,7 @@ func updateClusterResCount(clusterInst *edgeproto.ClusterInst) {
 	if clusterInst.IpAccess == edgeproto.IpAccess_IP_ACCESS_DEDICATED {
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        clusterInst.Fqdn,
-			Type:        cloudcommon.VMTypeRootLB,
+			Type:        cloudcommon.NodeTypeDedicatedRootLB,
 			InfraFlavor: "x1.small",
 			Status:      "ACTIVE",
 		})
@@ -322,7 +322,7 @@ func updateVmAppResCount(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		}
 		FakeClusterVMs[clusterInst.Key] = append(FakeClusterVMs[clusterInst.Key], edgeproto.VmInfo{
 			Name:        appFQN,
-			Type:        cloudcommon.VMTypeAppVM,
+			Type:        cloudcommon.NodeTypeAppVM,
 			InfraFlavor: appInst.VmFlavor,
 			Status:      "ACTIVE",
 		})
@@ -385,7 +385,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 	var resources edgeproto.InfraResourcesSnapshot
 	platvm := edgeproto.VmInfo{
 		Name:        "fake-platform-vm",
-		Type:        "platform",
+		Type:        cloudcommon.NodeTypePlatformVM,
 		InfraFlavor: "x1.small",
 		Status:      "ACTIVE",
 		Ipaddresses: []edgeproto.IpAddr{
@@ -395,7 +395,7 @@ func (s *Platform) GetCloudletInfraResources(ctx context.Context) (*edgeproto.In
 	resources.PlatformVms = append(resources.PlatformVms, platvm)
 	rlbvm := edgeproto.VmInfo{
 		Name:        "fake-rootlb-vm",
-		Type:        "rootlb",
+		Type:        cloudcommon.NodeTypeDedicatedRootLB,
 		InfraFlavor: "x1.small",
 		Status:      "ACTIVE",
 		Ipaddresses: []edgeproto.IpAddr{
@@ -536,7 +536,7 @@ func (s *Platform) GetNodePlatformClient(ctx context.Context, node *edgeproto.Cl
 func (s *Platform) ListCloudletMgmtNodes(ctx context.Context, clusterInsts []edgeproto.ClusterInst, vmAppInsts []edgeproto.AppInst) ([]edgeproto.CloudletMgmtNode, error) {
 	return []edgeproto.CloudletMgmtNode{
 		edgeproto.CloudletMgmtNode{
-			Type: "platformvm",
+			Type: cloudcommon.NodeTypePlatformVM,
 			Name: "platformvmname",
 		},
 	}, nil

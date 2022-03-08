@@ -38,24 +38,23 @@ var CloudletKindFake = "fake"
 var OperatingSystemMac = "mac"
 var OperatingSystemLinux = "linux"
 
-// cloudlet vm types
-var VMTypeAppVM = "appvm"
-var VMTypeRootLB = "rootlb"
-var VMTypePlatform = "platform"
-var VMTypePlatformClusterMaster = "platform-cluster-master"
-var VMTypePlatformClusterPrimaryNode = "platform-cluster-primary-node"
-var VMTypePlatformClusterSecondaryNode = "platform-cluster-secondary-node"
+// Cloudlet Platform nodes -- update IsPlatformNode if adding to this list
+var NodeTypeAppVM = "appvm"
+var NodeTypeSharedRootLB = "sharedrootlb"
+var NodeTypeDedicatedRootLB = "dedicatedrootlb"
+var NodeTypePlatformVM = "platformvm"
+var NodeTypePlatformHost = "platformhost"
+var NodeTypePlatformClusterMaster = "platform-cluster-master"
+var NodeTypePlatformClusterPrimaryNode = "platform-cluster-primary-node"
+var NodeTypePlatformClusterSecondaryNode = "platform-cluster-secondary-node"
 
-var VMTypeClusterMaster = "cluster-master"
-var VMTypeClusterK8sNode = "cluster-k8s-node"
-var VMTypeClusterDockerNode = "cluster-docker-node"
+// Cloudlet Compute nodes
+var NodeTypeClusterMaster = "cluster-master"
+var NodeTypeClusterK8sNode = "cluster-k8s-node"
+var NodeTypeClusterDockerNode = "cluster-docker-node"
 
 // resource types
 var ResourceTypeK8sLBSvc = "k8s-lb-svc"
-
-// cloudlet node names
-var CloudletNodeSharedRootLB = "sharedrootlb"
-var CloudletNodeDedicatedRootLB = "dedicatedrootlb"
 
 const AutoClusterPrefix = "autocluster"
 const ReservableClusterPrefix = "reservable"
@@ -376,4 +375,24 @@ func GetGPUDriverLicenseURL(key *edgeproto.GPUDriverKey, cloudletName, deploymen
 
 func GetGPUDriverBuildPathFromURL(driverURL, deploymentTag string) string {
 	return strings.TrimPrefix(driverURL, fmt.Sprintf("https://storage.cloud.google.com/%s/", GetGPUDriverBucketName(deploymentTag)))
+}
+
+func IsPlatformNode(nodeType string) bool {
+	switch nodeType {
+	case NodeTypePlatformVM:
+		fallthrough
+	case NodeTypePlatformHost:
+		fallthrough
+	case NodeTypePlatformClusterMaster:
+		fallthrough
+	case NodeTypePlatformClusterPrimaryNode:
+		fallthrough
+	case NodeTypePlatformClusterSecondaryNode:
+		return true
+	}
+	return false
+}
+
+func IsLBNode(nodeType string) bool {
+	return nodeType == NodeTypeDedicatedRootLB || nodeType == NodeTypeSharedRootLB
 }
