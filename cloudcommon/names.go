@@ -39,19 +39,51 @@ var OperatingSystemMac = "mac"
 var OperatingSystemLinux = "linux"
 
 // Cloudlet Platform nodes -- update IsPlatformNode if adding to this list
-var NodeTypeAppVM = "appvm"
-var NodeTypeSharedRootLB = "sharedrootlb"
-var NodeTypeDedicatedRootLB = "dedicatedrootlb"
-var NodeTypePlatformVM = "platformvm"
-var NodeTypePlatformHost = "platformhost"
-var NodeTypePlatformClusterMaster = "platform-cluster-master"
-var NodeTypePlatformClusterPrimaryNode = "platform-cluster-primary-node"
-var NodeTypePlatformClusterSecondaryNode = "platform-cluster-secondary-node"
 
-// Cloudlet Compute nodes
-var NodeTypeClusterMaster = "cluster-master"
-var NodeTypeClusterK8sNode = "cluster-k8s-node"
-var NodeTypeClusterDockerNode = "cluster-docker-node"
+type NodeType int
+
+const (
+	NodeTypeAppVM NodeType = iota
+	NodeTypeSharedRootLB
+	NodeTypeDedicatedRootLB
+	NodeTypePlatformVM
+	NodeTypePlatformHost
+	NodeTypePlatformK8sClusterMaster
+	NodeTypePlatformK8sClusterPrimaryNode
+	NodeTypePlatformK8sClusterSecondaryNode
+	// Cloudlet Compute nodes
+	NodeTypeK8sClusterMaster
+	NodeTypeK8sClusterNode
+	NodeTypeDockerClusterNode
+)
+
+func (n NodeType) String() string {
+	switch n {
+	case NodeTypeAppVM:
+		return "appvm"
+	case NodeTypeSharedRootLB:
+		return "sharedrootlb"
+	case NodeTypeDedicatedRootLB:
+		return "dedicatedrootlb"
+	case NodeTypePlatformVM:
+		return "platformvm"
+	case NodeTypePlatformHost:
+		return "platformhost"
+	case NodeTypePlatformK8sClusterMaster:
+		return "platform-k8s-cluster-master"
+	case NodeTypePlatformK8sClusterPrimaryNode:
+		return "platform-k8s-cluster-primary-node"
+	case NodeTypePlatformK8sClusterSecondaryNode:
+		return "platform-k8s-cluster-secondary-node"
+	case NodeTypeK8sClusterMaster:
+		return "k8s-cluster-master"
+	case NodeTypeK8sClusterNode:
+		return "k8s-cluster-node"
+	case NodeTypeDockerClusterNode:
+		return "docker-cluster-node"
+	}
+	return "unknown node type"
+}
 
 // resource types
 var ResourceTypeK8sLBSvc = "k8s-lb-svc"
@@ -377,22 +409,22 @@ func GetGPUDriverBuildPathFromURL(driverURL, deploymentTag string) string {
 	return strings.TrimPrefix(driverURL, fmt.Sprintf("https://storage.cloud.google.com/%s/", GetGPUDriverBucketName(deploymentTag)))
 }
 
-func IsPlatformNode(nodeType string) bool {
-	switch nodeType {
-	case NodeTypePlatformVM:
+func IsPlatformNode(nodeTypeStr string) bool {
+	switch nodeTypeStr {
+	case NodeTypePlatformVM.String():
 		fallthrough
-	case NodeTypePlatformHost:
+	case NodeTypePlatformHost.String():
 		fallthrough
-	case NodeTypePlatformClusterMaster:
+	case NodeTypePlatformK8sClusterMaster.String():
 		fallthrough
-	case NodeTypePlatformClusterPrimaryNode:
+	case NodeTypePlatformK8sClusterPrimaryNode.String():
 		fallthrough
-	case NodeTypePlatformClusterSecondaryNode:
+	case NodeTypePlatformK8sClusterSecondaryNode.String():
 		return true
 	}
 	return false
 }
 
-func IsLBNode(nodeType string) bool {
-	return nodeType == NodeTypeDedicatedRootLB || nodeType == NodeTypeSharedRootLB
+func IsLBNode(nodeTypeStr string) bool {
+	return nodeTypeStr == NodeTypeDedicatedRootLB.String() || nodeTypeStr == NodeTypeSharedRootLB.String()
 }
