@@ -261,13 +261,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -314,13 +314,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -367,13 +367,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -420,13 +420,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -473,13 +473,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -526,13 +526,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -579,13 +579,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -632,13 +632,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -685,13 +685,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -738,13 +738,13 @@ cloudletinfos:
   resourcessnapshot:
     platformvms:
     - name: fake-platform-vm
-      type: platform
+      type: platformvm
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
       - externalip: 10.101.100.10
     - name: fake-rootlb-vm
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
       ipaddresses:
@@ -802,7 +802,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable0-mobiledgex.azure-cloud-9-azure.local.localtest.net
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -838,7 +838,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable0-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -1130,7 +1130,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable1-mobiledgex.azure-cloud-9-azure.local.localtest.net
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1166,7 +1166,7 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable1-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
-      type: rootlb
+      type: dedicatedrootlb
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
