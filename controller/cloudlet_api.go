@@ -2257,7 +2257,7 @@ func (s *CloudletApi) GetCloudletResourceInfo(ctx context.Context, stm concurren
 					resInfo[cloudcommon.ResourceGpus] = gpusInfo
 				}
 			}
-			if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+			if cloudcommon.IsLBNode(vmRes.Type) || cloudcommon.IsPlatformNode(vmRes.Type) {
 				externalIPInfo, ok := resInfo[cloudcommon.ResourceExternalIPs]
 				if ok {
 					externalIPInfo.Value += 1

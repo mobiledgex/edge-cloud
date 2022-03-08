@@ -764,7 +764,7 @@ func (s *ClusterInstApi) getCloudletResourceMetric(ctx context.Context, stm conc
 				flavorCount[vmRes.VmFlavor.Name] = 1
 			}
 		}
-		if vmRes.Type == cloudcommon.VMTypeRootLB || vmRes.Type == cloudcommon.VMTypePlatform {
+		if cloudcommon.IsLBNode(vmRes.Type) || cloudcommon.IsPlatformNode(vmRes.Type) {
 			externalIPsUsed += 1
 		}
 	}
