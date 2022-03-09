@@ -448,11 +448,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-1-reservablecluster-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-1-reservablecluster-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: reservablecluster-mobiledgex.dmuus-cloud-1-dmuus.local.localtest.net
@@ -482,11 +482,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-2-reservablecluster2-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-reservablecluster2-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: reservablecluster2-mobiledgex.dmuus-cloud-2-dmuus.local.localtest.net
@@ -515,11 +515,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-1-smallcluster-acmeappco
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-1-smallcluster-acmeappco
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: smallcluster-acmeappco.dmuus-cloud-1-dmuus.local.localtest.net
@@ -548,11 +548,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-2-smallcluster-acmeappco
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-smallcluster-acmeappco
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: smallcluster-acmeappco

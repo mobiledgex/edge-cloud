@@ -765,11 +765,11 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context, apis *AllAp
 		numMasters := 0
 		numRootLB := 0
 		for _, res := range ciResources {
-			if res.Type == cloudcommon.NodeTypeClusterMaster {
+			if res.Type == cloudcommon.NodeTypeK8sClusterMaster.String() {
 				numMasters++
-			} else if res.Type == cloudcommon.NodeTypeClusterK8sNode {
+			} else if res.Type == cloudcommon.NodeTypeK8sClusterNode.String() {
 				numNodes++
-			} else if res.Type == cloudcommon.NodeTypeDedicatedRootLB {
+			} else if res.Type == cloudcommon.NodeTypeDedicatedRootLB.String() {
 				numRootLB++
 			} else {
 				require.Fail(t, "invalid resource type", "type", res.Type)
@@ -818,9 +818,9 @@ func testClusterInstResourceUsage(t *testing.T, ctx context.Context, apis *AllAp
 		foundVMRes := false
 		foundVMRootLBRes := false
 		for _, vmRes := range vmAppResources {
-			if vmRes.Type == cloudcommon.NodeTypeAppVM {
+			if vmRes.Type == cloudcommon.NodeTypeAppVM.String() {
 				foundVMRes = true
-			} else if vmRes.Type == cloudcommon.NodeTypeDedicatedRootLB {
+			} else if vmRes.Type == cloudcommon.NodeTypeDedicatedRootLB.String() {
 				foundVMRootLBRes = true
 			}
 			require.Equal(t, vmAppResources[0].Key, *appInst.ClusterInstKey(), "resource key matches appinst's clusterinst key")
