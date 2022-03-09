@@ -94,7 +94,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      clusterInst.Key,
 			VmFlavor: nodeFlavor,
-			Type:     NodeTypeClusterDockerNode,
+			Type:     NodeTypeDockerClusterNode.String(),
 		})
 	} else {
 		// For managed-k8s platforms, ignore master node for resource calculation
@@ -104,13 +104,13 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 					vmResources = append(vmResources, edgeproto.VMResource{
 						Key:      clusterInst.Key,
 						VmFlavor: nodeFlavor,
-						Type:     NodeTypeClusterMaster,
+						Type:     NodeTypeK8sClusterMaster.String(),
 					})
 				} else {
 					vmResources = append(vmResources, edgeproto.VMResource{
 						Key:      clusterInst.Key,
 						VmFlavor: masterNodeFlavor,
-						Type:     NodeTypeClusterMaster,
+						Type:     NodeTypeK8sClusterMaster.String(),
 					})
 				}
 			}
@@ -119,7 +119,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			vmResources = append(vmResources, edgeproto.VMResource{
 				Key:      clusterInst.Key,
 				VmFlavor: nodeFlavor,
-				Type:     NodeTypeClusterK8sNode,
+				Type:     NodeTypeK8sClusterNode.String(),
 			})
 		}
 	}
@@ -133,7 +133,7 @@ func GetClusterInstVMRequirements(ctx context.Context, clusterInst *edgeproto.Cl
 			vmResources = append(vmResources, edgeproto.VMResource{
 				Key:      clusterInst.Key,
 				VmFlavor: rootLBFlavor,
-				Type:     NodeTypeDedicatedRootLB,
+				Type:     NodeTypeDedicatedRootLB.String(),
 			})
 		}
 	}
@@ -159,13 +159,13 @@ func GetVMAppRequirements(ctx context.Context, app *edgeproto.App, appInst *edge
 		vmResources = append(vmResources, edgeproto.VMResource{
 			Key:      *appInst.ClusterInstKey(),
 			VmFlavor: rootLBFlavor,
-			Type:     NodeTypeDedicatedRootLB,
+			Type:     NodeTypeDedicatedRootLB.String(),
 		})
 	}
 	vmResources = append(vmResources, edgeproto.VMResource{
 		Key:           *appInst.ClusterInstKey(),
 		VmFlavor:      vmFlavor,
-		Type:          NodeTypeAppVM,
+		Type:          NodeTypeAppVM.String(),
 		AppAccessType: app.AccessType,
 	})
 	return vmResources, nil
