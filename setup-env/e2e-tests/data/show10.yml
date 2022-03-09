@@ -794,11 +794,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-azure-cloud-9-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-azure-cloud-9-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable0-mobiledgex.azure-cloud-9-azure.local.localtest.net
@@ -830,11 +830,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-gcp-cloud-10-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-gcp-cloud-10-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable0-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
@@ -866,11 +866,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-1-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-1-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -898,11 +898,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-2-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -930,11 +930,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-3-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-3-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -962,11 +962,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-4-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-4-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -994,11 +994,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-5-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-5-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -1026,11 +1026,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-6-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-6-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -1058,11 +1058,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-7-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-7-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -1090,11 +1090,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-8-reservable0-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-8-reservable0-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable0-mobiledgex
@@ -1122,11 +1122,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-azure-cloud-9-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-azure-cloud-9-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable1-mobiledgex.azure-cloud-9-azure.local.localtest.net
@@ -1158,11 +1158,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-gcp-cloud-10-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-gcp-cloud-10-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: reservable1-mobiledgex.gcp-cloud-10-gcp.local.localtest.net
@@ -1194,11 +1194,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-1-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-1-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1226,11 +1226,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-2-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1258,11 +1258,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-3-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-3-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1290,11 +1290,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-4-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-4-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1322,11 +1322,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-5-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-5-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1354,11 +1354,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-6-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-6-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1386,11 +1386,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-7-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-7-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex
@@ -1418,11 +1418,11 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-8-reservable1-mobiledgex
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-8-reservable1-mobiledgex
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: reservable1-mobiledgex

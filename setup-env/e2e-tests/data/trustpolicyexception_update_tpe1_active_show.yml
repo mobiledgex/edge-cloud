@@ -158,11 +158,11 @@ clusterinsts:
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-master-1-cloudlet2-Untomt-cluster-22-Untomt
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-cloudlet2-Untomt-cluster-22-Untomt
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: Untomt-cluster-22-Untomt

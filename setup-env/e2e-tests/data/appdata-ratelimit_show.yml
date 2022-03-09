@@ -428,15 +428,15 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-1-smallcluster-acmeappco
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-1-smallcluster-acmeappco
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-2-dmuus-cloud-1-smallcluster-acmeappco
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
   dnslabel: smallcluster-acmeappco
@@ -461,15 +461,15 @@ clusterinsts:
   resources:
     vms:
     - name: fake-master-1-dmuus-cloud-2-smallcluster-acmeappco
-      type: cluster-master
+      type: k8s-cluster-master
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-1-dmuus-cloud-2-smallcluster-acmeappco
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: fake-node-2-dmuus-cloud-2-smallcluster-acmeappco
-      type: cluster-k8s-node
+      type: k8s-cluster-node
       status: ACTIVE
       infraflavor: x1.small
     - name: smallcluster-acmeappco.dmuus-cloud-2-dmuus.local.localtest.net
