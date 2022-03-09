@@ -150,7 +150,7 @@ func getRootLbCertsHelper(ctx context.Context, key *edgeproto.CloudletKey, commo
 		return lastCertsUsed
 	}
 	// apply new cert
-	client, err := platform.GetNodePlatformClient(ctx, &edgeproto.CloudletMgmtNode{Type: cloudcommon.NodeTypeSharedRootLB})
+	client, err := platform.GetNodePlatformClient(ctx, &edgeproto.CloudletMgmtNode{Type: cloudcommon.NodeTypeSharedRootLB.String()})
 	if err == nil {
 		err = writeCertToRootLb(ctx, &tls, client, certsDir, certFile, keyFile)
 		if err != nil {
