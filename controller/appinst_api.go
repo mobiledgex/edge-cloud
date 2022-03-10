@@ -447,19 +447,39 @@ func removeAppInstFromRefs(appInstKey *edgeproto.AppInstKey, appInstRefs *[]edge
 func SetAppInstKeyDefaults(ctx context.Context, key *edgeproto.AppInstKey, apis *AllApis) (bool, bool) {
 	setClusterOrg := false
 	setClusterName := false
-	if key.ClusterInstKey.Organization == "" {
+	autoCluster := strings.HasPrefix(key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix)
+	singleKubernetesCluster := false
+
+	cloudlet := edgeproto.Cloudlet{}
+	if apis.cloudletApi.Get(&key.ClusterInstKey.CloudletKey, &cloudlet) {
+		features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
+		if err == nil && features.IsSingleKubernetesCluster {
+			singleKubernetesCluster = true
+			autoCluster = false // disable autocluster logic
+		}
+	}
+
+	if key.ClusterInstKey.Organization == "" && autoCluster {
+		// reservable cluster org is MobiledgeX
+		key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
+		setClusterOrg = true
+		// for deprecated auto cluster, cluster org is app org
+		info := edgeproto.CloudletInfo{}
+		if apis.cloudletInfoApi.cache.Get(&key.ClusterInstKey.CloudletKey, &info) {
+			if info.CompatibilityVersion < cloudcommon.CRMCompatibilityAutoReservableCluster {
+				// deprecated auto cluster
+				key.ClusterInstKey.Organization = key.AppKey.Organization
+			}
+		}
+	} else if key.ClusterInstKey.Organization == "" {
 		key.ClusterInstKey.Organization = key.AppKey.Organization
 		setClusterOrg = true
 		// check if cloudlet is a single kubernetes cluster
-		cloudlet := edgeproto.Cloudlet{}
-		if apis.cloudletApi.Get(&key.ClusterInstKey.CloudletKey, &cloudlet) {
-			features, err := GetCloudletFeatures(ctx, cloudlet.PlatformType)
-			if err == nil && features.IsSingleKubernetesCluster {
-				if cloudlet.SingleKubernetesClusterOwner != "" {
-					key.ClusterInstKey.Organization = cloudlet.SingleKubernetesClusterOwner
-				} else {
-					key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
-				}
+		if singleKubernetesCluster {
+			if cloudlet.SingleKubernetesClusterOwner != "" {
+				key.ClusterInstKey.Organization = cloudlet.SingleKubernetesClusterOwner
+			} else {
+				key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
 			}
 		}
 	}
