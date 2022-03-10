@@ -483,7 +483,9 @@ func TestAutoClusterInst(t *testing.T) {
 	createAutoClusterAppInst := func(copy edgeproto.AppInst, expectedId string) {
 		// since cluster inst does not exist, it will be auto-created
 		copy.Key.ClusterInstKey.ClusterKey.Name = cloudcommon.AutoClusterPrefix + expectedId
-		copy.Key.ClusterInstKey.Organization = cloudcommon.OrganizationMobiledgeX
+		// make sure cluster org can be left blank
+		copy.Key.ClusterInstKey.Organization = ""
+
 		err := apis.appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create app inst")
 		// As there was some progress, there should be some messages in stream
@@ -597,7 +599,8 @@ func testDeprecatedAutoCluster(t *testing.T, ctx context.Context, apis *AllApis)
 		if !strings.HasPrefix(obj.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
 			continue
 		}
-		obj.Key.ClusterInstKey.Organization = obj.Key.AppKey.Organization
+		// make sure cluster org can be left blank
+		obj.Key.ClusterInstKey.Organization = ""
 		appInsts = append(appInsts, obj)
 
 		err := apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -949,6 +952,10 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 		0, &cloudletMT, "autocluster", "", "", notDedicatedIp,
 		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
 	}, {
+		"MT any clust name blank org",
+		0, &cloudletMT, "clust", "", "", notDedicatedIp,
+		"shared.singlek8smt-unittest.local.mobiledgex.net", PASS,
+	}, {
 		"ST any clust name",
 		0, &cloudletST, "clust", stOrg, "", notDedicatedIp,
 		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
@@ -959,6 +966,10 @@ func testSingleKubernetesCloudlet(t *testing.T, ctx context.Context, apis *AllAp
 	}, {
 		"ST auto clust name blank org",
 		0, &cloudletST, "autocluster", "", "", notDedicatedIp,
+		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
+	}, {
+		"ST any clust name blank org",
+		0, &cloudletST, "clust", "", "", notDedicatedIp,
 		"shared.singlek8sst-unittest.local.mobiledgex.net", PASS,
 	}, {
 		"MT any clust name dedicated",
