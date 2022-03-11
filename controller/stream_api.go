@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/rediscache"
@@ -264,7 +265,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		// * Else if undo was set from different object (in case of autocluster),
 		//   then perform the check
 		if !cctx.AutoCluster && !cctx.Undo {
-			return nil, nil, fmt.Errorf("An action is already in progress for the object %s", streamKey)
+			return nil, nil, fmt.Errorf("%s %s", cloudcommon.StreamActionAlreadyInProgressMsg, streamKey)
 		}
 	}
 
