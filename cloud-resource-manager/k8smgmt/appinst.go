@@ -200,6 +200,11 @@ func UpdateLoadBalancerPortMap(ctx context.Context, client ssh.Client, names *Ku
 
 	for _, s := range services {
 		lbip := ""
+		// It is possible to have ports for internal services that may overlap but not exposed externally. Skip services not part of this app.
+		if !names.ContainsService(s.Name) {
+			continue
+		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "service name match found in kubenames", "svc name", s.Name)
 		if names.MultitenantNamespace != "" {
 			svcNamespace := s.ObjectMeta.Namespace
 			if svcNamespace != names.MultitenantNamespace {
