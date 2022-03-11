@@ -1,6 +1,7 @@
 package process
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -163,18 +164,27 @@ func GetTypeString(p interface{}) string {
 func getPidsByName(processName string, processArgs string) []ProcessInfo {
 	//pidlist is a set of pids and alive bool
 	var processes []ProcessInfo
-	var pgrepCommand string
+	//var pgrepCommand string
+	var cmd *exec.Cmd
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 	if processArgs == "" {
 		//look for any instance of this process name
-		pgrepCommand = "pgrep -x " + processName
+		cmd = exec.CommandContext(ctx, "pgrep", "-x", processName)
+		//pgrepCommand = "pgrep -x " + processName
 	} else {
 		//look for a process running with particular arguments
-		pgrepCommand = "pgrep -f '" + processName + " .*" + processArgs + ".*'"
+		cmd = exec.CommandContext(ctx, "pgrep", "-f", processName+" .*"+processArgs+".*")
+		//pgrepCommand = "pgrep -f '" + processName + " .*" + processArgs + ".*'"
 	}
-	log.Printf("Running pgrep %v\n", pgrepCommand)
-	out, perr := exec.Command("sh", "-c", pgrepCommand).Output()
+	log.Printf("Running %v\n", cmd.String())
+
+	out, perr := cmd.CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		perr = fmt.Errorf("command timed out")
+	}
 	if perr != nil {
-		log.Printf("Process not found for: %s\n", pgrepCommand)
+		log.Printf("Process not found for: %s, %s, %v\n", cmd.String(), string(out), perr)
 		pinfo := ProcessInfo{alive: false}
 		processes = append(processes, pinfo)
 		return processes
@@ -186,7 +196,7 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 		}
 		p, err := strconv.Atoi(pid)
 		if err != nil {
-			fmt.Printf("Error in finding pid from process: %v -- %v", processName, err)
+			fmt.Printf("Error in finding pid from process: %v, output %s -- %v", processName, pid, err)
 		} else {
 			pinfo := ProcessInfo{pid: p, alive: true}
 			processes = append(processes, pinfo)
