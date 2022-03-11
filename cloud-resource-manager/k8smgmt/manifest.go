@@ -199,14 +199,14 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 		case *appsv1.Deployment:
 			template = &obj.Spec.Template
 			name = obj.ObjectMeta.Name
-			obj.Spec.Replicas = getDefaultReplicas(app, names)
+			obj.Spec.Replicas = getDefaultReplicas(app, names, *obj.Spec.Replicas)
 		case *appsv1.DaemonSet:
 			template = &obj.Spec.Template
 			name = obj.ObjectMeta.Name
 		case *appsv1.StatefulSet:
 			template = &obj.Spec.Template
 			name = obj.ObjectMeta.Name
-			obj.Spec.Replicas = getDefaultReplicas(app, names)
+			obj.Spec.Replicas = getDefaultReplicas(app, names, *obj.Spec.Replicas)
 		}
 		if template == nil {
 			continue
@@ -270,8 +270,11 @@ func AddManifest(mf, addmf string) string {
 	return mf + "---\n" + addmf
 }
 
-func getDefaultReplicas(app *edgeproto.App, names *KubeNames) *int32 {
+func getDefaultReplicas(app *edgeproto.App, names *KubeNames, curReplica int32) *int32 {
 	val := int32(1)
+	if curReplica != 0 {
+		val = curReplica
+	}
 	if names.MultitenantNamespace != "" && app.ServerlessConfig != nil {
 		val = int32(app.ServerlessConfig.MinReplicas)
 	}
