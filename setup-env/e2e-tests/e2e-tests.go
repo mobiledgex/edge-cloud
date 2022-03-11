@@ -243,12 +243,15 @@ func runTests(dirName, fileName, progName string, depth int, mods []string) (int
 				}
 				continue
 			}
-			sof := ""
-			if *stopOnFail {
-				sof = "-stop"
+			args := []string{
+				"-testConfig", configStr,
+				"-testSpec", string(testSpec),
+				"-mods", string(modsSpec),
 			}
-			cmdstr := fmt.Sprintf("%s -testConfig '%s' -testSpec '%s' -mods '%s' %s", progName, configStr, string(testSpec), string(modsSpec), sof)
-			cmd := exec.Command("sh", "-c", cmdstr)
+			if *stopOnFail {
+				args = append(args, "-stop")
+			}
+			cmd := exec.Command(progName, args...)
 			var out bytes.Buffer
 			var stderr bytes.Buffer
 			cmd.Stdout = &out
