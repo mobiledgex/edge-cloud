@@ -50,7 +50,7 @@ func TestEnvVars(t *testing.T) {
 	defaultFlavor := testutil.FlavorData[0]
 
 	authApi := &cloudcommon.DummyRegistryAuthApi{}
-	// Test Deploymeent manifest with inline EnvVars
+	// Test Deployment manifest with inline EnvVars
 	baseMf, err := cloudcommon.GetAppDeploymentManifest(ctx, nil, app)
 	require.Nil(t, err)
 	envVarsMf, err := MergeEnvVars(ctx, authApi, app, baseMf, nil, names, &defaultFlavor)
@@ -190,7 +190,7 @@ kind: Deployment
 metadata:
   name: pillimogo-deployment
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: pillimogo
@@ -296,7 +296,7 @@ metadata:
     config: ""
   name: pillimogo-deployment
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: pillimogo
