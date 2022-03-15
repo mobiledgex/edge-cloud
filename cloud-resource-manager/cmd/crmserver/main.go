@@ -297,6 +297,8 @@ func main() {
 						cspan.Finish()
 						log.FatalLog("unexpected error getting cloudlet info from HA cache", "err", err)
 					}
+					// update the container version as this may not match what is in the cache
+					myCloudletInfo.ContainerVersion = cloudletContainerVersion
 					if myCloudletInfo.State == dme.CloudletState_CLOUDLET_STATE_READY {
 						log.SpanLog(ctx, log.DebugLevelInfo, "conditional init not required as cloudlet was previously ready and versions match")
 						conditionalInitRequired = false
