@@ -1254,7 +1254,7 @@ func TestAppInstIdDelimiter(t *testing.T) {
 	require.NotContains(t, id, ".", "id must not contain '.'")
 }
 
-func waitForAppInstState(t *testing.T, ctx context.Context, apis *AllApis, key *edgeproto.AppInstKey, state edgeproto.TrackedState) {
+func waitForAppInstState(t *testing.T, ctx context.Context, apis *AllApis, key *edgeproto.AppInstKey, ii int, state edgeproto.TrackedState) {
 	var ok bool
 	for ii := 0; ii < 50; ii++ {
 		apis.appInstApi.cache.Mux.Lock()
@@ -1266,7 +1266,7 @@ func waitForAppInstState(t *testing.T, ctx context.Context, apis *AllApis, key *
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	require.True(t, ok, "Wait for state %s for %s", state.String(), key.GetKeyString())
+	require.True(t, ok, "Wait for state %s for AppInstData[%d]", state.String(), ii)
 }
 
 // Autoprov relies on being able to detect AppInst being created
@@ -1287,11 +1287,11 @@ func testBeingErrors(t *testing.T, ctx context.Context, responder *DummyInfoResp
 		responder.SetPause(true)
 		go func() {
 			err := apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
-			require.Nil(t, err)
+			require.Nil(t, err, "AppInstData[%d]", ii)
 			wg.Done()
 		}()
 		// make sure appinst is in deleting state
-		waitForAppInstState(t, ctx, apis, &ai.Key, edgeproto.TrackedState_DELETING)
+		waitForAppInstState(t, ctx, apis, &ai.Key, ii, edgeproto.TrackedState_DELETING)
 		// verify error
 		checkErr := apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		require.True(t, cloudcommon.IsAppInstBeingDeletedError(checkErr), "AppInstData[%d]: %s", ii, checkErr)
@@ -1305,11 +1305,11 @@ func testBeingErrors(t *testing.T, ctx context.Context, responder *DummyInfoResp
 		responder.SetPause(true)
 		go func() {
 			err := apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
-			require.Nil(t, err)
+			require.Nil(t, err, "AppInstData[%d]", ii)
 			wg.Done()
 		}()
 		// make sure appinst is in creating state
-		waitForAppInstState(t, ctx, apis, &ai.Key, edgeproto.TrackedState_CREATING)
+		waitForAppInstState(t, ctx, apis, &ai.Key, ii, edgeproto.TrackedState_CREATING)
 		// verify error
 		checkErr = apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
 		require.True(t, cloudcommon.IsAppInstBeingCreatedError(checkErr), "AppInstData[%d]: %s", ii, checkErr)
