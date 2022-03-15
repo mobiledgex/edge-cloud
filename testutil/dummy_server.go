@@ -95,6 +95,7 @@ func (s *DummyServer) SetDummyOrgObjs(ctx context.Context, a Action, org string,
 		cloudletInfo.Key.Organization = org
 		cloudletInfo.Key.Name = name
 		cloudletInfo.ContainerVersion = "xyz"
+		cloudletInfo.Controller = "ctrl.local"
 		cloudletInfo.ResourcesSnapshot = edgeproto.InfraResourcesSnapshot{
 			PlatformVms: []edgeproto.VmInfo{
 				{Name: "test"},
