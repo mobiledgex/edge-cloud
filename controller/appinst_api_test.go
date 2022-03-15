@@ -1308,7 +1308,7 @@ func testBeingErrors(t *testing.T, ctx context.Context, responder *DummyInfoResp
 			require.Nil(t, err)
 			wg.Done()
 		}()
-		// make sure appinst is in deleting state
+		// make sure appinst is in creating state
 		waitForAppInstState(t, ctx, apis, &ai.Key, edgeproto.TrackedState_CREATING)
 		// verify error
 		checkErr = apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))

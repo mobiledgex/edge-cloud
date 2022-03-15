@@ -33,3 +33,6 @@ controller/influxdb.log
 controller/influxq_client/.influxdb
 controller/influxq_client/influxdb.log
 cloud-resource-manager/cmd/crmserver/envoy/*
+controller/.influxdb/*
+controller/envoy/*
+dump.rdb
