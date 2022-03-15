@@ -183,9 +183,9 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
 
-	// If this is undo, but not an autocluster, then caller has already performed
-	// the same operation, so reuse the existing callback.
-	if !cctx.AutoCluster && cctx.Undo {
+	// If this is an undo, then caller has already performed
+	// the same operation, so reuse the existing callback
+	if cctx.Undo {
 		streamSendObj := streamSend{cb: inCb}
 		outCb := &CbWrapper{
 			GenericCb: inCb,
@@ -193,6 +193,27 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 			streamKey: streamKey,
 		}
 		return &streamSendObj, outCb, nil
+	}
+
+	// Check number of existing subscribers, if there are any, then
+	// stream action is already in progress
+	subMap, err := redisClient.PubSubNumSub(streamKey).Result()
+	if err != nil {
+		return nil, nil, err
+	}
+	if subCnt, ok := subMap[streamKey]; ok && subCnt >= 1 {
+		return nil, nil, fmt.Errorf("An action is already in progress for the object %s", streamKey)
+	}
+	out, err := redisClient.Exists(streamKey).Result()
+	if err != nil {
+		return nil, nil, err
+	}
+	// clean old stream data if stream key already exists
+	if out == 1 {
+		_, err := redisClient.Del(streamKey).Result()
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	// Start subscription to redis channel identified by stream key.
@@ -204,7 +225,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	pubsub := redisClient.Subscribe(streamKey)
 
 	// Wait for confirmation that subscription is created before publishing anything.
-	_, err := pubsub.Receive()
+	_, err = pubsub.Receive()
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to subscribe to stream %s, %v", streamKey, err)
 	}
@@ -220,61 +241,13 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		streamSendObj.cb = inCb
 	}
 
-	newStream := false
-
-	out, err := redisClient.Exists(streamKey).Result()
-	if err != nil {
-		return nil, nil, err
-	}
-	// stream key already exists
-	if out == 1 {
-		// check last message on the existing stream to
-		// figure out if stream should be cleared or not
-		streamMsgs, err := redisClient.XRange(streamKey,
-			rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
-		if err != nil {
-			return nil, nil, err
-		}
-		if len(streamMsgs) > 0 {
-			for k, _ := range streamMsgs[len(streamMsgs)-1].Values {
-				if k == StreamMsgTypeEOM || k == StreamMsgTypeError {
-					// Since last msg was EOM/Error, reset this stream
-					// as it is for a new API call
-					_, err := redisClient.Del(streamKey).Result()
-					if err != nil {
-						return nil, nil, err
-					}
-					newStream = true
-					break
-				}
-			}
-		} else {
-			newStream = true
-		}
-	} else {
-		newStream = true
-	}
-
-	// Stream in progress check
-	// ========================
-	// If crm override is specified, then ignore the check.
-	// This is required in case there are some stale unterminated streams
-	if !ignoreCRM(cctx) && !newStream {
-		// * If undo was set from the same object, then ignore the check
-		// * Else if undo was set from different object (in case of autocluster),
-		//   then perform the check
-		if !cctx.AutoCluster && !cctx.Undo {
-			return nil, nil, fmt.Errorf("An action is already in progress for the object %s", streamKey)
-		}
-	}
-
 	outCb := &CbWrapper{
 		GenericCb: inCb,
 		ctx:       ctx,
 		streamKey: streamKey,
 	}
 
-	log.SpanLog(ctx, log.DebugLevelApi, "Started new stream", "key", streamKey, "new stream", newStream)
+	log.SpanLog(ctx, log.DebugLevelApi, "Started new stream", "key", streamKey)
 	return &streamSendObj, outCb, nil
 }
 
@@ -284,9 +257,9 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 		return nil
 	}
 
-	// If this is undo, but not an autocluster, then caller has already performed
-	// the same operation, so skip performing any cleanup
-	if !cctx.AutoCluster && cctx.Undo {
+	// If this is an undo, then caller has already performed the same operation,
+	// so skip performing any cleanup
+	if cctx.Undo {
 		return nil
 	}
 
