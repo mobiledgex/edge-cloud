@@ -104,6 +104,7 @@ func TestAppApi(t *testing.T) {
 		DeploymentManifest: "some manifest",
 		DefaultFlavor:      testutil.FlavorData[2].Key,
 	}
+
 	_, err = apis.appApi.CreateApp(ctx, &app)
 	require.Nil(t, err, "Create app with deployment manifest")
 	checkApp := edgeproto.App{}
@@ -318,6 +319,40 @@ func TestAppApi(t *testing.T) {
 	require.Nil(t, err, "Deleted app with alert policy")
 	_, err = apis.alertPolicyApi.DeleteAlertPolicy(ctx, &userAlert)
 	require.Nil(t, err, "Delete alert policy")
+
+	reservedPortsApp := edgeproto.App{
+		Key: edgeproto.AppKey{
+			Organization: "org",
+			Name:         "reservedPortsTest",
+			Version:      "1.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:   "tcp:8080",
+		Deployment:    "kubernetes",
+		DefaultFlavor: testutil.FlavorData[2].Key,
+	}
+
+	// test reserved ports
+	for p := range edgeproto.ReservedPlatformPorts {
+		rpApp := reservedPortsApp
+		rpApp.Deployment = cloudcommon.DeploymentTypeKubernetes
+		rpApp.AccessPorts = p
+		rpApp.DeploymentManifest = ""
+		// test create
+		_, err = apis.appApi.CreateApp(ctx, &rpApp)
+		require.Contains(t, err.Error(), "App cannot use port")
+		// test update
+		rpApp.AccessPorts = app.AccessPorts
+		_, err = apis.appApi.CreateApp(ctx, &rpApp)
+		require.Nil(t, err)
+		rpApp.AccessPorts = p
+		rpApp.Fields = []string{edgeproto.AppFieldAccessPorts}
+		_, err = apis.appApi.UpdateApp(ctx, &rpApp)
+		require.Contains(t, err.Error(), "App cannot use port")
+		// now delete the app
+		_, err = apis.appApi.DeleteApp(ctx, &rpApp)
+		require.Nil(t, err)
+	}
 
 	dummy.Stop()
 }
