@@ -190,8 +190,8 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		return &streamSendObj, outCb, nil
 	}
 
-	// * Redis `pubsub.Close()` is not sychronous and hence we can't rely on `NumSub()`
-	//   call to figure out if an stream already exists for the streamKey
+	// * Redis `pubsub.Close()` is not synchronous and hence we can't rely on `NumSub()`
+	//   call to figure out if the stream already exists for the streamKey
 	// * Hence, we end up using redis stream to figure out if stream already exists or not
 	// * Since this can be accessed by multiple threads, we use redis transactions for atomic
 	//   operation.
