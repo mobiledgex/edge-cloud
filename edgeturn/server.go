@@ -34,6 +34,7 @@ var proxyAddr = flag.String("proxyAddr", "127.0.0.1:8443", "EdgeTurn Proxy Addre
 var region = flag.String("region", "local", "region name")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var testMode = flag.Bool("testMode", false, "Run EdgeTurn in test mode")
+var consoleAddr = flag.String("consoleAddr", "", "Address of the UI console using EdgeTurn, required for origin check")
 
 const (
 	ShellConnTimeout   = 5 * time.Minute
@@ -320,6 +321,19 @@ func setupProxyServer(started chan bool) error {
 	ctx := log.ContextWithSpan(context.Background(), span)
 	defer span.Finish()
 
+	consoleHostname := ""
+	if *consoleAddr != "" {
+		addr := *consoleAddr
+		if !strings.HasPrefix(addr, "http") {
+			addr = "http://" + addr
+		}
+		u, err := url.Parse(addr)
+		if err != nil {
+			return fmt.Errorf("Invalid consoleAddr, must be a valid URL")
+		}
+		consoleHostname = u.Host
+	}
+
 	proxy := &httputil.ReverseProxy{
 		Director: func(req *http.Request) {},
 		Transport: &HttpTransport{
@@ -419,6 +433,21 @@ func setupProxyServer(started chan bool) error {
 	})
 
 	upgrader := websocket.Upgrader{}
+	// Check origin returns true if the origin is not set or is equal to the console addr
+	upgrader.CheckOrigin = func(r *http.Request) bool {
+		origin := r.Header["Origin"]
+		if len(origin) == 0 {
+			return true
+		}
+		u, err := url.Parse(origin[0])
+		if err != nil {
+			return false
+		}
+		if consoleHostname == "" {
+			return false
+		}
+		return consoleHostname == u.Host
+	}
 	http.HandleFunc("/edgeshell", func(w http.ResponseWriter, r *http.Request) {
 		queryArgs := r.URL.Query()
 		tokenVals, ok := queryArgs["edgetoken"]
