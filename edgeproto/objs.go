@@ -41,6 +41,8 @@ var ValidConfigKinds = map[string]struct{}{
 var ReservedPlatformPorts = map[string]string{
 	"tcp:22":    "Platform inter-node SSH",
 	"tcp:20800": "Kubernetes master join server",
+	"udp:53":    "dns udp",
+	"tcp:53":    "dns tcp",
 }
 
 type WaitStateSpec struct {
