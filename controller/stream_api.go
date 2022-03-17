@@ -21,7 +21,9 @@ var (
 	StreamMsgTypeEOM     = "end-of-stream-message"
 
 	StreamMsgReadTimeout = 30 * time.Minute
-	StreamExpiration     = 10 * time.Minute
+
+	CleanupStream   = true
+	NoCleanupStream = false
 )
 
 type streamSend struct {
@@ -53,21 +55,11 @@ func NewStreamObjApi(sync *Sync, all *AllApis) *StreamObjApi {
 }
 
 func addMsgToRedisStream(ctx context.Context, streamKey string, streamMsg map[string]interface{}) error {
-	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		xaddArgs := redis.XAddArgs{
-			Stream: streamKey,
-			Values: streamMsg,
-		}
-		_, err := pipe.XAdd(&xaddArgs).Result()
-		if err != nil {
-			return err
-		}
-		_, err = pipe.Expire(streamKey, StreamExpiration).Result()
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to reset expiry for stream", "key", streamKey, "err", err)
-		}
-		return nil
-	})
+	xaddArgs := redis.XAddArgs{
+		Stream: streamKey,
+		Values: streamMsg,
+	}
+	_, err := redisClient.XAdd(&xaddArgs).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to add message to stream", "key", streamKey, "err", err)
 		return err
@@ -198,7 +190,17 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		return &streamSendObj, outCb, nil
 	}
 
-	// Transactional function.
+	// * Redis `pubsub.Close()` is not sychronous and hence we can't rely on `NumSub()`
+	//   call to figure out if an stream already exists for the streamKey
+	// * Hence, we end up using redis stream to figure out if stream already exists or not
+	// * Since this can be accessed by multiple threads, we use redis transactions for atomic
+	//   operation.
+	// * To mark the start of stream, we create redis stream as part of this function and add
+	//   initial SOM message to it
+	// * If redis stream already exists, then we check for EOM or Error to figure out if it is
+	//   a new stream re-using the old stream and cleanup the old stream
+	// * If CRM override (IgnoreTransient) is specified, then we reset the stream if it already
+	//   is in progress
 	txf := func(tx *redis.Tx) error {
 		// Get the current value or zero.
 		out, err := tx.Exists(streamKey).Result()
@@ -232,6 +234,12 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		} else {
 			newStream = true
 		}
+		if ignoreCRMTransient(cctx) {
+			newStream = true
+			if out == 1 {
+				cleanupOldStream = true
+			}
+		}
 		// Operation is commited only if the watched keys remain unchanged.
 		_, err = tx.TxPipelined(func(pipe redis.Pipeliner) error {
 			if newStream {
@@ -251,10 +259,6 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 				if err != nil {
 					return err
 				}
-				_, err = pipe.Expire(streamKey, StreamExpiration).Result()
-				if err != nil {
-					log.SpanLog(ctx, log.DebugLevelApi, "Failed to reset expiry for stream", "key", streamKey, "err", err)
-				}
 				return nil
 			}
 			return fmt.Errorf("An action is already in progress for the object %s", streamKey)
@@ -263,7 +267,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	}
 
 	// Retry if the key has been changed.
-	for i := 0; i < 10; i++ {
+	for i := 0; i < rediscache.RedisTxMaxRetries; i++ {
 		err := redisClient.Watch(txf, streamKey)
 		if err == nil {
 			// Success.
@@ -312,7 +316,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	return &streamSendObj, outCb, nil
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error) error {
+func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error, cleanupStream bool) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", streamKey, "cctx", cctx, "err", objErr)
 	if streamSendObj == nil {
 		return nil
@@ -346,6 +350,12 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 	if streamSendObj.crmPubSub != nil {
 		// Close() also closes channels
 		streamSendObj.crmPubSub.Close()
+	}
+	if cleanupStream {
+		_, err := redisClient.Del(streamKey).Result()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup redis stream", "key", streamKey, "err", err)
+		}
 	}
 	return nil
 }

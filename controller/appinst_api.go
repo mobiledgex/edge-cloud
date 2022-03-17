@@ -317,8 +317,8 @@ func (s *AppInstApi) startAppInstStream(ctx context.Context, cctx *CallContext, 
 	return streamSendObj, outCb, err
 }
 
-func (s *AppInstApi) stopAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *AppInstApi) stopAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error, cleanupStream bool) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
 }
@@ -553,7 +553,17 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 	defer func() {
-		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr)
+		cleanupStream := false
+		if reterr != nil {
+			// Cleanup stream if object is not present in etcd (due to undo)
+			s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+				if !s.store.STMGet(stm, &in.Key, nil) {
+					cleanupStream = true
+				}
+				return nil
+			})
+		}
+		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr, cleanupStream)
 	}()
 
 	if setClusterOrg {
@@ -1469,7 +1479,7 @@ func (s *AppInstApi) refreshAppInstInternal(cctx *CallContext, key edgeproto.App
 		return false, err
 	}
 	defer func() {
-		s.stopAppInstStream(ctx, cctx, &key, sendObj, reterr)
+		s.stopAppInstStream(ctx, cctx, &key, sendObj, reterr, NoCleanupStream)
 	}()
 
 	var app edgeproto.App
@@ -1744,7 +1754,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 	defer func() {
-		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr)
+		cleanupStream := false
+		if reterr == nil {
+			// deletion is successful, cleanup stream
+			cleanupStream = true
+		}
+		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr, cleanupStream)
 	}()
 
 	// get appinst info for flavor
