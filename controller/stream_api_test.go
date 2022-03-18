@@ -75,9 +75,9 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 
 	// Test for race issues
 	// ====================
-	// * Start multiple threads performing StartStream + StopStream, if a stream is
+	// * Start multiple threads performing [StartStream + StopStream], if a stream is
 	//   already in progress, then retry.
-	// * Ensure that as part of stream, SOM & EOM exists for all the threads in-order
+	// * Ensure that as part of stream, [SOM & EOM/Error] exists for all the threads in-order
 	wg := sync.WaitGroup{}
 	numThreads := 20
 	for ii := 0; ii < numThreads; ii++ {
@@ -96,7 +96,12 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 				}
 				break
 			}
-			err = streamObjApi.stopStream(ctx, cctx, streamKey, sendObj, nil, NoCleanupStream)
+			var objErr error
+			// Alternatively introduce errors so that we can test for those as well
+			if ii%2 == 0 {
+				objErr = fmt.Errorf("Some error")
+			}
+			err = streamObjApi.stopStream(ctx, cctx, streamKey, sendObj, objErr, NoCleanupStream)
 			require.Nil(t, err, "stop stream")
 		}()
 	}
@@ -108,7 +113,7 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 
 	streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
 	require.Nil(t, err, "get stream messages")
-	// SOM + EOM per thread
+	// [SOM + EOM/Error] per thread
 	require.Equal(t, 2*numThreads, len(streamMsgs), "check if correct number of stream messages exists")
 
 	start := true
@@ -118,7 +123,11 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 				require.Equal(t, StreamMsgTypeSOM, k, "Start of message")
 				start = false
 			} else {
-				require.Equal(t, StreamMsgTypeEOM, k, "End of message")
+				if k != StreamMsgTypeEOM {
+					require.Equal(t, StreamMsgTypeError, k, "Error message")
+				} else {
+					require.Equal(t, StreamMsgTypeEOM, k, "End of message")
+				}
 				start = true
 			}
 		}
