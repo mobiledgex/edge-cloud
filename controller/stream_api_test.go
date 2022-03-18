@@ -82,7 +82,7 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 	numThreads := 20
 	for ii := 0; ii < numThreads; ii++ {
 		wg.Add(1)
-		go func() {
+		go func(iter int) {
 			defer wg.Done()
 			var sendObj *streamSend
 			var err error
@@ -98,12 +98,12 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 			}
 			var objErr error
 			// Alternatively introduce errors so that we can test for those as well
-			if ii%2 == 0 {
+			if iter%2 == 0 {
 				objErr = fmt.Errorf("Some error")
 			}
 			err = streamObjApi.stopStream(ctx, cctx, streamKey, sendObj, objErr, NoCleanupStream)
 			require.Nil(t, err, "stop stream")
-		}()
+		}(ii)
 	}
 	wg.Wait()
 
