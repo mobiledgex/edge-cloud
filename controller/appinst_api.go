@@ -317,7 +317,7 @@ func (s *AppInstApi) startAppInstStream(ctx context.Context, cctx *CallContext, 
 	return streamSendObj, outCb, err
 }
 
-func (s *AppInstApi) stopAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error, cleanupStream bool) {
+func (s *AppInstApi) stopAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
 	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
@@ -553,15 +553,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 	defer func() {
-		cleanupStream := false
+		cleanupStream := NoCleanupStream
 		if reterr != nil {
 			// Cleanup stream if object is not present in etcd (due to undo)
-			s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-				if !s.store.STMGet(stm, &in.Key, nil) {
-					cleanupStream = true
-				}
-				return nil
-			})
+			if !s.store.Get(ctx, &in.Key, nil) {
+				cleanupStream = CleanupStream
+			}
 		}
 		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr, cleanupStream)
 	}()
@@ -1754,10 +1751,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 	defer func() {
-		cleanupStream := false
+		cleanupStream := NoCleanupStream
 		if reterr == nil {
 			// deletion is successful, cleanup stream
-			cleanupStream = true
+			cleanupStream = CleanupStream
 		}
 		s.stopAppInstStream(ctx, cctx, &appInstKey, sendObj, reterr, cleanupStream)
 	}()

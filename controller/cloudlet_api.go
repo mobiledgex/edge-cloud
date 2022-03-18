@@ -200,7 +200,7 @@ func (s *CloudletApi) startCloudletStream(ctx context.Context, cctx *CallContext
 	return streamSendObj, outCb, err
 }
 
-func (s *CloudletApi) stopCloudletStream(ctx context.Context, cctx *CallContext, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error, cleanupStream bool) {
+func (s *CloudletApi) stopCloudletStream(ctx context.Context, cctx *CallContext, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
 	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop Cloudlet stream", "err", err)
 	}
@@ -466,15 +466,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 	defer func() {
-		cleanupStream := false
+		cleanupStream := NoCleanupStream
 		if reterr != nil {
 			// Cleanup stream if object is not present in etcd (due to undo)
-			s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-				if !s.store.STMGet(stm, &in.Key, nil) {
-					cleanupStream = true
-				}
-				return nil
-			})
+			if !s.store.Get(ctx, &in.Key, nil) {
+				cleanupStream = CleanupStream
+			}
 		}
 		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, cleanupStream)
 		if reterr == nil {
@@ -1422,10 +1419,10 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 	defer func() {
-		cleanupStream := false
+		cleanupStream := NoCleanupStream
 		if reterr == nil {
 			// deletion is successful, cleanup stream
-			cleanupStream = true
+			cleanupStream = CleanupStream
 		}
 		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, cleanupStream)
 		if reterr == nil {

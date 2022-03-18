@@ -265,7 +265,7 @@ func (s *VMPoolApi) startVMPoolStream(ctx context.Context, cctx *CallContext, ke
 	return streamSendObj, nil
 }
 
-func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error, cleanupStream bool) {
+func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
 	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop VMPool stream", "err", err)
 	}

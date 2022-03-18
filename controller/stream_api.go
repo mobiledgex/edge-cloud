@@ -21,9 +21,13 @@ var (
 	StreamMsgTypeEOM     = "end-of-stream-message"
 
 	StreamMsgReadTimeout = 30 * time.Minute
+)
 
-	CleanupStream   = true
-	NoCleanupStream = false
+type CleanupStreamAction bool
+
+var (
+	CleanupStream   CleanupStreamAction = true
+	NoCleanupStream CleanupStreamAction = false
 )
 
 type streamSend struct {
@@ -175,8 +179,23 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 	}
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
+type StreamOptions struct {
+	NoResetStream bool
+}
+
+type StreamOp func(op *StreamOptions)
+
+func WithNoResetStream() StreamOp {
+	return func(op *StreamOptions) { op.NoResetStream = true }
+}
+
+func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb, opts ...StreamOp) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
+
+	streamOps := StreamOptions{}
+	for _, fn := range opts {
+		fn(&streamOps)
+	}
 
 	// If this is an undo, then caller has already performed
 	// the same operation, so reuse the existing callback
@@ -210,7 +229,12 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 
 		newStream := false
 		cleanupOldStream := false
-		if out == 1 {
+		if ignoreCRMTransient(cctx) {
+			newStream = true
+			if out == 1 {
+				cleanupOldStream = true
+			}
+		} else if out == 1 {
 			// check last message on the existing stream to
 			// figure out if stream should be cleared or not
 			streamMsgs, err := redisClient.XRange(streamKey,
@@ -234,11 +258,9 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		} else {
 			newStream = true
 		}
-		if ignoreCRMTransient(cctx) {
-			newStream = true
-			if out == 1 {
-				cleanupOldStream = true
-			}
+		if streamOps.NoResetStream {
+			// for unit-testing
+			cleanupOldStream = false
 		}
 		// Operation is commited only if the watched keys remain unchanged.
 		_, err = tx.TxPipelined(func(pipe redis.Pipeliner) error {
@@ -316,7 +338,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	return &streamSendObj, outCb, nil
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error, cleanupStream bool) error {
+func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", streamKey, "cctx", cctx, "err", objErr)
 	if streamSendObj == nil {
 		return nil

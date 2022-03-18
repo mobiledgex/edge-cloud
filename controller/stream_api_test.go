@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
@@ -16,9 +19,19 @@ func TestStreamObjs(t *testing.T) {
 	log.InitTracer(nil)
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
-	testSvcs := testinit(ctx, t)
-	defer testfinish(testSvcs)
 
+	// Test with dummy server
+	testSvcs := testinit(ctx, t)
+	testStreamObjsWithServer(t, ctx)
+	testfinish(testSvcs)
+
+	// Test with local server
+	testSvcs = testinit(ctx, t, WithLocalRedis())
+	testStreamObjsWithServer(t, ctx)
+	testfinish(testSvcs)
+}
+
+func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 	cctx := DefCallContext()
 	streamKey := "testkey"
 	streamObjApi := StreamObjApi{}
@@ -54,4 +67,65 @@ func TestStreamObjs(t *testing.T) {
 		err = streamObjApi.stopStream(ctx, cctx, streamKey, sendObj, nil, CleanupStream)
 		require.Nil(t, err, iterMsg)
 	}
+
+	// Ensure that stream is cleaned up
+	out, err := redisClient.Exists(streamKey).Result()
+	require.Nil(t, err, "check if stream exists")
+	require.Equal(t, int64(0), out, "stream should not exist")
+
+	// Test for race issues
+	// ====================
+	// * Start multiple threads performing StartStream + StopStream, if a stream is
+	//   already in progress, then retry.
+	// * Ensure that as part of stream, SOM & EOM exists for all the threads in-order
+	wg := sync.WaitGroup{}
+	numThreads := 20
+	for ii := 0; ii < numThreads; ii++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var sendObj *streamSend
+			var err error
+			for jj := 0; jj < numThreads; jj++ {
+				sendObj, _, err = streamObjApi.startStream(ctx, cctx, streamKey, testutil.NewCudStreamoutAppInst(ctx), WithNoResetStream())
+				if err != nil {
+					require.Contains(t, err.Error(), "action is already in progress")
+					// retry, it must succeed in at least `numThreads` iterations
+					time.Sleep(100 * time.Millisecond)
+					continue
+				}
+				break
+			}
+			err = streamObjApi.stopStream(ctx, cctx, streamKey, sendObj, nil, NoCleanupStream)
+			require.Nil(t, err, "stop stream")
+		}()
+	}
+	wg.Wait()
+
+	out, err = redisClient.Exists(streamKey).Result()
+	require.Nil(t, err, "check if stream exists")
+	require.Equal(t, int64(1), out, "stream should exist")
+
+	streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
+	require.Nil(t, err, "get stream messages")
+	// SOM + EOM per thread
+	require.Equal(t, 2*numThreads, len(streamMsgs), "check if correct number of stream messages exists")
+
+	start := true
+	for _, sMsg := range streamMsgs {
+		for k, _ := range sMsg.Values {
+			if start {
+				require.Equal(t, StreamMsgTypeSOM, k, "Start of message")
+				start = false
+			} else {
+				require.Equal(t, StreamMsgTypeEOM, k, "End of message")
+				start = true
+			}
+		}
+	}
+
+	// Cleanup stream
+	keysRem, err := redisClient.Del(streamKey).Result()
+	require.Nil(t, err, "delete stream")
+	require.Equal(t, int64(1), keysRem, "stream deleted")
 }
