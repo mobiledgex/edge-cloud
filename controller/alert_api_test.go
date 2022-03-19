@@ -10,6 +10,7 @@ import (
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/rediscache"
@@ -158,10 +159,26 @@ func TestAppInstDownAlert(t *testing.T) {
 
 type testServices struct {
 	DummyRedisSrv *rediscache.DummyRedis
+	RedisLocalSrv *process.RedisCache
+}
+
+type TestOptions struct {
+	// Start local redis server
+	LocalRedis bool
+}
+
+type TestOp func(op *TestOptions)
+
+func WithLocalRedis() TestOp {
+	return func(op *TestOptions) { op.LocalRedis = true }
 }
 
 // Set up globals for API unit tests
-func testinit(ctx context.Context, t *testing.T) *testServices {
+func testinit(ctx context.Context, t *testing.T, opts ...TestOp) *testServices {
+	options := TestOptions{}
+	for _, op := range opts {
+		op(&options)
+	}
 	svcs := &testServices{}
 	objstore.InitRegion(1)
 	tMode := true
@@ -179,13 +196,28 @@ func testinit(ctx context.Context, t *testing.T) *testServices {
 	cloudletLookup := &node.CloudletCache{}
 	cloudletLookup.Init()
 	nodeMgr.CloudletLookup = cloudletLookup
-	redisServer, err := rediscache.NewMockRedisServer()
-	require.Nil(t, err, "start mock redis server")
-	svcs.DummyRedisSrv = redisServer
-	redisClient, err = rediscache.NewClient(ctx, &rediscache.RedisConfig{
-		SentinelAddrs: redisServer.GetSentinelAddr(),
-	})
-	require.Nil(t, err, "setup redis client")
+	if options.LocalRedis {
+		// Since it is a single node, config file is not required
+		procOpts := []process.StartOp{process.WithNoConfig()}
+		redisLocal, err := StartLocalRedisServer(procOpts...)
+		require.Nil(t, err, "start redis server")
+		svcs.RedisLocalSrv = redisLocal
+		redisCfg = rediscache.RedisConfig{
+			StandaloneAddr: rediscache.DefaultRedisStandaloneAddr,
+		}
+		redisClient, err = rediscache.NewClient(ctx, &redisCfg)
+		require.Nil(t, err, "setup redis client")
+	} else {
+		redisServer, err := rediscache.NewMockRedisServer()
+		require.Nil(t, err, "start mock redis server")
+		svcs.DummyRedisSrv = redisServer
+		redisCfg = rediscache.RedisConfig{
+			SentinelAddrs: redisServer.GetSentinelAddr(),
+		}
+		redisClient, err = rediscache.NewClient(ctx, &redisCfg)
+		require.Nil(t, err, "setup redis client")
+	}
+
 	return svcs
 }
 
@@ -197,6 +229,10 @@ func testfinish(s *testServices) {
 	if s.DummyRedisSrv != nil {
 		s.DummyRedisSrv.Close()
 		s.DummyRedisSrv = nil
+	}
+	if s.RedisLocalSrv != nil {
+		s.RedisLocalSrv.StopLocal()
+		s.RedisLocalSrv = nil
 	}
 	services = Services{}
 }
