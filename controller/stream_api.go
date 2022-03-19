@@ -17,10 +17,17 @@ import (
 var (
 	StreamMsgTypeMessage = "message"
 	StreamMsgTypeError   = "error"
+	StreamMsgTypeSOM     = "start-of-stream-message"
 	StreamMsgTypeEOM     = "end-of-stream-message"
 
 	StreamMsgReadTimeout = 30 * time.Minute
-	StreamExpiration     = 10 * time.Minute
+)
+
+type CleanupStreamAction bool
+
+var (
+	CleanupStream   CleanupStreamAction = true
+	NoCleanupStream CleanupStreamAction = false
 )
 
 type streamSend struct {
@@ -52,21 +59,11 @@ func NewStreamObjApi(sync *Sync, all *AllApis) *StreamObjApi {
 }
 
 func addMsgToRedisStream(ctx context.Context, streamKey string, streamMsg map[string]interface{}) error {
-	_, err := redisClient.Pipelined(func(pipe redis.Pipeliner) error {
-		xaddArgs := redis.XAddArgs{
-			Stream: streamKey,
-			Values: streamMsg,
-		}
-		_, err := pipe.XAdd(&xaddArgs).Result()
-		if err != nil {
-			return err
-		}
-		_, err = pipe.Expire(streamKey, StreamExpiration).Result()
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to reset expiry for stream", "key", streamKey, "err", err)
-		}
-		return nil
-	})
+	xaddArgs := redis.XAddArgs{
+		Stream: streamKey,
+		Values: streamMsg,
+	}
+	_, err := redisClient.XAdd(&xaddArgs).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to add message to stream", "key", streamKey, "err", err)
 		return err
@@ -128,6 +125,8 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 			case StreamMsgTypeEOM:
 				done = true
 				break
+			case StreamMsgTypeSOM:
+				// ignore
 			default:
 				return done, fmt.Errorf("Unsupported message type received: %v", k)
 			}
@@ -180,8 +179,23 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 	}
 }
 
-func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb) (*streamSend, GenericCb, error) {
+type StreamOptions struct {
+	NoResetStream bool
+}
+
+type StreamOp func(op *StreamOptions)
+
+func WithNoResetStream() StreamOp {
+	return func(op *StreamOptions) { op.NoResetStream = true }
+}
+
+func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, streamKey string, inCb GenericCb, opts ...StreamOp) (*streamSend, GenericCb, error) {
 	log.SpanLog(ctx, log.DebugLevelApi, "Start new stream", "key", streamKey)
+
+	streamOps := StreamOptions{}
+	for _, fn := range opts {
+		fn(&streamOps)
+	}
 
 	// If this is an undo, then caller has already performed
 	// the same operation, so reuse the existing callback
@@ -195,25 +209,98 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 		return &streamSendObj, outCb, nil
 	}
 
-	// Check number of existing subscribers, if there are any, then
-	// stream action is already in progress
-	subMap, err := redisClient.PubSubNumSub(streamKey).Result()
-	if err != nil {
-		return nil, nil, err
-	}
-	if subCnt, ok := subMap[streamKey]; ok && subCnt >= 1 {
-		return nil, nil, fmt.Errorf("An action is already in progress for the object %s", streamKey)
-	}
-	out, err := redisClient.Exists(streamKey).Result()
-	if err != nil {
-		return nil, nil, err
-	}
-	// clean old stream data if stream key already exists
-	if out == 1 {
-		_, err := redisClient.Del(streamKey).Result()
-		if err != nil {
-			return nil, nil, err
+	// * Redis `pubsub.Close()` is not synchronous and hence we can't rely on `NumSub()`
+	//   call to figure out if the stream already exists for the streamKey
+	// * Hence, we end up using redis stream to figure out if stream already exists or not
+	// * Since this can be accessed by multiple threads, we use redis transactions for atomic
+	//   operation.
+	// * To mark the start of stream, we create redis stream as part of this function and add
+	//   initial SOM message to it
+	// * If redis stream already exists, then we check for EOM or Error to figure out if it is
+	//   a new stream re-using the old stream and cleanup the old stream
+	// * If CRM override (IgnoreTransient) is specified, then we reset the stream if it already
+	//   is in progress
+	txf := func(tx *redis.Tx) error {
+		// Get the current value or zero.
+		out, err := tx.Exists(streamKey).Result()
+		if err != nil && err != redis.Nil {
+			return err
 		}
+
+		newStream := false
+		cleanupOldStream := false
+		if ignoreCRMTransient(cctx) {
+			newStream = true
+			if out == 1 {
+				cleanupOldStream = true
+			}
+		} else if out == 1 {
+			// check last message on the existing stream to
+			// figure out if stream should be cleared or not
+			streamMsgs, err := redisClient.XRange(streamKey,
+				rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
+			if err != nil {
+				return err
+			}
+			if len(streamMsgs) > 0 {
+				for k, _ := range streamMsgs[len(streamMsgs)-1].Values {
+					if k == StreamMsgTypeEOM || k == StreamMsgTypeError {
+						// Since last msg was EOM/Error, reset this stream
+						// as it is for a new API call
+						cleanupOldStream = true
+						newStream = true
+						break
+					}
+				}
+			} else {
+				newStream = true
+			}
+		} else {
+			newStream = true
+		}
+		if streamOps.NoResetStream {
+			// for unit-testing
+			cleanupOldStream = false
+		}
+		// Operation is commited only if the watched keys remain unchanged.
+		_, err = tx.TxPipelined(func(pipe redis.Pipeliner) error {
+			if newStream {
+				if cleanupOldStream {
+					_, err := pipe.Del(streamKey).Result()
+					if err != nil {
+						return err
+					}
+				}
+				xaddArgs := redis.XAddArgs{
+					Stream: streamKey,
+					Values: map[string]interface{}{
+						StreamMsgTypeSOM: "",
+					},
+				}
+				_, err := pipe.XAdd(&xaddArgs).Result()
+				if err != nil {
+					return err
+				}
+				return nil
+			}
+			return fmt.Errorf("An action is already in progress for the object %s", streamKey)
+		})
+		return err
+	}
+
+	// Retry if the key has been changed.
+	for i := 0; i < rediscache.RedisTxMaxRetries; i++ {
+		err := redisClient.Watch(txf, streamKey)
+		if err == nil {
+			// Success.
+			break
+		}
+		if err == redis.TxFailedErr {
+			// Optimistic lock lost. Retry.
+			continue
+		}
+		// Return any other error.
+		return nil, nil, err
 	}
 
 	// Start subscription to redis channel identified by stream key.
@@ -225,7 +312,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	pubsub := redisClient.Subscribe(streamKey)
 
 	// Wait for confirmation that subscription is created before publishing anything.
-	_, err = pubsub.Receive()
+	_, err := pubsub.Receive()
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to subscribe to stream %s, %v", streamKey, err)
 	}
@@ -251,7 +338,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 	return &streamSendObj, outCb, nil
 }
 
-func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error) error {
+func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, streamKey string, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) error {
 	log.SpanLog(ctx, log.DebugLevelApi, "Stop stream", "key", streamKey, "cctx", cctx, "err", objErr)
 	if streamSendObj == nil {
 		return nil
@@ -285,6 +372,12 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 	if streamSendObj.crmPubSub != nil {
 		// Close() also closes channels
 		streamSendObj.crmPubSub.Close()
+	}
+	if cleanupStream {
+		_, err := redisClient.Del(streamKey).Result()
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup redis stream", "key", streamKey, "err", err)
+		}
 	}
 	return nil
 }

@@ -150,9 +150,14 @@ func TestAppInstApi(t *testing.T) {
 		} else {
 			require.Equal(t, "Encountered failures: crm create app inst failed", err.Error(), "AppInst[%d]: %v", ii, obj.Key)
 		}
-		// As there was some progress, there should be some messages in stream
-		msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
-		require.Greater(t, len(msgs), 0, "some progress messages before failure")
+		// Verify that on error, undo deleted the appInst object from etcd
+		show := testutil.ShowAppInst{}
+		show.Init()
+		err = apis.appInstApi.ShowAppInst(&obj, &show)
+		require.Nil(t, err, "show app inst data")
+		require.Equal(t, 0, len(show.Data))
+		// Since appinst creation failed, object is deleted from etcd, stream obj should also be deleted
+		GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
 	}
 	responder.SetSimulateAppCreateFailure(false)
 	RequireAppInstPortConsistency = true
@@ -206,6 +211,14 @@ func TestAppInstApi(t *testing.T) {
 	err = apis.appInstApi.DeleteAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 	require.Nil(t, err, "delete overrides create error")
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
+	// Verify that on error, undo deleted the appInst object from etcd
+	show := testutil.ShowAppInst{}
+	show.Init()
+	err = apis.appInstApi.ShowAppInst(&obj, &show)
+	require.Nil(t, err, "show app inst data")
+	require.Equal(t, 0, len(show.Data))
+	// Stream should be empty, as object is deleted from etcd
+	GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
 	// create copy of refs without the deleted AppInst
 	appInstRefsDeleted := append([]edgeproto.AppInstRefs{}, testutil.GetAppInstRefsData()...)
 	appInstRefsDeleted[0].Insts = make(map[string]uint32)
@@ -216,9 +229,6 @@ func TestAppInstApi(t *testing.T) {
 		appInstRefsDeleted[0].Insts[k] = v
 	}
 	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, appInstRefsDeleted)
-	// As there was some progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Pass)
-	require.Greater(t, len(msgs), 0, "some progress messages")
 
 	// check override of error UPDATE_ERROR
 	err = apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
@@ -558,6 +568,14 @@ func TestAutoClusterInst(t *testing.T) {
 	err = apis.appInstApi.CreateAppInst(&autoDeleteAppInst, testutil.NewCudStreamoutAppInst(ctx))
 	require.NotNil(t, err, "create autodelete appInst")
 	require.Contains(t, err.Error(), "Sidecar AppInst (AutoDelete App) must specify the RealClusterName field to deploy to the virtual cluster")
+	// Verify that on error, undo deleted the appInst object from etcd
+	show := testutil.ShowAppInst{}
+	show.Init()
+	err = apis.appInstApi.ShowAppInst(&autoDeleteAppInst, &show)
+	require.Nil(t, err, "show app inst data")
+	require.Equal(t, 0, len(show.Data))
+	// Stream should not exist, as object deleted from etcd as part of undo
+	GetAppInstStreamMsgs(t, ctx, &autoDeleteAppInst.Key, apis, Fail)
 
 	err = apis.clusterInstApi.DeleteClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err)

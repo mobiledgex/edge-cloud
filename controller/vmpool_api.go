@@ -265,8 +265,8 @@ func (s *VMPoolApi) startVMPoolStream(ctx context.Context, cctx *CallContext, ke
 	return streamSendObj, nil
 }
 
-func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *VMPoolApi) stopVMPoolStream(ctx context.Context, cctx *CallContext, key *edgeproto.VMPoolKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop VMPool stream", "err", err)
 	}
 }
@@ -331,7 +331,7 @@ func (s *VMPoolApi) updateVMPoolInternal(cctx *CallContext, ctx context.Context,
 		return err
 	}
 	defer func() {
-		s.stopVMPoolStream(ctx, cctx, key, sendObj, reterr)
+		s.stopVMPoolStream(ctx, cctx, key, sendObj, reterr, CleanupStream)
 	}()
 	err = edgeproto.WaitForVMPoolInfo(ctx, key, edgeproto.TrackedState_READY,
 		UpdateVMPoolTransitions, edgeproto.TrackedState_UPDATE_ERROR,
