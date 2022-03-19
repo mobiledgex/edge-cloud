@@ -170,8 +170,8 @@ func (s *GPUDriverApi) startGPUDriverStream(ctx context.Context, cctx *CallConte
 	return streamSendObj, outCb, err
 }
 
-func (s *GPUDriverApi) stopGPUDriverStream(ctx context.Context, cctx *CallContext, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *GPUDriverApi) stopGPUDriverStream(ctx context.Context, cctx *CallContext, key *edgeproto.GPUDriverKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop GPU driver stream", "err", err)
 	}
 }
@@ -197,7 +197,14 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
+		cleanupStream := NoCleanupStream
+		if reterr != nil {
+			// Cleanup stream if object is not present in etcd (due to undo)
+			if !s.store.Get(ctx, &in.Key, nil) {
+				cleanupStream = CleanupStream
+			}
+		}
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr, cleanupStream)
 	}()
 
 	credsMap := make(map[string]string)
@@ -301,7 +308,7 @@ func (s *GPUDriverApi) UpdateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr, NoCleanupStream)
 	}()
 
 	ignoreState := in.IgnoreState
@@ -419,7 +426,12 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
+		cleanupStream := NoCleanupStream
+		if reterr == nil {
+			// deletion is successful, cleanup stream
+			cleanupStream = CleanupStream
+		}
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr, cleanupStream)
 	}()
 
 	ignoreState := in.IgnoreState
@@ -540,7 +552,7 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr, NoCleanupStream)
 	}()
 
 	ignoreState := in.IgnoreState
@@ -655,7 +667,7 @@ func (s *GPUDriverApi) removeGPUDriverBuildInternal(cctx *CallContext, in *edgep
 		return err
 	}
 	defer func() {
-		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr)
+		s.stopGPUDriverStream(ctx, cctx, &gpuDriverKey, sendObj, reterr, NoCleanupStream)
 	}()
 
 	ignoreState := in.IgnoreState

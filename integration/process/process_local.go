@@ -1307,7 +1307,7 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 
 	cfgFile := fmt.Sprintf("%s/%s.conf", path.Dir(logfile), p.Name)
 
-	args := []string{cfgFile}
+	args := []string{}
 
 	switch p.Type {
 	case "master":
@@ -1316,19 +1316,26 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 		if p.Port == "" {
 			p.Port = LocalRedisPort
 		}
-		tmpl := template.Must(template.New(p.Name).Parse(redisServerConfig))
-		f, err := os.Create(cfgFile)
-		if err != nil {
-			return err
+		configFileReqd := true
+		if p.Port == LocalRedisPort && options.NoConfig {
+			configFileReqd = false
 		}
-		defer f.Close()
+		if configFileReqd {
+			tmpl := template.Must(template.New(p.Name).Parse(redisServerConfig))
+			f, err := os.Create(cfgFile)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
 
-		wr := bufio.NewWriter(f)
-		err = tmpl.Execute(wr, p)
-		if err != nil {
-			return err
+			wr := bufio.NewWriter(f)
+			err = tmpl.Execute(wr, p)
+			if err != nil {
+				return err
+			}
+			wr.Flush()
+			args = append(args, cfgFile)
 		}
-		wr.Flush()
 	case "sentinel":
 		if p.Port == "" {
 			p.Port = LocalRedisSentinelPort
@@ -1349,6 +1356,7 @@ func (p *RedisCache) StartLocal(logfile string, opts ...StartOp) error {
 			return err
 		}
 		wr.Flush()
+		args = append(args, cfgFile)
 		args = append(args, "--sentinel")
 	default:
 		return fmt.Errorf("Invalid type %s specified, "+

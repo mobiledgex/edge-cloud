@@ -126,6 +126,7 @@ type StartOptions struct {
 	RolesFile    string
 	CleanStartup bool
 	ExtraArgs    []string
+	NoConfig     bool
 }
 
 type StartOp func(op *StartOptions)
@@ -144,6 +145,10 @@ func WithCleanStartup() StartOp {
 
 func WithExtraArgs(params []string) StartOp {
 	return func(op *StartOptions) { op.ExtraArgs = params }
+}
+
+func WithNoConfig() StartOp {
+	return func(op *StartOptions) { op.NoConfig = true }
 }
 
 func (s *StartOptions) ApplyStartOptions(opts ...StartOp) {
