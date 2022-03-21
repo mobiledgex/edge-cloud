@@ -285,6 +285,19 @@ func TestAppApi(t *testing.T) {
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), "Allow serverless only supported for deployment type Kubernetes")
 
+	// Verify that qossessionduration cannot be specified without also specifying a qossessionprofile
+	qosApp := testutil.AppData[15]
+	require.Equal(t, app.Deployment, cloudcommon.DeploymentTypeDocker)
+	qosApp.Key.Name = "docker serverless"
+	qosApp.QosSessionDuration = 60
+	_, err = apis.appApi.CreateApp(ctx, &qosApp)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "QosSessionDuration cannot be specified without setting QosSessionProfile")
+	// Verify success case
+	qosApp.QosSessionProfile = edgeproto.QosSessionProfile_QOS_THROUGHPUT_DOWN_M
+	_, err = apis.appApi.CreateApp(ctx, &qosApp)
+	require.Nil(t, err, "Create app with proper QOS Priority Sessions config")
+
 	// test updating app with a list of alertpolicies
 	alertPolicyApp := testutil.AppData[1]
 	alertPolicyApp.Deployment = cloudcommon.DeploymentTypeKubernetes
