@@ -455,6 +455,10 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		}
 	}
 
+	if in.QosSessionProfile == edgeproto.QosSessionProfile_QOS_NO_PRIORITY && in.QosSessionDuration > 0 {
+		return fmt.Errorf("QosSessionDuration cannot be specified without setting QosSessionProfile")
+	}
+
 	// Save manifest to app in case it was a remote target.
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
