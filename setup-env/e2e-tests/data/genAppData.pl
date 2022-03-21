@@ -264,25 +264,30 @@ sub genFlavor{
  print("
 flavors:
 - key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
 - key:
     name: x1.small
   ram: 2048
   vcpus: 2
   disk: 2
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 ");
  if ($Nox1medium) {
    print("\n");
    return;
  }
- print("- key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4\n\n");
+ # print("- key:
+ #   name: x1.medium
+ # ram: 4096
+ # vcpus: 4
+ # disk: 4\n\n");
 }
 
 

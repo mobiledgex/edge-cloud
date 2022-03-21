@@ -35,11 +35,13 @@ tests:
   actions: [stop=etcd3,start=etcd3]
 
 - name: start both controllers
-  actions: [start=ctrl1,start=ctrl2]
+  actions: [start=ctrl1,start=ctrl2,sleep=1]
 
 - name: verify services are running
   actions: [status]
-
+  retrycount: 10
+  retryintervalsec: 0.5
+  
 - name: show provisioning again and compare results 
   actions: [ctrlapi-show]
   compareyaml:

@@ -748,7 +748,7 @@ func RunAction(ctx context.Context, actionSpec, outputDir string, spec *util.Tes
 			errors = append(errors, "controller RunCommand api failed")
 		}
 	case "dmeapi":
-		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, spec.ApiType, outputDir) {
+		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiFileVars, spec.ApiType, outputDir, retry) {
 			log.Printf("Unable to run api for %s\n", action)
 			errors = append(errors, "dme api failed")
 		}

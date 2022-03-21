@@ -89,14 +89,14 @@ cloudletinfos:
   osmaxvcores: 50
   osmaxvolgb: 5000
   flavors:
-  - name: x1.tiny
-    vcpus: 1
-    ram: 1024
-    disk: 20
   - name: x1.small
     vcpus: 2
     ram: 4096
     disk: 40
+  - name: x1.tiny
+    vcpus: 1
+    ram: 1024
+    disk: 20
   containerversion: "2019-10-24"
   controllercachereceived: true
   resourcessnapshot:
@@ -115,11 +115,11 @@ cloudletinfos:
       - externalip: 10.101.100.11
     info:
     - name: RAM
-      value: 16384
+      value: 10240
       inframaxvalue: 40960
       units: MB
     - name: vCPUs
-      value: 8
+      value: 6
       inframaxvalue: 50
     - name: External IPs
       value: 1

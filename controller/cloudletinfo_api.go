@@ -86,8 +86,11 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 			if in.State == dme.CloudletState_CLOUDLET_STATE_READY &&
 				info.State != dme.CloudletState_CLOUDLET_STATE_READY {
 				changedToOnline = true
+
 			}
-			added, deleted, updated, recreated = s.HandleInfraFlavorUpdate(ctx, in, updateFlavors, info.Flavors)
+			if in.State == dme.CloudletState_CLOUDLET_STATE_READY {
+				added, deleted, updated, recreated = s.HandleInfraFlavorUpdate(ctx, in, updateFlavors, info.Flavors)
+			}
 		}
 		// Clear fields that are cached in Redis as they should not be stored in DB
 		in.ClearRedisOnlyFields()
@@ -99,7 +102,6 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 		return nil
 	})
 	if len(added)+len(deleted)+len(updated)+len(recreated) != 0 {
-		fmt.Printf("\n\nCloudletInfoUpdate deltas found in flavors for cld: %+v\n\n added: %+v deleted: %+v updated: %+v recreated: %+v\n\n", in.Key, added, deleted, updated, recreated)
 		s.fixupFlavorUpdate(ctx, in, added, deleted, updated, recreated)
 	}
 	cloudlet := edgeproto.Cloudlet{}
@@ -524,14 +526,14 @@ func newDeprecatedFlavorInUseAlert(key *edgeproto.CloudletKey, infraFlavor strin
 }
 
 func (s *CloudletInfoApi) ClearDeletedInfraFlavorAlert(ctx context.Context, key *edgeproto.CloudletKey, flavor string) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "clear alert for", "flavor", flavor)
+	log.SpanLog(ctx, log.DebugLevelInfra, "clear alert for", "cloudlet", key, "flavor", flavor)
 	alert := newDeprecatedFlavorInUseAlert(key, flavor)
 	s.all.alertApi.Delete(ctx, alert, 0)
 }
 
 // Raise the alert, pass in the usage info in case someone is interested in what was  using this flavor
 func (s *CloudletInfoApi) RaiseDeletedInfraFlavorAlert(ctx context.Context, key *edgeproto.CloudletKey, flavor string, reasons string) {
-	log.SpanLog(ctx, log.DebugLevelInfra, "raise alert for deleted infra", "flavor", flavor, "reason", reasons)
+	log.SpanLog(ctx, log.DebugLevelInfra, "raise alert for deleted infra", "cloudlet", key, "flavor", flavor, "reason", reasons)
 	alert := newDeprecatedFlavorInUseAlert(key, flavor)
 	alert.Annotations = make(map[string]string)
 	alert.Annotations["users"] = reasons
@@ -580,24 +582,7 @@ func (s *CloudletInfoApi) findFlavorDeltas(ctx context.Context, flavorMap, newFl
 }
 
 func (s *CloudletInfoApi) HandleInfraFlavorUpdate(ctx context.Context, info *edgeproto.CloudletInfo, newFlavors, curFlavors []*edgeproto.FlavorInfo) (added, deleted, updated, recreated map[string]*edgeproto.FlavorInfo) {
-	// e2e tests play havoc with flavors, if we're in test mode, return
-	cloudlet := &edgeproto.Cloudlet{
-		Key: info.Key,
-	}
-	pfConfig, err := s.all.cloudletApi.getPlatformConfig(ctx, cloudlet)
-	if err != nil {
-		panic("getPlatformCOnfig failed")
-		//		log.SpanLog(ctx, log.DebugLevelInfra, "flavor refresh: updated", "flavor", key)
-		//		return err
-	}
-	if pfConfig.TestMode {
-		log.SpanLog(ctx, log.DebugLevelInfra, "HandleInfraFlavorUpdate in testmode is noop")
-		added := make(map[string]*edgeproto.FlavorInfo)
-		deleted := added
-		updated := added
-		recreated := added
-		return added, deleted, updated, recreated
-	}
+
 	newFlavorsMap := make(map[string]*edgeproto.FlavorInfo) // newFlavors = new  in.Flavors
 	curFlavorsMap := make(map[string]*edgeproto.FlavorInfo) // curFlavors = whats was in the db when the update came in
 	for _, flavor := range curFlavors {

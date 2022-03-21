@@ -1600,7 +1600,6 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		if features.IsSingleKubernetesCluster {
 			s.all.clusterInstApi.deleteCloudletSingularCluster(stm, &in.Key, updateCloudlet.SingleKubernetesClusterOwner)
 		}
-		cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 		return nil
 	})
 	if err1 != nil {
@@ -1610,7 +1609,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 	if err != nil {
 		return err
 	}
-
+	cb.Send(&edgeproto.Result{Message: "Deleted Cloudlet successfully"})
 	// also delete associated info
 	// Note: don't delete cloudletinfo, that will get deleted once CRM
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with

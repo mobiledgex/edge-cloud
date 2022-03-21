@@ -60,9 +60,6 @@ type findcloudlet struct {
 	At    time.Time                    `yaml:"at"`
 }
 
-var apiRequests []*dmeApiRequest
-var singleRequest bool
-
 // REST client implementation of MatchEngineApiClient interface
 type dmeRestClient struct {
 	client *http.Client
@@ -203,7 +200,11 @@ func (c *dmeRestClient) StreamEdgeEvent(ctx context.Context, opts ...grpc.CallOp
 	return nil, fmt.Errorf("StreamEdgeEvent not supported yet in E2E via REST")
 }
 
-func readDMEApiFile(apifile string, apiFileVars map[string]string) {
+func readDMEApiFile(apifile string, apiFileVars map[string]string) ([]*dmeApiRequest, bool) {
+	var apiRequests []*dmeApiRequest
+	var singleRequest bool
+
+	log.Printf("readDMEApiFile read apifile %s\n", apifile)
 	err := util.ReadYamlFile(apifile, &apiRequests, util.WithVars(apiFileVars), util.ValidateReplacedVars())
 	if err != nil && !util.IsYamlOk(err, "dmeapi") {
 		// old yaml files are not arrayed dmeApiRequests
@@ -212,28 +213,33 @@ func readDMEApiFile(apifile string, apiFileVars map[string]string) {
 		err = util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
 		singleRequest = true
 	}
+
 	if err != nil {
+		log.Printf("readDMEApiFile 2nd ReadYamlFile error %s \n", err.Error())
 		if !util.IsYamlOk(err, "dmeapi") {
-			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apifile)
 			os.Exit(1)
 		}
 	}
+	return apiRequests, singleRequest
 }
 
 func readMatchEngineStatus(filename string, mes *registration) {
 	util.ReadYamlFile(filename, &mes)
 }
 
-func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[string]string, apiType string, outputDir string) bool {
+func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[string]string, apiType string, outputDir string, retry *bool) bool {
 	if apiFile == "" {
 		log.Println("Error: Cannot run DME APIs without API file")
 		return false
 	}
 	log.Printf("RunDmeAPI for api %s, %s, %s\n", api, apiFile, apiType)
+	apiRequests, singleRequest := readDMEApiFile(apiFile, apiFileVars)
+	return runDmeAPI(api, procname, apiFile, apiFileVars, apiType, outputDir, apiRequests, &singleRequest, retry)
+}
+func runDmeAPI(api string, procname string, apiFile string, apiFileVars map[string]string, apiType string, outputDir string, apiRequests []*dmeApiRequest,
+	singleRequest, retry *bool) bool {
+
 	apiConnectTimeout := 5 * time.Second
-
-	readDMEApiFile(apiFile, apiFileVars)
-
 	dme := util.GetDme(procname)
 	var client dmeproto.MatchEngineApiClient
 
@@ -270,7 +276,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[stri
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		log.Printf("RunDmeAPIiter[%d]\n", ii)
-		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client, YesFilterOutput)
+		ok, reply := runDmeAPIiter(ctx, api, apiFile, outputDir, apiRequest, client, YesFilterOutput, retry)
 		if !ok {
 			rc = false
 			continue
@@ -283,7 +289,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[stri
 
 	var out []byte
 	var ymlerror error
-	if singleRequest && len(replies) == 1 {
+	if *singleRequest && len(replies) == 1 {
 		out, ymlerror = yaml.Marshal(replies[0])
 	} else {
 		out, ymlerror = yaml.Marshal(replies)
@@ -293,6 +299,10 @@ func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[stri
 		return false
 	}
 	util.PrintToFile(api+".yml", outputDir, string(out), true)
+	// check if we're bleeding requests into the next test
+	log.Printf("RunDMEAPI complete len(apiRequests) = %d\n", len(apiRequests))
+	apiRequests = nil
+	log.Printf("RunDMEAPI clearned, now  len(apiRequests) = %d\n", len(apiRequests))
 	return true
 }
 
@@ -303,7 +313,7 @@ const (
 	YesFilterOutput = true
 )
 
-func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiRequest *dmeApiRequest, client dmeproto.MatchEngineApiClient, filterOutput FilterOutput) (bool, interface{}) {
+func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiRequest *dmeApiRequest, client dmeproto.MatchEngineApiClient, filterOutput FilterOutput, retry *bool) (bool, interface{}) {
 	//generic struct so we can do the marshal in one place even though return types are different
 	var dmereply interface{}
 	var dmeerror error
@@ -321,7 +331,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers ||
 				time.Since(registerStatus.At) > time.Hour) {
 			log.Printf("Re-registering for api %s - cached registerStatus: %+v, current Rcreq: %+v\n", api, registerStatus, apiRequest.Rcreq)
-			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client, NoFilterOutput)
+			ok, reply := runDmeAPIiter(ctx, "register", apiFile, outputDir, apiRequest, client, NoFilterOutput, retry)
 			if !ok {
 				return false, nil
 			}
@@ -346,7 +356,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				time.Since(findCloudlet.At) > 10*time.Minute {
 				log.Printf("Redoing findcloudlet for api %s - cached findCloudlet %+v, current Fcreq: %+v\n", api, findCloudlet, apiRequest.Fcreq)
 				ctx = context.WithValue(ctx, "edgeevents", true)
-				ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client, NoFilterOutput)
+				ok, reply := runDmeAPIiter(ctx, "findcloudlet", apiFile, outputDir, apiRequest, client, NoFilterOutput, retry)
 				if !ok {
 					return false, nil
 				}
@@ -377,6 +387,8 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		log.Printf("platformfindcloudlet using client token: %s\n", apiRequest.Pfcreq.ClientToken)
 		fallthrough
 	case "findcloudlet":
+		// AddAppInst in dme can lag behind a FindCloudlet for appInst state change, so be prepared to retry
+		*retry = true
 		apiRequest.Fcreq.SessionCookie = sessionCookie
 		for ii := 0; ii < apiRequest.Repeat; ii++ {
 			if apiRequest.RunAtIntervalSec != 0 {

@@ -44,7 +44,6 @@ func TestCloudletInfo(t *testing.T) {
 	// test revision changes to cloudletinfo object on update
 	testCloudletInfoRevs(t, ctx, &dummy, apis, testutil.CloudletInfoData)
 
-	// test flavor deltas
 }
 
 func insertCloudletInfo(ctx context.Context, apis *AllApis, data []edgeproto.CloudletInfo) {

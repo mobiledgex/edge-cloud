@@ -72,5 +72,9 @@ requests:
       region: local
     output: notify,dmedb,dmereq,locapi,metrics,events
   - node:
+      type: frm
+      region: local
+    output: api,notify,infra
+  - node:
       type: notifyroot
     output: api,notify,events

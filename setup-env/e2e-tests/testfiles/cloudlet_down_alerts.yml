@@ -58,7 +58,7 @@ tests:
      filetype: getappinstlist
 
 - name: start crm on dmuus1
-  actions: [start-crm]
+  actions: [start-crm,sleep=1]
   apifile: "{{datadir}}/dmuus_cloudlet_1.yml"
 
 - name: show alerts, expect none

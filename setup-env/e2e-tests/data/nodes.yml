@@ -90,5 +90,14 @@ nodes:
     region: local
   internalpki: from-file,UseVaultPki
 - key:
+    type: frm
+    region: local
+  internalpki: UseVaultPki
+  properties:
+    InfraBuildAuthor: ""
+    InfraBuildDate: ""
+    InfraBuildHead: ""
+    InfraBuildMaster: ""
+- key:
     type: notifyroot
   internalpki: from-file,UseVaultPki

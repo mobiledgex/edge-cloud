@@ -397,6 +397,15 @@ func PrintToFile(fname string, outputDir string, out string, truncate bool) {
 }
 
 func PrintToYamlFile(fname, outputDir string, data interface{}, truncate bool) {
+	allData, ok := data.(*edgeproto.AllData)
+	if ok {
+		// sort all flavor lists in allData's cloudletInfos for output
+		for _, cloudletInfo := range allData.CloudletInfos {
+			sort.Slice(cloudletInfo.Flavors, func(i, j int) bool {
+				return cloudletInfo.Flavors[i].Name < cloudletInfo.Flavors[j].Name
+			})
+		}
+	}
 	out, err := yaml.Marshal(data)
 	if err != nil {
 		log.Fatalf("yaml marshal data failed, %v, %+v\n", err, data)

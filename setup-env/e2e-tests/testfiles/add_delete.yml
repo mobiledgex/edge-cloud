@@ -29,6 +29,9 @@ tests:
 
 - name: check DME/CRM node-show
   actions: [ctrlapi-nodeshow]
+  retrycount: 10
+  retryintervalsec: 0.5
+
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/nodes.yml"
@@ -50,9 +53,11 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
-- name: verify stream data
+- name: verify empty stream data
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-stream]
+  retrycount: 10
+  retryintervalsec: 0.5
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty_stream.yml"

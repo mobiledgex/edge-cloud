@@ -33,9 +33,11 @@ tests:
 - name: start AppInstClients stream for app1
   apifile: "{{datadir}}/appinstclientkey_app1_cloud1.yml"
   actions: [clientshow-start=1]
-
-- name: Wait as sec for the client to be detected
-  actions: [sleep=1]
+  retrycount: 10
+  retryintervalsec: 0.3
+ 
+- name: Wait a sec for the client to be detected
+  actions: [sleep=2]
 
 - name: stop and check AppInstClients stream for app1
   apifile: "{{datadir}}/appinstclientkey_app1_cloud1.yml"
@@ -163,6 +165,8 @@ tests:
 - name: find cloudlet for app1, expect to see cloudlet2
   apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
+  retrycount: 10
+  retryintervalsec: 0.2
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"

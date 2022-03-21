@@ -56,16 +56,16 @@ var FakeClusterVMs = map[edgeproto.ClusterInstKey][]edgeproto.VmInfo{}
 
 var FakeFlavorList = []*edgeproto.FlavorInfo{
 	&edgeproto.FlavorInfo{
-		Name:  "x1.tiny",
-		Vcpus: uint64(1),
-		Ram:   uint64(1024),
-		Disk:  uint64(20),
-	},
-	&edgeproto.FlavorInfo{
 		Name:  "x1.small",
 		Vcpus: uint64(2),
 		Ram:   uint64(4096),
 		Disk:  uint64(40),
+	},
+	&edgeproto.FlavorInfo{
+		Name:  "x1.tiny",
+		Vcpus: uint64(1),
+		Ram:   uint64(1024),
+		Disk:  uint64(20),
 	},
 }
 
@@ -170,6 +170,7 @@ func (s *Platform) GetFeatures() *platform.Features {
 		CloudletServicesLocal:                    true,
 		IsFake:                                   true,
 		SupportsAdditionalNetworks:               true,
+		SupportsNativeFlavors:                    true,
 		SupportsPlatformHighAvailabilityOnDocker: true,
 		SupportsPlatformHighAvailabilityOnK8s:    true,
 	}

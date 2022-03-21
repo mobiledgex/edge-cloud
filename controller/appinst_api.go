@@ -1922,6 +1922,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			s.updateCloudletResourcesMetric(ctx, in)
 		}
 	}
+	s.cleanupDeletedInfraFlavorAlerts(ctx, in)
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it
 	// this is retained for old autoclusters that are not reservable,
 	// and can be removed once no old autoclusters exist anymore.
@@ -1935,7 +1936,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				"clusterInst", clusterInst, "err", autoerr)
 		}
 	}
-	s.cleanupDeletedInfraFlavorAlerts(ctx, in)
+
 	return err
 }
 
