@@ -200,8 +200,8 @@ func (s *CloudletApi) startCloudletStream(ctx context.Context, cctx *CallContext
 	return streamSendObj, outCb, err
 }
 
-func (s *CloudletApi) stopCloudletStream(ctx context.Context, cctx *CallContext, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error) {
-	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr); err != nil {
+func (s *CloudletApi) stopCloudletStream(ctx context.Context, cctx *CallContext, key *edgeproto.CloudletKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
+	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop Cloudlet stream", "err", err)
 	}
 }
@@ -466,7 +466,14 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 	defer func() {
-		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr)
+		cleanupStream := NoCleanupStream
+		if reterr != nil {
+			// Cleanup stream if object is not present in etcd (due to undo)
+			if !s.store.Get(ctx, &in.Key, nil) {
+				cleanupStream = CleanupStream
+			}
+		}
+		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, cleanupStream)
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.CREATED, cloudcommon.InstanceUp)
 		}
@@ -882,7 +889,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 		return err
 	}
 	defer func() {
-		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr)
+		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, NoCleanupStream)
 	}()
 
 	updatecb := updateCloudletCallback{in, cb}
@@ -1412,7 +1419,12 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 	defer func() {
-		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr)
+		cleanupStream := NoCleanupStream
+		if reterr == nil {
+			// deletion is successful, cleanup stream
+			cleanupStream = CleanupStream
+		}
+		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, cleanupStream)
 		if reterr == nil {
 			RecordCloudletEvent(ctx, &in.Key, cloudcommon.DELETED, cloudcommon.InstanceDown)
 		}
