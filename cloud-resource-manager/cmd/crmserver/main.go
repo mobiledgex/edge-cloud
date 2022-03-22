@@ -324,6 +324,9 @@ func main() {
 			myCloudletInfo.Errors = append(myCloudletInfo.Errors, err.Error())
 			myCloudletInfo.State = dme.CloudletState_CLOUDLET_STATE_ERRORS
 		} else {
+			// If cloudlet release version is known, update cloudletInfo with release version details
+			myCloudletInfo.ReleaseVersion = os.Getenv("MEX_RELEASE_VERSION")
+
 			// at this point we are ok to do periodic refresh of the platform init compatibility version in the HA Manager
 			// because we have either matched the version from a switchover or have done a conditional init
 			controllerData.UpdateHACompatibilityVersion = true
