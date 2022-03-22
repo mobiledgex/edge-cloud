@@ -864,6 +864,8 @@ message CloudletInfo {
   string active_crm_instance = 22;
   // Denotes if info was reported by inactive
   bool standby_crm = 23;
+  // Cloudlet release version
+  string release_version = 24;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
