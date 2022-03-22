@@ -51,6 +51,14 @@ func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.C
 	return appInstOnline && AutoProvCloudletInfoOnline(cloudletInfo) && AutoProvCloudletOnline(cloudlet)
 }
 
+func AutoProvAppInstGoingOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.CloudletInfo, cloudlet *edgeproto.Cloudlet) bool {
+	appInstGoingOnline := false
+	if appInst.State == edgeproto.TrackedState_CREATE_REQUESTED || appInst.State == edgeproto.TrackedState_CREATING || appInst.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
+		appInstGoingOnline = true
+	}
+	return appInstGoingOnline && AutoProvCloudletInfoOnline(cloudletInfo) && AutoProvCloudletOnline(cloudlet)
+}
+
 func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {
 	if inst.State == edgeproto.TrackedState_DELETE_REQUESTED || inst.State == edgeproto.TrackedState_DELETING || inst.State == edgeproto.TrackedState_DELETE_DONE || inst.State == edgeproto.TrackedState_NOT_PRESENT {
 		return true

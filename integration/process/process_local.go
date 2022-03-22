@@ -1393,7 +1393,7 @@ func (p *RedisCache) StopLocal() {
 func (p *RedisCache) GetExeName() string { return "redis-server" }
 
 func (p *RedisCache) LookupArgs() string {
-	return p.Name + ".conf"
+	return ":" + p.Port
 }
 
 func (p *RedisCache) ResetData(logfile string) error {
@@ -1451,6 +1451,8 @@ func (p *DockerGeneric) StopLocal() {
 	StopLocal(p.cmd)
 	// if container is from previous aborted run
 	cmd := exec.Command("docker", "kill", p.Name)
+	cmd.Run()
+	cmd = exec.Command("docker", "rm", p.Name)
 	cmd.Run()
 }
 

@@ -161,7 +161,6 @@ storageClass:
 `
 
 var isUpgradingErrorString = "is upgrading"
-var isInProgressErrorString = "action is already in progress"
 
 type retryMapKey struct {
 	createTypeStr string
@@ -557,7 +556,7 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			log.SpanLog(ctx, log.DebugLevelApi, "appinst already exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
 			updateExistingAppInst(ctx, apiClient, &platformAppInst)
 			err = nil
-		} else if strings.Contains(err.Error(), isInProgressErrorString) {
+		} else if cloudcommon.IsAppInstBeingCreatedError(err) {
 			// If multiple cluster-svcs' are running in HA cluster, then creation might
 			// have already been started by another instance and hence ignore such appinst errors
 			log.SpanLog(ctx, log.DebugLevelApi, "an action is already in progress for appinst", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
@@ -568,14 +567,14 @@ func createAppInstCommon(ctx context.Context, dialOpts grpc.DialOption, clusterI
 			if nerr := createAppCommon(ctx, dialOpts, platformApp); nerr == nil || nerr == platformApp.Key.ExistsError() {
 				eventStart = time.Now()
 				res, err = appInstCreateApi(ctx, apiClient, platformAppInst)
-				if err != nil && strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) {
+				if err != nil && (strings.Contains(err.Error(), platformAppInst.Key.ExistsError().Error()) || cloudcommon.IsAppInstBeingCreatedError(err)) {
 
 					// If there are multiple cluster-svc instances running, each will receive a notification about cluster being created.
 					// They don't know about each other(they are just replicas for HA) and both try to do the same thing.
 					// One of them will succeed and create prometheus appInstance.
 					// Suppress the AlertClusterSvcAppInstFailure alert for the other cluster-svc instance in such a case by setting err to nil.
 
-					log.SpanLog(ctx, log.DebugLevelApi, "appinst now exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String())
+					log.SpanLog(ctx, log.DebugLevelApi, "appinst now exists", "platformApp", platformApp.String(), "app", app, "cluster", clusterInst.Key.String(), "err", err)
 					err = nil
 				}
 			}
