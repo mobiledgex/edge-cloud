@@ -36,7 +36,7 @@ var createWaitNoResources = 10 * time.Second
 var applyManifest = "apply"
 var createManifest = "create"
 
-var podStateRegString = "(\\S+)\\s+\\d+\\/\\d+\\s+(\\S+)\\s+\\d+\\s+\\S+"
+var podStateRegString = "(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(.*)\\s+"
 var podStateReg = regexp.MustCompile(podStateRegString)
 
 func LbServicePortToString(p *v1.ServicePort) string {
@@ -48,7 +48,8 @@ func LbServicePortToString(p *v1.ServicePort) string {
 func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace, selector, waitFor string, startTimer time.Time) (bool, error) {
 	done := false
 	log.SpanLog(ctx, log.DebugLevelInfra, "check pods status", "namespace", namespace, "selector", selector)
-	cmd := fmt.Sprintf("%s kubectl get pods --no-headers -n %s --selector=%s", kConfEnv, namespace, selector)
+	// custom columns will show <none> if there is nothing to display
+	cmd := fmt.Sprintf("%s kubectl get pods --no-headers -n %s --selector=%s -o=custom-columns='Name:metadata.name,Status:status.phase,Reason:status.conditions[].reason,Message:status.conditions[].message'", kConfEnv, namespace, selector)
 	out, err := client.Output(cmd)
 	if err != nil {
 		log.InfoLog("error getting pods", "err", err, "out", out)
@@ -71,11 +72,17 @@ func CheckPodsStatus(ctx context.Context, client ssh.Client, kConfEnv, namespace
 			matches := podStateReg.FindStringSubmatch(line)
 			podName := matches[1]
 			podState := matches[2]
+			reason := matches[3]
+			message := matches[4]
 			switch podState {
 			case "Running":
 				log.SpanLog(ctx, log.DebugLevelInfra, "pod is running", "podName", podName)
 				runningCount++
 			case "Pending":
+				if reason == "Unschedulable" {
+					log.SpanLog(ctx, log.DebugLevelInfra, "pod cannot be scheduled", "podName", podName, "message", message)
+					return done, fmt.Errorf("Run container failed, pod could not be scheduled, message: %s", message)
+				}
 				fallthrough
 			case "ContainerCreating":
 				fallthrough
