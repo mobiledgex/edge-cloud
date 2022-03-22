@@ -620,13 +620,13 @@ clusterrefs:
     organization: AcmeAppCo
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
+      organization: AcmeAppCo
+      name: trustedapp
       version: "1.0"
     vclustername: cluster1
   - appkey:
-      organization: AcmeAppCo
-      name: trustedapp
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
       version: "1.0"
     vclustername: cluster1
 - key:
@@ -638,12 +638,12 @@ clusterrefs:
     organization: AcmeAppCo
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
+      organization: AcmeAppCo
+      name: nontrustedapp
       version: "1.0"
     vclustername: cluster2
   - appkey:
-      organization: AcmeAppCo
-      name: nontrustedapp
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
       version: "1.0"
     vclustername: cluster2

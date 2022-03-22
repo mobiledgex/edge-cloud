@@ -1311,7 +1311,7 @@ func validateDeleteState(cctx *CallContext, objName string, state edgeproto.Trac
 	if cctx.Override != edgeproto.CRMOverride_IGNORE_TRANSIENT_STATE &&
 		cctx.Override != edgeproto.CRMOverride_IGNORE_CRM_AND_TRANSIENT_STATE {
 		if edgeproto.IsDeleteState(state) {
-			return fmt.Errorf("%s busy, already under deletion", objName)
+			return fmt.Errorf("%s %s", objName, cloudcommon.AlreadyUnderDeletionMsg)
 		}
 		if edgeproto.IsTransientState(state) {
 			return fmt.Errorf("%s %s", objName, ObjBusyDeletionMsg)

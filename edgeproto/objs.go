@@ -121,6 +121,11 @@ func (a *AllData) Sort() {
 	sort.Slice(a.ClusterRefs[:], func(i, j int) bool {
 		return a.ClusterRefs[i].Key.GetKeyString() < a.ClusterRefs[j].Key.GetKeyString()
 	})
+	for i := range a.ClusterRefs {
+		sort.Slice(a.ClusterRefs[i].Apps, func(ii, jj int) bool {
+			return a.ClusterRefs[i].Apps[ii].GetKeyString() < a.ClusterRefs[i].Apps[jj].GetKeyString()
+		})
+	}
 	sort.Slice(a.VmPools[:], func(i, j int) bool {
 		return a.VmPools[i].Key.GetKeyString() < a.VmPools[j].Key.GetKeyString()
 	})

@@ -366,14 +366,14 @@ clusterrefs:
     organization: 1000realities
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
-      version: "1.0"
-    vclustername: 1000realities-cluster-22
-  - appkey:
       organization: 1000realities
       name: VRmax
       version: 1.0.0
+    vclustername: 1000realities-cluster-22
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
     vclustername: 1000realities-cluster-22
 trustpolicyexceptions:
 - key:

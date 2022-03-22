@@ -1074,15 +1074,15 @@ clusterrefs:
     organization: MobiledgeX
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
-      version: "1.0"
-    vclustername: ReservableCluster2
-  - appkey:
       organization: AcmeAppCo
       name: autoprovapp
       version: "1.0"
     vclustername: autocluster-autoprov
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: ReservableCluster2
 - key:
     clusterkey:
       name: SmallCluster

@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -264,6 +266,9 @@ func runTests(dirName, fileName, progName string, depth int, mods []string) (int
 				fmt.Println("PASS")
 				numPassed += 1
 			} else {
+				if stderr.Len() > 0 {
+					ioutil.WriteFile("/tmp/fail-output"+strconv.Itoa(cmd.Process.Pid), stderr.Bytes(), 0666)
+				}
 				fmt.Printf("FAIL: %s\n", stderr.String())
 				numFailed += 1
 				_, ok := failedTests[fileName+":"+t.Name]
