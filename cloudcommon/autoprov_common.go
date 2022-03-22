@@ -2,6 +2,7 @@ package cloudcommon
 
 import (
 	"fmt"
+	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -50,8 +51,46 @@ func AutoProvAppInstOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.C
 	return appInstOnline && AutoProvCloudletInfoOnline(cloudletInfo) && AutoProvCloudletOnline(cloudlet)
 }
 
+func AutoProvAppInstGoingOnline(appInst *edgeproto.AppInst, cloudletInfo *edgeproto.CloudletInfo, cloudlet *edgeproto.Cloudlet) bool {
+	appInstGoingOnline := false
+	if appInst.State == edgeproto.TrackedState_CREATE_REQUESTED || appInst.State == edgeproto.TrackedState_CREATING || appInst.State == edgeproto.TrackedState_CREATING_DEPENDENCIES {
+		appInstGoingOnline = true
+	}
+	return appInstGoingOnline && AutoProvCloudletInfoOnline(cloudletInfo) && AutoProvCloudletOnline(cloudlet)
+}
+
 func AppInstBeingDeleted(inst *edgeproto.AppInst) bool {
 	if inst.State == edgeproto.TrackedState_DELETE_REQUESTED || inst.State == edgeproto.TrackedState_DELETING || inst.State == edgeproto.TrackedState_DELETE_DONE || inst.State == edgeproto.TrackedState_NOT_PRESENT {
+		return true
+	}
+	return false
+}
+
+const (
+	AlreadyUnderDeletionMsg          = "busy, already under deletion"
+	StreamActionAlreadyInProgressMsg = "An action is already in progress for the object"
+)
+
+// Autoprov relies on detecting if an AppInst is already being created
+func IsAppInstBeingCreatedError(err error) bool {
+	if strings.Contains(err.Error(), "AppInst key") && strings.Contains(err.Error(), "already exists") {
+		// obj.ExistsError()
+		return true
+	}
+	if strings.Contains(err.Error(), StreamActionAlreadyInProgressMsg) {
+		// stream autocluster error
+		return true
+	}
+	return false
+}
+
+// Autoprov relies on detecting if an AppInst is already being deleted
+func IsAppInstBeingDeletedError(err error) bool {
+	if strings.Contains(err.Error(), AlreadyUnderDeletionMsg) {
+		return true
+	}
+	if strings.Contains(err.Error(), StreamActionAlreadyInProgressMsg) {
+		// stream autocluster error
 		return true
 	}
 	return false
