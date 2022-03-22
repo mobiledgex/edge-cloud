@@ -1393,7 +1393,7 @@ func (p *RedisCache) StopLocal() {
 func (p *RedisCache) GetExeName() string { return "redis-server" }
 
 func (p *RedisCache) LookupArgs() string {
-	return ":" + p.Port
+	return p.Name + ".conf"
 }
 
 func (p *RedisCache) ResetData(logfile string) error {
