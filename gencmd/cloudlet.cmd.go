@@ -2911,6 +2911,7 @@ var CloudletInfoOptionalArgs = []string{
 	"nodeinfos:#.name",
 	"activecrminstance",
 	"standbycrm",
+	"releaseversion",
 }
 var CloudletInfoAliasArgs = []string{
 	"cloudletorg=key.organization",
@@ -2979,6 +2980,7 @@ var CloudletInfoComments = map[string]string{
 	"nodeinfos:#.name":     "Node name",
 	"activecrminstance":    "Active HA instance",
 	"standbycrm":           "Denotes if info was reported by inactive",
+	"releaseversion":       "Cloudlet release version",
 }
 var CloudletInfoSpecialArgs = map[string]string{
 	"errors":            "StringArray",
