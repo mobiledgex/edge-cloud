@@ -208,6 +208,33 @@ func TestParseArgs(t *testing.T) {
 	_, err = input.ParseArgs(args, &buf)
 	require.NotNil(t, err)
 	require.Contains(t, err.Error(), `parsing arg "arr:empty=ttrue" failed: unable to parse "ttrue" as bool, valid values are true, false`)
+
+	// no args is ok with nil object
+	noArgsMap, err := input.ParseArgs([]string{}, nil)
+	require.Nil(t, err)
+	require.Equal(t, 0, len(noArgsMap.Data))
+
+	// make sure code does not crash for nil input object
+	_, err = input.ParseArgs([]string{"foo"}, nil)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "no arguments accepted")
+	_, err = cli.JsonMap(&cli.MapData{}, nil)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Invalid nil object")
+	err = cli.MapJsonNamesT(map[string]interface{}{}, map[string]interface{}{}, nil, cli.JsonNamespace)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Invalid nil type")
+	cmd := cli.Command{}
+	cli.Datafile = "foo"
+	_, err = cmd.ParseInput([]string{})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "command does not accept input")
+	cli.Datafile = ""
+	cli.Data = "{}"
+	_, err = cmd.ParseInput([]string{})
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "command does not accept input")
+	cli.Data = ""
 }
 
 func testConversionEmptyFields(t *testing.T, input *cli.Input, obj, buf interface{}, args []string, expectedFields []string) {
