@@ -61,25 +61,27 @@ func AddHideTagsFormatFlag(flagSet *pflag.FlagSet) {
 }
 
 type Command struct {
-	Use                  string
-	Short                string
-	RequiredArgs         string
-	OptionalArgs         string
-	AliasArgs            string
-	SpecialArgs          *map[string]string
-	Comments             map[string]string
-	ReqData              interface{}
-	ReplyData            interface{}
-	PasswordArg          string
-	VerifyPassword       bool
-	DataFlagOnly         bool
-	StreamOut            bool
-	StreamOutIncremental bool
-	CobraCmd             *cobra.Command
-	Run                  func(c *Command, args []string) error
-	UsageIsHelp          bool
-	Annotations          map[string]string
-	AddFlagsFunc         func(*pflag.FlagSet)
+	Use                   string
+	Short                 string
+	RequiredArgs          string
+	OptionalArgs          string
+	AliasArgs             string
+	SpecialArgs           *map[string]string
+	Comments              map[string]string
+	ReqData               interface{}
+	ReplyData             interface{}
+	PasswordArg           string
+	ConfirmPasswordArg    string
+	VerifyPassword        bool
+	ConfirmVerifyPassword bool
+	DataFlagOnly          bool
+	StreamOut             bool
+	StreamOutIncremental  bool
+	CobraCmd              *cobra.Command
+	Run                   func(c *Command, args []string) error
+	UsageIsHelp           bool
+	Annotations           map[string]string
+	AddFlagsFunc          func(*pflag.FlagSet)
 }
 
 func (c *Command) GenCmd() *cobra.Command {
@@ -244,12 +246,14 @@ func (c *Command) ParseInput(args []string) (*MapData, error) {
 			return nil, fmt.Errorf("--data must be used to supply json/yaml-formatted input data")
 		}
 		input := Input{
-			RequiredArgs:   strings.Fields(c.RequiredArgs),
-			AliasArgs:      strings.Fields(c.AliasArgs),
-			SpecialArgs:    c.SpecialArgs,
-			PasswordArg:    c.PasswordArg,
-			VerifyPassword: c.VerifyPassword,
-			DecodeHook:     DecodeHook,
+			RequiredArgs:          strings.Fields(c.RequiredArgs),
+			AliasArgs:             strings.Fields(c.AliasArgs),
+			SpecialArgs:           c.SpecialArgs,
+			PasswordArg:           c.PasswordArg,
+			ConfirmPasswordArg:    c.ConfirmPasswordArg,
+			VerifyPassword:        c.VerifyPassword,
+			ConfirmVerifyPassword: c.ConfirmVerifyPassword,
+			DecodeHook:            DecodeHook,
 		}
 		argsMap, err := input.ParseArgs(args, c.ReqData)
 		if err != nil {

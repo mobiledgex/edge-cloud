@@ -34,10 +34,14 @@ type Input struct {
 	SpecialArgs *map[string]string
 	// Password arg will prompt for password if not in args list
 	PasswordArg string
+	// Confirm password arg will prompt for password if not in args list
+	ConfirmPasswordArg string
 	// API key arg will replace password and avoid prompt for password
 	ApiKeyArg string
 	// Verify password if prompting
 	VerifyPassword bool
+	// Confirm and Verify password if prompting
+	ConfirmVerifyPassword bool
 	// Mapstructure DecodeHook functions
 	DecodeHook mapstructure.DecodeHookFunc
 	// Allow extra args that were not mapped to target object.
@@ -78,6 +82,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 
 	// create generic data map from args
 	passwordFound := false
+	confirmPasswordFound := false
 	apiKeyFound := false
 	for _, arg := range args {
 		arg = strings.TrimSpace(arg)
@@ -100,6 +105,8 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		}
 		if argKey == s.PasswordArg {
 			passwordFound = true
+		} else if argKey == s.ConfirmPasswordArg {
+			confirmPasswordFound = true
 		} else if argKey == s.ApiKeyArg {
 			apiKeyFound = true
 		}
@@ -121,11 +128,29 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		}
 	}
 
+	if s.ConfirmVerifyPassword {
+		// prompt for current password if not in arg list
+		if s.ConfirmPasswordArg != "" && !confirmPasswordFound {
+			fmt.Printf("current password: ")
+			pw, err := terminal.ReadPassword(int(syscall.Stdin))
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println()
+			s.setKeyVal(dat, obj, resolveAlias(s.ConfirmPasswordArg, aliases), string(pw), "")
+		}
+	}
+
 	// Do not prompt for password if API key is passed
 	if s.ApiKeyArg == "" || !apiKeyFound {
 		// prompt for password if not in arg list
 		if s.PasswordArg != "" && !passwordFound {
-			pw, err := getPassword(s.VerifyPassword)
+			passPrefix := ""
+			if s.ConfirmVerifyPassword {
+				passPrefix = "new "
+				s.VerifyPassword = true
+			}
+			pw, err := getPassword(passPrefix, s.VerifyPassword)
 			if err != nil {
 				return nil, err
 			}
@@ -699,15 +724,16 @@ func getFieldEmptyListMap(hierName string, fieldType reflect.Type, ns FieldNames
 	return nil, false
 }
 
-func getPassword(verify bool) (string, error) {
-	fmt.Printf("password: ")
+func getPassword(prefix string, verify bool) (string, error) {
+	passStr := fmt.Sprintf("%spassword", prefix)
+	fmt.Printf("%s: ", passStr)
 	pw, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", err
 	}
 	fmt.Println()
 	if verify {
-		fmt.Print("verify password: ")
+		fmt.Printf("verify %s: ", passStr)
 		pw2, err := terminal.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			return "", err
