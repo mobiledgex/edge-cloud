@@ -1175,18 +1175,8 @@ clusterrefs:
     organization: AcmeAppCo
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
-      version: "1.0"
-    vclustername: SmallCluster
-  - appkey:
-      organization: MobiledgeX
-      name: NFSAutoProvision
-      version: "1.0"
-    vclustername: SmallCluster
-  - appkey:
       organization: AcmeAppCo
-      name: someapplication1
+      name: NoPortsApp
       version: "1.0"
     vclustername: SmallCluster
   - appkey:
@@ -1196,7 +1186,17 @@ clusterrefs:
     vclustername: SmallCluster
   - appkey:
       organization: AcmeAppCo
-      name: NoPortsApp
+      name: someapplication1
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
+    vclustername: SmallCluster
+  - appkey:
+      organization: MobiledgeX
+      name: NFSAutoProvision
       version: "1.0"
     vclustername: SmallCluster
 - key:
@@ -1208,13 +1208,13 @@ clusterrefs:
     organization: AcmeAppCo
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
+      organization: AcmeAppCo
+      name: someapplication1
       version: "1.0"
     vclustername: SmallCluster
   - appkey:
-      organization: AcmeAppCo
-      name: someapplication1
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
       version: "1.0"
     vclustername: SmallCluster
 flowratelimitsettings:

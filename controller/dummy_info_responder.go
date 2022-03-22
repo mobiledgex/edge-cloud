@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -35,6 +36,7 @@ type DummyInfoResponder struct {
 	simulateClusterDeleteFailure bool
 	simulateVMPoolUpdateFailure  bool
 	enable                       bool
+	pause                        sync.WaitGroup
 }
 
 func (d *DummyInfoResponder) InitDummyInfoResponder() {
@@ -80,6 +82,16 @@ func (d *DummyInfoResponder) SetSimulateClusterDeleteFailure(state bool) {
 
 func (d *DummyInfoResponder) SetSimulateVMPoolUpdateFailure(state bool) {
 	d.simulateVMPoolUpdateFailure = state
+}
+
+// Pauses responder until unpaused.
+// Warning: don't double-pause or double-unpause.
+func (d *DummyInfoResponder) SetPause(enable bool) {
+	if enable {
+		d.pause.Add(1)
+	} else {
+		d.pause.Done()
+	}
 }
 
 func (d *DummyInfoResponder) runClusterInstChanged(ctx context.Context, key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst, modRev int64) {
@@ -155,6 +167,8 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgep
 		log.SpanLog(ctx, log.DebugLevelApi, "Update ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_UPDATING)
+		time.Sleep(DummyInfoDelay)
+		d.pause.Wait()
 		log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst ready", "key", key)
 		if d.simulateClusterUpdateFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_UPDATE_ERROR, "crm update ClusterInst failed")
@@ -167,6 +181,7 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgep
 		time.Sleep(DummyInfoDelay)
 		d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_CREATING)
 		time.Sleep(DummyInfoDelay)
+		d.pause.Wait()
 		log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst ready", "key", key)
 		if d.simulateClusterCreateFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_CREATE_ERROR, "crm create ClusterInst failed")
@@ -179,6 +194,7 @@ func (d *DummyInfoResponder) clusterInstChanged(ctx context.Context, inst *edgep
 		time.Sleep(DummyInfoDelay)
 		d.ClusterInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_DELETING)
 		time.Sleep(DummyInfoDelay)
+		d.pause.Wait()
 		log.SpanLog(ctx, log.DebugLevelApi, "ClusterInst deleted", "key", key)
 		if d.simulateClusterDeleteFailure {
 			d.ClusterInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_DELETE_ERROR, "crm delete ClusterInst failed")
@@ -200,6 +216,8 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto
 		log.SpanLog(ctx, log.DebugLevelApi, "Update app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
 		d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_UPDATING)
+		time.Sleep(DummyInfoDelay)
+		d.pause.Wait()
 		log.SpanLog(ctx, log.DebugLevelApi, "app inst ready", "key", key)
 		if d.simulateAppUpdateFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_UPDATE_ERROR, "crm update app inst failed")
@@ -212,6 +230,7 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto
 		time.Sleep(DummyInfoDelay)
 		d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_CREATING)
 		time.Sleep(DummyInfoDelay)
+		d.pause.Wait()
 		log.SpanLog(ctx, log.DebugLevelApi, "app inst ready", "key", key)
 		if d.simulateAppCreateFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_CREATE_ERROR, "crm create app inst failed")
@@ -224,6 +243,7 @@ func (d *DummyInfoResponder) appInstChanged(ctx context.Context, inst *edgeproto
 		time.Sleep(DummyInfoDelay)
 		d.AppInstInfoCache.SetState(ctx, key, edgeproto.TrackedState_DELETING)
 		time.Sleep(DummyInfoDelay)
+		d.pause.Wait()
 		log.SpanLog(ctx, log.DebugLevelApi, "app inst deleted", "key", key)
 		if d.simulateAppDeleteFailure {
 			d.AppInstInfoCache.SetError(ctx, key, edgeproto.TrackedState_DELETE_ERROR, "crm delete app inst failed")

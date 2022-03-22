@@ -366,14 +366,14 @@ clusterrefs:
     organization: Untomt
   apps:
   - appkey:
-      organization: MobiledgeX
-      name: MEXPrometheusAppName
-      version: "1.0"
-    vclustername: Untomt-cluster-22
-  - appkey:
       organization: Untomt
       name: VRmax
       version: 1.0.0
+    vclustername: Untomt-cluster-22
+  - appkey:
+      organization: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
     vclustername: Untomt-cluster-22
 trustpolicyexceptions:
 - key:

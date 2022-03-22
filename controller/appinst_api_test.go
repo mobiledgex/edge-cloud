@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -176,6 +177,9 @@ func TestAppInstApi(t *testing.T) {
 	// Note this refs data is a second set after app insts were created.
 	testutil.InternalCloudletRefsTest(t, "show", apis.cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
 	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, testutil.GetAppInstRefsData())
+
+	// Test for being created and being deleted errors.
+	testBeingErrors(t, ctx, responder, apis)
 
 	commonApi := testutil.NewInternalAppInstApi(apis.appInstApi)
 
@@ -1266,4 +1270,70 @@ func TestAppInstIdDelimiter(t *testing.T) {
 	appInst.Key.ClusterInstKey.CloudletKey.Organization += "."
 	id := cloudcommon.GetAppInstId(&appInst, &app, ".")
 	require.NotContains(t, id, ".", "id must not contain '.'")
+}
+
+func waitForAppInstState(t *testing.T, ctx context.Context, apis *AllApis, key *edgeproto.AppInstKey, ii int, state edgeproto.TrackedState) {
+	var ok bool
+	for ii := 0; ii < 50; ii++ {
+		apis.appInstApi.cache.Mux.Lock()
+		inst, found := apis.appInstApi.cache.Objs[*key]
+		ok = found && inst.Obj.State == state
+		apis.appInstApi.cache.Mux.Unlock()
+		if ok {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	require.True(t, ok, "Wait for state %s for AppInstData[%d]", state.String(), ii)
+}
+
+// Autoprov relies on being able to detect AppInst being created
+// or AppInst being deleted errors.
+func testBeingErrors(t *testing.T, ctx context.Context, responder *DummyInfoResponder, apis *AllApis) {
+	var wg sync.WaitGroup
+
+	testedAutoCluster := false
+	// Error messages may vary based on autocluster/no-autocluster
+	for ii := 0; ii < len(testutil.AppInstData); ii++ {
+		ai := testutil.AppInstData[ii]
+		if strings.HasPrefix(ai.Key.ClusterInstKey.ClusterKey.Name, cloudcommon.AutoClusterPrefix) {
+			testedAutoCluster = true
+		}
+
+		// start delete of appinst
+		wg.Add(1)
+		responder.SetPause(true)
+		go func() {
+			err := apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+			require.Nil(t, err, "AppInstData[%d]", ii)
+			wg.Done()
+		}()
+		// make sure appinst is in deleting state
+		waitForAppInstState(t, ctx, apis, &ai.Key, ii, edgeproto.TrackedState_DELETING)
+		// verify error
+		checkErr := apis.appInstApi.DeleteAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		require.True(t, cloudcommon.IsAppInstBeingDeletedError(checkErr), "AppInstData[%d]: %s", ii, checkErr)
+		// let delete finish
+		responder.SetPause(false)
+		wg.Wait()
+
+		// start create of appinst
+		ai = testutil.AppInstData[ii]
+		wg.Add(1)
+		responder.SetPause(true)
+		go func() {
+			err := apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+			require.Nil(t, err, "AppInstData[%d]", ii)
+			wg.Done()
+		}()
+		// make sure appinst is in creating state
+		waitForAppInstState(t, ctx, apis, &ai.Key, ii, edgeproto.TrackedState_CREATING)
+		// verify error
+		checkErr = apis.appInstApi.CreateAppInst(&ai, testutil.NewCudStreamoutAppInst(ctx))
+		require.True(t, cloudcommon.IsAppInstBeingCreatedError(checkErr), "AppInstData[%d]: %s", ii, checkErr)
+		// let delete finish
+		responder.SetPause(false)
+		wg.Wait()
+	}
+	require.True(t, testedAutoCluster, "tested autocluster")
 }

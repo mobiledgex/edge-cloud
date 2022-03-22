@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/rediscache"
@@ -283,7 +284,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 				}
 				return nil
 			}
-			return fmt.Errorf("An action is already in progress for the object %s", streamKey)
+			return fmt.Errorf("%s %s", cloudcommon.StreamActionAlreadyInProgressMsg, streamKey)
 		})
 		return err
 	}
