@@ -1,7 +1,7 @@
 package process
 
 import (
-	"context"
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -166,33 +166,48 @@ func GetTypeString(p interface{}) string {
 }
 
 //get list of pids for a process name
-func getPidsByName(processName string, processArgs string) []ProcessInfo {
+func getPidsByName(processName string, processArgs string) ([]ProcessInfo, error) {
 	//pidlist is a set of pids and alive bool
 	var processes []ProcessInfo
 	//var pgrepCommand string
 	var cmd *exec.Cmd
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	if processArgs == "" {
 		//look for any instance of this process name
-		cmd = exec.CommandContext(ctx, "pgrep", "-x", processName)
-		//pgrepCommand = "pgrep -x " + processName
+		cmd = exec.Command("pgrep", "-x", processName)
 	} else {
 		//look for a process running with particular arguments
-		cmd = exec.CommandContext(ctx, "pgrep", "-f", processName+" .*"+processArgs+".*")
-		//pgrepCommand = "pgrep -f '" + processName + " .*" + processArgs + ".*'"
+		cmd = exec.Command("pgrep", "-f", processName+" .*"+processArgs+".*")
 	}
 	log.Printf("Running %v\n", cmd.String())
 
-	out, perr := cmd.CombinedOutput()
-	if ctx.Err() == context.DeadlineExceeded {
-		perr = fmt.Errorf("command timed out")
+	outBuf := bytes.Buffer{}
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &outBuf
+	done := make(chan error)
+	go func() {
+		// cmd.Start/Run/etc hangs, may be related to
+		// github.com/golang/go/issues/38824.
+		cmd.Start()
+		done <- cmd.Wait()
+	}()
+	var perr error
+	select {
+	case <-time.After(15 * time.Second):
+		if cmd.Process == nil {
+			perr = fmt.Errorf("timed out but process not started")
+		} else {
+			perr = fmt.Errorf("timed out, killing process")
+			cmd.Process.Signal(syscall.SIGSEGV)
+		}
+	case derr := <-done:
+		perr = derr
 	}
+	out := outBuf.Bytes()
 	if perr != nil {
 		log.Printf("Process not found for: %s, %s, %v\n", cmd.String(), string(out), perr)
 		pinfo := ProcessInfo{alive: false}
 		processes = append(processes, pinfo)
-		return processes
+		return processes, perr
 	}
 
 	for _, pid := range strings.Split(string(out), "\n") {
@@ -207,7 +222,7 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 			processes = append(processes, pinfo)
 		}
 	}
-	return processes
+	return processes, nil
 }
 
 func StopProcess(p Process, maxwait time.Duration, c chan string) {
@@ -220,7 +235,11 @@ func StopProcess(p Process, maxwait time.Duration, c chan string) {
 //first tries to kill process with SIGINT, then waits up to maxwait time
 //for it to die.  After that point it kills with SIGKILL
 func KillProcessesByName(processName string, maxwait time.Duration, processArgs string, c chan string) {
-	processes := getPidsByName(processName, processArgs)
+	processes, err := getPidsByName(processName, processArgs)
+	if err != nil {
+		c <- err.Error()
+		return
+	}
 	waitInterval := 100 * time.Millisecond
 
 	for _, p := range processes {
@@ -284,10 +303,15 @@ func KillProcessesByName(processName string, maxwait time.Duration, processArgs 
 	}
 
 	c <- "forcefully shut down " + processName
+	return
 }
 
 func EnsureProcessesByName(processName string, processArgs string) bool {
-	processes := getPidsByName(processName, processArgs)
+	processes, err := getPidsByName(processName, processArgs)
+	if err != nil {
+		log.Printf("Ensure process by name failed to get pid for %s %s, %s\n", processName, processArgs, err)
+		return false
+	}
 	ensured := true
 	for _, p := range processes {
 		if !p.alive {
