@@ -128,13 +128,12 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 
 	// prompt for current password if not in arg list
 	if s.CurrentPasswordArg != "" && !currentPasswordFound {
-		fmt.Printf("current password: ")
-		pw, err := terminal.ReadPassword(int(syscall.Stdin))
+		verifyCurrentPassword := false
+		pw, err := getPassword("current ", verifyCurrentPassword)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println()
-		s.setKeyVal(dat, obj, resolveAlias(s.CurrentPasswordArg, aliases), string(pw), "")
+		s.setKeyVal(dat, obj, resolveAlias(s.CurrentPasswordArg, aliases), pw, "")
 	}
 
 	// Do not prompt for password if API key is passed
