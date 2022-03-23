@@ -36,7 +36,7 @@ var createWaitNoResources = 10 * time.Second
 var applyManifest = "apply"
 var createManifest = "create"
 
-var podStateRegString = "(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(.*)\\s+"
+var podStateRegString = "(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(.*)\\s*"
 var podStateReg = regexp.MustCompile(podStateRegString)
 
 func LbServicePortToString(p *v1.ServicePort) string {
