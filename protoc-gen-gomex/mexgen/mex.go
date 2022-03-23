@@ -1288,6 +1288,7 @@ type cacheTemplateArgs struct {
 	CudCache      bool
 	NotifyCache   bool
 	NotifyFlush   bool
+	ParentObjName string
 	WaitForState  string
 	ObjAndKey     bool
 	CustomKeyType string
@@ -1726,6 +1727,17 @@ func WaitFor{{.Name}}(ctx context.Context, key *{{.KeyType}}, targetState dme_pr
 	for {
 		select {
 		case chObj := <-wSpec.CrmMsgCh:
+			if chObj == nil {
+				// Since msg chan is a receive-only chan, it will return nil if
+				// connection to redis server is disrupted. But the object might
+				// still be in progress. Hence, just show a message about the failure,
+				// so that user can manually look at object's progress
+				if send != nil {
+					msg := fmt.Sprintf("Failed to get progress messages. Please use Show{{.ParentObjName}} to check current status")
+					send(&Result{Message: msg})
+				}
+				return nil
+			}
 			info := {{.Name}}{}
 			err = json.Unmarshal([]byte(chObj.Payload), &info)
 			if err != nil {
@@ -1764,9 +1776,9 @@ func WaitFor{{.Name}}(ctx context.Context, key *{{.KeyType}}, targetState dme_pr
 				// Do not undo since CRM is still busy.
 				if send != nil {
 					{{- if eq (.WaitForState) ("TrackedState")}}
-					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(curState)])
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.ParentObjName}} to check current status", {{.WaitForState}}_CamelName[int32(curState)])
 					{{- else}}
-					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", dme_proto.{{.WaitForState}}_CamelName[int32(curState)])
+					msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.ParentObjName}} to check current status", dme_proto.{{.WaitForState}}_CamelName[int32(curState)])
 					{{- end}}
 					send(&Result{Message: msg})
 				}
@@ -1967,11 +1979,10 @@ func (s *{{.Name}}By{{.LookupName}}) Find(lookup {{.LookupType}}) []{{.KeyType}}
 `
 
 type keysTemplateArgs struct {
-	Name         string
-	KeyType      string
-	ObjAndKey    bool
-	StreamKey    bool
-	WaitForState string
+	Name      string
+	KeyType   string
+	ObjAndKey bool
+	StreamKey bool
 }
 
 var keysTemplateIn = `
@@ -2170,6 +2181,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			CudCache:      GetGenerateCud(message),
 			NotifyCache:   GetNotifyCache(message),
 			NotifyFlush:   GetNotifyFlush(message),
+			ParentObjName: GetParentObjName(message),
 			WaitForState:  GetGenerateWaitForState(message),
 			ObjAndKey:     gensupport.GetObjAndKey(message),
 			CustomKeyType: gensupport.GetCustomKeyType(message),
@@ -2304,11 +2316,10 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			m.gen.Fail(err.Error())
 		}
 		args := keysTemplateArgs{
-			Name:         *message.Name,
-			KeyType:      keyType,
-			ObjAndKey:    gensupport.GetObjAndKey(message),
-			WaitForState: GetGenerateWaitForState(message),
-			StreamKey:    GetGenerateStreamKey(message),
+			Name:      *message.Name,
+			KeyType:   keyType,
+			ObjAndKey: gensupport.GetObjAndKey(message),
+			StreamKey: GetGenerateStreamKey(message),
 		}
 		m.keysTemplate.Execute(m.gen.Buffer, args)
 	}
@@ -3000,4 +3011,8 @@ func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
 
 func GetRedisOnly(field *descriptor.FieldDescriptorProto) bool {
 	return proto.GetBoolExtension(field.Options, protogen.E_RedisOnly, false)
+}
+
+func GetParentObjName(message *descriptor.DescriptorProto) string {
+	return gensupport.GetStringExtension(message.Options, protogen.E_ParentObjName, "")
 }
