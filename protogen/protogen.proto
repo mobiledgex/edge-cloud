@@ -104,6 +104,8 @@ extend google.protobuf.MessageOptions {
   bool copy_in_all_fields = 51058;
   // Key used for streaming messages and cached as part of redis
   bool generate_stream_key = 51060;
+  // Parent object the current object refers to
+  string parent_obj_name = 51062;
 }
 
 extend google.protobuf.EnumOptions {
