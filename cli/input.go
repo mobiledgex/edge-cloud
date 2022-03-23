@@ -34,14 +34,12 @@ type Input struct {
 	SpecialArgs *map[string]string
 	// Password arg will prompt for password if not in args list
 	PasswordArg string
-	// Confirm password arg will prompt for password if not in args list
-	ConfirmPasswordArg string
+	// Current password arg will prompt for current password if not in args list
+	CurrentPasswordArg string
 	// API key arg will replace password and avoid prompt for password
 	ApiKeyArg string
 	// Verify password if prompting
 	VerifyPassword bool
-	// Confirm and Verify password if prompting
-	ConfirmVerifyPassword bool
 	// Mapstructure DecodeHook functions
 	DecodeHook mapstructure.DecodeHookFunc
 	// Allow extra args that were not mapped to target object.
@@ -82,7 +80,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 
 	// create generic data map from args
 	passwordFound := false
-	confirmPasswordFound := false
+	currentPasswordFound := false
 	apiKeyFound := false
 	for _, arg := range args {
 		arg = strings.TrimSpace(arg)
@@ -105,8 +103,8 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		}
 		if argKey == s.PasswordArg {
 			passwordFound = true
-		} else if argKey == s.ConfirmPasswordArg {
-			confirmPasswordFound = true
+		} else if argKey == s.CurrentPasswordArg {
+			currentPasswordFound = true
 		} else if argKey == s.ApiKeyArg {
 			apiKeyFound = true
 		}
@@ -128,17 +126,15 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		}
 	}
 
-	if s.ConfirmVerifyPassword {
-		// prompt for current password if not in arg list
-		if s.ConfirmPasswordArg != "" && !confirmPasswordFound {
-			fmt.Printf("current password: ")
-			pw, err := terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				return nil, err
-			}
-			fmt.Println()
-			s.setKeyVal(dat, obj, resolveAlias(s.ConfirmPasswordArg, aliases), string(pw), "")
+	// prompt for current password if not in arg list
+	if s.CurrentPasswordArg != "" && !currentPasswordFound {
+		fmt.Printf("current password: ")
+		pw, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return nil, err
 		}
+		fmt.Println()
+		s.setKeyVal(dat, obj, resolveAlias(s.CurrentPasswordArg, aliases), string(pw), "")
 	}
 
 	// Do not prompt for password if API key is passed
@@ -146,9 +142,8 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		// prompt for password if not in arg list
 		if s.PasswordArg != "" && !passwordFound {
 			passPrefix := ""
-			if s.ConfirmVerifyPassword {
+			if s.CurrentPasswordArg != "" {
 				passPrefix = "new "
-				s.VerifyPassword = true
 			}
 			pw, err := getPassword(passPrefix, s.VerifyPassword)
 			if err != nil {
