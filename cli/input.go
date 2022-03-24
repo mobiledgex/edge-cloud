@@ -53,6 +53,16 @@ type Input struct {
 // NOTE: arrays and maps not supported yet.
 func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 	dat := map[string]interface{}{}
+	data := MapData{
+		Namespace: ArgsNamespace,
+		Data:      dat,
+	}
+	if len(args) == 0 {
+		return &data, nil
+	}
+	if obj == nil {
+		return &data, fmt.Errorf("no arguments accepted")
+	}
 
 	// resolve aliases first
 	aliases := make(map[string]string)
@@ -144,10 +154,6 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 			return nil, fmt.Errorf("invalid args: %s",
 				strings.Join(unused, " "))
 		}
-	}
-	data := MapData{
-		Namespace: ArgsNamespace,
-		Data:      dat,
 	}
 	return &data, nil
 }
@@ -257,6 +263,9 @@ func JsonMap(mdat *MapData, obj interface{}) (*MapData, error) {
 		// already json
 		return mdat, nil
 	}
+	if obj == nil {
+		return mdat, fmt.Errorf("Invalid nil object")
+	}
 
 	js := map[string]interface{}{}
 	err := MapJsonNamesT(mdat.Data, js, reflect.TypeOf(obj), mdat.Namespace)
@@ -271,6 +280,9 @@ func JsonMap(mdat *MapData, obj interface{}) (*MapData, error) {
 }
 
 func MapJsonNamesT(dat, js map[string]interface{}, t reflect.Type, inputNS FieldNamespace) error {
+	if t == nil {
+		return fmt.Errorf("Invalid nil type")
+	}
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}

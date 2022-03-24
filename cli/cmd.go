@@ -198,6 +198,9 @@ func (c *Command) runE(cmd *cobra.Command, args []string) error {
 func (c *Command) ParseInput(args []string) (*MapData, error) {
 	var in *MapData
 	if Datafile != "" {
+		if c.ReqData == nil {
+			return in, fmt.Errorf("command does not accept input")
+		}
 		byt, err := ioutil.ReadFile(Datafile)
 		if err != nil {
 			return nil, err
@@ -205,6 +208,9 @@ func (c *Command) ParseInput(args []string) (*MapData, error) {
 		Data = string(byt)
 	}
 	if Data != "" {
+		if c.ReqData == nil {
+			return in, fmt.Errorf("command does not accept input")
+		}
 		indata := make(map[string]interface{})
 		err := json.Unmarshal([]byte(Data), &indata)
 		if err == nil && c.ReqData != nil {
