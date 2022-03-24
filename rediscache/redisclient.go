@@ -14,6 +14,7 @@ import (
 const (
 	MaxRedisWait      = time.Second * 30
 	RedisTxMaxRetries = 10
+	RedisStreamTTL    = time.Minute * 5
 
 	// Special IDs in the streams API
 	RedisSmallestId = "-"
