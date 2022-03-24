@@ -68,10 +68,14 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 		require.Nil(t, err, iterMsg)
 	}
 
+	// Ensure that TTL is set
+	dur, err := redisClient.TTL(streamKey).Result()
+	require.Nil(t, err, "stream TTL check")
+	require.Greater(t, dur, time.Duration(1*time.Second), "TTL is set")
 	// Ensure that stream is cleaned up
-	out, err := redisClient.Exists(streamKey).Result()
-	require.Nil(t, err, "check if stream exists")
-	require.Equal(t, int64(0), out, "stream should not exist")
+	keysRem, err := redisClient.Del(streamKey).Result()
+	require.Nil(t, err, "stream delete")
+	require.Equal(t, int64(1), keysRem, "stream should be deleted")
 
 	// Test for race issues
 	// ====================
@@ -107,9 +111,14 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 	}
 	wg.Wait()
 
-	out, err = redisClient.Exists(streamKey).Result()
+	// Check if stream exists
+	out, err := redisClient.Exists(streamKey).Result()
 	require.Nil(t, err, "check if stream exists")
 	require.Equal(t, int64(1), out, "stream should exist")
+	// Ensure that TTL is not set
+	dur, err = redisClient.TTL(streamKey).Result()
+	require.Nil(t, err, "stream TTL check")
+	require.Equal(t, dur, time.Duration(-1*time.Second), "TTL is not set")
 
 	streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
 	require.Nil(t, err, "get stream messages")
@@ -134,7 +143,7 @@ func testStreamObjsWithServer(t *testing.T, ctx context.Context) {
 	}
 
 	// Cleanup stream
-	keysRem, err := redisClient.Del(streamKey).Result()
+	keysRem, err = redisClient.Del(streamKey).Result()
 	require.Nil(t, err, "delete stream")
 	require.Equal(t, int64(1), keysRem, "stream deleted")
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/rediscache"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/require"
@@ -47,30 +48,56 @@ func NewStreamoutMsg(ctx context.Context) *StreamoutMsg {
 	}
 }
 
-func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, apis *AllApis, pass bool) []edgeproto.Result {
+type StreamCheck int
+
+const (
+	StreamPresent StreamCheck = iota
+	StreamError
+	StreamExpirySet
+	StreamErrExpirySet
+)
+
+func GetAppInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.AppInstKey, apis *AllApis, check StreamCheck) {
 	// Verify stream appInst
-	streamAppInst := NewStreamoutMsg(ctx)
-	err := apis.streamObjApi.StreamAppInst(key, streamAppInst)
-	if pass {
-		require.Nil(t, err, "stream appinst")
-		require.Greater(t, len(streamAppInst.Msgs), 0, "contains stream messages")
-	} else {
-		require.NotNil(t, err, "stream appinst should return error for key %s", *key)
-	}
-	return streamAppInst.Msgs
+	streamOutMsg := NewStreamoutMsg(ctx)
+	err := apis.streamObjApi.StreamAppInst(key, streamOutMsg)
+	VerifyStreamMsgs(t, key.StreamKey(), err, streamOutMsg, check)
 }
 
-func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, apis *AllApis, pass bool) []edgeproto.Result {
-	// Verify stream clusterInst
-	streamClusterInst := NewStreamoutMsg(ctx)
-	err := apis.streamObjApi.StreamClusterInst(key, streamClusterInst)
-	if pass {
-		require.Nil(t, err, "stream clusterinst")
-		require.Greater(t, len(streamClusterInst.Msgs), 0, "contains stream messages")
+func GetClusterInstStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.ClusterInstKey, apis *AllApis, check StreamCheck) {
+	// Verify stream clusterinst
+	streamOutMsg := NewStreamoutMsg(ctx)
+	err := apis.streamObjApi.StreamClusterInst(key, streamOutMsg)
+	VerifyStreamMsgs(t, key.StreamKey(), err, streamOutMsg, check)
+}
+
+func VerifyStreamMsgs(t *testing.T, streamKey string, objErr error, streamOutMsg *StreamoutMsg, check StreamCheck) {
+	if check == StreamPresent {
+		require.Nil(t, objErr, "stream obj present")
+		require.Greater(t, len(streamOutMsg.Msgs), 0, "contains stream messages")
+		dur, err := redisClient.TTL(streamKey).Result()
+		require.Nil(t, err, "get stream ttl")
+		require.Equal(t, time.Duration(-1*time.Second), dur, "No TTL is set")
+	} else if check == StreamExpirySet {
+		require.Nil(t, objErr, "stream obj present")
+		require.Greater(t, len(streamOutMsg.Msgs), 0, "contains stream messages")
+		dur, err := redisClient.TTL(streamKey).Result()
+		require.Nil(t, err, "get stream ttl")
+		require.Equal(t, rediscache.RedisStreamTTL, dur, "TTL is set")
+	} else if check == StreamErrExpirySet {
+		require.NotNil(t, objErr, "stream obj error")
+		dur, err := redisClient.TTL(streamKey).Result()
+		require.Nil(t, err, "get stream ttl")
+		require.Equal(t, rediscache.RedisStreamTTL, dur, "TTL is set")
+	} else if check == StreamError {
+		require.NotNil(t, objErr, "stream obj error")
+		require.Greater(t, len(streamOutMsg.Msgs), 0, "contains stream messages")
+		dur, err := redisClient.TTL(streamKey).Result()
+		require.Nil(t, err, "get stream ttl")
+		require.Equal(t, time.Duration(-1*time.Second), dur, "No TTL is set")
 	} else {
-		require.NotNil(t, err, "stream clusterinst should return error")
+		require.NotNil(t, objErr, "stream obj should return error for key %s", streamKey)
 	}
-	return streamClusterInst.Msgs
 }
 
 func GetCloudletStreamMsgs(t *testing.T, ctx context.Context, key *edgeproto.CloudletKey, apis *AllApis) []edgeproto.Result {
@@ -114,7 +141,7 @@ func TestAppInstApi(t *testing.T) {
 		err := apis.appInstApi.CreateAppInst(&obj, testutil.NewCudStreamoutAppInst(ctx))
 		require.NotNil(t, err, "Create app inst without apps/cloudlets")
 		// Verify stream AppInst fails
-		GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
+		GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, StreamErrExpirySet)
 	}
 
 	// create supporting data
@@ -157,8 +184,8 @@ func TestAppInstApi(t *testing.T) {
 		err = apis.appInstApi.ShowAppInst(&obj, &show)
 		require.Nil(t, err, "show app inst data")
 		require.Equal(t, 0, len(show.Data))
-		// Since appinst creation failed, object is deleted from etcd, stream obj should also be deleted
-		GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
+		// Since appinst creation failed, object is deleted from etcd, stream obj should reflect that
+		GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, StreamErrExpirySet)
 	}
 	responder.SetSimulateAppCreateFailure(false)
 	RequireAppInstPortConsistency = true
@@ -192,8 +219,7 @@ func TestAppInstApi(t *testing.T) {
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, testutil.GetAppInstRefsData())
 	// As there was some progress, there should be some messages in stream
-	msgs := GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
-	require.Greater(t, len(msgs), 0, "some progress messages before failure")
+	GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, StreamError)
 
 	obj = testutil.AppInstData[0]
 	// check override of error DELETE_ERROR
@@ -205,8 +231,7 @@ func TestAppInstApi(t *testing.T) {
 	checkAppInstState(t, ctx, commonApi, &obj, edgeproto.TrackedState_READY)
 	testutil.InternalAppInstRefsTest(t, "show", apis.appInstRefsApi, testutil.GetAppInstRefsData())
 	// As there was progress, there should be some messages in stream
-	msgs = GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Pass)
-	require.Greater(t, len(msgs), 0, "progress messages")
+	GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, StreamPresent)
 
 	// check override of error CREATE_ERROR
 	err = forceAppInstState(ctx, &obj, edgeproto.TrackedState_CREATE_ERROR, responder, apis)
@@ -221,8 +246,8 @@ func TestAppInstApi(t *testing.T) {
 	err = apis.appInstApi.ShowAppInst(&obj, &show)
 	require.Nil(t, err, "show app inst data")
 	require.Equal(t, 0, len(show.Data))
-	// Stream should be empty, as object is deleted from etcd
-	GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, Fail)
+	// Stream will have expiry set, as object is deleted from etcd
+	GetAppInstStreamMsgs(t, ctx, &obj.Key, apis, StreamExpirySet)
 	// create copy of refs without the deleted AppInst
 	appInstRefsDeleted := append([]edgeproto.AppInstRefs{}, testutil.GetAppInstRefsData()...)
 	appInstRefsDeleted[0].Insts = make(map[string]uint32)
@@ -491,8 +516,7 @@ func TestAutoClusterInst(t *testing.T) {
 		require.True(t, clusterInst.Reservable, "clusterinst is reservable")
 		require.Equal(t, reservedBy, clusterInst.ReservedBy, "reserved by matches")
 		// Progress message should be there for cluster instance itself
-		msgs := GetClusterInstStreamMsgs(t, ctx, key, apis, Pass)
-		require.Greater(t, len(msgs), 0, "some progress messages")
+		GetClusterInstStreamMsgs(t, ctx, key, apis, StreamPresent)
 	}
 	createAutoClusterAppInst := func(copy edgeproto.AppInst, expectedId string) {
 		// since cluster inst does not exist, it will be auto-created
@@ -503,8 +527,7 @@ func TestAutoClusterInst(t *testing.T) {
 		err := apis.appInstApi.CreateAppInst(&copy, testutil.NewCudStreamoutAppInst(ctx))
 		require.Nil(t, err, "create app inst")
 		// As there was some progress, there should be some messages in stream
-		msgs := GetAppInstStreamMsgs(t, ctx, &copy.Key, apis, Pass)
-		require.Greater(t, len(msgs), 0, "some progress messages")
+		GetAppInstStreamMsgs(t, ctx, &copy.Key, apis, StreamPresent)
 		// Check that reserved ClusterInst was created
 		checkReserved(copy.Key.ClusterInstKey.CloudletKey, true, expectedId, copy.Key.AppKey.Organization)
 		// check for expected cluster name.
@@ -578,8 +601,6 @@ func TestAutoClusterInst(t *testing.T) {
 	err = apis.appInstApi.ShowAppInst(&autoDeleteAppInst, &show)
 	require.Nil(t, err, "show app inst data")
 	require.Equal(t, 0, len(show.Data))
-	// Stream should not exist, as object deleted from etcd as part of undo
-	GetAppInstStreamMsgs(t, ctx, &autoDeleteAppInst.Key, apis, Fail)
 
 	err = apis.clusterInstApi.DeleteClusterInst(&mt, testutil.NewCudStreamoutClusterInst(ctx))
 	require.Nil(t, err)

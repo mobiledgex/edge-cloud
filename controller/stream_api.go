@@ -98,8 +98,8 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 		return err
 	}
 	if out == 0 {
-		// stream key does not exist
-		return fmt.Errorf("Stream %s does not exist", streamKey)
+		// stream does not exist
+		return nil
 	}
 
 	streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
@@ -375,9 +375,9 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 		streamSendObj.crmPubSub.Close()
 	}
 	if cleanupStream {
-		_, err := redisClient.Del(streamKey).Result()
+		_, err := redisClient.Expire(streamKey, rediscache.RedisStreamTTL).Result()
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to cleanup redis stream", "key", streamKey, "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to set expiry on redis stream", "key", streamKey, "err", err)
 		}
 	}
 	return nil
