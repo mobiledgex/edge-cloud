@@ -71,6 +71,7 @@ type Command struct {
 	ReqData              interface{}
 	ReplyData            interface{}
 	PasswordArg          string
+	CurrentPasswordArg   string
 	VerifyPassword       bool
 	DataFlagOnly         bool
 	StreamOut            bool
@@ -250,12 +251,13 @@ func (c *Command) ParseInput(args []string) (*MapData, error) {
 			return nil, fmt.Errorf("--data must be used to supply json/yaml-formatted input data")
 		}
 		input := Input{
-			RequiredArgs:   strings.Fields(c.RequiredArgs),
-			AliasArgs:      strings.Fields(c.AliasArgs),
-			SpecialArgs:    c.SpecialArgs,
-			PasswordArg:    c.PasswordArg,
-			VerifyPassword: c.VerifyPassword,
-			DecodeHook:     DecodeHook,
+			RequiredArgs:       strings.Fields(c.RequiredArgs),
+			AliasArgs:          strings.Fields(c.AliasArgs),
+			SpecialArgs:        c.SpecialArgs,
+			PasswordArg:        c.PasswordArg,
+			CurrentPasswordArg: c.CurrentPasswordArg,
+			VerifyPassword:     c.VerifyPassword,
+			DecodeHook:         DecodeHook,
 		}
 		argsMap, err := input.ParseArgs(args, c.ReqData)
 		if err != nil {
