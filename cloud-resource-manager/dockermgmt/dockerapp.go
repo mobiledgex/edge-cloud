@@ -26,6 +26,8 @@ type DockerNetworkingMode string
 var DockerHostMode DockerNetworkingMode = "hostMode"
 var DockerBridgeMode DockerNetworkingMode = "bridgeMode"
 
+const dockerCliImage string = "docker.mobiledgex.net/mobiledgex/mobiledgex_public/docker-cli@sha256:97911992833b8ca49ade2d6c712a5447ccbf6f3f237330ed80d0996b025ae997"
+
 type DockerOptions struct {
 	ForceImagePull bool
 }
@@ -496,7 +498,7 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 		if err != nil {
 			return "", fmt.Errorf("bad command: %s", err)
 		}
-		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, userCmd)
+		cmdStr := fmt.Sprintf("docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -it %s docker exec -it %s %s", dockerCliImage, req.ContainerId, userCmd)
 		return cmdStr, nil
 	}
 	if req.Log != nil {

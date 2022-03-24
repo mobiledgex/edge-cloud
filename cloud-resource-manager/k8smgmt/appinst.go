@@ -24,6 +24,8 @@ const WaitRunning string = "WaitRunning"
 
 const DefaultNamespace string = "default"
 
+const kubectlImage string = "docker.mobiledgex.net/mobiledgex/mobiledgex_public/kubectl@sha256:e72b73d5b030faade325c9f9f8b55508a302492f7c75d5131b0641ea3ece8513"
+
 // This is half of the default controller AppInst timeout
 var maxWait = 15 * time.Minute
 
@@ -565,8 +567,7 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		if err != nil {
 			return "", fmt.Errorf("bad command: %s", err)
 		}
-		cmdStr := fmt.Sprintf("%s kubectl exec -n %s -it %s%s -- %s",
-			names.KconfEnv, namespace, containerCmd, podName, userCmd)
+		cmdStr := fmt.Sprintf("docker run --rm -it -v /home/ubuntu/%s:/.kube/config %s exec -n %s -it %s%s -- %s", names.KconfName, kubectlImage, namespace, containerCmd, podName, userCmd)
 		return cmdStr, nil
 	}
 	if req.Log != nil {
