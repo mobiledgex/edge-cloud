@@ -309,7 +309,6 @@ func removeProtocol(protos int32, protocolToRemove int32) int32 {
 }
 
 func (s *AppInstApi) startAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, inCb edgeproto.AppInstApi_CreateAppInstServer) (*streamSend, edgeproto.AppInstApi_CreateAppInstServer, error) {
-	fmt.Println(">>ASHCHECK start stream", key.StreamKey())
 	streamSendObj, outCb, err := s.all.streamObjApi.startStream(ctx, cctx, key.StreamKey(), inCb)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to start appinst stream", "err", err)
@@ -319,7 +318,6 @@ func (s *AppInstApi) startAppInstStream(ctx context.Context, cctx *CallContext, 
 }
 
 func (s *AppInstApi) stopAppInstStream(ctx context.Context, cctx *CallContext, key *edgeproto.AppInstKey, streamSendObj *streamSend, objErr error, cleanupStream CleanupStreamAction) {
-	fmt.Println(">>ASHCHECK stop stream", key.StreamKey())
 	if err := s.all.streamObjApi.stopStream(ctx, cctx, key.StreamKey(), streamSendObj, objErr, cleanupStream); err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "failed to stop appinst stream", "err", err)
 	}
