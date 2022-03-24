@@ -81,6 +81,9 @@ doc:
 external-doc:
 	make -C edgeproto external-doc
 
+third_party:
+	parsedeps --gennotice ./cloud-resource-manager/cmd/crmserver ./controller ./d-match-engine/dme-server ./cluster-svc ./edgeturn ./notifyroot > THIRD-PARTY-NOTICES
+
 lint:
 	(cd $(GOPATH)/src/github.com/uber/prototool; go install ./cmd/prototool)
 	$(RM) link-gogo-protobuf
