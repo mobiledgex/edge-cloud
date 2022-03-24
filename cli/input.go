@@ -32,6 +32,8 @@ type Input struct {
 	SpecialArgs *map[string]string
 	// Password arg will prompt for password if not in args list
 	PasswordArg string
+	// Current password arg will prompt for current password if not in args list
+	CurrentPasswordArg string
 	// API key arg will replace password and avoid prompt for password
 	ApiKeyArg string
 	// Verify password if prompting
@@ -76,6 +78,7 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 
 	// create generic data map from args
 	passwordFound := false
+	currentPasswordFound := false
 	apiKeyFound := false
 	for _, arg := range args {
 		arg = strings.TrimSpace(arg)
@@ -98,6 +101,8 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		}
 		if argKey == s.PasswordArg {
 			passwordFound = true
+		} else if argKey == s.CurrentPasswordArg {
+			currentPasswordFound = true
 		} else if argKey == s.ApiKeyArg {
 			apiKeyFound = true
 		}
@@ -119,11 +124,25 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		}
 	}
 
+	// prompt for current password if not in arg list
+	if s.CurrentPasswordArg != "" && !currentPasswordFound {
+		verifyCurrentPassword := false
+		pw, err := getPassword("current ", verifyCurrentPassword)
+		if err != nil {
+			return nil, err
+		}
+		s.setKeyVal(dat, obj, resolveAlias(s.CurrentPasswordArg, aliases), pw, "")
+	}
+
 	// Do not prompt for password if API key is passed
 	if s.ApiKeyArg == "" || !apiKeyFound {
 		// prompt for password if not in arg list
 		if s.PasswordArg != "" && !passwordFound {
-			pw, err := getPassword(s.VerifyPassword)
+			passPrefix := ""
+			if s.CurrentPasswordArg != "" {
+				passPrefix = "new "
+			}
+			pw, err := getPassword(passPrefix, s.VerifyPassword)
 			if err != nil {
 				return nil, err
 			}
@@ -680,15 +699,16 @@ func getFieldEmptyListMap(hierName string, fieldType reflect.Type, ns FieldNames
 	return nil, false
 }
 
-func getPassword(verify bool) (string, error) {
-	fmt.Printf("password: ")
+func getPassword(prefix string, verify bool) (string, error) {
+	passStr := fmt.Sprintf("%spassword", prefix)
+	fmt.Printf("%s: ", passStr)
 	pw, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", err
 	}
 	fmt.Println()
 	if verify {
-		fmt.Print("verify password: ")
+		fmt.Printf("verify %s: ", passStr)
 		pw2, err := terminal.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			return "", err
