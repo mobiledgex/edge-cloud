@@ -49,6 +49,7 @@ var VersionHash_UpgradeFuncs = map[int32]VersionUpgradeFunc{
 	37: nil,
 	38: AddDnsLabels,
 	39: AddCloudletKeyToCloudletPool,
+	40: AddSetupSpecificAppDNSRootForCloudlets,
 }
 var VersionHash_UpgradeFuncNames = map[int32]string{
 	0:  "",
@@ -83,6 +84,7 @@ var VersionHash_UpgradeFuncNames = map[int32]string{
 	37: "",
 	38: "AddDnsLabels",
 	39: "AddCloudletKeyToCloudletPool",
+	40: "AddSetupSpecificAppDNSRootForCloudlets",
 }
 
 // Auto-generated code: DO NOT EDIT
