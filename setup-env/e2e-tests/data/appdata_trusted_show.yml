@@ -524,7 +524,7 @@ appinstances:
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-cluster1-cloudlet1-tmus
+  uniqueid: mexprometheusappname10mobiledgex-cluster1-cloudlet1-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -554,7 +554,7 @@ appinstances:
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-cluster2-cloudlet2-tmus
+  uniqueid: mexprometheusappname10mobiledgex-cluster2-cloudlet2-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -589,7 +589,7 @@ appinstances:
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
-  uniqueid: acmeappcotrustedapp10-cluster1-cloudlet1-tmus
+  uniqueid: trustedapp10acmeappco-cluster1-cloudlet1-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -624,7 +624,7 @@ appinstances:
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
-  uniqueid: acmeappconontrustedapp10-cluster2-cloudlet2-tmus
+  uniqueid: nontrustedapp10acmeappco-cluster2-cloudlet2-tmus
 appinstrefs:
 - key:
     organization: MobiledgeX

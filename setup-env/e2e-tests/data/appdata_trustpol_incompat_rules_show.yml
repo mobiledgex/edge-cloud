@@ -416,7 +416,7 @@ appinstances:
   healthcheck: Ok
   powerstate: PowerOn
   vmflavor: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-cluster1-cloudlet1-tmus
+  uniqueid: mexprometheusappname10mobiledgex-cluster1-cloudlet1-tmus
 appinstrefs:
 - key:
     organization: MobiledgeX

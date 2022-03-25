@@ -279,7 +279,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-1-tmus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-tmus-cloud-1-tmus
 
 - key:
     appkey:
@@ -299,7 +299,7 @@ appinstances:
   liveness: Dynamic
   flavor:
     name: x1.small
-  uniqueid: mobiledgexnfsautoprovision10-smallcluster-tmus-cloud-1-tmus
+  uniqueid: nfsautoprovision10mobiledgex-smallcluster-tmus-cloud-1-tmus
 
 - key:
     appkey:
@@ -334,7 +334,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-  uniqueid: acmeappcosomeapplication110-smallcluster-tmus-cloud-1-tmus
+  uniqueid: someapplication110acmeappco-smallcluster-tmus-cloud-1-tmus
 
 appinstrefs:
 - key:

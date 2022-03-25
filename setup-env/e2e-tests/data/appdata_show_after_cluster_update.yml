@@ -653,7 +653,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-1-tmus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -697,7 +697,7 @@ appinstances:
     - appOnClusterNode1
     - appOnClusterNode2
   revision: 1
-  uniqueid: acmeappcosomeapplication110-smallcluster-tmus-cloud-1-tmus
+  uniqueid: someapplication110acmeappco-smallcluster-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -720,7 +720,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-tmus-cloud-2-tmus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -739,7 +739,7 @@ appinstances:
   liveness: Dynamic
   flavor:
     name: x1.small
-  uniqueid: mobiledgexnfsautoprovision10-smallcluster-tmus-cloud-1-tmus
+  uniqueid: nfsautoprovision10mobiledgex-smallcluster-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -781,7 +781,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-  uniqueid: acmeappcosomeapplication110-smallcluster-tmus-cloud-2-tmus
+  uniqueid: someapplication110acmeappco-smallcluster-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -805,7 +805,7 @@ appinstances:
     publicport: 20002
   flavor:
     name: x1.small
-  uniqueid: acmeappcohelmapplication10-smallcluster-tmus-cloud-1-tmus
+  uniqueid: helmapplication10acmeappco-smallcluster-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -835,7 +835,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-  uniqueid: acmeappco1vmapp110-tmus-cloud-1-tmus
+  uniqueid: vmapp110acmeappco1-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -865,7 +865,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-  uniqueid: acmeappco1vmapp210-tmus-cloud-2-tmus
+  uniqueid: vmapp210acmeappco1-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -889,7 +889,7 @@ appinstances:
     - appOnClusterNode0
     - appOnClusterNode1
     - appOnClusterNode2
-  uniqueid: acmeappconoportsapp10-smallcluster-tmus-cloud-1-tmus
+  uniqueid: noportsapp10acmeappco-smallcluster-tmus-cloud-1-tmus
 
 appinstrefs:
 - key:

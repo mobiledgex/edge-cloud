@@ -346,7 +346,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
-  uniqueid: acmeappcosomeapplication110-someapplication1-tmus-cloud-1-tmus
+  uniqueid: someapplication110acmeappco-someapplication1-tmus-cloud-1-tmus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -379,7 +379,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
-  uniqueid: acmeappcosomeapplication110-someapplication1-tmus-cloud-2-tmus
+  uniqueid: someapplication110acmeappco-someapplication1-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -402,7 +402,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-someapplication1-tmus-cloud-2-tmus
+  uniqueid: mexprometheusappname10mobiledgex-someapplication1-tmus-cloud-2-tmus
 - key:
     appkey:
       organization: MobiledgeX
@@ -425,7 +425,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-someapplication1-tmus-cloud-1-tmus
+  uniqueid: mexprometheusappname10mobiledgex-someapplication1-tmus-cloud-1-tmus
 
 appinstrefs:
 - key:

@@ -823,8 +823,8 @@ func testAppInstId(t *testing.T, ctx context.Context) {
 	appInst1 := appInst0
 	appInst1.Key.AppKey = app1.Key
 
-	expId0 := "nianticincapp110-pokemons-sanjosesite-attinc"
-	expId1 := "nianticincapp110-pokemons-sanjosesite-attinc-1"
+	expId0 := "app110nianticinc-pokemons-sanjosesite-attinc"
+	expId1 := "app110nianticinc-pokemons-sanjosesite-attinc-1"
 
 	_, err = appApi.CreateApp(ctx, &app0)
 	require.Nil(t, err)
