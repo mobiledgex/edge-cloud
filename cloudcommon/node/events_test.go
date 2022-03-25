@@ -18,17 +18,25 @@ import (
 func TestEvents(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelEvents | log.DebugLevelInfo)
 
+	dockNet := process.DockerNetwork{}
+	dockNet.Common.Name = "unit-test-logging"
+	err := dockNet.Create()
+	require.Nil(t, err)
+	defer dockNet.Delete()
+
 	// elasticsearch docker takes a while to start up (~20s),
 	// so make sure to include all unit-testing against it here.
 	esProc := process.ElasticSearch{}
 	esProc.Common.Name = "elasticsearch-unit-test"
-	err := esProc.StartLocal("")
+	esProc.DockerNetwork = dockNet.Common.Name
+	err = esProc.StartLocal("")
 	require.Nil(t, err)
 	defer esProc.StopLocal()
 
 	// start Jaeger to test searching spans in elasticsearch
 	jaegerProc := process.Jaeger{}
 	jaegerProc.Common.Name = "jaeger-unit-test"
+	jaegerProc.DockerNetwork = dockNet.Common.Name
 	jaegerProc.DockerEnvVars = make(map[string]string)
 	jaegerProc.DockerEnvVars["ES_SERVER_URLS"] = "http://elasticsearch:9200"
 	jaegerProc.DockerEnvVars["SPAN_STORAGE_TYPE"] = "elasticsearch"
