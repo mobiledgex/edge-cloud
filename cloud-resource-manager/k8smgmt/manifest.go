@@ -144,7 +144,7 @@ func GetAppEnvVars(ctx context.Context, app *edgeproto.App, authApi cloudcommon.
 // Merge in all the environment variables into
 func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string, names *KubeNames, appInstFlavor *edgeproto.Flavor) (string, error) {
 	var files []string
-	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
+	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest)
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
 	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "deploymentVars", deploymentVars, "varsFound", varsFound)
