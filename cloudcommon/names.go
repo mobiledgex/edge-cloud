@@ -227,7 +227,7 @@ func GetAppInstId(appInst *edgeproto.AppInst, app *edgeproto.App, salt string) s
 	appName := util.DNSSanitize(appInst.Key.AppKey.Name)
 	dev := util.DNSSanitize(appInst.Key.AppKey.Organization)
 	ver := util.DNSSanitize(appInst.Key.AppKey.Version)
-	appId := fmt.Sprintf("%s%s%s", dev, appName, ver)
+	appId := fmt.Sprintf("%s%s%s", appName, ver, dev)
 	fields = append(fields, appId)
 
 	if IsClusterInstReqd(app) {

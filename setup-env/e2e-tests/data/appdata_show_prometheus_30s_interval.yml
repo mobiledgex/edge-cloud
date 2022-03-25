@@ -655,7 +655,7 @@ appinstances:
   flavor:
     name: x1.small
   revision: 1
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -674,7 +674,7 @@ appinstances:
   liveness: Dynamic
   flavor:
     name: x1.small
-  uniqueid: mobiledgexnfsautoprovision10-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: nfsautoprovision10mobiledgex-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -716,7 +716,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-  uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: someapplication110acmeappco-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -740,7 +740,7 @@ appinstances:
   flavor:
     name: x1.small
   revision: 1
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-2-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -782,7 +782,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-  uniqueid: acmeappcosomeapplication110-smallcluster-dmuus-cloud-2-dmuus
+  uniqueid: someapplication110acmeappco-smallcluster-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -806,7 +806,7 @@ appinstances:
     publicport: 20002
   flavor:
     name: x1.small
-  uniqueid: acmeappcohelmapplication10-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: helmapplication10acmeappco-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -836,7 +836,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-  uniqueid: acmeappco1vmapp110-dmuus-cloud-1-dmuus
+  uniqueid: vmapp110acmeappco1-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: AcmeAppCo1
@@ -866,7 +866,7 @@ appinstances:
     publicport: 10002
   flavor:
     name: x1.small
-  uniqueid: acmeappco1vmapp210-dmuus-cloud-2-dmuus
+  uniqueid: vmapp210acmeappco1-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -889,7 +889,7 @@ appinstances:
     containerids:
     - appOnClusterNode0
     - appOnClusterNode1
-  uniqueid: acmeappconoportsapp10-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: noportsapp10acmeappco-smallcluster-dmuus-cloud-1-dmuus
 
 appinstrefs:
 - key:

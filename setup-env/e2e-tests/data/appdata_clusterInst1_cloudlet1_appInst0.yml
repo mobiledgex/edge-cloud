@@ -245,7 +245,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-dmuus-cloud-1-dmuus
 
 appinstrefs:
 - key:

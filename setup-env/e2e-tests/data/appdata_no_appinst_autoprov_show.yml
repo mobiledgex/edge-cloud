@@ -601,7 +601,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-1-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       name: MEXPrometheusAppName
@@ -624,7 +624,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-smallcluster-dmuus-cloud-2-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-smallcluster-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -647,7 +647,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-reservablecluster-dmuus-cloud-1-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-reservablecluster-dmuus-cloud-1-dmuus
 - key:
     appkey:
       organization: MobiledgeX
@@ -670,7 +670,7 @@ appinstances:
     publicport: 9090
   flavor:
     name: x1.small
-  uniqueid: mobiledgexmexprometheusappname10-reservablecluster2-dmuus-cloud-2-dmuus
+  uniqueid: mexprometheusappname10mobiledgex-reservablecluster2-dmuus-cloud-2-dmuus
 - key:
     appkey:
       organization: AcmeAppCo
@@ -698,7 +698,7 @@ appinstances:
   runtimeinfo:
     containerids:
     - appOnClusterNode0
-  uniqueid: acmeappcoautoprovapp10-autocluster-autoprov-dmuus-cloud-2-dmuus
+  uniqueid: autoprovapp10acmeappco-autocluster-autoprov-dmuus-cloud-2-dmuus
 
 autoprovpolicies:
 - key:
