@@ -790,6 +790,8 @@ func AddSetupSpecificAppDNSRootForCloudlets(ctx context.Context, objStore objsto
 				return fmt.Errorf("Unmarshal Cloudlet %s failed: %s", key, err)
 			}
 
+			// this will transition xxx.mobiledgex.net to xxx.mobiledgex-qa.net for example, because
+			// our deployment scripts are changing the appDnsRoot parameter that is passed on deploy.
 			newRootLbFqdn := getCloudletRootLBFQDN(&cloudlet)
 			if cloudlet.RootLbFqdn == newRootLbFqdn {
 				return nil // already done
