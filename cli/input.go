@@ -59,6 +59,9 @@ func (s *Input) ParseArgs(args []string, obj interface{}) (*MapData, error) {
 		Namespace: ArgsNamespace,
 		Data:      dat,
 	}
+	if len(args) == 0 && s.PasswordArg == "" && s.CurrentPasswordArg == "" {
+		return &data, nil
+	}
 	if obj == nil {
 		return &data, fmt.Errorf("no arguments accepted")
 	}
