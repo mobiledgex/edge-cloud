@@ -770,3 +770,37 @@ func AddCloudletKeyToCloudletPool(ctx context.Context, objStore objstore.KVStore
 	}
 	return nil
 }
+
+func AddSetupSpecificAppDNSRootForCloudlets(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
+	cloudletKeys, err := getDbObjectKeys(objStore, "Cloudlet")
+	if err != nil {
+		return err
+	}
+	for key, _ := range cloudletKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// Get cloudlet
+			cloudletStr := stm.Get(key)
+			if cloudletStr == "" {
+				return nil // was deleted
+			}
+
+			cloudlet := edgeproto.Cloudlet{}
+			err = json.Unmarshal([]byte(cloudletStr), &cloudlet)
+			if err != nil {
+				return fmt.Errorf("Unmarshal Cloudlet %s failed: %s", key, err)
+			}
+
+			newRootLbFqdn := getCloudletRootLBFQDN(&cloudlet)
+			if cloudlet.RootLbFqdn == newRootLbFqdn {
+				return nil // already done
+			}
+			cloudlet.RootLbFqdn = newRootLbFqdn
+			allApis.cloudletApi.store.STMPut(stm, &cloudlet)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
