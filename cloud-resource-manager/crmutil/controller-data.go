@@ -1801,7 +1801,7 @@ func (cd *ControllerData) UpdateTrustPolicy(ctx context.Context, k interface{}) 
 			return
 		}
 	}
-	log.SpanLog(ctx, log.DebugLevelInfra, "found TrustPolicy", "TrustPolicy", TrustPolicy)
+	log.SpanLog(ctx, log.DebugLevelInfra, "UpdateTrustPolicy", "cloudlet.TrustPolicy", cloudlet.TrustPolicy, "TrustPolicyCache TrustPolicy", TrustPolicy)
 	err := cd.platform.UpdateTrustPolicy(ctx, &TrustPolicy)
 	log.SpanLog(ctx, log.DebugLevelInfra, "Update Privacy Done", "err", err)
 
