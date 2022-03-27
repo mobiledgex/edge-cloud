@@ -71,6 +71,16 @@ func setupGPUDriver(ctx context.Context, storageClient *gcs.GCSClient, driverKey
 	}
 	cb.Send(&edgeproto.Result{Message: "Downloading GPU driver build " + build.Name})
 	fileName := cloudcommon.GetGPUDriverBuildStoragePath(driverKey, build.Name, ext)
+
+	// Check if object already exists in GCS
+	exists, err := storageClient.ObjectExists(ctx, fileName)
+	if err != nil {
+		return "", err
+	}
+	if exists {
+		return "", fmt.Errorf("GPU driver with same build name already exists (in any region)")
+	}
+
 	localFilePath := "/tmp/" + strings.ReplaceAll(fileName, "/", "_")
 	err = cloudcommon.DownloadFile(ctx, authApi, build.DriverPath, build.DriverPathCreds, localFilePath, nil)
 	if err != nil {

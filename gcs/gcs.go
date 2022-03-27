@@ -97,6 +97,27 @@ func (gc *GCSClient) ListObjects(ctx context.Context) ([]string, error) {
 	return objs, nil
 }
 
+// Check if object exists
+func (gc *GCSClient) ObjectExists(ctx context.Context, objName string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, gc.Timeout)
+	defer cancel()
+
+	it := gc.Client.Bucket(gc.BucketName).Objects(ctx, nil)
+	for {
+		attrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return false, fmt.Errorf("Failed to get bucket(%q) objects: %v", gc.BucketName, err)
+		}
+		if objName == attrs.Name {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // Overwrites object if already exists
 func (gc *GCSClient) UploadObject(ctx context.Context, objectName, uploadFilePath string, buf *bytes.Buffer) error {
 	ctx, cancel := context.WithTimeout(ctx, gc.Timeout)
