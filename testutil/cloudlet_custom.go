@@ -26,6 +26,14 @@ func (s *DummyServer) RemoveCloudletAllianceOrg(ctx context.Context, in *edgepro
 	return &edgeproto.Result{}, nil
 }
 
+func (s *DummyServer) AddCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) RemoveCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
 func (s *DummyServer) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
 	return in, nil
 }

@@ -612,6 +612,17 @@ message CloudletAllianceOrg {
   option (protogen.not_required) = "Key.FederatedOrganization";
 }
 
+message CloudletEnvVar {
+  // Cloudlet Key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Single Key-Value pair of env var to be passed to CRM
+  map<string, string> env_var = 2;
+  // Override actions to CRM
+  CRMOverride crm_override = 3 [(protogen.backend) = true];
+  option (protogen.alias) = "cloudlet=Key.Name,cloudletorg=Key.Organization,federatedorg=Key.FederatedOrganization";
+  option (protogen.not_required) = "Key.FederatedOrganization";
+}
+
 service CloudletApi {
   // Create Cloudlet. Sets up Cloudlet services on the Operator's compute resources,
   // and integrated as part of MobiledgeX edge resource portfolio.
@@ -778,6 +789,23 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
+
+  // Add env var to the cloudlet
+  rpc AddCloudletEnvVar(CloudletEnvVar) returns (Result) {
+    option (google.api.http) = {
+      post: "/addenvvar/cloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
+  }
+  // Remove env var from the cloudlet
+  rpc RemoveCloudletEnvVar(CloudletEnvVar) returns (Result) {
+    option (google.api.http) = {
+      post: "/rmenvvar/cloudlet"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.Organization";
   }
 
   // This is used internally to forward requests to other Controllers

@@ -1069,3 +1069,109 @@ func testCloudletDnsLabel(t *testing.T, ctx context.Context, apis *AllApis) {
 func testHasCloudletDnsLabel(kvstore objstore.KVStore, id string) bool {
 	return testKVStoreHasKey(kvstore, edgeproto.CloudletDnsLabelDbKey(id))
 }
+
+func TestUpdateCloudlet(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
+
+	testSvcs := testinit(ctx, t)
+	defer testfinish(testSvcs)
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	apis := NewAllApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	// test data
+	testutil.InternalFlavorCreate(t, apis.flavorApi, testutil.FlavorData)
+	testutil.InternalGPUDriverCreate(t, apis.gpuDriverApi, testutil.GPUDriverData)
+	testutil.InternalResTagTableCreate(t, apis.resTagTableApi, testutil.ResTagTableData)
+	testutil.InternalCloudletCreate(t, apis.cloudletApi, testutil.CloudletData())
+	insertCloudletInfo(ctx, apis, testutil.CloudletInfoData)
+
+	cloudletData := testutil.CloudletData()
+
+	// Test env vars update
+	cl := cloudletData[0]
+	envVar := map[string]string{"K1": "V1", "K2": "V2"}
+	cl.EnvVar = envVar
+	cl.Fields = []string{edgeproto.CloudletFieldEnvVar}
+	err := apis.cloudletApi.UpdateCloudlet(&cl, testutil.NewCudStreamoutCloudlet(ctx))
+	require.Nil(t, err)
+	clCheck := edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl.Key, &clCheck))
+	require.Equal(t, envVar, clCheck.EnvVar)
+
+	// no env var specified
+	clEnvVarObj := edgeproto.CloudletEnvVar{Key: cl.Key}
+	_, err = apis.cloudletApi.AddCloudletEnvVar(ctx, &clEnvVarObj)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "No env var specified")
+
+	// add new key-val pair
+	envVar = map[string]string{"K1": "V1", "K2": "V2", "K3": "V3"}
+	clEnvVarObj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+	clEnvVarObj.EnvVar = map[string]string{"K3": "V3"}
+	_, err = apis.cloudletApi.AddCloudletEnvVar(ctx, &clEnvVarObj)
+	require.Nil(t, err)
+	clCheck = edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl.Key, &clCheck))
+	require.Equal(t, envVar, clCheck.EnvVar)
+
+	// overwrite existing key
+	envVar = map[string]string{"K1": "V1", "K2": "V2.1", "K3": "V3"}
+	clEnvVarObj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+	clEnvVarObj.EnvVar = map[string]string{"K2": "V2.1"}
+	_, err = apis.cloudletApi.AddCloudletEnvVar(ctx, &clEnvVarObj)
+	require.Nil(t, err)
+	clCheck = edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl.Key, &clCheck))
+	require.Equal(t, envVar, clCheck.EnvVar)
+
+	// no env var specified
+	clEnvVarObj.EnvVar = nil
+	_, err = apis.cloudletApi.RemoveCloudletEnvVar(ctx, &clEnvVarObj)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "No env var specified")
+
+	// remove non-existent key
+	clEnvVarObj.EnvVar = map[string]string{"K4": "V4"}
+	clEnvVarObj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+	_, err = apis.cloudletApi.RemoveCloudletEnvVar(ctx, &clEnvVarObj)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Specified env var key \"K4\" does not exist")
+
+	// remove non-existent key-val pair
+	clEnvVarObj.EnvVar = map[string]string{"K3": "V4"}
+	clEnvVarObj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+	_, err = apis.cloudletApi.RemoveCloudletEnvVar(ctx, &clEnvVarObj)
+	require.NotNil(t, err)
+	require.Contains(t, err.Error(), "Specified env var value \"V4\" for key \"K3\" does not exist")
+
+	// remove existing key-val pair
+	envVar = map[string]string{"K1": "V1", "K3": "V3"}
+	clEnvVarObj.EnvVar = map[string]string{"K2": "V2.1"}
+	clEnvVarObj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+	_, err = apis.cloudletApi.RemoveCloudletEnvVar(ctx, &clEnvVarObj)
+	require.Nil(t, err)
+	clCheck = edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl.Key, &clCheck))
+	require.Equal(t, envVar, clCheck.EnvVar)
+
+	// remove all
+	envVar = nil
+	clEnvVarObj.EnvVar = map[string]string{"K1": "V1", "K3": "V3"}
+	clEnvVarObj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
+	_, err = apis.cloudletApi.RemoveCloudletEnvVar(ctx, &clEnvVarObj)
+	require.Nil(t, err)
+	clCheck = edgeproto.Cloudlet{}
+	require.True(t, apis.cloudletApi.cache.Get(&cl.Key, &clCheck))
+	require.Equal(t, envVar, clCheck.EnvVar)
+
+	dummy.Stop()
+}

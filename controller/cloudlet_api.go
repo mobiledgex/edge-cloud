@@ -1841,6 +1841,123 @@ func (s *CloudletApi) RemoveCloudletAllianceOrg(ctx context.Context, in *edgepro
 	return &edgeproto.Result{}, err
 }
 
+func (s *CloudletApi) AddCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (result *edgeproto.Result, reterr error) {
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+	if len(in.EnvVar) == 0 {
+		return &edgeproto.Result{}, fmt.Errorf("No env var specified")
+	}
+	cloudletKey := in.Key
+	sendObj, _, err := s.startCloudletStream(ctx, cctx, &cloudletKey, nil)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	defer func() {
+		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, NoCleanupStream)
+	}()
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cl := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		if len(cl.EnvVar) == 0 {
+			cl.EnvVar = make(map[string]string)
+		}
+		for k, v := range in.EnvVar {
+			cl.EnvVar[k] = v
+		}
+		if !ignoreCRM(cctx) {
+			cloudletErr := s.all.cloudletInfoApi.checkCloudletReady(cctx, stm, &in.Key, cloudcommon.Update)
+			if cloudletErr != nil {
+				return cloudletErr
+			}
+			cl.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		cl.UpdatedAt = dme.TimeToTimestamp(time.Now())
+		s.store.STMPut(stm, &cl)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	if ignoreCRM(cctx) {
+		return &edgeproto.Result{}, nil
+	}
+
+	// Wait for cloudlet to update envvar
+	err = edgeproto.WaitForCloudletInfo(
+		ctx, &in.Key,
+		dme.CloudletState_CLOUDLET_STATE_READY,
+		UpdateCloudletTransitions, dme.CloudletState_CLOUDLET_STATE_ERRORS,
+		s.all.settingsApi.Get().UpdateCloudletTimeout.TimeDuration(),
+		"Added cloudlet envvar successfully", nil,
+		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
+	return &edgeproto.Result{}, err
+}
+
+func (s *CloudletApi) RemoveCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (result *edgeproto.Result, reterr error) {
+	cctx := DefCallContext()
+	cctx.SetOverride(&in.CrmOverride)
+	if len(in.EnvVar) == 0 {
+		return &edgeproto.Result{}, fmt.Errorf("No env var specified")
+	}
+	cloudletKey := in.Key
+	sendObj, _, err := s.startCloudletStream(ctx, cctx, &cloudletKey, nil)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	defer func() {
+		s.stopCloudletStream(ctx, cctx, &cloudletKey, sendObj, reterr, NoCleanupStream)
+	}()
+	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		cl := edgeproto.Cloudlet{}
+		if !s.store.STMGet(stm, &in.Key, &cl) {
+			return in.Key.NotFoundError()
+		}
+		if len(cl.EnvVar) == 0 {
+			return fmt.Errorf("No env vars present on cloudlet, nothing to remove")
+		}
+		for k, v := range in.EnvVar {
+			existingVal, ok := cl.EnvVar[k]
+			if !ok {
+				return fmt.Errorf("Specified env var key %q does not exist", k)
+			}
+			if existingVal != v {
+				return fmt.Errorf("Specified env var value %q for key %q does not exist", v, k)
+			}
+			delete(cl.EnvVar, k)
+		}
+		if !ignoreCRM(cctx) {
+			cloudletErr := s.all.cloudletInfoApi.checkCloudletReady(cctx, stm, &in.Key, cloudcommon.Update)
+			if cloudletErr != nil {
+				return cloudletErr
+			}
+			cl.State = edgeproto.TrackedState_UPDATE_REQUESTED
+		}
+		cl.UpdatedAt = dme.TimeToTimestamp(time.Now())
+		s.store.STMPut(stm, &cl)
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+
+	if ignoreCRM(cctx) {
+		return &edgeproto.Result{}, nil
+	}
+
+	// Wait for cloudlet to update envvar
+	err = edgeproto.WaitForCloudletInfo(
+		ctx, &in.Key,
+		dme.CloudletState_CLOUDLET_STATE_READY,
+		UpdateCloudletTransitions, dme.CloudletState_CLOUDLET_STATE_ERRORS,
+		s.all.settingsApi.Get().UpdateCloudletTimeout.TimeDuration(),
+		"Removed cloudlet envvar successfully", nil,
+		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh))
+	return &edgeproto.Result{}, err
+}
+
 func (s *CloudletApi) FindFlavorMatch(ctx context.Context, in *edgeproto.FlavorMatch) (*edgeproto.FlavorMatch, error) {
 
 	cl := edgeproto.Cloudlet{}

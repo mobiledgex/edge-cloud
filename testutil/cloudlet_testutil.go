@@ -1308,6 +1308,39 @@ func (r *Run) CloudletApi_CloudletAllianceOrg(data *[]edgeproto.CloudletAlliance
 	}
 }
 
+func (r *Run) CloudletApi_CloudletEnvVar(data *[]edgeproto.CloudletEnvVar, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for CloudletEnvVar", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "add":
+			out, err := r.client.AddCloudletEnvVar(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletEnvVar[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletEnvVar expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "remove":
+			out, err := r.client.RemoveCloudletEnvVar(r.ctx, obj)
+			if err != nil {
+				err = ignoreExpectedErrors(r.Mode, obj.GetKey(), err)
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletEnvVar[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletEnvVar expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for CloudletKey", "mode", r.Mode)
 	for ii, objD := range *data {
@@ -2142,6 +2175,30 @@ func (s *CliClient) GenerateAccessKey(ctx context.Context, in *edgeproto.Cloudle
 	return &out, err
 }
 
+func (s *ApiClient) AddCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.AddCloudletEnvVar(ctx, in)
+}
+
+func (s *CliClient) AddCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "AddCloudletEnvVar")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
+func (s *ApiClient) RemoveCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.RemoveCloudletEnvVar(ctx, in)
+}
+
+func (s *CliClient) RemoveCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "RemoveCloudletEnvVar")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 func (s *ApiClient) PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	stream, err := api.PlatformDeleteCloudlet(ctx, in)
@@ -2176,6 +2233,8 @@ type CloudletApiClient interface {
 	GetOrganizationsOnCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.Organization, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
+	AddCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error)
+	RemoveCloudletEnvVar(ctx context.Context, in *edgeproto.CloudletEnvVar) (*edgeproto.Result, error)
 	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 }
 

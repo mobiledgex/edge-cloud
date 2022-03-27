@@ -1820,6 +1820,120 @@ func GenerateAccessKeys(c *cli.Command, data []edgeproto.CloudletKey, err *error
 	}
 }
 
+var AddCloudletEnvVarCmd = &cli.Command{
+	Use:          "AddCloudletEnvVar",
+	RequiredArgs: strings.Join(CloudletEnvVarRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletEnvVarOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletEnvVarAliasArgs, " "),
+	SpecialArgs:  &CloudletEnvVarSpecialArgs,
+	Comments:     CloudletEnvVarComments,
+	ReqData:      &edgeproto.CloudletEnvVar{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runAddCloudletEnvVar,
+}
+
+func runAddCloudletEnvVar(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletEnvVar)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return AddCloudletEnvVar(c, obj)
+}
+
+func AddCloudletEnvVar(c *cli.Command, in *edgeproto.CloudletEnvVar) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.AddCloudletEnvVar(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddCloudletEnvVar failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func AddCloudletEnvVars(c *cli.Command, data []edgeproto.CloudletEnvVar, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddCloudletEnvVar %v\n", data[ii])
+		myerr := AddCloudletEnvVar(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
+var RemoveCloudletEnvVarCmd = &cli.Command{
+	Use:          "RemoveCloudletEnvVar",
+	RequiredArgs: strings.Join(CloudletEnvVarRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletEnvVarOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletEnvVarAliasArgs, " "),
+	SpecialArgs:  &CloudletEnvVarSpecialArgs,
+	Comments:     CloudletEnvVarComments,
+	ReqData:      &edgeproto.CloudletEnvVar{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runRemoveCloudletEnvVar,
+}
+
+func runRemoveCloudletEnvVar(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletEnvVar)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return RemoveCloudletEnvVar(c, obj)
+}
+
+func RemoveCloudletEnvVar(c *cli.Command, in *edgeproto.CloudletEnvVar) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.RemoveCloudletEnvVar(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RemoveCloudletEnvVar failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func RemoveCloudletEnvVars(c *cli.Command, data []edgeproto.CloudletEnvVar, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RemoveCloudletEnvVar %v\n", data[ii])
+		myerr := RemoveCloudletEnvVar(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var PlatformDeleteCloudletCmd = &cli.Command{
 	Use:          "PlatformDeleteCloudlet",
 	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
@@ -1915,6 +2029,8 @@ var CloudletApiCmds = []*cobra.Command{
 	GetOrganizationsOnCloudletCmd.GenCmd(),
 	RevokeAccessKeyCmd.GenCmd(),
 	GenerateAccessKeyCmd.GenCmd(),
+	AddCloudletEnvVarCmd.GenCmd(),
+	RemoveCloudletEnvVarCmd.GenCmd(),
 	PlatformDeleteCloudletCmd.GenCmd(),
 }
 
@@ -2803,6 +2919,30 @@ var CloudletAllianceOrgComments = map[string]string{
 	"organization": "Alliance organization",
 }
 var CloudletAllianceOrgSpecialArgs = map[string]string{}
+var CloudletEnvVarRequiredArgs = []string{
+	"cloudletorg",
+	"cloudlet",
+}
+var CloudletEnvVarOptionalArgs = []string{
+	"federatedorg",
+	"envvar",
+	"crmoverride",
+}
+var CloudletEnvVarAliasArgs = []string{
+	"cloudletorg=key.organization",
+	"cloudlet=key.name",
+	"federatedorg=key.federatedorganization",
+}
+var CloudletEnvVarComments = map[string]string{
+	"cloudletorg":  "Organization of the cloudlet site",
+	"cloudlet":     "Name of the cloudlet",
+	"federatedorg": "Federated operator organization who shared this cloudlet",
+	"envvar":       "Single Key-Value pair of env var to be passed to CRM",
+	"crmoverride":  "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
+}
+var CloudletEnvVarSpecialArgs = map[string]string{
+	"envvar": "StringToString",
+}
 var FlavorInfoRequiredArgs = []string{}
 var FlavorInfoOptionalArgs = []string{
 	"name",
