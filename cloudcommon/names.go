@@ -373,34 +373,34 @@ func GetGPUDriverBucketName(deploymentTag string) string {
 	return fmt.Sprintf("mobiledgex-%s-gpu-drivers", deploymentTag)
 }
 
-func GetGPUDriverStoragePath(key *edgeproto.GPUDriverKey) string {
+func GetGPUDriverStoragePath(key *edgeproto.GPUDriverKey, region string) string {
 	orgName := key.Organization
 	if key.Organization == "" {
 		orgName = OrganizationMobiledgeX
 	}
-	return fmt.Sprintf("%s/%s", orgName, key.Name)
+	return fmt.Sprintf("%s/%s/%s", region, orgName, key.Name)
 }
 
-func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey) string {
-	return fmt.Sprintf("%s/%s", GetGPUDriverStoragePath(key), edgeproto.GPUDriverLicenseConfig)
+func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey, region string) string {
+	return fmt.Sprintf("%s/%s", GetGPUDriverStoragePath(key, region), edgeproto.GPUDriverLicenseConfig)
 }
 
-func GetGPUDriverLicenseCloudletStoragePath(key *edgeproto.GPUDriverKey, cloudletName string) string {
-	return fmt.Sprintf("%s/%s/%s", GetGPUDriverStoragePath(key), cloudletName, edgeproto.GPUDriverLicenseConfig)
+func GetGPUDriverLicenseCloudletStoragePath(key *edgeproto.GPUDriverKey, region, cloudletName string) string {
+	return fmt.Sprintf("%s/%s/%s", GetGPUDriverStoragePath(key, region), cloudletName, edgeproto.GPUDriverLicenseConfig)
 }
 
-func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, buildName, ext string) string {
-	return fmt.Sprintf("%s/%s%s", GetGPUDriverStoragePath(key), buildName, ext)
+func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, region, buildName, ext string) string {
+	return fmt.Sprintf("%s/%s%s", GetGPUDriverStoragePath(key, region), buildName, ext)
 }
 
-func GetGPUDriverURL(key *edgeproto.GPUDriverKey, deploymentTag, buildName, ext string) string {
-	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), GetGPUDriverBuildStoragePath(key, buildName, ext))
+func GetGPUDriverURL(key *edgeproto.GPUDriverKey, region, deploymentTag, buildName, ext string) string {
+	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), GetGPUDriverBuildStoragePath(key, region, buildName, ext))
 }
 
-func GetGPUDriverLicenseURL(key *edgeproto.GPUDriverKey, cloudletName, deploymentTag string) string {
-	licensePath := GetGPUDriverLicenseStoragePath(key)
+func GetGPUDriverLicenseURL(key *edgeproto.GPUDriverKey, region, cloudletName, deploymentTag string) string {
+	licensePath := GetGPUDriverLicenseStoragePath(key, region)
 	if cloudletName != "" {
-		licensePath = GetGPUDriverLicenseCloudletStoragePath(key, cloudletName)
+		licensePath = GetGPUDriverLicenseCloudletStoragePath(key, region, cloudletName)
 	}
 	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), licensePath)
 }
