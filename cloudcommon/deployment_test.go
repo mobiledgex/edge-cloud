@@ -12,11 +12,31 @@ import (
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
 
 var deploymentMF = "some deployment manifest"
+
+var testFlavor = edgeproto.Flavor{
+	Key: edgeproto.FlavorKey{
+		Name: "x1.tiny",
+	},
+	Ram:   1024,
+	Vcpus: 1,
+	Disk:  1,
+}
+
+var testFlavor2 = edgeproto.Flavor{
+	Key: edgeproto.FlavorKey{
+		Name: "x1.tiny.gpu",
+	},
+	Ram:   1024,
+	Vcpus: 1,
+	Disk:  1,
+	OptResMap: map[string]string{
+		"gpu": "pci:1",
+	},
+}
 
 func TestDeployment(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi | log.DebugLevelNotify)
@@ -24,7 +44,17 @@ func TestDeployment(t *testing.T) {
 	defer log.FinishTracer()
 	ctx := log.StartTestSpan(context.Background())
 
-	app := &testutil.AppData[0]
+	app := &edgeproto.App{
+		Key: edgeproto.AppKey{
+			Organization: "AtlanticInc",
+			Name:         "Pillimo Go!",
+			Version:      "1.0.0",
+		},
+		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
+		AccessPorts:   "tcp:443,tcp:10002,udp:10002",
+		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
+		DefaultFlavor: testFlavor.Key,
+	}
 
 	// start up http server to serve deployment manifest
 	tsManifest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -210,7 +240,7 @@ func TestDeploymentManifest(t *testing.T) {
 			InternalPort: int32(3333),
 		},
 	}
-	err = IsValidDeploymentManifest(DeploymentTypeKubernetes, "", svcManifest, ports, &testutil.FlavorData[0])
+	err = IsValidDeploymentManifest(DeploymentTypeKubernetes, "", svcManifest, ports, &testFlavor)
 	require.Nil(t, err, "valid k8s svc manifest")
 
 	// clusterIP should not be considered while validating access ports
@@ -218,12 +248,12 @@ func TestDeploymentManifest(t *testing.T) {
 		Proto:        dme.LProto_L_PROTO_TCP,
 		InternalPort: int32(1111),
 	})
-	err = IsValidDeploymentManifest(DeploymentTypeKubernetes, "", svcManifest, ports, &testutil.FlavorData[0])
+	err = IsValidDeploymentManifest(DeploymentTypeKubernetes, "", svcManifest, ports, &testFlavor)
 	require.NotNil(t, err, "invalid k8s svc manifest")
 	require.Contains(t, err.Error(), "tcp:1111 defined in AccessPorts but missing from kubernetes manifest")
 
 	// gpu flavor with rescount as 1
-	flavor := &testutil.FlavorData[4]
+	flavor := &testFlavor2
 
 	manifestResCnt1 := gpuBaseDeploymentManifest + gpuSubManifest
 	err = IsValidDeploymentManifestForFlavor(DeploymentTypeKubernetes, manifestResCnt1, flavor)
