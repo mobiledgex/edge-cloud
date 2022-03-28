@@ -47,6 +47,9 @@ func GetKV(client *api.Client, path string, version int) (map[string]interface{}
 	if secret == nil {
 		return nil, fmt.Errorf("no secrets at path %s", path)
 	}
+	if secret.Data == nil {
+		return nil, fmt.Errorf("no valid secrets at path %s", path)
+	}
 	return secret.Data, nil
 }
 
