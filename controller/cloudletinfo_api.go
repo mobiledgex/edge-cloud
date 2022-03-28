@@ -247,6 +247,9 @@ func (s *CloudletInfoApi) clearCloudletDownAppInstAlerts(ctx context.Context, in
 		alert := edgeproto.Alert{}
 		alert.Labels = cloudletDownAppInstAlertLabels(&k)
 		s.all.alertApi.Delete(ctx, &alert, 0)
+		// NOTE: for 3.1 release delete all alerts that have the old status format
+		alert.Labels[cloudcommon.AlertHealthCheckStatus] = strconv.Itoa(int(dme.HealthCheck_HEALTH_CHECK_CLOUDLET_OFFLINE))
+		s.all.alertApi.Delete(ctx, &alert, 0)
 	}
 }
 
