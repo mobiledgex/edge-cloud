@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -80,7 +81,7 @@ var ClusterKeys = []edgeproto.ClusterKey{
 		Name: "Reservable",
 	},
 	edgeproto.ClusterKey{
-		Name: "defaultmtclust", // cloudcommon.DefaultMultiTenantCluster
+		Name: cloudcommon.DefaultMultiTenantCluster,
 	},
 	edgeproto.ClusterKey{
 		Name: "dockerCluster",
@@ -197,7 +198,7 @@ var AppData = []edgeproto.App{
 	},
 	edgeproto.App{ // 9
 		Key: edgeproto.AppKey{
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 			Name:         "AutoDeleteApp",
 			Version:      "1.0.0",
 		},
@@ -253,7 +254,7 @@ var AppData = []edgeproto.App{
 	},
 	edgeproto.App{ // 13 - MobiledgeX app
 		Key: edgeproto.AppKey{
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 			Name:         "SampleApp",
 			Version:      "1.0.0",
 		},
@@ -289,7 +290,7 @@ var AppData = []edgeproto.App{
 			Name:         "Pillimo Docker!",
 			Version:      "1.0.1",
 		},
-		Deployment:    "docker", // cloudcommon.DeploymentTypeDocker
+		Deployment:    cloudcommon.DeploymentTypeDocker,
 		ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 		AccessPorts:   "tcp:80,tcp:443,tcp:81:tls",
 		AccessType:    edgeproto.AccessType_ACCESS_TYPE_LOAD_BALANCER,
@@ -514,7 +515,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:   ClusterKeys[4],
 			CloudletKey:  cloudletData[0].Key,
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 		},
 		Flavor:     FlavorData[0].Key,
 		IpAccess:   edgeproto.IpAccess_IP_ACCESS_SHARED,
@@ -526,7 +527,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:   ClusterKeys[5], // multi-tenant cluster
 			CloudletKey:  cloudletData[0].Key,
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 		},
 		Flavor:           FlavorData[0].Key,
 		IpAccess:         edgeproto.IpAccess_IP_ACCESS_SHARED,
@@ -541,7 +542,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			CloudletKey:  cloudletData[1].Key,
 			Organization: DevData[0],
 		},
-		Deployment: "docker", // cloudcommon.DeploymentTypeDocker
+		Deployment: cloudcommon.DeploymentTypeDocker,
 		Flavor:     FlavorData[0].Key,
 		IpAccess:   edgeproto.IpAccess_IP_ACCESS_DEDICATED,
 	},
@@ -557,7 +558,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 				Name: "reservable0",
 			},
 			CloudletKey:  cloudletData[1].Key,
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 		},
 		Flavor:     FlavorData[0].Key,
 		NumMasters: 1,
@@ -574,7 +575,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 				Name: "reservable0",
 			},
 			CloudletKey:  cloudletData[2].Key,
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 		},
 		Flavor:     FlavorData[1].Key,
 		NumMasters: 1,
@@ -591,7 +592,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 				Name: "reservable1",
 			},
 			CloudletKey:  cloudletData[2].Key,
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 		},
 		Flavor:     FlavorData[1].Key,
 		NumMasters: 1,
@@ -608,7 +609,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 				Name: "reservable0",
 			},
 			CloudletKey:  cloudletData[3].Key,
-			Organization: "MobiledgeX", // cloudcommon.OrganizationMobiledgeX
+			Organization: cloudcommon.OrganizationMobiledgeX,
 		},
 		Flavor:     FlavorData[0].Key,
 		NumMasters: 1,
@@ -1001,7 +1002,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
-		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
+		CompatibilityVersion: cloudcommon.GetCRMCompatibilityVersion(),
 		Properties: map[string]string{
 			"supports-mt": "true", // cloudcommon.CloudletSupportsMT
 		},
@@ -1056,7 +1057,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
-		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
+		CompatibilityVersion: cloudcommon.GetCRMCompatibilityVersion(),
 	},
 	edgeproto.CloudletInfo{
 		Key:         cloudletData[2].Key,
@@ -1108,7 +1109,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
-		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
+		CompatibilityVersion: cloudcommon.GetCRMCompatibilityVersion(),
 	},
 	edgeproto.CloudletInfo{
 		Key:         cloudletData[3].Key,
@@ -1154,7 +1155,7 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 				},
 			},
 		},
-		CompatibilityVersion: 1, // cloudcommon.GetCRMCompatibilityVersion()
+		CompatibilityVersion: cloudcommon.GetCRMCompatibilityVersion(),
 	},
 }
 
