@@ -218,6 +218,8 @@ func (s *AddRefsDataGen) GetCreateClusterInstTestObj() (*edgeproto.ClusterInst, 
 	autoScalePolicy := testutil.AutoScalePolicyData[0]
 	network := testutil.NetworkData[0]
 	network.Key.CloudletKey = cloudlet.Key
+	gpuDriver := testutil.GPUDriverData[0]
+	gpuDriver.Key.Organization = cloudlet.Key.Organization
 
 	clusterInst := testutil.ClusterInstData[0]
 	clusterInst.Key.CloudletKey = cloudlet.Key
@@ -227,6 +229,7 @@ func (s *AddRefsDataGen) GetCreateClusterInstTestObj() (*edgeproto.ClusterInst, 
 	clusterInst.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
 	clusterInst.Deployment = cloudcommon.DeploymentTypeKubernetes
 	clusterInst.State = edgeproto.TrackedState_READY
+	clusterInst.GpuConfig.Driver = gpuDriver.Key
 
 	supportData := &testSupportData{}
 	supportData.Cloudlets = []edgeproto.Cloudlet{cloudlet}
@@ -234,6 +237,7 @@ func (s *AddRefsDataGen) GetCreateClusterInstTestObj() (*edgeproto.ClusterInst, 
 	supportData.Flavors = []edgeproto.Flavor{flavor}
 	supportData.AutoScalePolicies = []edgeproto.AutoScalePolicy{autoScalePolicy}
 	supportData.Networks = []edgeproto.Network{network}
+	supportData.GpuDrivers = []edgeproto.GPUDriver{gpuDriver}
 	return &clusterInst, supportData
 }
 
@@ -353,6 +357,7 @@ func (s *AddRefsDataGen) GetUpdateClusterInstTestObj() (*edgeproto.ClusterInst, 
 	updatable.Flavor = edgeproto.FlavorKey{}
 	updatable.AutoScalePolicy = ""
 	updatable.Networks = nil
+	updatable.GpuConfig = edgeproto.GPUConfig{}
 
 	supportData.ClusterInsts = []edgeproto.ClusterInst{updatable}
 

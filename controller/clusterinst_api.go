@@ -98,6 +98,21 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) *edgeprot
 	return nil
 }
 
+func (s *ClusterInstApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) (bool, []string) {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	clusterInsts := []string{}
+	inUse := false
+	for _, data := range s.cache.Objs {
+		val := data.Obj
+		if driverKey.Matches(&val.GpuConfig.Driver) {
+			clusterInsts = append(clusterInsts, val.Key.ClusterKey.Name+"/"+val.Key.Organization+"/"+val.Key.CloudletKey.Name)
+			inUse = true
+		}
+	}
+	return inUse, clusterInsts
+}
+
 func (s *ClusterInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.CloudletRefs, dynInsts map[edgeproto.ClusterInstKey]struct{}) error {
 	for _, ciRefKey := range refs.ClusterInsts {
 		ci := edgeproto.ClusterInst{}

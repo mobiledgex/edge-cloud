@@ -477,6 +477,12 @@ func (s *GPUDriverApi) deleteGPUDriverInternal(cctx *CallContext, in *edgeproto.
 		return fmt.Errorf("GPU driver in use by Cloudlet(s): %s", strings.Join(cloudlets, ","))
 	}
 
+	// Validate if driver is in use by ClusterInst
+	inUse, clusterInsts := s.all.clusterInstApi.UsesGPUDriver(&in.Key)
+	if inUse {
+		return fmt.Errorf("GPU driver in use by ClusterInsts(s): %s", strings.Join(clusterInsts, ","))
+	}
+
 	// Step-2: Delete objects from GCS
 	if len(buildFiles) > 0 || licenseConfig != "" {
 		storageClient, err := getGCSStorageClient(ctx)
