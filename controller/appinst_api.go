@@ -12,6 +12,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -1004,7 +1005,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if ii != 0 {
 				salt = strconv.Itoa(ii)
 			}
-			id := cloudcommon.GetAppInstId(in, &app, salt)
+			id, err := pfutils.GetAppInstId(ctx, in, &app, salt, cloudletPlatformType)
+			if err != nil {
+				return err
+			}
 			if s.idStore.STMHas(stm, id) {
 				continue
 			}
