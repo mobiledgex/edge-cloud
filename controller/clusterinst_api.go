@@ -990,6 +990,38 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return fmt.Errorf("No GPU driver associated with cloudlet %s", cloudlet.Key)
 			}
 		}
+
+		if in.GpuConfig.Driver.Name != "" {
+			if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.CloudletKey.Organization {
+				return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.CloudletKey.Organization)
+			}
+			gpuDriver := edgeproto.GPUDriver{}
+			if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
+				return in.GpuConfig.Driver.NotFoundError()
+			}
+			if gpuDriver.DeletePrepare {
+				return in.GpuConfig.Driver.BeingDeletedError()
+			}
+			if gpuDriver.State == ChangeInProgress {
+				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
+			}
+			if in.GpuConfig.LicenseConfig != "" {
+				storageClient, err := getGCSStorageClient(ctx)
+				if err != nil {
+					return err
+				}
+				defer storageClient.Close()
+				clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&in.Key)
+				url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &gpuDriver.Key, gpuDriver.LicenseConfig, clusterTag, cb)
+				if err != nil {
+					return err
+				}
+				// store the GCS path to license config
+				in.GpuConfig.LicenseConfig = url
+				in.GpuConfig.LicenseConfigMd5Sum = md5sum
+			}
+		}
+
 		in.NodeFlavor = vmspec.FlavorName
 		in.AvailabilityZone = vmspec.AvailabilityZone
 		in.ExternalVolumeSize = vmspec.ExternalVolumeSize
@@ -1492,6 +1524,19 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
+	if in.GpuConfig.LicenseConfig != "" {
+		storageClient, err := getGCSStorageClient(ctx)
+		if err != nil {
+			return err
+		}
+		defer storageClient.Close()
+		// Delete license config from GCS
+		clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&in.Key)
+		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, clusterTag)
+		if err != nil {
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to delete GPU driver license config from secure storage", "key", in.Key, "gpu config", in.GpuConfig, "err", err)
+		}
+	}
 	if ignoreCRM(cctx) {
 		s.all.alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
 		return nil
@@ -1955,4 +2000,29 @@ func (s *ClusterInstApi) deleteCloudletSingularCluster(stm concurrency.STM, key 
 	s.store.STMDel(stm, clusterInstKey)
 	s.dnsLabelStore.STMDel(stm, key, clusterInst.DnsLabel)
 	s.all.clusterRefsApi.deleteRef(stm, clusterInstKey)
+}
+
+func (s *ClusterInstApi) GetClusterInstGPUDriverLicenseConfig(ctx context.Context, key *edgeproto.ClusterInstKey) (*edgeproto.Result, error) {
+	clusterInst := edgeproto.ClusterInst{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, key, &clusterInst) {
+			return key.NotFoundError()
+		}
+		if clusterInst.GpuConfig.Driver.Name == "" {
+			return fmt.Errorf("Cluster instance is not associated with any GPU driver")
+		}
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&clusterInst.Key)
+	cfgPath := cloudcommon.GetGPUDriverLicenseStoragePath(&clusterInst.GpuConfig.Driver, clusterTag)
+	cfg, err := GetLicenseConfigFromStorageServer(ctx, cfgPath)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	return &edgeproto.Result{
+		Message: cfg,
+	}, nil
 }

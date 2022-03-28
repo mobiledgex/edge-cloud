@@ -69,6 +69,10 @@ func (s *DummyServer) GetOrganizationsOnCloudlet(in *edgeproto.CloudletKey, cb e
 	return nil
 }
 
+func (s *DummyServer) GetCloudletGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
 // minimal bits not currently generated for flavorkey.proto to stream flavorKey objs
 // for ShowFlavorsForCloudlet cli
 type ShowFlavorsForCloudlet struct {

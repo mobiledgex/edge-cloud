@@ -288,6 +288,23 @@ func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 		_, err = all.networkApi.store.Put(ctx, ref, all.networkApi.sync.syncWait)
 		require.Nil(t, err)
 	}
+	{
+		// set delete_prepare on referenced GPUDriver
+		ref := supportData.getOneGPUDriver()
+		require.NotNil(t, ref, "support data must include one referenced GPUDriver")
+		ref.DeletePrepare = true
+		_, err = all.gpuDriverApi.store.Put(ctx, ref, all.gpuDriverApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetCreateClusterInstTestObj()
+		err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "CreateClusterInst must fail with GPUDriver.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced GPUDriver
+		ref.DeletePrepare = false
+		_, err = all.gpuDriverApi.store.Put(ctx, ref, all.gpuDriverApi.sync.syncWait)
+		require.Nil(t, err)
+	}
 
 	// wrap the stores so we can make sure all checks and changes
 	// happen in the same STM.
@@ -301,6 +318,8 @@ func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 	defer autoScalePolicyApiUnwrap()
 	networkApiStore, networkApiUnwrap := wrapNetworkTrackerStore(all.networkApi)
 	defer networkApiUnwrap()
+	gpuDriverApiStore, gpuDriverApiUnwrap := wrapGPUDriverTrackerStore(all.gpuDriverApi)
+	defer gpuDriverApiUnwrap()
 
 	// CreateClusterInst should succeed if no references are in delete_prepare
 	testObj, _ = dataGen.GetCreateClusterInstTestObj()
@@ -316,6 +335,8 @@ func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 	require.Equal(t, clusterInstApiStore.putSTM, autoScalePolicyApiStore.getSTM, "CreateClusterInst check AutoScalePolicy ref must be done in same STM as ClusterInst put")
 	require.NotNil(t, networkApiStore.getSTM, "CreateClusterInst check Network ref must be done in STM")
 	require.Equal(t, clusterInstApiStore.putSTM, networkApiStore.getSTM, "CreateClusterInst check Network ref must be done in same STM as ClusterInst put")
+	require.NotNil(t, gpuDriverApiStore.getSTM, "CreateClusterInst check GPUDriver ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, gpuDriverApiStore.getSTM, "CreateClusterInst check GPUDriver ref must be done in same STM as ClusterInst put")
 
 	// clean up
 	// delete created test obj
@@ -347,6 +368,23 @@ func UpdateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 		_, err = all.autoScalePolicyApi.store.Put(ctx, ref, all.autoScalePolicyApi.sync.syncWait)
 		require.Nil(t, err)
 	}
+	{
+		// set delete_prepare on referenced GPUDriver
+		ref := supportData.getOneGPUDriver()
+		require.NotNil(t, ref, "support data must include one referenced GPUDriver")
+		ref.DeletePrepare = true
+		_, err = all.gpuDriverApi.store.Put(ctx, ref, all.gpuDriverApi.sync.syncWait)
+		require.Nil(t, err)
+		// api call must fail with object being deleted
+		testObj, _ = dataGen.GetUpdateClusterInstTestObj()
+		err = all.clusterInstApi.UpdateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
+		require.NotNil(t, err, "UpdateClusterInst must fail with GPUDriver.DeletePrepare set")
+		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
+		// reset delete_prepare on referenced GPUDriver
+		ref.DeletePrepare = false
+		_, err = all.gpuDriverApi.store.Put(ctx, ref, all.gpuDriverApi.sync.syncWait)
+		require.Nil(t, err)
+	}
 
 	// wrap the stores so we can make sure all checks and changes
 	// happen in the same STM.
@@ -354,6 +392,8 @@ func UpdateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 	defer clusterInstApiUnwrap()
 	autoScalePolicyApiStore, autoScalePolicyApiUnwrap := wrapAutoScalePolicyTrackerStore(all.autoScalePolicyApi)
 	defer autoScalePolicyApiUnwrap()
+	gpuDriverApiStore, gpuDriverApiUnwrap := wrapGPUDriverTrackerStore(all.gpuDriverApi)
+	defer gpuDriverApiUnwrap()
 
 	// UpdateClusterInst should succeed if no references are in delete_prepare
 	testObj, _ = dataGen.GetUpdateClusterInstTestObj()
@@ -363,6 +403,8 @@ func UpdateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 	require.NotNil(t, clusterInstApiStore.putSTM, "UpdateClusterInst put ClusterInst must be done in STM")
 	require.NotNil(t, autoScalePolicyApiStore.getSTM, "UpdateClusterInst check AutoScalePolicy ref must be done in STM")
 	require.Equal(t, clusterInstApiStore.putSTM, autoScalePolicyApiStore.getSTM, "UpdateClusterInst check AutoScalePolicy ref must be done in same STM as ClusterInst put")
+	require.NotNil(t, gpuDriverApiStore.getSTM, "UpdateClusterInst check GPUDriver ref must be done in STM")
+	require.Equal(t, clusterInstApiStore.putSTM, gpuDriverApiStore.getSTM, "UpdateClusterInst check GPUDriver ref must be done in same STM as ClusterInst put")
 
 	// clean up
 	supportData.delete(t, ctx, all)

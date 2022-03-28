@@ -250,6 +250,9 @@ message GPUDriverKey {
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
+  option (protogen.alias) = "gpudrivername=Name,gpudriverorg=Organization";
+  option (protogen.custom_key_type) = "GPUDriverKey";
+  option (protogen.uses_org) = "none";
 }
 
 message GPUDriverBuild {
@@ -398,6 +401,14 @@ service GPUDriverApi {
     option (protogen.method_also_required) = "Build.Name";
     option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.HypervisorInfo,Build.DriverPathCreds,Build.Md5Sum";
     option (protogen.mc2_custom_authz) = true;
+  }
+  // Get GPU Driver License Config. Returns the license config specific to GPU driver
+  rpc GetGPUDriverLicenseConfig(GPUDriverKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/get/gpudriverlicenseconfig"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
   }
 }
 
@@ -778,6 +789,14 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
+  // Get Cloudlet Specific GPU Driver License Config. Returns the license config associated with the cloudlet
+  rpc GetCloudletGPUDriverLicenseConfig(CloudletKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/gpudriverlicenseconfig"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
   }
 
   // This is used internally to forward requests to other Controllers

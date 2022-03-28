@@ -454,12 +454,70 @@ func DeleteIdleReservableClusterInstsBatch(c *cli.Command, data *edgeproto.IdleR
 	}
 }
 
+var GetClusterInstGPUDriverLicenseConfigCmd = &cli.Command{
+	Use:          "GetClusterInstGPUDriverLicenseConfig",
+	RequiredArgs: strings.Join(ClusterInstKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(ClusterInstKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(ClusterInstKeyAliasArgs, " "),
+	SpecialArgs:  &ClusterInstKeySpecialArgs,
+	Comments:     ClusterInstKeyComments,
+	ReqData:      &edgeproto.ClusterInstKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runGetClusterInstGPUDriverLicenseConfig,
+}
+
+func runGetClusterInstGPUDriverLicenseConfig(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.ClusterInstKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetClusterInstGPUDriverLicenseConfig(c, obj)
+}
+
+func GetClusterInstGPUDriverLicenseConfig(c *cli.Command, in *edgeproto.ClusterInstKey) error {
+	if ClusterInstApiCmd == nil {
+		return fmt.Errorf("ClusterInstApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ClusterInstApiCmd.GetClusterInstGPUDriverLicenseConfig(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetClusterInstGPUDriverLicenseConfig failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetClusterInstGPUDriverLicenseConfigs(c *cli.Command, data []edgeproto.ClusterInstKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetClusterInstGPUDriverLicenseConfig %v\n", data[ii])
+		myerr := GetClusterInstGPUDriverLicenseConfig(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var ClusterInstApiCmds = []*cobra.Command{
 	CreateClusterInstCmd.GenCmd(),
 	DeleteClusterInstCmd.GenCmd(),
 	UpdateClusterInstCmd.GenCmd(),
 	ShowClusterInstCmd.GenCmd(),
 	DeleteIdleReservableClusterInstsCmd.GenCmd(),
+	GetClusterInstGPUDriverLicenseConfigCmd.GenCmd(),
 }
 
 var ClusterInstInfoApiCmd edgeproto.ClusterInstInfoApiClient
@@ -583,6 +641,10 @@ var ClusterInstOptionalArgs = []string{
 	"skipcrmcleanuponfailure",
 	"multitenant",
 	"networks",
+	"gpuconfig.driver.name",
+	"gpuconfig.driver.organization",
+	"gpuconfig.properties",
+	"gpuconfig.licenseconfig",
 }
 var ClusterInstAliasArgs = []string{
 	"cluster=key.clusterkey.name",
@@ -643,11 +705,17 @@ var ClusterInstComments = map[string]string{
 	"deleteprepare":                            "Preparing to be deleted",
 	"dnslabel":                                 "DNS label that is unique within the cloudlet and among other AppInsts/ClusterInsts",
 	"fqdn":                                     "FQDN is a globally unique DNS id for the ClusterInst",
+	"gpuconfig.driver.name":                    "Name of the driver",
+	"gpuconfig.driver.organization":            "Organization to which the driver belongs to",
+	"gpuconfig.properties":                     "Properties to identify specifics of GPU, specify gpuconfig.properties:empty=true to clear",
+	"gpuconfig.licenseconfig":                  "Cloudlet specific license config to setup license (will be stored in secure storage)",
+	"gpuconfig.licenseconfigmd5sum":            "Cloudlet specific license config md5sum, to ensure integrity of license config",
 }
 var ClusterInstSpecialArgs = map[string]string{
-	"errors":   "StringArray",
-	"fields":   "StringArray",
-	"networks": "StringArray",
+	"errors":               "StringArray",
+	"fields":               "StringArray",
+	"gpuconfig.properties": "StringToString",
+	"networks":             "StringArray",
 }
 var IdleReservableClusterInstsRequiredArgs = []string{}
 var IdleReservableClusterInstsOptionalArgs = []string{

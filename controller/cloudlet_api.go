@@ -592,7 +592,8 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 					return err
 				}
 				defer storageClient.Close()
-				url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &gpuDriver.Key, gpuDriver.LicenseConfig, in.Key.Name, cb)
+				cloudletTag := cloudcommon.GetCloudletGPUDriverTag(&in.Key)
+				url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &gpuDriver.Key, gpuDriver.LicenseConfig, cloudletTag, cb)
 				if err != nil {
 					return err
 				}
@@ -1002,7 +1003,8 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			}
 			in.GpuConfig.LicenseConfigMd5Sum = ""
 		} else {
-			url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, in.GpuConfig.LicenseConfig, in.Key.Name, cb)
+			cloudletTag := cloudcommon.GetCloudletGPUDriverTag(&in.Key)
+			url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, in.GpuConfig.LicenseConfig, cloudletTag, cb)
 			if err != nil {
 				return err
 			}
@@ -2511,4 +2513,29 @@ func (s *CloudletApi) GetOrganizationsOnCloudlet(in *edgeproto.CloudletKey, cb e
 		}
 	}
 	return nil
+}
+
+func (s *CloudletApi) GetCloudletGPUDriverLicenseConfig(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	cloudlet := edgeproto.Cloudlet{}
+	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, key, &cloudlet) {
+			return key.NotFoundError()
+		}
+		if cloudlet.GpuConfig.Driver.Name == "" {
+			return fmt.Errorf("Cloudlet is not associated with any GPU driver")
+		}
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	cloudletTag := cloudcommon.GetCloudletGPUDriverTag(key)
+	cfgPath := cloudcommon.GetGPUDriverLicenseStoragePath(&cloudlet.GpuConfig.Driver, cloudletTag)
+	cfg, err := GetLicenseConfigFromStorageServer(ctx, cfgPath)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	return &edgeproto.Result{
+		Message: cfg,
+	}, nil
 }

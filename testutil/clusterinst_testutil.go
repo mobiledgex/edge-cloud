@@ -678,6 +678,26 @@ func (r *Run) ClusterInstApi(data *[]edgeproto.ClusterInst, dataMap interface{},
 	}
 }
 
+func (r *Run) ClusterInstApi_ClusterInstKey(data *[]edgeproto.ClusterInstKey, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for ClusterInstKey", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "getclusterinstgpudriverlicenseconfig":
+			out, err := r.client.GetClusterInstGPUDriverLicenseConfig(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("ClusterInstApi_ClusterInstKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunClusterInstApi_ClusterInstKey expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (r *Run) ClusterInstApi_IdleReservableClusterInsts(obj *edgeproto.IdleReservableClusterInsts, dataMap interface{}, dataOut interface{}) {
 	log.DebugLog(log.DebugLevelApi, "API for IdleReservableClusterInsts", "mode", r.Mode)
 	if obj == nil {
@@ -935,12 +955,25 @@ func (s *CliClient) DeleteIdleReservableClusterInsts(ctx context.Context, in *ed
 	return &out, err
 }
 
+func (s *ApiClient) GetClusterInstGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.ClusterInstKey) (*edgeproto.Result, error) {
+	api := edgeproto.NewClusterInstApiClient(s.Conn)
+	return api.GetClusterInstGPUDriverLicenseConfig(ctx, in)
+}
+
+func (s *CliClient) GetClusterInstGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.ClusterInstKey) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "GetClusterInstGPUDriverLicenseConfig")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type ClusterInstApiClient interface {
 	CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
 	DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
 	UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.Result, error)
 	ShowClusterInst(ctx context.Context, in *edgeproto.ClusterInst) ([]edgeproto.ClusterInst, error)
 	DeleteIdleReservableClusterInsts(ctx context.Context, in *edgeproto.IdleReservableClusterInsts) (*edgeproto.Result, error)
+	GetClusterInstGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.ClusterInstKey) (*edgeproto.Result, error)
 }
 
 type ClusterInstInfoStream interface {
