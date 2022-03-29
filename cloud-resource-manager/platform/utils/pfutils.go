@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"os"
 	"plugin"
+	"strings"
 
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/fake"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/kind"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 var solib = ""
@@ -77,6 +81,44 @@ func GetClusterSvc(ctx context.Context, pluginRequired bool) (pf.ClusterSvc, err
 	}
 	log.SpanLog(ctx, log.DebugLevelInfo, "Creating ClusterSvc")
 	return getClusterSvcFunc()
+}
+
+// GetAppInstId returns a string for this AppInst that is likely to be
+// unique within the region. It does not guarantee uniqueness.
+// The delimiter '.' is removed from the AppInstId so that it can be used
+// to append further strings to this ID to build derived unique names.
+// Salt can be used by the caller to add an extra field if needed
+// to ensure uniqueness. In all cases, any requirements for uniqueness
+// must be guaranteed by the caller. Name sanitization for the platform is performed
+func GetAppInstId(ctx context.Context, appInst *edgeproto.AppInst, app *edgeproto.App, salt string, platformType edgeproto.PlatformType) (string, error) {
+	fields := []string{}
+
+	cloudletPlatform, err := GetPlatform(ctx, platformType.String(), nil)
+	if err != nil {
+		return "", err
+	}
+	appName := util.DNSSanitize(appInst.Key.AppKey.Name)
+	dev := util.DNSSanitize(appInst.Key.AppKey.Organization)
+	ver := util.DNSSanitize(appInst.Key.AppKey.Version)
+	appId := fmt.Sprintf("%s%s%s", dev, appName, ver)
+	fields = append(fields, appId)
+
+	if cloudcommon.IsClusterInstReqd(app) {
+		cluster := util.DNSSanitize(appInst.Key.ClusterInstKey.ClusterKey.Name)
+		fields = append(fields, cluster)
+	}
+
+	loc := util.DNSSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
+	fields = append(fields, loc)
+
+	oper := util.DNSSanitize(appInst.Key.ClusterInstKey.CloudletKey.Organization)
+	fields = append(fields, oper)
+
+	if salt != "" {
+		salt = util.DNSSanitize(salt)
+		fields = append(fields, salt)
+	}
+	return cloudletPlatform.NameSanitize(strings.Join(fields, "-")), nil
 }
 
 func loadPlugin(ctx context.Context) (*plugin.Plugin, error) {
