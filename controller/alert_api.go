@@ -143,11 +143,16 @@ func (s *AlertApi) StoreUpdate(ctx context.Context, old, new *edgeproto.Alert) {
 				"labels", new.Labels)
 			return
 		}
-		hcState, err := strconv.Atoi(state)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelNotify, "failed to parse Health Check state",
-				"state", state, "error", err)
-			return
+		hcState, ok := dme.HealthCheck_CamelValue[state]
+		if !ok {
+			// NOTE: we might have an old alert that has a number value for state
+			intHcState, err := strconv.Atoi(state)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelNotify, "failed to parse Health Check state",
+					"state", state, "error", err)
+				return
+			}
+			hcState = int32(intHcState)
 		}
 		s.appInstSetStateFromHealthCheckAlert(ctx, new, dme.HealthCheck(hcState))
 	}
