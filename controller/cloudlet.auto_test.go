@@ -71,7 +71,6 @@ func (s *GPUDriverStoreTracker) STMPut(stm concurrency.STM, obj *edgeproto.GPUDr
 type GPUDriverDeleteDataGen interface {
 	GetGPUDriverTestObj() (*edgeproto.GPUDriver, *testSupportData)
 	GetCloudletGpuConfigDriverRef(key *edgeproto.GPUDriverKey) (*edgeproto.Cloudlet, *testSupportData)
-	GetClusterInstGpuConfigDriverRef(key *edgeproto.GPUDriverKey) (*edgeproto.ClusterInst, *testSupportData)
 }
 
 // GPUDriverDeleteStore wraps around the usual
@@ -196,26 +195,6 @@ func deleteGPUDriverChecks(t *testing.T, ctx context.Context, all *AllApis, data
 		// remove Cloudlet obj
 		_, err = all.cloudletApi.store.Delete(ctx, refBy, all.cloudletApi.sync.syncWait)
 		require.Nil(t, err, "cleanup ref from Cloudlet must succeed")
-		deleteStore.putDeletePrepareCb = nil
-		supportData.delete(t, ctx, all)
-	}
-	{
-		// Negative test, ClusterInst refers to GPUDriver.
-		// The cb will inject refBy obj after delete prepare has been set.
-		refBy, supportData := dataGen.GetClusterInstGpuConfigDriverRef(testObj.GetKey())
-		supportData.put(t, ctx, all)
-		deleteStore.putDeletePrepareCb = func() {
-			all.clusterInstApi.store.Put(ctx, refBy, all.clusterInstApi.sync.syncWait)
-		}
-		testObj, _ = dataGen.GetGPUDriverTestObj()
-		err = api.DeleteGPUDriver(testObj, testutil.NewCudStreamoutGPUDriver(ctx))
-		require.NotNil(t, err, "must fail delete with ref from ClusterInst")
-		require.Contains(t, err.Error(), "in use")
-		// check that delete prepare was reset
-		deleteStore.requireUndoDeletePrepare(ctx, testObj)
-		// remove ClusterInst obj
-		_, err = all.clusterInstApi.store.Delete(ctx, refBy, all.clusterInstApi.sync.syncWait)
-		require.Nil(t, err, "cleanup ref from ClusterInst must succeed")
 		deleteStore.putDeletePrepareCb = nil
 		supportData.delete(t, ctx, all)
 	}

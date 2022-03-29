@@ -253,6 +253,7 @@ message GPUDriverKey {
   option (protogen.alias) = "gpudrivername=Name,gpudriverorg=Organization";
   option (protogen.custom_key_type) = "GPUDriverKey";
   option (protogen.uses_org) = "none";
+  option (protogen.also_required) = "Name,Organization";
 }
 
 message GPUDriverBuild {

@@ -223,11 +223,6 @@ func (s *DeleteDataGen) GetCloudletGpuConfigDriverRef(key *edgeproto.GPUDriverKe
 	ref.GpuConfig.Driver = *key
 	return &ref, noSupportData
 }
-func (s *DeleteDataGen) GetClusterInstGpuConfigDriverRef(key *edgeproto.GPUDriverKey) (*edgeproto.ClusterInst, *testSupportData) {
-	ref := testutil.ClusterInstData[0]
-	ref.GpuConfig.Driver = *key
-	return &ref, noSupportData
-}
 
 // Network
 func (s *DeleteDataGen) GetNetworkTestObj() (*edgeproto.Network, *testSupportData) {

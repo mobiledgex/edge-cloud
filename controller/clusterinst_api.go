@@ -98,21 +98,6 @@ func (s *ClusterInstApi) UsesAutoScalePolicy(key *edgeproto.PolicyKey) *edgeprot
 	return nil
 }
 
-func (s *ClusterInstApi) UsesGPUDriver(driverKey *edgeproto.GPUDriverKey) (bool, []string) {
-	s.cache.Mux.Lock()
-	defer s.cache.Mux.Unlock()
-	clusterInsts := []string{}
-	inUse := false
-	for _, data := range s.cache.Objs {
-		val := data.Obj
-		if driverKey.Matches(&val.GpuConfig.Driver) {
-			clusterInsts = append(clusterInsts, val.Key.ClusterKey.Name+"/"+val.Key.Organization+"/"+val.Key.CloudletKey.Name)
-			inUse = true
-		}
-	}
-	return inUse, clusterInsts
-}
-
 func (s *ClusterInstApi) deleteCloudletOk(stm concurrency.STM, refs *edgeproto.CloudletRefs, dynInsts map[edgeproto.ClusterInstKey]struct{}) error {
 	for _, ciRefKey := range refs.ClusterInsts {
 		ci := edgeproto.ClusterInst{}
@@ -1006,35 +991,24 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 
-		if in.GpuConfig.Driver.Name != "" {
-			if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.CloudletKey.Organization {
-				return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.CloudletKey.Organization)
+		// Check for Md5sum to be empty, as STM can run multiple times, this avoid uploading the config twice
+		if in.GpuDriverLicenseConfig != "" && in.GpuDriverLicenseConfigMd5Sum == "" {
+			if cloudlet.GpuConfig.Driver.Name == "" {
+				return fmt.Errorf("Cannot specify GPU driver license config as cloudlet does not support GPU config")
 			}
-			gpuDriver := edgeproto.GPUDriver{}
-			if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
-				return in.GpuConfig.Driver.NotFoundError()
+			storageClient, err := getGCSStorageClient(ctx)
+			if err != nil {
+				return err
 			}
-			if gpuDriver.DeletePrepare {
-				return in.GpuConfig.Driver.BeingDeletedError()
+			defer storageClient.Close()
+			clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&in.Key)
+			url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &cloudlet.GpuConfig.Driver, in.GpuDriverLicenseConfig, clusterTag, cb)
+			if err != nil {
+				return err
 			}
-			if gpuDriver.State == ChangeInProgress {
-				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
-			}
-			if in.GpuConfig.LicenseConfig != "" {
-				storageClient, err := getGCSStorageClient(ctx)
-				if err != nil {
-					return err
-				}
-				defer storageClient.Close()
-				clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&in.Key)
-				url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &gpuDriver.Key, gpuDriver.LicenseConfig, clusterTag, cb)
-				if err != nil {
-					return err
-				}
-				// store the GCS path to license config
-				in.GpuConfig.LicenseConfig = url
-				in.GpuConfig.LicenseConfigMd5Sum = md5sum
-			}
+			// store the GCS path to license config
+			in.GpuDriverLicenseConfig = url
+			in.GpuDriverLicenseConfigMd5Sum = md5sum
 		}
 
 		in.NodeFlavor = vmspec.FlavorName
@@ -1472,6 +1446,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		return err
 	}
 
+	cloudlet := edgeproto.Cloudlet{}
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return in.Key.NotFoundError()
@@ -1485,7 +1460,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			log.WarnLog("Delete ClusterInst: flavor not found",
 				"flavor", in.Flavor.Name)
 		}
-		cloudlet := edgeproto.Cloudlet{}
 		if !s.all.cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 			log.WarnLog("Delete ClusterInst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
@@ -1539,7 +1513,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-	if in.GpuConfig.LicenseConfig != "" {
+	if in.GpuDriverLicenseConfig != "" {
 		storageClient, err := getGCSStorageClient(ctx)
 		if err != nil {
 			return err
@@ -1547,9 +1521,9 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		defer storageClient.Close()
 		// Delete license config from GCS
 		clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&in.Key)
-		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, clusterTag)
+		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &cloudlet.GpuConfig.Driver, clusterTag)
 		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to delete GPU driver license config from secure storage", "key", in.Key, "gpu config", in.GpuConfig, "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to delete GPU driver license config from secure storage", "key", in.Key, "config", in.GpuDriverLicenseConfig, "gpu driver", cloudlet.GpuConfig.Driver, "err", err)
 		}
 	}
 	if ignoreCRM(cctx) {
@@ -2019,11 +1993,15 @@ func (s *ClusterInstApi) deleteCloudletSingularCluster(stm concurrency.STM, key 
 
 func (s *ClusterInstApi) GetClusterInstGPUDriverLicenseConfig(ctx context.Context, key *edgeproto.ClusterInstKey) (*edgeproto.Result, error) {
 	clusterInst := edgeproto.ClusterInst{}
+	cloudlet := edgeproto.Cloudlet{}
 	err := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, key, &clusterInst) {
 			return key.NotFoundError()
 		}
-		if clusterInst.GpuConfig.Driver.Name == "" {
+		if !s.all.cloudletApi.store.STMGet(stm, &key.CloudletKey, &cloudlet) {
+			return key.CloudletKey.NotFoundError()
+		}
+		if clusterInst.GpuDriverLicenseConfig == "" {
 			return fmt.Errorf("Cluster instance is not associated with any GPU driver")
 		}
 		return nil
@@ -2032,7 +2010,7 @@ func (s *ClusterInstApi) GetClusterInstGPUDriverLicenseConfig(ctx context.Contex
 		return &edgeproto.Result{}, err
 	}
 	clusterTag := cloudcommon.GetClusterInstGPUDriverTag(&clusterInst.Key)
-	cfgPath := cloudcommon.GetGPUDriverLicenseStoragePath(&clusterInst.GpuConfig.Driver, clusterTag)
+	cfgPath := cloudcommon.GetGPUDriverLicenseStoragePath(&cloudlet.GpuConfig.Driver, clusterTag)
 	cfg, err := GetLicenseConfigFromStorageServer(ctx, cfgPath)
 	if err != nil {
 		return &edgeproto.Result{}, err

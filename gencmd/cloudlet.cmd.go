@@ -2472,11 +2472,11 @@ var ResourceQuotaComments = map[string]string{
 	"alertthreshold": "Generate alert when more than threshold percentage of resource is used",
 }
 var ResourceQuotaSpecialArgs = map[string]string{}
-var GPUDriverKeyRequiredArgs = []string{}
-var GPUDriverKeyOptionalArgs = []string{
+var GPUDriverKeyRequiredArgs = []string{
 	"gpudrivername",
 	"gpudriverorg",
 }
+var GPUDriverKeyOptionalArgs = []string{}
 var GPUDriverKeyAliasArgs = []string{
 	"gpudrivername=name",
 	"gpudriverorg=organization",

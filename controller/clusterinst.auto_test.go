@@ -288,23 +288,6 @@ func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 		_, err = all.networkApi.store.Put(ctx, ref, all.networkApi.sync.syncWait)
 		require.Nil(t, err)
 	}
-	{
-		// set delete_prepare on referenced GPUDriver
-		ref := supportData.getOneGPUDriver()
-		require.NotNil(t, ref, "support data must include one referenced GPUDriver")
-		ref.DeletePrepare = true
-		_, err = all.gpuDriverApi.store.Put(ctx, ref, all.gpuDriverApi.sync.syncWait)
-		require.Nil(t, err)
-		// api call must fail with object being deleted
-		testObj, _ = dataGen.GetCreateClusterInstTestObj()
-		err = all.clusterInstApi.CreateClusterInst(testObj, testutil.NewCudStreamoutClusterInst(ctx))
-		require.NotNil(t, err, "CreateClusterInst must fail with GPUDriver.DeletePrepare set")
-		require.Equal(t, ref.GetKey().BeingDeletedError().Error(), err.Error())
-		// reset delete_prepare on referenced GPUDriver
-		ref.DeletePrepare = false
-		_, err = all.gpuDriverApi.store.Put(ctx, ref, all.gpuDriverApi.sync.syncWait)
-		require.Nil(t, err)
-	}
 
 	// wrap the stores so we can make sure all checks and changes
 	// happen in the same STM.
@@ -318,8 +301,6 @@ func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 	defer autoScalePolicyApiUnwrap()
 	networkApiStore, networkApiUnwrap := wrapNetworkTrackerStore(all.networkApi)
 	defer networkApiUnwrap()
-	gpuDriverApiStore, gpuDriverApiUnwrap := wrapGPUDriverTrackerStore(all.gpuDriverApi)
-	defer gpuDriverApiUnwrap()
 
 	// CreateClusterInst should succeed if no references are in delete_prepare
 	testObj, _ = dataGen.GetCreateClusterInstTestObj()
@@ -335,8 +316,6 @@ func CreateClusterInstAddRefsChecks(t *testing.T, ctx context.Context, all *AllA
 	require.Equal(t, clusterInstApiStore.putSTM, autoScalePolicyApiStore.getSTM, "CreateClusterInst check AutoScalePolicy ref must be done in same STM as ClusterInst put")
 	require.NotNil(t, networkApiStore.getSTM, "CreateClusterInst check Network ref must be done in STM")
 	require.Equal(t, clusterInstApiStore.putSTM, networkApiStore.getSTM, "CreateClusterInst check Network ref must be done in same STM as ClusterInst put")
-	require.NotNil(t, gpuDriverApiStore.getSTM, "CreateClusterInst check GPUDriver ref must be done in STM")
-	require.Equal(t, clusterInstApiStore.putSTM, gpuDriverApiStore.getSTM, "CreateClusterInst check GPUDriver ref must be done in same STM as ClusterInst put")
 
 	// clean up
 	// delete created test obj
