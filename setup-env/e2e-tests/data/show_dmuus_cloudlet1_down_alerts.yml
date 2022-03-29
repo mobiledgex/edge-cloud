@@ -10,7 +10,7 @@
     federatedorg: ""
     region: local
     scope: Application
-    status: "4"
+    status: HealthCheckCloudletOffline
   annotations:
     description: AppInst down due to cloudlet offline
     title: AppInstDown
@@ -27,7 +27,7 @@
     federatedorg: ""
     region: local
     scope: Application
-    status: "4"
+    status: HealthCheckCloudletOffline
   annotations:
     description: AppInst down due to cloudlet offline
     title: AppInstDown
@@ -44,7 +44,7 @@
     federatedorg: ""
     region: local
     scope: Application
-    status: "4"
+    status: HealthCheckCloudletOffline
   annotations:
     description: AppInst down due to cloudlet offline
     title: AppInstDown
@@ -61,7 +61,7 @@
     federatedorg: ""
     region: local
     scope: Application
-    status: "4"
+    status: HealthCheckCloudletOffline
   annotations:
     description: AppInst down due to cloudlet offline
     title: AppInstDown
