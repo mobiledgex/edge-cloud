@@ -46,6 +46,7 @@ enum VersionHash {
   HASH_2dfdb2ed2cf52241b2b3db1d39e11bc6 = 38 [(protogen.upgrade_func) = "AddDnsLabels"];
   HASH_6585ad5e26ee92a955abd26c38067065 = 39 [(protogen.upgrade_func) = "AddCloudletKeyToCloudletPool"];
   HASH_4ddeb801651b2acb84f5d182e445fce1 = 40 [(protogen.upgrade_func) = "AddSetupSpecificAppDNSRootForCloudlets"];
+  HASH_156def83eec72a44248fabd79199efbe = 41 [(protogen.upgrade_func) = "AddGPUDriverStoragePaths"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "4";
+  option (protogen.version_hash_salt) = "5";
 }
