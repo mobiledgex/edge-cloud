@@ -797,3 +797,7 @@ func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) error
 	log.SpanLog(ctx, log.DebugLevelInfra, "ActiveChanged", "platformActive", platformActive)
 	return nil
 }
+
+func (s *Platform) NameSanitize(name string) string {
+	return name
+}

@@ -144,9 +144,10 @@ func GetAppEnvVars(ctx context.Context, app *edgeproto.App, authApi cloudcommon.
 // Merge in all the environment variables into
 func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app *edgeproto.App, kubeManifest string, imagePullSecrets []string, names *KubeNames, appInstFlavor *edgeproto.Flavor) (string, error) {
 	var files []string
+	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest)
 
 	deploymentVars, varsFound := ctx.Value(crmutil.DeploymentReplaceVarsKey).(*crmutil.DeploymentReplaceVars)
-	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "kubeManifest", kubeManifest, "imagePullSecrets", imagePullSecrets)
+	log.SpanLog(ctx, log.DebugLevelInfra, "MergeEnvVars", "deploymentVars", deploymentVars, "varsFound", varsFound)
 	envVars, err := GetAppEnvVars(ctx, app, authApi, deploymentVars)
 	if err != nil {
 		return "", err
@@ -164,6 +165,8 @@ func MergeEnvVars(ctx context.Context, authApi cloudcommon.RegistryAuthApi, app 
 				"manifest", mf, "DeploymentVars", deploymentVars, "error", err)
 			return "", err
 		}
+		log.SpanLog(ctx, log.DebugLevelInfra, "Success to replace Crm variables",
+			"manifest", mf, "DeploymentVars", deploymentVars)
 	}
 
 	//decode the objects so we can find the container objects, where we'll add the env vars
