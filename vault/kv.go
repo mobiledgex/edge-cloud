@@ -3,6 +3,7 @@ package vault
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/mitchellh/mapstructure"
@@ -46,6 +47,13 @@ func GetKV(client *api.Client, path string, version int) (map[string]interface{}
 	}
 	if secret == nil {
 		return nil, fmt.Errorf("no secrets at path %s", path)
+	}
+	if secret.Data == nil {
+		if len(secret.Warnings) > 0 {
+			errStr := strings.Join(secret.Warnings, ";")
+			return nil, fmt.Errorf("No data: %s", errStr)
+		}
+		return nil, fmt.Errorf("No data at path %s", path)
 	}
 	return secret.Data, nil
 }
