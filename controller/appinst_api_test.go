@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -1245,6 +1247,11 @@ func testKVStoreHasKey(kvstore objstore.KVStore, keystr string) bool {
 }
 
 func TestAppInstIdDelimiter(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelApi)
+
+	log.InitTracer(nil)
+	defer log.FinishTracer()
+	ctx := log.StartTestSpan(context.Background())
 	// The generated AppInstId must not have any '.'
 	// in it. That will allow any platform-specific code
 	// to append further strings to it, delimited by '.',
@@ -1253,7 +1260,7 @@ func TestAppInstIdDelimiter(t *testing.T) {
 		// need the app definition as well
 		for _, app := range testutil.AppData {
 			if app.Key.Matches(&ai.Key.AppKey) {
-				id := cloudcommon.GetAppInstId(&ai, &app, "")
+				id, _ := pfutils.GetAppInstId(ctx, &ai, &app, "", edgeproto.PlatformType_PLATFORM_TYPE_FAKE)
 				require.NotContains(t, id, ".", "id must not contain '.'")
 			}
 		}
@@ -1268,8 +1275,38 @@ func TestAppInstIdDelimiter(t *testing.T) {
 	appInst.Key.ClusterInstKey.Organization += "."
 	appInst.Key.ClusterInstKey.CloudletKey.Name += "."
 	appInst.Key.ClusterInstKey.CloudletKey.Organization += "."
-	id := cloudcommon.GetAppInstId(&appInst, &app, ".")
+	id, _ := pfutils.GetAppInstId(ctx, &appInst, &app, ".", edgeproto.PlatformType_PLATFORM_TYPE_FAKE)
 	require.NotContains(t, id, ".", "id must not contain '.'")
+
+	// test name sanitization
+	startWithNumReg := regexp.MustCompile("^\\d")
+	appOrgStartWithNumber := edgeproto.App{
+		Key: edgeproto.AppKey{
+			Name:         "testapp",
+			Organization: "5GTestOrg",
+			Version:      "1.0",
+		},
+	}
+	appInstOrgStartWithNumber := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey: appOrgStartWithNumber.Key,
+			ClusterInstKey: edgeproto.VirtualClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: "cluster1",
+				},
+				CloudletKey: edgeproto.CloudletKey{
+					Organization: "GDDT",
+					Name:         "CloudletA",
+				},
+				Organization: appOrgStartWithNumber.Key.Organization,
+			},
+		},
+	}
+
+	id, _ = pfutils.GetAppInstId(ctx, &appInstOrgStartWithNumber, &appOrgStartWithNumber, ".", edgeproto.PlatformType_PLATFORM_TYPE_FAKE)
+	require.Regexp(t, startWithNumReg, id, "fake id not sanitized")
+	id, _ = pfutils.GetAppInstId(ctx, &appInstOrgStartWithNumber, &appOrgStartWithNumber, ".", edgeproto.PlatformType_PLATFORM_TYPE_OPENSTACK)
+	require.NotRegexp(t, startWithNumReg, id, "openstack id must not start with number")
 }
 
 func waitForAppInstState(t *testing.T, ctx context.Context, apis *AllApis, key *edgeproto.AppInstKey, ii int, state edgeproto.TrackedState) {
