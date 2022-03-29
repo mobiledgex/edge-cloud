@@ -195,7 +195,7 @@ func cloudletInfoToAlertLabels(in *edgeproto.CloudletInfo) map[string]string {
 func cloudletDownAppInstAlertLabels(appInstKey *edgeproto.AppInstKey) map[string]string {
 	labels := appInstKey.GetTags()
 	labels["alertname"] = cloudcommon.AlertAppInstDown
-	labels[cloudcommon.AlertHealthCheckStatus] = strconv.Itoa(int(dme.HealthCheck_HEALTH_CHECK_CLOUDLET_OFFLINE))
+	labels[cloudcommon.AlertHealthCheckStatus] = dme.HealthCheck_CamelName[int32(dme.HealthCheck_HEALTH_CHECK_CLOUDLET_OFFLINE)]
 	labels[cloudcommon.AlertScopeTypeTag] = cloudcommon.AlertScopeApp
 	return labels
 }
