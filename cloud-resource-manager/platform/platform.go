@@ -172,6 +172,8 @@ type Platform interface {
 	GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error)
 	// Called when the platform instance switches activity. Currently only transition from Standby to Active is allowed.
 	ActiveChanged(ctx context.Context, platformActive bool) error
+	// Sanitizes the name to make it conform to platform requirements.
+	NameSanitize(name string) string
 }
 
 type ClusterSvc interface {

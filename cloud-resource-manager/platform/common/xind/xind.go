@@ -118,3 +118,7 @@ func (s *Xind) GetRootLBFlavor(ctx context.Context) (*edgeproto.Flavor, error) {
 		Disk:  uint64(0),
 	}, nil
 }
+
+func (s *Xind) NameSanitize(name string) string {
+	return name
+}
