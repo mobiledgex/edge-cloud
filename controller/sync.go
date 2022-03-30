@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -20,6 +21,8 @@ type Sync struct {
 	initWait   bool
 	syncDone   bool
 	syncCancel context.CancelFunc
+	batch      []syncBatchData
+	notifyOrd  *edgeproto.NotifyOrder
 	caches     map[string]ObjCache
 }
 
@@ -39,6 +42,7 @@ func InitSync(store objstore.KVStore) *Sync {
 	sync.mux.InitCond(&sync.cond)
 	sync.caches = make(map[string]ObjCache)
 	sync.rev = 1
+	sync.notifyOrd = edgeproto.NewNotifyOrder()
 	return &sync
 }
 
@@ -122,9 +126,17 @@ func (s *Sync) syncCb(ctx context.Context, data *objstore.SyncCbData) {
 		fallthrough
 	case objstore.SyncUpdate:
 		if cache, found := s.GetCache(ctx, data.Key); found {
-			cache.SyncUpdate(ctx, data.Key, data.Value, data.Rev, data.ModRev)
+			// To guarantee that objects are sent via notify
+			// in the correct order, we need to sort all object
+			// updates that are part of the same transaction and
+			// do updates in the notify send order.
+			s.insertBatchData(cache, data)
 		}
 		if !data.MoreEvents {
+			for _, d := range s.batch {
+				d.cache.SyncUpdate(ctx, d.data.Key, d.data.Value, d.data.Rev, d.data.ModRev)
+			}
+			s.batch = nil
 			s.rev = data.Rev
 		}
 	case objstore.SyncDelete:
@@ -170,4 +182,31 @@ func (s *Sync) usesOrg(org string) []string {
 	}
 	sort.Strings(usedBy)
 	return usedBy
+}
+
+type syncBatchData struct {
+	cache ObjCache
+	data  objstore.SyncCbData
+}
+
+func (s *Sync) insertBatchData(cache ObjCache, data *objstore.SyncCbData) {
+	dat := syncBatchData{
+		cache: cache,
+		data:  *data,
+	}
+	inserted := false
+	for ii, d := range s.batch {
+		if s.notifyOrd.Less(cache.GetTypeString(), d.cache.GetTypeString()) {
+			// insert before
+			// shift out later entries (duplicates ii)
+			s.batch = append(s.batch[:ii+1], s.batch[ii:]...)
+			// replace
+			s.batch[ii] = dat
+			inserted = true
+			break
+		}
+	}
+	if !inserted {
+		s.batch = append(s.batch, dat)
+	}
 }

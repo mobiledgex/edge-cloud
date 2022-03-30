@@ -455,6 +455,10 @@ func (s *{{.Name}}SendMany) UpdateFiltered(ctx context.Context, msg *{{.NameType
 }
 {{- end}}
 
+func (s *{{.Name}}SendMany) GetTypeString() string {
+	return "{{.Name}}"
+}
+
 type {{.Name}}Recv struct {
 	Name string
 	MessageName string
