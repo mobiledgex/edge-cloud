@@ -24,6 +24,7 @@ type AllDataOut struct {
 	OperatorCodes              []edgeproto.Result
 	ResTagTables               []edgeproto.Result
 	TrustPolicies              [][]edgeproto.Result
+	GpuDrivers                 [][]edgeproto.Result
 	Cloudlets                  [][]edgeproto.Result
 	CloudletInfos              []edgeproto.Result
 	CloudletPools              []edgeproto.Result
@@ -36,7 +37,6 @@ type AllDataOut struct {
 	Apps                       []edgeproto.Result
 	AppInstances               [][]edgeproto.Result
 	VmPools                    []edgeproto.Result
-	GpuDrivers                 [][]edgeproto.Result
 	AlertPolicies              []edgeproto.Result
 	FlowRateLimitSettings      []edgeproto.Result
 	MaxReqsRateLimitSettings   []edgeproto.Result
@@ -61,6 +61,8 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("restagtables")
 	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	apicb("trustpolicies")
+	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
+	apicb("gpudrivers")
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
 	apicb("cloudlets")
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
@@ -85,8 +87,6 @@ func RunAllDataApis(run *Run, in *edgeproto.AllData, inMap map[string]interface{
 	apicb("appinstances")
 	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
 	apicb("vmpools")
-	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
-	apicb("gpudrivers")
 	run.AlertPolicyApi(&in.AlertPolicies, inMap["alertpolicies"], &out.AlertPolicies)
 	apicb("alertpolicies")
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, inMap["flowratelimitsettings"], &out.FlowRateLimitSettings)
@@ -107,8 +107,6 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, inMap["flowratelimitsettings"], &out.FlowRateLimitSettings)
 	apicb("alertpolicies")
 	run.AlertPolicyApi(&in.AlertPolicies, inMap["alertpolicies"], &out.AlertPolicies)
-	apicb("gpudrivers")
-	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
 	apicb("vmpools")
 	run.VMPoolApi(&in.VmPools, inMap["vmpools"], &out.VmPools)
 	apicb("appinstances")
@@ -133,6 +131,8 @@ func RunAllDataReverseApis(run *Run, in *edgeproto.AllData, inMap map[string]int
 	run.CloudletInfoApi(&in.CloudletInfos, inMap["cloudletinfos"], &out.CloudletInfos)
 	apicb("cloudlets")
 	run.CloudletApi(&in.Cloudlets, inMap["cloudlets"], &out.Cloudlets)
+	apicb("gpudrivers")
+	run.GPUDriverApi(&in.GpuDrivers, inMap["gpudrivers"], &out.GpuDrivers)
 	apicb("trustpolicies")
 	run.TrustPolicyApi(&in.TrustPolicies, inMap["trustpolicies"], &out.TrustPolicies)
 	apicb("restagtables")
@@ -153,6 +153,7 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.OperatorCodeApi(&in.OperatorCodes, nil, &out.OperatorCodes)
 	run.ResTagTableApi(&in.ResTagTables, nil, &out.ResTagTables)
 	run.TrustPolicyApi(&in.TrustPolicies, nil, &out.TrustPolicies)
+	run.GPUDriverApi(&in.GpuDrivers, nil, &out.GpuDrivers)
 	run.CloudletApi(&in.Cloudlets, nil, &out.Cloudlets)
 	run.CloudletInfoApi(&in.CloudletInfos, nil, &out.CloudletInfos)
 	run.CloudletPoolApi(&in.CloudletPools, nil, &out.CloudletPools)
@@ -165,7 +166,6 @@ func RunAllDataShowApis(run *Run, in *edgeproto.AllData, out *edgeproto.AllData)
 	run.AppInstRefsApi(&in.AppInstRefs, nil, &out.AppInstRefs)
 	run.ClusterRefsApi(&in.ClusterRefs, nil, &out.ClusterRefs)
 	run.VMPoolApi(&in.VmPools, nil, &out.VmPools)
-	run.GPUDriverApi(&in.GpuDrivers, nil, &out.GpuDrivers)
 	run.AlertPolicyApi(&in.AlertPolicies, nil, &out.AlertPolicies)
 	run.RateLimitSettingsApi_FlowRateLimitSettings(&in.FlowRateLimitSettings, nil, &out.FlowRateLimitSettings)
 	run.RateLimitSettingsApi_MaxReqsRateLimitSettings(&in.MaxReqsRateLimitSettings, nil, &out.MaxReqsRateLimitSettings)

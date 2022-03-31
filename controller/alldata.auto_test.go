@@ -45,6 +45,10 @@ func (s *testSupportData) put(t *testing.T, ctx context.Context, all *AllApis) {
 		_, err := all.trustPolicyApi.store.Put(ctx, &obj, all.trustPolicyApi.sync.syncWait)
 		require.Nil(t, err)
 	}
+	for _, obj := range s.GpuDrivers {
+		_, err := all.gpuDriverApi.store.Put(ctx, &obj, all.gpuDriverApi.sync.syncWait)
+		require.Nil(t, err)
+	}
 	for _, obj := range s.Cloudlets {
 		_, err := all.cloudletApi.store.Put(ctx, &obj, all.cloudletApi.sync.syncWait)
 		require.Nil(t, err)
@@ -93,10 +97,6 @@ func (s *testSupportData) put(t *testing.T, ctx context.Context, all *AllApis) {
 		_, err := all.vmPoolApi.store.Put(ctx, &obj, all.vmPoolApi.sync.syncWait)
 		require.Nil(t, err)
 	}
-	for _, obj := range s.GpuDrivers {
-		_, err := all.gpuDriverApi.store.Put(ctx, &obj, all.gpuDriverApi.sync.syncWait)
-		require.Nil(t, err)
-	}
 	for _, obj := range s.AlertPolicies {
 		_, err := all.alertPolicyApi.store.Put(ctx, &obj, all.alertPolicyApi.sync.syncWait)
 		require.Nil(t, err)
@@ -130,10 +130,6 @@ func (s *testSupportData) delete(t *testing.T, ctx context.Context, all *AllApis
 	}
 	for _, obj := range s.AlertPolicies {
 		_, err := all.alertPolicyApi.store.Delete(ctx, &obj, all.alertPolicyApi.sync.syncWait)
-		require.Nil(t, err)
-	}
-	for _, obj := range s.GpuDrivers {
-		_, err := all.gpuDriverApi.store.Delete(ctx, &obj, all.gpuDriverApi.sync.syncWait)
 		require.Nil(t, err)
 	}
 	for _, obj := range s.VmPools {
@@ -182,6 +178,10 @@ func (s *testSupportData) delete(t *testing.T, ctx context.Context, all *AllApis
 	}
 	for _, obj := range s.Cloudlets {
 		_, err := all.cloudletApi.store.Delete(ctx, &obj, all.cloudletApi.sync.syncWait)
+		require.Nil(t, err)
+	}
+	for _, obj := range s.GpuDrivers {
+		_, err := all.gpuDriverApi.store.Delete(ctx, &obj, all.gpuDriverApi.sync.syncWait)
 		require.Nil(t, err)
 	}
 	for _, obj := range s.TrustPolicies {
@@ -236,6 +236,13 @@ func (s *testSupportData) getOneTrustPolicy() *edgeproto.TrustPolicy {
 		return nil
 	}
 	return &s.TrustPolicies[0]
+}
+
+func (s *testSupportData) getOneGPUDriver() *edgeproto.GPUDriver {
+	if len(s.GpuDrivers) == 0 {
+		return nil
+	}
+	return &s.GpuDrivers[0]
 }
 
 func (s *testSupportData) getOneCloudlet() *edgeproto.Cloudlet {
@@ -320,13 +327,6 @@ func (s *testSupportData) getOneVMPool() *edgeproto.VMPool {
 		return nil
 	}
 	return &s.VmPools[0]
-}
-
-func (s *testSupportData) getOneGPUDriver() *edgeproto.GPUDriver {
-	if len(s.GpuDrivers) == 0 {
-		return nil
-	}
-	return &s.GpuDrivers[0]
 }
 
 func (s *testSupportData) getOneAlertPolicy() *edgeproto.AlertPolicy {
