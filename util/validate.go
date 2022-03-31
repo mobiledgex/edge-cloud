@@ -165,6 +165,19 @@ func ValidObjName(name string) error {
 	return nil
 }
 
+func ValidStoragePath(path string) error {
+	if !ValidName(path) {
+		return fmt.Errorf("Invalid path %s", path)
+	}
+	if path == "." || path == ".." {
+		return fmt.Errorf("Invalid path %s, cannot be name . or ...", path)
+	}
+	if strings.Contains(path, "/") {
+		return fmt.Errorf("Invalid path %s, cannot be have /", path)
+	}
+	return nil
+}
+
 // IsLatitudeValid checks that the latitude is within accepted ranges
 func IsLatitudeValid(latitude float64) bool {
 	return (latitude >= -90) && (latitude <= 90)
