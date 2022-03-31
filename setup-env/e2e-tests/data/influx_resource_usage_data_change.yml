@@ -16,6 +16,56 @@
     - - 0
       - dmuus-cloud-1
       - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - azure-cloud-4
+      - azure
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
       - 5
       - null
       - x1.small
@@ -86,6 +136,56 @@
     - - 0
       - dmuus-cloud-2
       - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - att-cloud-1
+      - att
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - azure-cloud-4
+      - azure
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - gcp-cloud-5
+      - gcp
       - 2
       - null
       - x1.small
@@ -176,66 +276,6 @@
     - - 0
       - dmuus-cloud-1
       - dmuus
-      - 5
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-      - null
-    - - 0
-      - dmuus-cloud-2
-      - dmuus
-      - 6
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-      - null
-    - - 0
-      - dmuus-cloud-1
-      - dmuus
-      - 7
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-      - null
-    - - 0
-      - dmuus-cloud-2
-      - dmuus
-      - 8
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-      - null
-    - - 0
-      - dmuus-cloud-1
-      - dmuus
-      - 5
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-      - null
-    - - 0
-      - dmuus-cloud-2
-      - dmuus
-      - 6
-      - null
-      - x1.small
-      - null
-      - null
-      - null
-      - null
-    - - 0
-      - dmuus-cloud-1
-      - dmuus
       - 2
       - null
       - x1.small
@@ -246,6 +286,36 @@
     - - 0
       - dmuus-cloud-2
       - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - azure-cloud-4
+      - azure
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - gcp-cloud-5
+      - gcp
       - 2
       - null
       - x1.small
@@ -336,6 +406,186 @@
     - - 0
       - dmuus-cloud-1
       - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - azure-cloud-4
+      - azure
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - 5
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 6
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - 7
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 8
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - 5
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 6
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - azure-cloud-4
+      - azure
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
       - 5
       - null
       - x1.small
@@ -416,6 +666,56 @@
     - - 0
       - dmuus-cloud-1
       - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - azure-cloud-4
+      - azure
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
       - 5
       - null
       - x1.small
@@ -485,6 +785,16 @@
       - null
     - - 0
       - dmuus-cloud-2
+      - dmuus
+      - 2
+      - null
+      - x1.small
+      - null
+      - null
+      - null
+      - null
+    - - 0
+      - dmuus-cloud-1
       - dmuus
       - 2
       - null
@@ -528,6 +838,56 @@
     - ramUsed
     - vcpusUsed
     values:
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - azure-cloud-4
+      - azure
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
     - - 0
       - dmuus-cloud-1
       - dmuus
@@ -601,6 +961,56 @@
     - - 0
       - dmuus-cloud-2
       - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - att-cloud-1
+      - att
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - azure-cloud-4
+      - azure
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - gcp-cloud-5
+      - gcp
       - null
       - 2
       - null
@@ -695,61 +1105,11 @@
       - 2
       - null
       - 0
-      - 5
-      - 20480
-      - 10
-    - - 0
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 3
-      - null
-      - 0
-      - 6
-      - 24576
-      - 12
-    - - 0
-      - dmuus-cloud-1
-      - dmuus
-      - null
-      - 3
-      - null
-      - 0
-      - 7
-      - 28672
-      - 14
-    - - 0
-      - dmuus-cloud-2
-      - dmuus
-      - null
-      - 4
-      - null
-      - 0
-      - 8
-      - 32768
-      - 16
-    - - 0
-      - dmuus-cloud-1
-      - dmuus
-      - null
       - 2
-      - null
-      - 0
-      - 5
-      - 20480
-      - 10
+      - 8192
+      - 4
     - - 0
       - dmuus-cloud-2
-      - dmuus
-      - null
-      - 3
-      - null
-      - 0
-      - 6
-      - 24576
-      - 12
-    - - 0
-      - dmuus-cloud-1
       - dmuus
       - null
       - 2
@@ -759,8 +1119,28 @@
       - 8192
       - 4
     - - 0
-      - dmuus-cloud-2
+      - dmuus-cloud-3
       - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - azure-cloud-4
+      - azure
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - gcp-cloud-5
+      - gcp
       - null
       - 2
       - null
@@ -855,6 +1235,186 @@
       - 2
       - null
       - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - azure-cloud-4
+      - azure
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 5
+      - 20480
+      - 10
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 3
+      - null
+      - 0
+      - 6
+      - 24576
+      - 12
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 3
+      - null
+      - 0
+      - 7
+      - 28672
+      - 14
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 4
+      - null
+      - 0
+      - 8
+      - 32768
+      - 16
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 5
+      - 20480
+      - 10
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 3
+      - null
+      - 0
+      - 6
+      - 24576
+      - 12
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - azure-cloud-4
+      - azure
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
       - 5
       - 20480
       - 10
@@ -935,6 +1495,56 @@
       - 2
       - null
       - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-3
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - azure-cloud-4
+      - azure
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - gcp-cloud-5
+      - gcp
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-1
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
       - 5
       - 20480
       - 10
@@ -1000,6 +1610,16 @@
       - 4
     - - 0
       - dmuus-cloud-2
+      - dmuus
+      - null
+      - 2
+      - null
+      - 0
+      - 2
+      - 8192
+      - 4
+    - - 0
+      - dmuus-cloud-1
       - dmuus
       - null
       - 2
