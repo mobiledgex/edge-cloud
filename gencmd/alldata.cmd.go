@@ -42,6 +42,10 @@ func AllDataHideTags(in *edgeproto.AllData) {
 		for i1 := 0; i1 < len(in.TrustPolicies[i0].OutboundSecurityRules); i1++ {
 		}
 	}
+	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
+		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
+		}
+	}
 	for i0 := 0; i0 < len(in.Cloudlets); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.Cloudlets[i0].Errors = nil
@@ -221,10 +225,6 @@ func AllDataHideTags(in *edgeproto.AllData) {
 			in.VmPools[i0].Errors = nil
 		}
 	}
-	for i0 := 0; i0 < len(in.GpuDrivers); i0++ {
-		for i1 := 0; i1 < len(in.GpuDrivers[i0].Builds); i1++ {
-		}
-	}
 	for i0 := 0; i0 < len(in.AlertPolicies); i0++ {
 		if _, found := tags["nocmp"]; found {
 			in.AlertPolicies[i0].DeletePrepare = false
@@ -307,6 +307,25 @@ var AllDataOptionalArgs = []string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr",
 	"trustpolicies:#.deleteprepare",
+	"gpudrivers:#.fields",
+	"gpudrivers:#.key.name",
+	"gpudrivers:#.key.organization",
+	"gpudrivers:#.builds:#.name",
+	"gpudrivers:#.builds:#.driverpath",
+	"gpudrivers:#.builds:#.driverpathcreds",
+	"gpudrivers:#.builds:#.operatingsystem",
+	"gpudrivers:#.builds:#.kernelversion",
+	"gpudrivers:#.builds:#.hypervisorinfo",
+	"gpudrivers:#.builds:#.md5sum",
+	"gpudrivers:#.builds:#.storagepath",
+	"gpudrivers:#.licenseconfig",
+	"gpudrivers:#.licenseconfigmd5sum",
+	"gpudrivers:#.properties",
+	"gpudrivers:#.state",
+	"gpudrivers:#.ignorestate",
+	"gpudrivers:#.deleteprepare",
+	"gpudrivers:#.storagebucketname",
+	"gpudrivers:#.licenseconfigstoragepath",
 	"cloudlets:#.fields",
 	"cloudlets:#.key.organization",
 	"cloudlets:#.key.name",
@@ -405,6 +424,7 @@ var AllDataOptionalArgs = []string{
 	"cloudlets:#.federationconfig.partnerfederationid",
 	"cloudlets:#.federationconfig.zonecountrycode",
 	"cloudlets:#.federationconfig.partnerfederationaddr",
+	"cloudlets:#.licenseconfigstoragepath",
 	"cloudletinfos:#.fields",
 	"cloudletinfos:#.key.organization",
 	"cloudletinfos:#.key.name",
@@ -705,22 +725,6 @@ var AllDataOptionalArgs = []string{
 	"vmpools:#.errors",
 	"vmpools:#.crmoverride",
 	"vmpools:#.deleteprepare",
-	"gpudrivers:#.fields",
-	"gpudrivers:#.key.name",
-	"gpudrivers:#.key.organization",
-	"gpudrivers:#.builds:#.name",
-	"gpudrivers:#.builds:#.driverpath",
-	"gpudrivers:#.builds:#.driverpathcreds",
-	"gpudrivers:#.builds:#.operatingsystem",
-	"gpudrivers:#.builds:#.kernelversion",
-	"gpudrivers:#.builds:#.hypervisorinfo",
-	"gpudrivers:#.builds:#.md5sum",
-	"gpudrivers:#.licenseconfig",
-	"gpudrivers:#.licenseconfigmd5sum",
-	"gpudrivers:#.properties",
-	"gpudrivers:#.state",
-	"gpudrivers:#.ignorestate",
-	"gpudrivers:#.deleteprepare",
 	"alertpolicies:#.fields",
 	"alertpolicies:#.key.organization",
 	"alertpolicies:#.key.name",
@@ -829,6 +833,25 @@ var AllDataComments = map[string]string{
 	"trustpolicies:#.outboundsecurityrules:#.portrangemax":                           "TCP or UDP port range end",
 	"trustpolicies:#.outboundsecurityrules:#.remotecidr":                             "Remote CIDR X.X.X.X/X",
 	"trustpolicies:#.deleteprepare":                                                  "Preparing to be deleted",
+	"gpudrivers:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
+	"gpudrivers:#.key.name":                                                          "Name of the driver",
+	"gpudrivers:#.key.organization":                                                  "Organization to which the driver belongs to",
+	"gpudrivers:#.builds:#.name":                                                     "Unique identifier key",
+	"gpudrivers:#.builds:#.driverpath":                                               "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
+	"gpudrivers:#.builds:#.driverpathcreds":                                          "Optional credentials (username:password) to access driver path",
+	"gpudrivers:#.builds:#.operatingsystem":                                          "Operator System supported by GPU driver build, one of Linux, Windows, Others",
+	"gpudrivers:#.builds:#.kernelversion":                                            "Kernel Version supported by GPU driver build",
+	"gpudrivers:#.builds:#.hypervisorinfo":                                           "Info on hypervisor supported by vGPU driver",
+	"gpudrivers:#.builds:#.md5sum":                                                   "Driver package md5sum to ensure package is not corrupted",
+	"gpudrivers:#.builds:#.storagepath":                                              "GPU driver build storage path",
+	"gpudrivers:#.licenseconfig":                                                     "License config to setup license (will be stored in secure storage)",
+	"gpudrivers:#.licenseconfigmd5sum":                                               "License config md5sum, to ensure integrity of license config",
+	"gpudrivers:#.properties":                                                        "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
+	"gpudrivers:#.state":                                                             "State to figure out if any action on the GPU driver is in-progress",
+	"gpudrivers:#.ignorestate":                                                       "Ignore state will ignore any action in-progress on the GPU driver",
+	"gpudrivers:#.deleteprepare":                                                     "Preparing to be deleted",
+	"gpudrivers:#.storagebucketname":                                                 "GPU driver storage bucket name",
+	"gpudrivers:#.licenseconfigstoragepath":                                          "GPU driver license config storage path",
 	"cloudlets:#.fields":                                                             "Fields are used for the Update API to specify which fields to apply",
 	"cloudlets:#.key.organization":                                                   "Organization of the cloudlet site",
 	"cloudlets:#.key.name":                                                           "Name of the cloudlet",
@@ -927,6 +950,7 @@ var AllDataComments = map[string]string{
 	"cloudlets:#.federationconfig.partnerfederationid":                               "Partner federation ID",
 	"cloudlets:#.federationconfig.zonecountrycode":                                   "Cloudlet zone country code",
 	"cloudlets:#.federationconfig.partnerfederationaddr":                             "Partner federation address",
+	"cloudlets:#.licenseconfigstoragepath":                                           "GPU driver license config storage path",
 	"cloudletinfos:#.fields":                                                         "Fields are used for the Update API to specify which fields to apply",
 	"cloudletinfos:#.key.organization":                                               "Organization of the cloudlet site",
 	"cloudletinfos:#.key.name":                                                       "Name of the cloudlet",
@@ -1221,22 +1245,6 @@ var AllDataComments = map[string]string{
 	"vmpools:#.errors":                                                               "Any errors trying to add/remove VM to/from VM Pool",
 	"vmpools:#.crmoverride":                                                          "Override actions to CRM, one of NoOverride, IgnoreCrmErrors, IgnoreCrm, IgnoreTransientState, IgnoreCrmAndTransientState",
 	"vmpools:#.deleteprepare":                                                        "Preparing to be deleted",
-	"gpudrivers:#.fields":                                                            "Fields are used for the Update API to specify which fields to apply",
-	"gpudrivers:#.key.name":                                                          "Name of the driver",
-	"gpudrivers:#.key.organization":                                                  "Organization to which the driver belongs to",
-	"gpudrivers:#.builds:#.name":                                                     "Unique identifier key",
-	"gpudrivers:#.builds:#.driverpath":                                               "Path where the driver package is located, if it is authenticated path, then credentials must be passed as part of URL (one-time download path)",
-	"gpudrivers:#.builds:#.driverpathcreds":                                          "Optional credentials (username:password) to access driver path",
-	"gpudrivers:#.builds:#.operatingsystem":                                          "Operator System supported by GPU driver build, one of Linux, Windows, Others",
-	"gpudrivers:#.builds:#.kernelversion":                                            "Kernel Version supported by GPU driver build",
-	"gpudrivers:#.builds:#.hypervisorinfo":                                           "Info on hypervisor supported by vGPU driver",
-	"gpudrivers:#.builds:#.md5sum":                                                   "Driver package md5sum to ensure package is not corrupted",
-	"gpudrivers:#.licenseconfig":                                                     "License config to setup license (will be stored in secure storage)",
-	"gpudrivers:#.licenseconfigmd5sum":                                               "License config md5sum, to ensure integrity of license config",
-	"gpudrivers:#.properties":                                                        "Additional properties associated with GPU driver build For example: license server information, driver release date, etc",
-	"gpudrivers:#.state":                                                             "State to figure out if any action on the GPU driver is in-progress",
-	"gpudrivers:#.ignorestate":                                                       "Ignore state will ignore any action in-progress on the GPU driver",
-	"gpudrivers:#.deleteprepare":                                                     "Preparing to be deleted",
 	"alertpolicies:#.key.organization":                                               "Name of the organization for the app that this alert can be applied to",
 	"alertpolicies:#.key.name":                                                       "Alert Policy name",
 	"alertpolicies:#.cpuutilizationlimit":                                            "Container or pod CPU utilization rate(percentage) across all nodes. Valid values 1-100",

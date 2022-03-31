@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -586,19 +587,27 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			if gpuDriver.State == ChangeInProgress {
 				return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
 			}
-			if gpuDriver.LicenseConfig != "" {
-				storageClient, err := getGCSStorageClient(ctx)
+			in.LicenseConfigStoragePath, err = cloudcommon.GetGPUDriverLicenseCloudletStoragePath(&gpuDriver.Key, *region, &in.Key)
+			if err != nil {
+				return err
+			}
+			// Check for md5sum to be empty so that the following is idempotent on multiple STM runs
+			if in.GpuConfig.LicenseConfig != "" && in.GpuConfig.LicenseConfigMd5Sum == "" {
+				storageClient, err := getGCSStorageClient(ctx, &gpuDriver)
 				if err != nil {
 					return err
 				}
 				defer storageClient.Close()
-				url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &gpuDriver.Key, gpuDriver.LicenseConfig, in.Key.Name, cb)
+
+				cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver license config to secure storage"})
+				log.SpanLog(ctx, log.DebugLevelApi, "Uploading GPU driver license config to GCS", "driver key", gpuDriver.Key, "license path", in.LicenseConfigStoragePath)
+				err = storageClient.UploadObject(ctx, in.LicenseConfigStoragePath, "", bytes.NewBufferString(in.GpuConfig.LicenseConfig))
 				if err != nil {
-					return err
+					return fmt.Errorf("Failed to upload GPU driver license to %s, %v", in.LicenseConfigStoragePath, err)
 				}
 				// store the GCS path to license config
-				in.GpuConfig.LicenseConfig = url
-				in.GpuConfig.LicenseConfigMd5Sum = md5sum
+				in.GpuConfig.LicenseConfigMd5Sum = cloudcommon.Md5SumStr(in.GpuConfig.LicenseConfig)
+				in.GpuConfig.LicenseConfig = cloudcommon.GetGPUDriverLicenseURL(gpuDriver.StorageBucketName, in.LicenseConfigStoragePath)
 			}
 		}
 		if in.TrustPolicy != "" {
@@ -987,30 +996,10 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	in.KafkaUser = ""
 	in.KafkaPassword = ""
 
+	newLicenseConfig := ""
 	if _, found := fmap[edgeproto.CloudletFieldGpuConfigLicenseConfig]; found {
-		storageClient, err := getGCSStorageClient(ctx)
-		if err != nil {
-			return err
-		}
-		defer storageClient.Close()
-		if in.GpuConfig.LicenseConfig == "" {
-			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
-			// Delete license config from GCS
-			err = deleteGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, in.Key.Name)
-			if err != nil {
-				return err
-			}
-			in.GpuConfig.LicenseConfigMd5Sum = ""
-		} else {
-			url, md5sum, err := setupGPUDriverLicenseConfig(ctx, storageClient, &in.GpuConfig.Driver, in.GpuConfig.LicenseConfig, in.Key.Name, cb)
-			if err != nil {
-				return err
-			}
-			// store the GCS path to license config
-			in.GpuConfig.LicenseConfig = url
-			in.GpuConfig.LicenseConfigMd5Sum = md5sum
-		}
-		in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigLicenseConfigMd5Sum)
+		newLicenseConfig = in.GpuConfig.LicenseConfig
+		in.GpuConfig.LicenseConfig = ""
 	}
 
 	crmUpdateReqd := false
@@ -1046,8 +1035,8 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 	maintenanceChanged := false
 	_, privPolUpdateRequested := fmap[edgeproto.CloudletFieldTrustPolicy]
 
+	var gpuDriver edgeproto.GPUDriver
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		cur = &edgeproto.Cloudlet{}
 		if !s.store.STMGet(stm, &in.Key, cur) {
 			return in.Key.NotFoundError()
 		}
@@ -1082,14 +1071,15 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 			if in.GpuConfig.Driver.Name == "" {
 				// clear GPU config
 				in.GpuConfig = edgeproto.GPUConfig{}
+				in.LicenseConfigStoragePath = ""
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverName)
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigDriverOrganization)
 				in.Fields = append(in.Fields, edgeproto.CloudletFieldGpuConfigProperties)
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldLicenseConfigStoragePath)
 			} else {
 				if in.GpuConfig.Driver.Organization != "" && in.GpuConfig.Driver.Organization != in.Key.Organization {
 					return fmt.Errorf("Can only use %s or '' org gpu drivers", in.Key.Organization)
 				}
-				gpuDriver := edgeproto.GPUDriver{}
 				if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
 					return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
 				}
@@ -1099,8 +1089,19 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 				if gpuDriver.State == ChangeInProgress {
 					return fmt.Errorf("GPU driver %s is busy", in.GpuConfig.Driver.String())
 				}
+				in.LicenseConfigStoragePath, err = cloudcommon.GetGPUDriverLicenseCloudletStoragePath(&gpuDriver.Key, *region, &in.Key)
+				if err != nil {
+					return err
+				}
+				in.Fields = append(in.Fields, edgeproto.CloudletFieldLicenseConfigStoragePath)
 			}
 			crmUpdateReqd = true
+		}
+
+		if in.GpuConfig.Driver.Name != "" {
+			if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
+				return fmt.Errorf("GPU driver %s not found", in.GpuConfig.Driver.String())
+			}
 		}
 
 		old := edgeproto.Cloudlet{}
@@ -1179,6 +1180,71 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, inCb edgeproto.Clou
 
 	if err != nil {
 		return err
+	}
+
+	defer func() {
+		if reterr != nil {
+			dErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+				cloudlet := edgeproto.Cloudlet{}
+				if !s.store.STMGet(stm, &in.Key, &cloudlet) {
+					return in.Key.NotFoundError()
+				}
+				if cloudlet.State != edgeproto.TrackedState_UPDATE_ERROR {
+					cloudlet.State = edgeproto.TrackedState_UPDATE_ERROR
+					s.store.STMPut(stm, &cloudlet)
+				}
+				return nil
+			})
+			if dErr != nil {
+				log.SpanLog(ctx, log.DebugLevelInfo, "Undo create cloudlet", "err", dErr)
+			}
+		}
+	}()
+
+	// Since state is set to UPDATE_REQUESTED, it is safe to do the following
+	if _, found := fmap[edgeproto.CloudletFieldGpuConfigLicenseConfig]; found {
+		if gpuDriver.Key.Name == "" {
+			return fmt.Errorf("License config can only be updated if GPU config exists for the cloudlet")
+		}
+		storageClient, err := getGCSStorageClient(ctx, &gpuDriver)
+		if err != nil {
+			return err
+		}
+		defer storageClient.Close()
+		newLicenseConfigMd5sum := ""
+		if newLicenseConfig == "" {
+			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
+			// Delete license config from GCS
+			log.SpanLog(ctx, log.DebugLevelApi, "Deleting GPU driver license config from GCS", "driver key", gpuDriver.Key, "license path", cur.LicenseConfigStoragePath)
+			err := storageClient.DeleteObject(ctx, cur.LicenseConfigStoragePath)
+			if err != nil {
+				return err
+			}
+			newLicenseConfigMd5sum = ""
+		} else {
+			cb.Send(&edgeproto.Result{Message: "Uploading the GPU driver license config to secure storage"})
+			log.SpanLog(ctx, log.DebugLevelApi, "Uploading GPU driver license config to GCS", "driver key", gpuDriver.Key, "license path", cur.LicenseConfigStoragePath)
+			err := storageClient.UploadObject(ctx, gpuDriver.LicenseConfigStoragePath, "", bytes.NewBufferString(newLicenseConfig))
+			if err != nil {
+				return fmt.Errorf("Failed to upload GPU driver license to %s, %v", cur.LicenseConfigStoragePath, err)
+			}
+			// store the GCS path to license config
+			newLicenseConfigMd5sum = cloudcommon.Md5SumStr(newLicenseConfig)
+			newLicenseConfig = cloudcommon.GetGPUDriverLicenseURL(gpuDriver.StorageBucketName, cur.LicenseConfigStoragePath)
+		}
+		err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
+			cl := edgeproto.Cloudlet{}
+			if !s.store.STMGet(stm, &in.Key, &cl) {
+				return in.Key.NotFoundError()
+			}
+			cl.GpuConfig.LicenseConfig = newLicenseConfig
+			cl.GpuConfig.LicenseConfigMd5Sum = newLicenseConfigMd5sum
+			s.store.STMPut(stm, &cl)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	// after the cloudlet change is committed, if the location changed,
@@ -1435,6 +1501,7 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 
 	var features *platform.Features
 	var prevState edgeproto.TrackedState
+	var gpuDriver edgeproto.GPUDriver
 	err = s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		dynInsts = make(map[edgeproto.AppInstKey]struct{})
 		clDynInsts = make(map[edgeproto.ClusterInstKey]struct{})
@@ -1457,6 +1524,11 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 			err = s.all.clusterInstApi.deleteCloudletOk(stm, &refs, clDynInsts)
 			if err != nil {
 				return err
+			}
+		}
+		if in.GpuConfig.Driver.Name != "" {
+			if !s.all.gpuDriverApi.store.STMGet(stm, &in.GpuConfig.Driver, &gpuDriver) {
+				return in.GpuConfig.Driver.NotFoundError()
 			}
 		}
 		err = s.all.appInstApi.deleteCloudletOk(stm, &refs, defaultClustKey, dynInsts)
@@ -1637,16 +1709,19 @@ func (s *CloudletApi) deleteCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		}
 	}
 
-	if updateCloudlet.GpuConfig.LicenseConfig != "" {
-		storageClient, err := getGCSStorageClient(ctx)
+	if gpuDriver.Key.Name != "" && updateCloudlet.GpuConfig.LicenseConfig != "" {
+		storageClient, err := getGCSStorageClient(ctx, &gpuDriver)
 		if err != nil {
-			return err
-		}
-		defer storageClient.Close()
-		// Delete license config from GCS
-		err = deleteGPUDriverLicenseConfig(ctx, storageClient, &updateCloudlet.GpuConfig.Driver, in.Key.Name)
-		if err != nil {
-			log.SpanLog(ctx, log.DebugLevelApi, "Failed to delete GPU driver license config from secure storage", "key", in.Key, "err", err)
+			log.SpanLog(ctx, log.DebugLevelApi, "Failed to get storage client", "bucket name", gpuDriver.StorageBucketName, "err", err)
+		} else {
+			defer storageClient.Close()
+			// Delete license config from GCS
+			cb.Send(&edgeproto.Result{Message: "Deleting GPU driver license config from secure storage"})
+			log.SpanLog(ctx, log.DebugLevelApi, "Deleting GPU driver license config from GCS", "driver key", gpuDriver.Key, "license path", updateCloudlet.LicenseConfigStoragePath)
+			err := storageClient.DeleteObject(ctx, updateCloudlet.LicenseConfigStoragePath)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelApi, "Failed to delete GPU driver license config from secure storage", "key", in.Key, "err", err)
+			}
 		}
 	}
 

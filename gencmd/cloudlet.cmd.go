@@ -2386,6 +2386,7 @@ var GPUDriverBuildComments = map[string]string{
 	"kernelversion":   "Kernel Version supported by GPU driver build",
 	"hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
 	"md5sum":          "Driver package md5sum to ensure package is not corrupted",
+	"storagepath":     "GPU driver build storage path",
 }
 var GPUDriverBuildSpecialArgs = map[string]string{}
 var GPUDriverBuildMemberRequiredArgs = []string{
@@ -2400,6 +2401,7 @@ var GPUDriverBuildMemberOptionalArgs = []string{
 	"build.kernelversion",
 	"build.hypervisorinfo",
 	"build.md5sum",
+	"build.storagepath",
 	"ignorestate",
 }
 var GPUDriverBuildMemberAliasArgs = []string{
@@ -2416,6 +2418,7 @@ var GPUDriverBuildMemberComments = map[string]string{
 	"build.kernelversion":   "Kernel Version supported by GPU driver build",
 	"build.hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
 	"build.md5sum":          "Driver package md5sum to ensure package is not corrupted",
+	"build.storagepath":     "GPU driver build storage path",
 	"ignorestate":           "Ignore state will ignore any action in-progress on the GPU driver",
 }
 var GPUDriverBuildMemberSpecialArgs = map[string]string{}
@@ -2443,6 +2446,7 @@ var GPUDriverOptionalArgs = []string{
 	"builds:#.kernelversion",
 	"builds:#.hypervisorinfo",
 	"builds:#.md5sum",
+	"builds:#.storagepath",
 	"licenseconfig",
 	"properties",
 	"ignorestate",
@@ -2463,12 +2467,15 @@ var GPUDriverComments = map[string]string{
 	"builds:#.kernelversion":   "Kernel Version supported by GPU driver build",
 	"builds:#.hypervisorinfo":  "Info on hypervisor supported by vGPU driver",
 	"builds:#.md5sum":          "Driver package md5sum to ensure package is not corrupted",
+	"builds:#.storagepath":     "GPU driver build storage path",
 	"licenseconfig":            "License config to setup license (will be stored in secure storage)",
 	"licenseconfigmd5sum":      "License config md5sum, to ensure integrity of license config",
 	"properties":               "Additional properties associated with GPU driver build For example: license server information, driver release date, etc, specify properties:empty=true to clear",
 	"state":                    "State to figure out if any action on the GPU driver is in-progress",
 	"ignorestate":              "Ignore state will ignore any action in-progress on the GPU driver",
 	"deleteprepare":            "Preparing to be deleted",
+	"storagebucketname":        "GPU driver storage bucket name",
+	"licenseconfigstoragepath": "GPU driver license config storage path",
 }
 var GPUDriverSpecialArgs = map[string]string{
 	"fields":     "StringArray",
@@ -2651,6 +2658,7 @@ var CloudletComments = map[string]string{
 	"federationconfig.partnerfederationid":   "Partner federation ID",
 	"federationconfig.zonecountrycode":       "Cloudlet zone country code",
 	"federationconfig.partnerfederationaddr": "Partner federation address",
+	"licenseconfigstoragepath":               "GPU driver license config storage path",
 }
 var CloudletSpecialArgs = map[string]string{
 	"accessvars":           "StringToString",
@@ -3018,6 +3026,7 @@ var AddGPUDriverBuildOptionalArgs = []string{
 	"build.driverpathcreds",
 	"build.kernelversion",
 	"build.hypervisorinfo",
+	"build.storagepath",
 	"ignorestate",
 }
 var RemoveGPUDriverBuildRequiredArgs = []string{
@@ -3028,6 +3037,7 @@ var RemoveGPUDriverBuildRequiredArgs = []string{
 var RemoveGPUDriverBuildOptionalArgs = []string{
 	"build.driverpathcreds",
 	"build.md5sum",
+	"build.storagepath",
 	"ignorestate",
 }
 var GetGPUDriverBuildURLRequiredArgs = []string{
@@ -3036,6 +3046,7 @@ var GetGPUDriverBuildURLRequiredArgs = []string{
 	"build.name",
 }
 var GetGPUDriverBuildURLOptionalArgs = []string{
+	"build.storagepath",
 	"ignorestate",
 }
 var CreateCloudletRequiredArgs = []string{
