@@ -8,6 +8,7 @@ import (
 	strings "strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -797,6 +798,76 @@ func AddSetupSpecificAppDNSRootForCloudlets(ctx context.Context, objStore objsto
 				return nil // already done
 			}
 			cloudlet.RootLbFqdn = newRootLbFqdn
+			allApis.cloudletApi.store.STMPut(stm, &cloudlet)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AddGPUDriverStoragePaths(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
+	// Process GPU drivers
+	gpuDriverKeys, err := getDbObjectKeys(objStore, "GPUDriver")
+	if err != nil {
+		return err
+	}
+	for key, _ := range gpuDriverKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get gpuDriver
+			gpuDriverStr := stm.Get(key)
+			if gpuDriverStr == "" {
+				return nil // was deleted
+			}
+			gpuDriver := edgeproto.GPUDriver{}
+			err := json.Unmarshal([]byte(gpuDriverStr), &gpuDriver)
+			if err != nil {
+				return fmt.Errorf("Unmarshal GPUDriver %s failed: %s", key, err)
+			}
+			if gpuDriver.StorageBucketName != "" && gpuDriver.LicenseConfigStoragePath != "" {
+				return nil // already done
+			}
+			gpuDriver.StorageBucketName = cloudcommon.GetGPUDriverBucketName(nodeMgr.DeploymentTag)
+			// old format doesn't have region in the storage path
+			gpuDriver.LicenseConfigStoragePath, err = cloudcommon.GetGPUDriverLicenseStoragePath(&gpuDriver.Key, "")
+			if err != nil {
+				return err
+			}
+			allApis.gpuDriverApi.store.STMPut(stm, &gpuDriver)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Process cloudlets
+	cloudletKeys, err := getDbObjectKeys(objStore, "Cloudlet")
+	if err != nil {
+		return err
+	}
+	for key, _ := range cloudletKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get cloudlet
+			cloudletStr := stm.Get(key)
+			if cloudletStr == "" {
+				return nil // was deleted
+			}
+			cloudlet := edgeproto.Cloudlet{}
+			err := json.Unmarshal([]byte(cloudletStr), &cloudlet)
+			if err != nil {
+				return fmt.Errorf("Unmarshal Cloudlet %s failed: %s", key, err)
+			}
+			if cloudlet.LicenseConfigStoragePath != "" {
+				return nil // already done
+			}
+			// old format doesn't have region in the storage path
+			cloudlet.LicenseConfigStoragePath, err = cloudcommon.GetGPUDriverLicenseCloudletStoragePath(&cloudlet.GpuConfig.Driver, "", &cloudlet.Key)
+			if err != nil {
+				return err
+			}
 			allApis.cloudletApi.store.STMPut(stm, &cloudlet)
 			return nil
 		})
