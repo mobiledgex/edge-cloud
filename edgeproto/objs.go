@@ -138,6 +138,9 @@ func (a *AllData) Sort() {
 	sort.Slice(a.Networks[:], func(i, j int) bool {
 		return a.Networks[i].Key.GetKeyString() < a.Networks[j].Key.GetKeyString()
 	})
+	sort.Slice(a.GpuDrivers[:], func(i, j int) bool {
+		return a.GpuDrivers[i].Key.GetKeyString() < a.GpuDrivers[j].Key.GetKeyString()
+	})
 }
 
 func (a *NodeData) Sort() {
