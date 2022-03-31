@@ -1096,6 +1096,26 @@ func (r *Run) GPUDriverApi_GPUDriverBuildMember(data *[]edgeproto.GPUDriverBuild
 	}
 }
 
+func (r *Run) GPUDriverApi_GPUDriverKey(data *[]edgeproto.GPUDriverKey, dataMap interface{}, dataOut interface{}) {
+	log.DebugLog(log.DebugLevelApi, "API for GPUDriverKey", "mode", r.Mode)
+	for ii, objD := range *data {
+		obj := &objD
+		switch r.Mode {
+		case "getgpudriverlicenseconfig":
+			out, err := r.client.GetGPUDriverLicenseConfig(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("GPUDriverApi_GPUDriverKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunGPUDriverApi_GPUDriverKey expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		}
+	}
+}
+
 func (s *DummyServer) CreateGPUDriver(in *edgeproto.GPUDriver, server edgeproto.GPUDriverApi_CreateGPUDriverServer) error {
 	var err error
 	if true {
@@ -1359,6 +1379,17 @@ func (r *Run) CloudletApi_CloudletKey(data *[]edgeproto.CloudletKey, dataMap int
 			}
 		case "generateaccesskey":
 			out, err := r.client.GenerateAccessKey(r.ctx, obj)
+			if err != nil {
+				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
+			} else {
+				outp, ok := dataOut.(*[]edgeproto.Result)
+				if !ok {
+					panic(fmt.Sprintf("RunCloudletApi_CloudletKey expected dataOut type *[]edgeproto.Result, but was %T", dataOut))
+				}
+				*outp = append(*outp, *out)
+			}
+		case "getcloudletgpudriverlicenseconfig":
+			out, err := r.client.GetCloudletGPUDriverLicenseConfig(r.ctx, obj)
 			if err != nil {
 				r.logErr(fmt.Sprintf("CloudletApi_CloudletKey[%d]", ii), err)
 			} else {
@@ -1847,6 +1878,18 @@ func (s *CliClient) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUD
 	return &out, err
 }
 
+func (s *ApiClient) GetGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.GPUDriverKey) (*edgeproto.Result, error) {
+	api := edgeproto.NewGPUDriverApiClient(s.Conn)
+	return api.GetGPUDriverLicenseConfig(ctx, in)
+}
+
+func (s *CliClient) GetGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.GPUDriverKey) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "GetGPUDriverLicenseConfig")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 type GPUDriverApiClient interface {
 	CreateGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error)
 	DeleteGPUDriver(ctx context.Context, in *edgeproto.GPUDriver) ([]edgeproto.Result, error)
@@ -1855,6 +1898,7 @@ type GPUDriverApiClient interface {
 	AddGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error)
 	RemoveGPUDriverBuild(ctx context.Context, in *edgeproto.GPUDriverBuildMember) ([]edgeproto.Result, error)
 	GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error)
+	GetGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.GPUDriverKey) (*edgeproto.Result, error)
 }
 
 func (s *ApiClient) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
@@ -2142,6 +2186,18 @@ func (s *CliClient) GenerateAccessKey(ctx context.Context, in *edgeproto.Cloudle
 	return &out, err
 }
 
+func (s *ApiClient) GetCloudletGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	api := edgeproto.NewCloudletApiClient(s.Conn)
+	return api.GetCloudletGPUDriverLicenseConfig(ctx, in)
+}
+
+func (s *CliClient) GetCloudletGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	out := edgeproto.Result{}
+	args := append(s.BaseArgs, "controller", "GetCloudletGPUDriverLicenseConfig")
+	err := wrapper.RunEdgectlObjs(args, in, &out, s.RunOps...)
+	return &out, err
+}
+
 func (s *ApiClient) PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error) {
 	api := edgeproto.NewCloudletApiClient(s.Conn)
 	stream, err := api.PlatformDeleteCloudlet(ctx, in)
@@ -2176,6 +2232,7 @@ type CloudletApiClient interface {
 	GetOrganizationsOnCloudlet(ctx context.Context, in *edgeproto.CloudletKey) ([]edgeproto.Organization, error)
 	RevokeAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	GenerateAccessKey(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
+	GetCloudletGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.CloudletKey) (*edgeproto.Result, error)
 	PlatformDeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) ([]edgeproto.Result, error)
 }
 

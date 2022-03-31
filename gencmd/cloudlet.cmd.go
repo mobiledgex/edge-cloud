@@ -698,6 +698,63 @@ func GetGPUDriverBuildURLs(c *cli.Command, data []edgeproto.GPUDriverBuildMember
 	}
 }
 
+var GetGPUDriverLicenseConfigCmd = &cli.Command{
+	Use:          "GetGPUDriverLicenseConfig",
+	RequiredArgs: strings.Join(GPUDriverKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(GPUDriverKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(GPUDriverKeyAliasArgs, " "),
+	SpecialArgs:  &GPUDriverKeySpecialArgs,
+	Comments:     GPUDriverKeyComments,
+	ReqData:      &edgeproto.GPUDriverKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runGetGPUDriverLicenseConfig,
+}
+
+func runGetGPUDriverLicenseConfig(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.GPUDriverKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetGPUDriverLicenseConfig(c, obj)
+}
+
+func GetGPUDriverLicenseConfig(c *cli.Command, in *edgeproto.GPUDriverKey) error {
+	if GPUDriverApiCmd == nil {
+		return fmt.Errorf("GPUDriverApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := GPUDriverApiCmd.GetGPUDriverLicenseConfig(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetGPUDriverLicenseConfig failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetGPUDriverLicenseConfigs(c *cli.Command, data []edgeproto.GPUDriverKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetGPUDriverLicenseConfig %v\n", data[ii])
+		myerr := GetGPUDriverLicenseConfig(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var GPUDriverApiCmds = []*cobra.Command{
 	CreateGPUDriverCmd.GenCmd(),
 	DeleteGPUDriverCmd.GenCmd(),
@@ -706,6 +763,7 @@ var GPUDriverApiCmds = []*cobra.Command{
 	AddGPUDriverBuildCmd.GenCmd(),
 	RemoveGPUDriverBuildCmd.GenCmd(),
 	GetGPUDriverBuildURLCmd.GenCmd(),
+	GetGPUDriverLicenseConfigCmd.GenCmd(),
 }
 
 var CloudletApiCmd edgeproto.CloudletApiClient
@@ -1820,6 +1878,63 @@ func GenerateAccessKeys(c *cli.Command, data []edgeproto.CloudletKey, err *error
 	}
 }
 
+var GetCloudletGPUDriverLicenseConfigCmd = &cli.Command{
+	Use:          "GetCloudletGPUDriverLicenseConfig",
+	RequiredArgs: strings.Join(CloudletKeyRequiredArgs, " "),
+	OptionalArgs: strings.Join(CloudletKeyOptionalArgs, " "),
+	AliasArgs:    strings.Join(CloudletKeyAliasArgs, " "),
+	SpecialArgs:  &CloudletKeySpecialArgs,
+	Comments:     CloudletKeyComments,
+	ReqData:      &edgeproto.CloudletKey{},
+	ReplyData:    &edgeproto.Result{},
+	Run:          runGetCloudletGPUDriverLicenseConfig,
+}
+
+func runGetCloudletGPUDriverLicenseConfig(c *cli.Command, args []string) error {
+	if cli.SilenceUsage {
+		c.CobraCmd.SilenceUsage = true
+	}
+	obj := c.ReqData.(*edgeproto.CloudletKey)
+	_, err := c.ParseInput(args)
+	if err != nil {
+		return err
+	}
+	return GetCloudletGPUDriverLicenseConfig(c, obj)
+}
+
+func GetCloudletGPUDriverLicenseConfig(c *cli.Command, in *edgeproto.CloudletKey) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletApiCmd.GetCloudletGPUDriverLicenseConfig(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudletGPUDriverLicenseConfig failed: %s", errstr)
+	}
+	c.WriteOutput(c.CobraCmd.OutOrStdout(), obj, cli.OutputFormat)
+	return nil
+}
+
+// this supports "Create" and "Delete" commands on ApplicationData
+func GetCloudletGPUDriverLicenseConfigs(c *cli.Command, data []edgeproto.CloudletKey, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudletGPUDriverLicenseConfig %v\n", data[ii])
+		myerr := GetCloudletGPUDriverLicenseConfig(c, &data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var PlatformDeleteCloudletCmd = &cli.Command{
 	Use:          "PlatformDeleteCloudlet",
 	RequiredArgs: strings.Join(CloudletRequiredArgs, " "),
@@ -1915,6 +2030,7 @@ var CloudletApiCmds = []*cobra.Command{
 	GetOrganizationsOnCloudletCmd.GenCmd(),
 	RevokeAccessKeyCmd.GenCmd(),
 	GenerateAccessKeyCmd.GenCmd(),
+	GetCloudletGPUDriverLicenseConfigCmd.GenCmd(),
 	PlatformDeleteCloudletCmd.GenCmd(),
 }
 
