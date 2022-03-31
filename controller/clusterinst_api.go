@@ -731,9 +731,7 @@ func (s *ClusterInstApi) getCloudletResourceMetric(ctx context.Context, stm conc
 		return nil, fmt.Errorf("CloudletInfo not found: %v", key)
 	}
 	cloudletRefs := edgeproto.CloudletRefs{}
-	if !s.all.cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs) {
-		return nil, fmt.Errorf("CloudletRefs not found: %v", key)
-	}
+	s.all.cloudletRefsApi.store.STMGet(stm, key, &cloudletRefs)
 	cloudletPlatform, err := pfutils.GetPlatform(ctx, cloudlet.PlatformType.String(), nodeMgr.UpdateNodeProps)
 	if err != nil {
 		return nil, err
@@ -1110,7 +1108,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
-		s.updateCloudletResourcesMetric(ctx, in)
+		s.updateCloudletResourcesMetric(ctx, &in.Key.CloudletKey)
 	}
 	return err
 }
@@ -1259,22 +1257,22 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 		edgeproto.WithCrmMsgCh(sendObj.crmMsgCh),
 	)
 	if err == nil {
-		s.updateCloudletResourcesMetric(ctx, in)
+		s.updateCloudletResourcesMetric(ctx, &in.Key.CloudletKey)
 	}
 	return err
 }
 
-func (s *ClusterInstApi) updateCloudletResourcesMetric(ctx context.Context, in *edgeproto.ClusterInst) {
+func (s *ClusterInstApi) updateCloudletResourcesMetric(ctx context.Context, key *edgeproto.CloudletKey) {
 	var err error
 	metrics := []*edgeproto.Metric{}
 	resErr := s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
-		metrics, err = s.getCloudletResourceMetric(ctx, stm, &in.Key.CloudletKey)
+		metrics, err = s.getCloudletResourceMetric(ctx, stm, key)
 		return err
 	})
 	if resErr == nil {
 		services.cloudletResourcesInfluxQ.AddMetric(metrics...)
 	} else {
-		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "clusterInstKey", in.Key, "err", resErr)
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to generate cloudlet resource usage metric", "cloudletkey", key, "err", resErr)
 	}
 }
 
@@ -1519,7 +1517,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 	}
 	if err == nil {
-		s.updateCloudletResourcesMetric(ctx, in)
+		s.updateCloudletResourcesMetric(ctx, &in.Key.CloudletKey)
 	}
 	s.all.alertApi.CleanupClusterInstAlerts(ctx, &clusterInstKey)
 	return err

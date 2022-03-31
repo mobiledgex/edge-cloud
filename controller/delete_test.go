@@ -106,7 +106,9 @@ func (s *DeleteDataGen) GetClusterInstAutoScalePolicyRef(key *edgeproto.PolicyKe
 // Cloudlet
 func (s *DeleteDataGen) GetCloudletTestObj() (*edgeproto.Cloudlet, *testSupportData) {
 	obj := testutil.CloudletData()[0]
-	return &obj, noSupportData
+	supportData := &testSupportData{}
+	supportData.GpuDrivers = []edgeproto.GPUDriver{testutil.GPUDriverData[0]}
+	return &obj, supportData
 }
 func (s *DeleteDataGen) GetAutoProvPolicyCloudletsRef(key *edgeproto.CloudletKey) (*edgeproto.AutoProvPolicy, *testSupportData) {
 	ref := testutil.AutoProvPolicyData[0]
