@@ -27,13 +27,14 @@ func TestSyncInsertBatch(t *testing.T) {
 	sy.insertBatchData(&edgeproto.CloudletCache{}, &objstore.SyncCbData{
 		Key: []byte("cloudletKey"),
 	})
-	// make sure sorted order is correct, order val in comment
+	// make sure sorted order is correct, order val in comment,
+	// see edgeproto TestNotifyOrder unit test.
 	newOrder := []string{
 		"flavorKey",      // 0
-		"appKey",         // 1
 		"cloudletKey",    // 1
-		"appInstKey",     // 3
-		"appInstRefsKey", // 4
+		"appKey",         // 3
+		"appInstKey",     // 4
+		"appInstRefsKey", // 5
 	}
 	require.Equal(t, len(newOrder), len(sy.batch))
 	for ii, name := range newOrder {

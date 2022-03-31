@@ -1380,6 +1380,42 @@ var AllKeyTagsMap = map[string]struct{}{
 	"vmpoolorg":           struct{}{},
 }
 
+// References generated from the refers_to and tracks_refs_by protogen options
+func GetReferencesMap() map[string][]string {
+	refs := make(map[string][]string)
+	refs["AppInstLatency"] = []string{"ClusterInst"}
+	refs["VMResource"] = []string{"Cloudlet"}
+	refs["AppAlertPolicy"] = []string{"AlertPolicy", "App"}
+	refs["DeploymentCloudletRequest"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
+	refs["AppInstKey"] = []string{"ClusterInst"}
+	refs["AppInstRefs"] = []string{"AppInst"}
+	refs["CloudletRefs"] = []string{"ClusterInst"}
+	refs["CloudletPool"] = []string{"Cloudlet"}
+	refs["AppInstClient"] = []string{"ClusterInst"}
+	refs["ClusterInstKey"] = []string{"Cloudlet"}
+	refs["Cloudlet"] = []string{"Flavor", "GPUDriver", "ResTagTable", "TrustPolicy", "VMPool"}
+	refs["NetworkKey"] = []string{"Cloudlet"}
+	refs["AutoProvPolicyCloudlet"] = []string{"AutoProvPolicy", "Cloudlet"}
+	refs["ExecRequest"] = []string{"ClusterInst"}
+	refs["ClusterInst"] = []string{"AutoScalePolicy", "Cloudlet", "Flavor", "Network"}
+	refs["ClusterRefs"] = []string{"AppInst"}
+	refs["AppAutoProvPolicy"] = []string{"App", "AutoProvPolicy"}
+	refs["App"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
+	refs["CloudletResMap"] = []string{"Cloudlet", "ResTagTable"}
+	refs["AllData"] = []string{"AlertPolicy", "App", "AutoProvPolicy", "AutoScalePolicy", "Cloudlet", "CloudletPool", "ClusterInst", "Flavor", "GPUDriver", "Network", "ResTagTable", "TrustPolicy", "VMPool"}
+	refs["TrustPolicyException"] = []string{"App", "CloudletPool"}
+	refs["AutoProvPolicy"] = []string{"Cloudlet"}
+	refs["AutoProvCounts"] = []string{"Cloudlet"}
+	refs["GPUConfig"] = []string{"GPUDriver"}
+	refs["Network"] = []string{"Cloudlet"}
+	refs["TrustPolicyExceptionKey"] = []string{"App", "CloudletPool"}
+	refs["AppInst"] = []string{"ClusterInst", "Flavor"}
+	refs["AutoProvCount"] = []string{"Cloudlet"}
+	refs["CloudletPoolMember"] = []string{"Cloudlet", "CloudletPool"}
+	refs["AppInstLookup2"] = []string{"ClusterInst"}
+	refs["AppInstLookup"] = []string{"ClusterInst"}
+	return refs
+}
 func (m *Alert) Size() (n int) {
 	if m == nil {
 		return 0

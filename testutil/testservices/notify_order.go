@@ -35,8 +35,7 @@ func CheckNotifySendOrder(t *testing.T, sendOrder map[string]int) {
 		fmt.Printf("%d: %s\n", to.order, to.name)
 	}
 
-	no := edgeproto.NewNotifyOrder()
-	for obj, deps := range no.GetDeps() {
+	for obj, deps := range edgeproto.GetReferencesMap() {
 		objOrder, found := sendOrder[obj]
 		if !found {
 			// object isn't sent, ignore

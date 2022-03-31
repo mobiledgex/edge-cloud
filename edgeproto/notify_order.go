@@ -8,11 +8,6 @@ package edgeproto
 // Lower order numbers represent sending before higher order numbers.
 // Sorting by Less functions means dependencies will be sorted first.
 
-// NotifyOrderObj is the object which will have order constraints
-type NotifyOrderObj interface {
-	GetTypeString() string
-}
-
 type NotifyOrder struct {
 	// key is cache type (cache.GetTypeString())
 	objs map[string]*NotifyOrderNode
@@ -28,53 +23,26 @@ type NotifyOrderNode struct {
 func NewNotifyOrder() *NotifyOrder {
 	n := &NotifyOrder{}
 	n.objs = make(map[string]*NotifyOrderNode)
-	// Cloudlet dependencies
-	n.addObjectDep(&CloudletCache{}, &FlavorCache{})
-	n.addObjectDep(&CloudletCache{}, &VMPoolCache{})
-	n.addObjectDep(&CloudletCache{}, &GPUDriverCache{})
-	// ClusterInst dependencies
-	n.addObjectDep(&ClusterInstCache{}, &FlavorCache{})
-	n.addObjectDep(&ClusterInstCache{}, &CloudletCache{})
-	n.addObjectDep(&ClusterInstCache{}, &AutoScalePolicyCache{})
-	n.addObjectDep(&ClusterInstCache{}, &TrustPolicyCache{})
-	n.addObjectDep(&ClusterInstCache{}, &NetworkCache{})
-	// App dependencies
-	n.addObjectDep(&AppCache{}, &FlavorCache{})
-	n.addObjectDep(&AppCache{}, &AutoProvPolicyCache{})
-	// AppInst dependencies
-	n.addObjectDep(&AppInstCache{}, &FlavorCache{})
-	n.addObjectDep(&AppInstCache{}, &AppCache{})
-	n.addObjectDep(&AppInstCache{}, &ClusterInstCache{})
-	n.addObjectDep(&AppInstCache{}, &TrustPolicyCache{})
-	// AppInstRefs dependencies
-	n.addObjectDep(&AppInstRefsCache{}, &AppCache{})
-	n.addObjectDep(&AppInstRefsCache{}, &AppInstCache{})
-	n.addObjectDep(&AppInstRefsCache{}, &CloudletCache{})
-	// CloudletRefs dependencies
-	n.addObjectDep(&CloudletRefsCache{}, &ClusterInstCache{})
-	n.addObjectDep(&CloudletRefsCache{}, &AppInstCache{})
-	// ClusterRefs dependencies
-	n.addObjectDep(&ClusterRefsCache{}, &AppInstCache{})
-	// TrustPolicyException dependencies
-	n.addObjectDep(&TrustPolicyExceptionCache{}, &AppCache{})
-	n.addObjectDep(&TrustPolicyExceptionCache{}, &CloudletPoolCache{})
-	// CloudletPool dependencies
-	n.addObjectDep(&CloudletPoolCache{}, &CloudletCache{})
+	for obj, refs := range GetReferencesMap() {
+		for _, ref := range refs {
+			n.addObjectDep(obj, ref)
+		}
+	}
 	return n
 }
 
-func (s *NotifyOrder) getNode(obj NotifyOrderObj) *NotifyOrderNode {
-	node, ok := s.objs[obj.GetTypeString()]
+func (s *NotifyOrder) getNode(obj string) *NotifyOrderNode {
+	node, ok := s.objs[obj]
 	if !ok {
 		node = &NotifyOrderNode{
-			typeName: obj.GetTypeString(),
+			typeName: obj,
 		}
-		s.objs[obj.GetTypeString()] = node
+		s.objs[obj] = node
 	}
 	return node
 }
 
-func (s *NotifyOrder) addObjectDep(obj, dependsOn NotifyOrderObj) {
+func (s *NotifyOrder) addObjectDep(obj, dependsOn string) {
 	objNode := s.getNode(obj)
 	depNode := s.getNode(dependsOn)
 
@@ -110,17 +78,4 @@ func (s *NotifyOrder) Less(typeString1, typeString2 string) bool {
 		order2 = node.order
 	}
 	return order1 < order2
-}
-
-// Get types and the types they depend upon
-func (s *NotifyOrder) GetDeps() map[string][]string {
-	deps := make(map[string][]string)
-	for _, obj := range s.objs {
-		objDeps, _ := deps[obj.typeName]
-		for _, node := range obj.dependsOn {
-			objDeps = append(objDeps, node.typeName)
-		}
-		deps[obj.typeName] = objDeps
-	}
-	return deps
 }
