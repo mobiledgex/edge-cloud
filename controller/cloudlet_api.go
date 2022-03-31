@@ -676,6 +676,12 @@ func (s *CloudletApi) createCloudletInternal(cctx *CallContext, in *edgeproto.Cl
 		return err
 	}
 
+	defer func() {
+		if reterr == nil {
+			s.all.clusterInstApi.updateCloudletResourcesMetric(ctx, &in.Key)
+		}
+	}()
+
 	if ignoreCRMState(cctx) {
 		return nil
 	}
