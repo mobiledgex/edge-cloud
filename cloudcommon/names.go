@@ -231,40 +231,6 @@ func GetRootLBFQDNOld(key *edgeproto.CloudletKey, domain string) string {
 	return fmt.Sprintf("%s.%s.%s", loc, oper, domain)
 }
 
-// GetAppInstId returns a string for this AppInst that is likely to be
-// unique within the region. It does not guarantee uniqueness.
-// The delimiter '.' is removed from the AppInstId so that it can be used
-// to append further strings to this ID to build derived unique names.
-// Salt can be used by the caller to add an extra field if needed
-// to ensure uniqueness. In all cases, any requirements for uniqueness
-// must be guaranteed by the caller.
-func GetAppInstId(appInst *edgeproto.AppInst, app *edgeproto.App, salt string) string {
-	fields := []string{}
-
-	appName := util.DNSSanitize(appInst.Key.AppKey.Name)
-	dev := util.DNSSanitize(appInst.Key.AppKey.Organization)
-	ver := util.DNSSanitize(appInst.Key.AppKey.Version)
-	appId := fmt.Sprintf("%s%s%s", dev, appName, ver)
-	fields = append(fields, appId)
-
-	if IsClusterInstReqd(app) {
-		cluster := util.DNSSanitize(appInst.Key.ClusterInstKey.ClusterKey.Name)
-		fields = append(fields, cluster)
-	}
-
-	loc := util.DNSSanitize(appInst.Key.ClusterInstKey.CloudletKey.Name)
-	fields = append(fields, loc)
-
-	oper := util.DNSSanitize(appInst.Key.ClusterInstKey.CloudletKey.Organization)
-	fields = append(fields, oper)
-
-	if salt != "" {
-		salt = util.DNSSanitize(salt)
-		fields = append(fields, salt)
-	}
-	return strings.Join(fields, "-")
-}
-
 // FqdnPrefix is used only for IP-per-service platforms that allocate
 // an IP for each kubernetes service. Because it adds an extra level of
 // DNS label hierarchy and cannot match the wildcard cert, we do not
@@ -370,43 +336,78 @@ func GetCloudletResourceUsageMeasurement(pfType string) string {
 
 // GCS Storage Bucket Name: used to store GPU driver packages
 func GetGPUDriverBucketName(deploymentTag string) string {
+	if deploymentTag == "" {
+		deploymentTag = "local"
+	}
 	return fmt.Sprintf("mobiledgex-%s-gpu-drivers", deploymentTag)
 }
 
-func GetGPUDriverStoragePath(key *edgeproto.GPUDriverKey) string {
+func GetGPUDriverStoragePath(key *edgeproto.GPUDriverKey, region string) (string, error) {
 	orgName := key.Organization
 	if key.Organization == "" {
 		orgName = OrganizationMobiledgeX
 	}
-	return fmt.Sprintf("%s/%s", orgName, key.Name)
-}
-
-func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey) string {
-	return fmt.Sprintf("%s/%s", GetGPUDriverStoragePath(key), edgeproto.GPUDriverLicenseConfig)
-}
-
-func GetGPUDriverLicenseCloudletStoragePath(key *edgeproto.GPUDriverKey, cloudletName string) string {
-	return fmt.Sprintf("%s/%s/%s", GetGPUDriverStoragePath(key), cloudletName, edgeproto.GPUDriverLicenseConfig)
-}
-
-func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, buildName, ext string) string {
-	return fmt.Sprintf("%s/%s%s", GetGPUDriverStoragePath(key), buildName, ext)
-}
-
-func GetGPUDriverURL(key *edgeproto.GPUDriverKey, deploymentTag, buildName, ext string) string {
-	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), GetGPUDriverBuildStoragePath(key, buildName, ext))
-}
-
-func GetGPUDriverLicenseURL(key *edgeproto.GPUDriverKey, cloudletName, deploymentTag string) string {
-	licensePath := GetGPUDriverLicenseStoragePath(key)
-	if cloudletName != "" {
-		licensePath = GetGPUDriverLicenseCloudletStoragePath(key, cloudletName)
+	sPath := StoragePath{}
+	err := sPath.AppendPaths(region, orgName, key.Name)
+	if err != nil {
+		return "", err
 	}
-	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", GetGPUDriverBucketName(deploymentTag), licensePath)
+	return sPath.String(), nil
 }
 
-func GetGPUDriverBuildPathFromURL(driverURL, deploymentTag string) string {
-	return strings.TrimPrefix(driverURL, fmt.Sprintf("https://storage.cloud.google.com/%s/", GetGPUDriverBucketName(deploymentTag)))
+func GetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey, region string) (string, error) {
+	driverStoragePath, err := GetGPUDriverStoragePath(key, region)
+	if err != nil {
+		return "", err
+	}
+	sPath := StoragePath{}
+	err = sPath.AppendPaths("licenseconfig", edgeproto.GPUDriverLicenseConfig)
+	if err != nil {
+		return "", err
+	}
+	return driverStoragePath + "/" + sPath.String(), nil
+}
+
+func GetGPUDriverLicenseCloudletStoragePath(key *edgeproto.GPUDriverKey, region string, cloudletKey *edgeproto.CloudletKey) (string, error) {
+	if key.Organization != "" && key.Organization != cloudletKey.Organization {
+		return "", fmt.Errorf("Can only use %s or '' org gpu drivers", key.Organization)
+	}
+	driverStoragePath, err := GetGPUDriverStoragePath(key, region)
+	if err != nil {
+		return "", err
+	}
+	// If GPU driver org is empty i.e. it is owned by MobiledgeX org, then add cloudletOrg to storage path
+	cloudletOrg := ""
+	if key.Organization == "" {
+		cloudletOrg = cloudletKey.Organization
+	}
+	sPath := StoragePath{}
+	err = sPath.AppendPaths("cloudlet", "licenseconfig", cloudletOrg, cloudletKey.Name, edgeproto.GPUDriverLicenseConfig)
+	if err != nil {
+		return "", err
+	}
+	return driverStoragePath + "/" + sPath.String(), nil
+}
+
+func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, region, buildName, ext string) (string, error) {
+	driverStoragePath, err := GetGPUDriverStoragePath(key, region)
+	if err != nil {
+		return "", err
+	}
+	sPath := StoragePath{}
+	err = sPath.AppendPaths("build", buildName, ext)
+	if err != nil {
+		return "", err
+	}
+	return driverStoragePath + "/" + sPath.String(), nil
+}
+
+func GetGPUDriverURL(bucketName, buildStoragePath string) string {
+	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", bucketName, buildStoragePath)
+}
+
+func GetGPUDriverLicenseURL(bucketName, licenseConfigStoragePath string) string {
+	return fmt.Sprintf("https://storage.cloud.google.com/%s/%s", bucketName, licenseConfigStoragePath)
 }
 
 func IsPlatformNode(nodeTypeStr string) bool {

@@ -275,3 +275,7 @@ func GetClusterContainerNames(ctx context.Context, client ssh.Client, clusterNam
 func (s *Platform) ActiveChanged(ctx context.Context, platformActive bool) error {
 	return nil
 }
+
+func (s *Platform) NameSanitize(name string) string {
+	return name
+}

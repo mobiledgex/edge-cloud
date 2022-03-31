@@ -268,6 +268,9 @@ message GPUDriverBuild {
   string hypervisor_info = 6;
   // Driver package md5sum to ensure package is not corrupted
   string md5sum = 7;
+  // GPU driver build storage path
+  string storage_path = 8 [(protogen.backend) = true];
+  option (protogen.noconfig) = "StoragePath";
 }
 
 message GPUDriverBuildMember {
@@ -308,6 +311,10 @@ message GPUDriver {
   bool ignore_state = 8;
   // Preparing to be deleted
   bool delete_prepare = 9 [(protogen.backend) = true]; 
+  // GPU driver storage bucket name
+  string storage_bucket_name = 10 [(protogen.backend) = true];
+  // GPU driver license config storage path
+  string license_config_storage_path = 11 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -318,7 +325,7 @@ message GPUDriver {
   option (protogen.notify_custom_update) = true;
   option (protogen.alias) = "gpudrivername=Key.Name,gpudriverorg=Key.Organization";
   option (protogen.uses_org) = "key=Organization";
-  option (protogen.noconfig) = "State,LicenseConfigMd5Sum,DeletePrepare";
+  option (protogen.noconfig) = "State,LicenseConfigMd5Sum,DeletePrepare,StorageBucketName,LicenseConfigStoragePath";
   option (protogen.not_required) = "Key.Organization";
   option (protogen.controller_api_struct) = "gpuDriverApi";
 }
@@ -524,6 +531,8 @@ message Cloudlet {
   string root_lb_fqdn = 55 [(protogen.backend) = true];
   // Federation config for a federated cloudlet
   FederationConfig federation_config = 56 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // GPU driver license config storage path
+  string license_config_storage_path = 57 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -533,7 +542,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_recv_hook) = true;
-  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,SecondaryCrmAccessPublicKey,SecondaryCrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare,GpuConfig.LicenseConfigMd5Sum,DnsLabel,RootLbFqdn,FederationConfig";
+  option (protogen.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp,Config,ChefClientKey,State,Errors,CrmAccessPublicKey,CrmAccessKeyUpgradeRequired,SecondaryCrmAccessPublicKey,SecondaryCrmAccessKeyUpgradeRequired,CreatedAt,UpdatedAt,TrustPolicyState,HostController,DeletePrepare,GpuConfig.LicenseConfigMd5Sum,DnsLabel,RootLbFqdn,FederationConfig,LicenseConfigStoragePath";
   option (protogen.alias) = "cloudlet=Key.Name,cloudletorg=Key.Organization,federatedorg=Key.FederatedOrganization";
   option (protogen.not_required) = "Key.FederatedOrganization";
   option (protogen.mc2_target_cloudlet) = "Key";
