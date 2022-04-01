@@ -406,6 +406,14 @@ service GPUDriverApi {
     option (protogen.method_noconfig) = "Build.DriverPath,Build.OperatingSystem,Build.KernelVersion,Build.HypervisorInfo,Build.DriverPathCreds,Build.Md5Sum";
     option (protogen.mc2_custom_authz) = true;
   }
+  // Get GPU Driver License Config. Returns the license config specific to GPU driver
+  rpc GetGPUDriverLicenseConfig(GPUDriverKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/get/gpudriverlicenseconfig"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
+  }
 }
 
 message GPUConfig {
@@ -787,6 +795,15 @@ service CloudletApi {
       body: "*"
     };
     option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Organization";
+  }
+
+  // Get Cloudlet Specific GPU Driver License Config. Returns the license config associated with the cloudlet
+  rpc GetCloudletGPUDriverLicenseConfig(CloudletKey) returns (Result) {
+    option (google.api.http) = {
+      post: "/get/cloudlet/gpudriverlicenseconfig"
+      body: "*"
+    };
+    option (protogen.mc2_api) = "ResourceCloudletAnalytics,ActionView,Organization";
   }
 
   // This is used internally to forward requests to other Controllers

@@ -792,3 +792,34 @@ func (s *GPUDriverApi) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.G
 		Validity:     edgeproto.Duration(GPUDriverBuildURLValidity),
 	}, nil
 }
+
+func GetLicenseConfigFromStorageServer(ctx context.Context, gpuDriver *edgeproto.GPUDriver, cfgPath string) (string, error) {
+	storageClient, err := getGCSStorageClient(ctx, gpuDriver)
+	if err != nil {
+		return "", err
+	}
+	defer storageClient.Close()
+	cfg, err := storageClient.GetObject(ctx, cfgPath)
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "failed to get license config", "cfgPath", cfgPath, "err", err)
+		return "", err
+	}
+	return cfg, nil
+}
+
+func (s *GPUDriverApi) GetGPUDriverLicenseConfig(ctx context.Context, key *edgeproto.GPUDriverKey) (*edgeproto.Result, error) {
+	gpuDriver := edgeproto.GPUDriver{}
+	if !s.store.Get(ctx, key, &gpuDriver) {
+		return &edgeproto.Result{}, key.NotFoundError()
+	}
+	if gpuDriver.LicenseConfigStoragePath == "" {
+		return &edgeproto.Result{}, fmt.Errorf("Missing license config storage path")
+	}
+	cfg, err := GetLicenseConfigFromStorageServer(ctx, &gpuDriver, gpuDriver.LicenseConfigStoragePath)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	return &edgeproto.Result{
+		Message: cfg,
+	}, nil
+}

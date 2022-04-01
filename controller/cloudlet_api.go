@@ -2593,3 +2593,17 @@ func (s *CloudletApi) GetOrganizationsOnCloudlet(in *edgeproto.CloudletKey, cb e
 	}
 	return nil
 }
+
+func (s *CloudletApi) GetCloudletGPUDriverLicenseConfig(ctx context.Context, key *edgeproto.CloudletKey) (*edgeproto.Result, error) {
+	cloudlet := edgeproto.Cloudlet{}
+	if !s.store.Get(ctx, key, &cloudlet) {
+		return &edgeproto.Result{}, key.NotFoundError()
+	}
+	if cloudlet.GpuConfig.Driver.Name == "" {
+		return &edgeproto.Result{}, fmt.Errorf("Cloudlet is not associated with any GPU driver")
+	}
+	if cloudlet.LicenseConfigStoragePath == "" {
+		return &edgeproto.Result{}, fmt.Errorf("Cloudlet license config storage path is empty")
+	}
+	return s.all.gpuDriverApi.GetGPUDriverLicenseConfig(ctx, &cloudlet.GpuConfig.Driver)
+}
