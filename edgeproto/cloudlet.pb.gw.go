@@ -215,6 +215,40 @@ func local_request_GPUDriverApi_GetGPUDriverBuildURL_0(ctx context.Context, mars
 
 }
 
+func request_GPUDriverApi_GetGPUDriverLicenseConfig_0(ctx context.Context, marshaler runtime.Marshaler, client GPUDriverApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GPUDriverKey
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetGPUDriverLicenseConfig(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_GPUDriverApi_GetGPUDriverLicenseConfig_0(ctx context.Context, marshaler runtime.Marshaler, server GPUDriverApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GPUDriverKey
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetGPUDriverLicenseConfig(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_CreateCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
@@ -739,6 +773,40 @@ func local_request_CloudletApi_GenerateAccessKey_0(ctx context.Context, marshale
 
 }
 
+func request_CloudletApi_GetCloudletGPUDriverLicenseConfig_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CloudletKey
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.GetCloudletGPUDriverLicenseConfig(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_CloudletApi_GetCloudletGPUDriverLicenseConfig_0(ctx context.Context, marshaler runtime.Marshaler, server CloudletApiServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CloudletKey
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetCloudletGPUDriverLicenseConfig(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_CloudletInfoApi_ShowCloudletInfo_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletInfoApiClient, req *http.Request, pathParams map[string]string) (CloudletInfoApi_ShowCloudletInfoClient, runtime.ServerMetadata, error) {
 	var protoReq CloudletInfo
 	var metadata runtime.ServerMetadata
@@ -853,6 +921,26 @@ func RegisterGPUDriverApiHandlerServer(ctx context.Context, mux *runtime.ServeMu
 		}
 
 		forward_GPUDriverApi_GetGPUDriverBuildURL_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_GPUDriverApi_GetGPUDriverLicenseConfig_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_GPUDriverApi_GetGPUDriverLicenseConfig_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_GPUDriverApi_GetGPUDriverLicenseConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1126,6 +1214,26 @@ func RegisterCloudletApiHandlerServer(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("POST", pattern_CloudletApi_GetCloudletGPUDriverLicenseConfig_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_CloudletApi_GetCloudletGPUDriverLicenseConfig_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_GetCloudletGPUDriverLicenseConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -1337,6 +1445,26 @@ func RegisterGPUDriverApiHandlerClient(ctx context.Context, mux *runtime.ServeMu
 
 	})
 
+	mux.Handle("POST", pattern_GPUDriverApi_GetGPUDriverLicenseConfig_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_GPUDriverApi_GetGPUDriverLicenseConfig_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_GPUDriverApi_GetGPUDriverLicenseConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -1354,6 +1482,8 @@ var (
 	pattern_GPUDriverApi_RemoveGPUDriverBuild_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"remove", "gpudriverbuild"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_GPUDriverApi_GetGPUDriverBuildURL_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"get", "gpudriverbuildurl"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_GPUDriverApi_GetGPUDriverLicenseConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"get", "gpudriverlicenseconfig"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -1370,6 +1500,8 @@ var (
 	forward_GPUDriverApi_RemoveGPUDriverBuild_0 = runtime.ForwardResponseStream
 
 	forward_GPUDriverApi_GetGPUDriverBuildURL_0 = runtime.ForwardResponseMessage
+
+	forward_GPUDriverApi_GetGPUDriverLicenseConfig_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterCloudletApiHandlerFromEndpoint is same as RegisterCloudletApiHandler but
@@ -1750,6 +1882,26 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 
 	})
 
+	mux.Handle("POST", pattern_CloudletApi_GetCloudletGPUDriverLicenseConfig_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CloudletApi_GetCloudletGPUDriverLicenseConfig_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletApi_GetCloudletGPUDriverLicenseConfig_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -1787,6 +1939,8 @@ var (
 	pattern_CloudletApi_RevokeAccessKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"revoke", "cloudletaccesskey"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_CloudletApi_GenerateAccessKey_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"generate", "cloudletaccesskey"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_CloudletApi_GetCloudletGPUDriverLicenseConfig_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"get", "cloudlet", "gpudriverlicenseconfig"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -1823,6 +1977,8 @@ var (
 	forward_CloudletApi_RevokeAccessKey_0 = runtime.ForwardResponseMessage
 
 	forward_CloudletApi_GenerateAccessKey_0 = runtime.ForwardResponseMessage
+
+	forward_CloudletApi_GetCloudletGPUDriverLicenseConfig_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterCloudletInfoApiHandlerFromEndpoint is same as RegisterCloudletInfoApiHandler but
