@@ -1227,7 +1227,7 @@ func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
 	case reflect.TypeOf(OSType(0)):
 		return "OSType", ", valid values are one of Linux, Windows, Others, or 0, 1, 20", true
 	case reflect.TypeOf(ReportSchedule(0)):
-		return "ReportSchedule", ", valid values are one of EveryWeek, Every15Days, Every30Days, EveryMonth, or 0, 1, 2, 3", true
+		return "ReportSchedule", ", valid values are one of EveryWeek, Every15Days, EveryMonth, or 0, 1, 3", true
 	case reflect.TypeOf(VMState(0)):
 		return "VMState", ", valid values are one of Free, InProgress, InUse, Add, Remove, Update, ForceFree, or 0, 1, 2, 3, 4, 5, 6", true
 	case reflect.TypeOf(VMAction(0)):
