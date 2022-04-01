@@ -932,15 +932,13 @@ service CloudletMetricsApi {
 //
 // 0: `EveryWeek`
 // 1: `Every15Days`
-// 2: `Every30Days`
 // 3: `EveryMonth`
 enum ReportSchedule {
   // Every Week
   EveryWeek = 0;
   // Every 15 Days
   Every15Days = 1;
-  // Every 30 Days
-  Every30Days = 2;
+  // (Deprecated) Every 30 Days
   // Every Month
   EveryMonth = 3;
   option (protogen.common_prefix) = ""; // avoid dropping "Every"
