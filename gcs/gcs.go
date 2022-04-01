@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -127,6 +128,23 @@ func (gc *GCSClient) UploadObject(ctx context.Context, objectName, uploadFilePat
 		return fmt.Errorf("Failed to write object(%q) to GCS: %v", objectName, err)
 	}
 	return nil
+}
+
+func (gc *GCSClient) GetObject(ctx context.Context, objectName string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, gc.Timeout)
+	defer cancel()
+
+	rc, err := gc.Client.Bucket(gc.BucketName).Object(objectName).NewReader(ctx)
+	if err != nil {
+		return "", fmt.Errorf("Failed to download GCS object(%q): %v", objectName, err)
+	}
+	defer rc.Close()
+
+	buf, err := ioutil.ReadAll(rc)
+	if err != nil {
+		return "", fmt.Errorf("Failed to read download object(%q): %v", objectName, err)
+	}
+	return string(buf), nil
 }
 
 func (gc *GCSClient) DownloadObject(ctx context.Context, objectName, downloadPath string) (reterr error) {

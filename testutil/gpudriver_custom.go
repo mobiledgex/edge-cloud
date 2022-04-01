@@ -17,3 +17,7 @@ func (s *DummyServer) RemoveGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, c
 func (s *DummyServer) GetGPUDriverBuildURL(ctx context.Context, in *edgeproto.GPUDriverBuildMember) (*edgeproto.GPUDriverBuildURL, error) {
 	return &edgeproto.GPUDriverBuildURL{}, nil
 }
+
+func (s *DummyServer) GetGPUDriverLicenseConfig(ctx context.Context, in *edgeproto.GPUDriverKey) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
