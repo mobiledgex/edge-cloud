@@ -17,6 +17,7 @@ var (
 	namespace     *string
 	container     *string
 	podName       *string
+	kubeConfig    *string
 	debug         *bool
 )
 
@@ -29,7 +30,8 @@ func init() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	containerType = flag.String("containerType", "", "docker or k8s")
 	namespace = flag.String("namespace", "default", "namespace for k8s")
-	container = flag.String("containerName", "", "container name or id")
+	kubeConfig = flag.String("kubeconfig", "", "kubeconfig file for k8s")
+	container = flag.String("container", "", "container name or id")
 	podName = flag.String("podName", "", "pod name for k8s")
 	debug = flag.Bool("debug", false, "debug logging")
 	userArgs = flag.String("userArgs", "", "base64 encoded user provided args")
@@ -44,6 +46,10 @@ func validateArgs() error {
 	} else if *containerType == "k8s" {
 		if *podName == "" {
 			return fmt.Errorf("must specify --pod for k8s exec")
+		}
+		if *kubeConfig == "" {
+			return fmt.Errorf("must specify --kubeconfig for k8s exec")
+
 		}
 	} else {
 		return fmt.Errorf("must specify --containerType of \"docker\" or \"k8s\"")
@@ -75,7 +81,7 @@ func runKubectlCommand() {
 		fmt.Printf("error decoding base64 user args - %v", err)
 		os.Exit(1)
 	}
-	cmdArgs := []string{"exec", "-n", *namespace, "-it", *podName}
+	cmdArgs := []string{"exec", "--kubeconfig=" + *kubeConfig, "-n", *namespace, "-it", *podName}
 	if *container != "" {
 		cmdArgs = append(cmdArgs, "-c", *container)
 	}
