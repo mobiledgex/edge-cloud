@@ -108,8 +108,12 @@ func WriteFile(client ssh.Client, file string, contents string, kind string, sud
 	return nil
 }
 
-func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteDir) error {
-	output, err := client.Output("mkdir " + dir)
+func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteDir, sudo Sudo) error {
+	mkdirCmd := fmt.Sprintf("mkdir %s", dir)
+	if sudo {
+		mkdirCmd = fmt.Sprintf("sudo mkdir %s", dir)
+	}
+	output, err := client.Output(mkdirCmd)
 	if err == nil {
 		return nil
 	}
@@ -123,13 +127,13 @@ func CreateDir(ctx context.Context, client ssh.Client, dir string, ow OverwriteD
 	}
 
 	// If overwrite, then try deleting the directory and recreate it
-	err = DeleteDir(ctx, client, dir, NoSudo)
+	err = DeleteDir(ctx, client, dir, sudo)
 	if err != nil {
 		delerr := fmt.Errorf("unable to delete already existing directory: %v", err)
-		log.SpanLog(ctx, log.DebugLevelInfra, "mkdir err", "err", delerr)
+		log.SpanLog(ctx, log.DebugLevelInfra, "rmdir err", "err", delerr)
 		return err
 	}
-	output, err = client.Output("mkdir " + dir)
+	output, err = client.Output(mkdirCmd)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelInfra, "mkdir err", "out", output, "err", err)
 		return err

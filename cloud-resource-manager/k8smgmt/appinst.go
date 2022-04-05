@@ -350,7 +350,7 @@ func createOrUpdateAppInst(ctx context.Context, authApi cloudcommon.RegistryAuth
 		return fmt.Errorf("error merging environment variables config file: %s", err)
 	}
 	configDir, configName := getConfigDirName(names)
-	err = pc.CreateDir(ctx, client, configDir, pc.NoOverwrite)
+	err = pc.CreateDir(ctx, client, configDir, pc.NoOverwrite, pc.NoSudo)
 	if err != nil {
 		return err
 	}
