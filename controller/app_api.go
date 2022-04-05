@@ -619,7 +619,8 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		// If NO_PRIORITY, set to duration to 0.
 		if in.QosSessionProfile == edgeproto.QosSessionProfile_QOS_NO_PRIORITY {
-			in.QosSessionDuration = 0
+			log.DebugLog(log.DebugLevelApi, "Automatically setting QosSessionDuration to 0")
+			cur.QosSessionDuration = 0
 		}
 
 		cur.CopyInFields(in)
