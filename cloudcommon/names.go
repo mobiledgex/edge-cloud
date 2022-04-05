@@ -395,7 +395,7 @@ func GetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, region, buildName
 		return "", err
 	}
 	sPath := StoragePath{}
-	err = sPath.AppendPaths("build", buildName, ext)
+	err = sPath.AppendPaths("build", buildName+ext)
 	if err != nil {
 		return "", err
 	}

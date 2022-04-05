@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	fmt "fmt"
+	"path/filepath"
 	"regexp"
 	"sort"
 	strings "strings"
@@ -869,6 +870,52 @@ func AddGPUDriverStoragePaths(ctx context.Context, objStore objstore.KVStore, al
 				return err
 			}
 			allApis.cloudletApi.store.STMPut(stm, &cloudlet)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AddGPUDriverBuildStoragePaths(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
+	// Process GPU drivers
+	gpuDriverKeys, err := getDbObjectKeys(objStore, "GPUDriver")
+	if err != nil {
+		return err
+	}
+	for key, _ := range gpuDriverKeys {
+		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
+			// get gpuDriver
+			gpuDriverStr := stm.Get(key)
+			if gpuDriverStr == "" {
+				return nil // was deleted
+			}
+			gpuDriver := edgeproto.GPUDriver{}
+			err := json.Unmarshal([]byte(gpuDriverStr), &gpuDriver)
+			if err != nil {
+				return fmt.Errorf("Unmarshal GPUDriver %s failed: %s", key, err)
+			}
+			changed := false
+			for ii, build := range gpuDriver.Builds {
+				if build.StoragePath != "" {
+					continue
+				}
+				driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
+				if err != nil {
+					return err
+				}
+				ext := filepath.Ext(driverFileName)
+				gpuDriver.Builds[ii].StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&gpuDriver.Key, "", build.Name, ext)
+				if err != nil {
+					return err
+				}
+				changed = true
+			}
+			if changed {
+				allApis.gpuDriverApi.store.STMPut(stm, &gpuDriver)
+			}
 			return nil
 		})
 		if err != nil {
