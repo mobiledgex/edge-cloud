@@ -455,10 +455,6 @@ func (s *AppApi) configureApp(ctx context.Context, stm concurrency.STM, in *edge
 		}
 	}
 
-	if in.QosSessionProfile == edgeproto.QosSessionProfile_QOS_NO_PRIORITY && in.QosSessionDuration > 0 {
-		return fmt.Errorf("QosSessionDuration cannot be specified without setting QosSessionProfile")
-	}
-
 	// Save manifest to app in case it was a remote target.
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
@@ -616,6 +612,17 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				cur.DeploymentManifest = ""
 			}
 		}
+		// Before copying the App fields, verify QOS Session fields.
+		log.DebugLog(log.DebugLevelApi, "QosSessionProfile check", "in.QosSessionProfile", in.QosSessionProfile, "in.QosSessionDuration", in.QosSessionDuration)
+		if in.QosSessionProfile == edgeproto.QosSessionProfile_QOS_NO_PRIORITY && in.QosSessionDuration > 0 {
+			return fmt.Errorf("QosSessionDuration cannot be specified without setting QosSessionProfile")
+		}
+		// If NO_PRIORITY, set to duration to 0.
+		if in.QosSessionProfile == edgeproto.QosSessionProfile_QOS_NO_PRIORITY {
+			log.DebugLog(log.DebugLevelApi, "Automatically setting QosSessionDuration to 0")
+			cur.QosSessionDuration = 0
+		}
+
 		cur.CopyInFields(in)
 		// for any changes that can affect trust policy, verify the app is still valid for all
 		// cloudlets onto which it is deployed.
