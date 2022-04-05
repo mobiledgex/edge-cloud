@@ -118,7 +118,7 @@ func handleDockerZipfile(ctx context.Context, authApi cloudcommon.RegistryAuthAp
 		dockerComposeCommand = "up -d"
 
 		// create a directory for the app and its files
-		err := pc.CreateDir(ctx, client, dir, pc.Overwrite)
+		err := pc.CreateDir(ctx, client, dir, pc.Overwrite, pc.NoSudo)
 		if err != nil {
 			return err
 		}
