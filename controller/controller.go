@@ -594,8 +594,10 @@ func stopServices() {
 		lis.Close()
 	}
 	nodeMgr.Finish()
-	redisClient.Close()
-	redisClient = nil
+	if redisClient != nil {
+		redisClient.Close()
+		redisClient = nil
+	}
 	services = Services{}
 }
 
