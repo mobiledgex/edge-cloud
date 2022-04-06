@@ -22,7 +22,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"net"
-	"reflect"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -75,6 +74,8 @@ type NotifySendMany interface {
 	NewSend(peerAddr string, notifyId int64) NotifySend
 	// Free a Send object
 	DoneSend(peerAddr string, send NotifySend)
+	// Get type string
+	GetTypeString() string
 }
 
 type NotifyRecvMany interface {
@@ -265,10 +266,10 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *Stats {
 }
 
 // Get order of sends based on SendAll type
-func (s *ServerMgr) GetSendOrder() map[reflect.Type]int {
-	order := make(map[reflect.Type]int)
+func (s *ServerMgr) GetSendOrder() map[string]int {
+	order := make(map[string]int)
 	for ii, send := range s.sends {
-		order[reflect.TypeOf(send)] = ii
+		order[send.GetTypeString()] = ii
 	}
 	return order
 }

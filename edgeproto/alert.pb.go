@@ -1380,6 +1380,42 @@ var AllKeyTagsMap = map[string]struct{}{
 	"vmpoolorg":           struct{}{},
 }
 
+// References generated from the refers_to and tracks_refs_by protogen options
+func GetReferencesMap() map[string][]string {
+	refs := make(map[string][]string)
+	refs["AppAutoProvPolicy"] = []string{"App", "AutoProvPolicy"}
+	refs["Network"] = []string{"Cloudlet"}
+	refs["AutoProvPolicyCloudlet"] = []string{"AutoProvPolicy", "Cloudlet"}
+	refs["GPUConfig"] = []string{"GPUDriver"}
+	refs["Cloudlet"] = []string{"Flavor", "GPUDriver", "ResTagTable", "TrustPolicy", "VMPool"}
+	refs["CloudletPool"] = []string{"Cloudlet"}
+	refs["CloudletRefs"] = []string{"ClusterInst"}
+	refs["AutoProvCount"] = []string{"Cloudlet"}
+	refs["AppInstKey"] = []string{"ClusterInst"}
+	refs["AppInstLatency"] = []string{"ClusterInst"}
+	refs["ClusterInstKey"] = []string{"Cloudlet"}
+	refs["AutoProvPolicy"] = []string{"Cloudlet"}
+	refs["VMResource"] = []string{"Cloudlet"}
+	refs["AutoProvCounts"] = []string{"Cloudlet"}
+	refs["AppInst"] = []string{"ClusterInst", "Flavor"}
+	refs["AppInstClient"] = []string{"ClusterInst"}
+	refs["ClusterRefs"] = []string{"AppInst"}
+	refs["TrustPolicyException"] = []string{"App", "CloudletPool"}
+	refs["CloudletPoolMember"] = []string{"Cloudlet", "CloudletPool"}
+	refs["AppInstLookup"] = []string{"ClusterInst"}
+	refs["AllData"] = []string{"AlertPolicy", "App", "AutoProvPolicy", "AutoScalePolicy", "Cloudlet", "CloudletPool", "ClusterInst", "Flavor", "GPUDriver", "Network", "ResTagTable", "TrustPolicy", "VMPool"}
+	refs["AppInstRefs"] = []string{"AppInst"}
+	refs["TrustPolicyExceptionKey"] = []string{"App", "CloudletPool"}
+	refs["DeploymentCloudletRequest"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
+	refs["NetworkKey"] = []string{"Cloudlet"}
+	refs["AppInstLookup2"] = []string{"ClusterInst"}
+	refs["ClusterInst"] = []string{"AutoScalePolicy", "Cloudlet", "Flavor", "Network"}
+	refs["CloudletResMap"] = []string{"Cloudlet", "ResTagTable"}
+	refs["ExecRequest"] = []string{"ClusterInst"}
+	refs["App"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
+	refs["AppAlertPolicy"] = []string{"AlertPolicy", "App"}
+	return refs
+}
 func (m *Alert) Size() (n int) {
 	if m == nil {
 		return 0
