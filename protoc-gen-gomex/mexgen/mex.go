@@ -124,6 +124,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		m.generateEnumDecodeHook()
 		m.generateShowCheck()
 		m.generateAllKeyTags()
+		m.generateGetReferences()
 	}
 }
 
@@ -2927,6 +2928,41 @@ func (m *mex) checkDeletePrepares() {
 		msgs = append(msgs, help)
 		m.gen.Fail("\n" + strings.Join(msgs, "\n"))
 	}
+}
+
+func (m *mex) generateGetReferences() {
+	if len(m.refData.RefBys) == 0 {
+		return
+	}
+	m.P()
+	m.P("// References generated from the refers_to and tracks_refs_by protogen options")
+	m.P("func GetReferencesMap() map[string][]string {")
+	m.P("refs := make(map[string][]string)")
+	refMap := make(map[string]map[string]struct{})
+	for obj, refByGroup := range m.refData.RefBys {
+		refs := map[string]struct{}{}
+		for _, to := range refByGroup.Tos {
+			refs[to.To.Type] = struct{}{}
+		}
+		refMap[obj] = refs
+	}
+	for obj, tracker := range m.refData.Trackers {
+		refs := map[string]struct{}{}
+		for _, by := range tracker.Bys {
+			refs[by.By.Type] = struct{}{}
+		}
+		refMap[obj] = refs
+	}
+	for obj, refs := range refMap {
+		strs := []string{}
+		for ref, _ := range refs {
+			strs = append(strs, "\""+ref+"\"")
+		}
+		sort.Strings(strs)
+		m.P(fmt.Sprintf("refs[%q] = []string{%s}", obj, strings.Join(strs, ", ")))
+	}
+	m.P("return refs")
+	m.P("}")
 }
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {

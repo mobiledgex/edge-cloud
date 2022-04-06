@@ -290,6 +290,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 			log.SpanLog(sendAllCtx, log.DebugLevelNotify, "send all end", "peer", s.peer)
 			notice.Action = edgeproto.NoticeAction_SENDALL_END
 			notice.Any = types.Any{}
+			notice.Span = log.SpanToString(sendAllCtx)
 			err = stream.Send(&notice)
 			if err != nil {
 				log.SpanLog(sendAllCtx, log.DebugLevelNotify,

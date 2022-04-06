@@ -50,10 +50,10 @@ func InitSrvNotify(notifyServer *notify.ServerMgr, nodeMgr *node.NodeMgr, contro
 	notifyServer.RegisterSendCloudletInternalCache(&controllerData.CloudletInternalCache)
 	notifyServer.RegisterSendAutoProvPolicyCache(&controllerData.AutoProvPolicyCache)
 	notifyServer.RegisterSendAutoScalePolicyCache(&controllerData.AutoScalePolicyCache)
+	notifyServer.RegisterSendAlertPolicyCache(&controllerData.AlertPolicyCache)
 	notifyServer.RegisterSendAppCache(&controllerData.AppCache)
 	notifyServer.RegisterSendClusterInstCache(&controllerData.ClusterInstCache)
 	notifyServer.RegisterSendAppInstCache(&controllerData.AppInstCache)
-	notifyServer.RegisterSendAlertPolicyCache(&controllerData.AlertPolicyCache)
 
 	notifyServer.RegisterRecv(notify.NewMetricRecvMany(&CrmMetricsReceiver{}))
 	notifyServer.RegisterRecvAlertCache(&controllerData.AlertCache)

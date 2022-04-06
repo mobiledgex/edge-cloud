@@ -304,7 +304,7 @@ func (s *NodeMgr) RegisterServer(server *notify.ServerMgr) {
 	server.RegisterRecvNodeCache(&s.NodeCache)
 	s.Debug.RegisterServer(server)
 	// MC notify handling of CloudletPoolCache is done outside of nodemgr.
-	if s.MyNode.Key.Type != NodeTypeMC && s.MyNode.Key.Type != NodeTypeNotifyRoot {
+	if s.MyNode.Key.Type != NodeTypeMC && s.MyNode.Key.Type != NodeTypeNotifyRoot && s.MyNode.Key.Type != NodeTypeController {
 		cache := s.CloudletPoolLookup.GetCloudletPoolCache(s.Region)
 		server.RegisterSendCloudletPoolCache(cache)
 	}

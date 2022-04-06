@@ -724,6 +724,7 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendMaxReqsRateLimitSettingsCache(&allApis.maxReqsRateLimitSettingsApi.cache)
 	notify.ServerMgrOne.RegisterSendOperatorCodeCache(&allApis.operatorCodeApi.cache)
 	notify.ServerMgrOne.RegisterSendFlavorCache(&allApis.flavorApi.cache)
+	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&allApis.alertPolicyApi.cache)
 	notify.ServerMgrOne.RegisterSendGPUDriverCache(&allApis.gpuDriverApi.cache)
 	notify.ServerMgrOne.RegisterSendVMPoolCache(&allApis.vmPoolApi.cache)
 	notify.ServerMgrOne.RegisterSendResTagTableCache(&allApis.resTagTableApi.cache)
@@ -743,7 +744,6 @@ func InitNotify(metricsInflux *influxq.InfluxQ, edgeEventsInflux *influxq.Influx
 	notify.ServerMgrOne.RegisterSendAppInstRefsCache(&allApis.appInstRefsApi.cache)
 	notify.ServerMgrOne.RegisterSendAlertCache(&allApis.alertApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstClientKeyCache(&allApis.appInstClientKeyApi.cache)
-	notify.ServerMgrOne.RegisterSendAlertPolicyCache(&allApis.alertPolicyApi.cache)
 	// TrustPolicyExceptions depend on App and Cloudlet so must be sent after them.
 	notify.ServerMgrOne.RegisterSendTrustPolicyExceptionCache(&allApis.trustPolicyExceptionApi.cache)
 	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
