@@ -7,18 +7,19 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 )
 
 var (
-	containerType *string
-	userArgs      *string
-	namespace     *string
-	container     *string
-	podName       *string
-	kubeConfig    *string
-	debug         *bool
+	containerType   *string
+	encodedUserArgs *string
+	namespace       *string
+	container       *string
+	podName         *string
+	kubeConfig      *string
+	debug           *bool
 )
 
 const (
@@ -34,18 +35,18 @@ func init() {
 	container = flag.String("container", "", "container name or id")
 	podName = flag.String("podName", "", "pod name for k8s")
 	debug = flag.Bool("debug", false, "debug logging")
-	userArgs = flag.String("userArgs", "", "base64 encoded user provided args")
+	encodedUserArgs = flag.String("encodedUserArgs", "", "base64 encoded user provided args")
 	flag.Parse()
 }
 
 func validateArgs() error {
-	if *containerType == "docker" {
+	if *containerType == dockerContainerType {
 		if *container == "" {
 			return fmt.Errorf("must specify --container for docker exec")
 		}
-	} else if *containerType == "k8s" {
+	} else if *containerType == k8sContainerType {
 		if *podName == "" {
-			return fmt.Errorf("must specify --pod for k8s exec")
+			return fmt.Errorf("must specify --podName for k8s exec")
 		}
 		if *kubeConfig == "" {
 			return fmt.Errorf("must specify --kubeconfig for k8s exec")
@@ -54,61 +55,60 @@ func validateArgs() error {
 	} else {
 		return fmt.Errorf("must specify --containerType of \"docker\" or \"k8s\"")
 	}
-	if len(*userArgs) == 0 {
-		return fmt.Errorf("must specify --userArgs")
+	if *encodedUserArgs == "" {
+		return fmt.Errorf("must specify --encodedUserArgs")
 	}
 	return nil
 }
 
-func debugPrintf(format string, v ...interface{}) {
+func debugLog(format string, v ...interface{}) {
 	if *debug {
-		fmt.Printf(format, v...)
+		log.Printf(format, v...)
 	}
 }
 
 func decodeBase64(str string) (string, error) {
-	v, err := base64.StdEncoding.DecodeString(*userArgs)
+	v, err := base64.StdEncoding.DecodeString(*encodedUserArgs)
 	if err != nil {
 		return "", err
 	}
 	return string(v), nil
 }
 
-func runKubectlCommand() {
-	debugPrintf("runKubectlCommand args %s\n", *userArgs)
-	decodedArgs, err := decodeBase64(*userArgs)
-	if err != nil {
-		fmt.Printf("error decoding base64 user args - %v", err)
-		os.Exit(1)
-	}
-	cmdArgs := []string{"exec", "--kubeconfig=" + *kubeConfig, "-n", *namespace, "-it", *podName}
-	if *container != "" {
-		cmdArgs = append(cmdArgs, "-c", *container)
-	}
-	userArgs := []string{"--", decodedArgs}
-	cmdArgs = append(cmdArgs, userArgs...)
-	cmd := exec.Command("kubectl", cmdArgs...)
-	debugPrintf("command args %v\n", cmd)
+func runCommand(command string, cmdArgs []string) {
+	cmd := exec.Command(command, cmdArgs...)
+	debugLog("command args %v\n", cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	cmd.Run()
 }
 
+func runKubectlCommand() {
+	debugLog("runKubectlCommand args %s\n", *encodedUserArgs)
+	decodedArgs, err := decodeBase64(*encodedUserArgs)
+	if err != nil {
+		log.Fatalf("error decoding base64 user args - %v", err)
+		os.Exit(1)
+	}
+	cmdArgs := []string{"exec", "--kubeconfig=" + *kubeConfig, "-n", *namespace, "-it", *podName}
+	if *container != "" {
+		cmdArgs = append(cmdArgs, "-c", *container)
+	}
+	encodedUserArgs := []string{"--", decodedArgs}
+	cmdArgs = append(cmdArgs, encodedUserArgs...)
+	runCommand("kubectl", cmdArgs)
+}
+
 func runDockerCommand() {
-	debugPrintf("runDockerCommand args %s\n", *userArgs)
-	decodedArgs, err := decodeBase64(*userArgs)
+	debugLog("runDockerCommand args %s\n", *encodedUserArgs)
+	decodedArgs, err := decodeBase64(*encodedUserArgs)
 	if err != nil {
 		fmt.Printf("error decoding base64 user args - %v", err)
 		os.Exit(1)
 	}
 	cmdArgs := []string{"exec", "-it", *container, decodedArgs}
-	cmd := exec.Command("docker", cmdArgs...)
-	debugPrintf("command args %v\n", cmd)
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-	cmd.Stderr = os.Stderr
-	cmd.Run()
+	runCommand("docker", cmdArgs)
 }
 
 func main() {
