@@ -399,8 +399,8 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, stream
 	// stream will be left incomplete as it will not be stopped by the caller controller.
 	// Hence, check here if there are no subscribers to the stream, then mark the end of stream,
 	// if not already marked
-	// Note: `PubSubNumSub` is synchronous call as the connection between redis client & redis server
-	//       is closed (due to controller restart)
+	// Note: `PubSubNumSub` function call will return right value as the connection between
+	//       redis client & redis server is closed (due to controller restart)
 	chMap, err := redisClient.PubSubNumSub(streamKey).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to get subscribe count on redis pubsub", "key", streamKey, "err", err)
