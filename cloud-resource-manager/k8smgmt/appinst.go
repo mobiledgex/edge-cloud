@@ -3,6 +3,7 @@ package k8smgmt
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"regexp"
 	"strings"
@@ -13,7 +14,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util"
 	ssh "github.com/mobiledgex/golang-ssh"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -557,16 +557,9 @@ func GetContainerCommand(ctx context.Context, clusterInst *edgeproto.ClusterInst
 		return "", fmt.Errorf("failed to get kube names, %v", err)
 	}
 	if req.Cmd != nil {
-		containerCmd := ""
-		if containerName != "" {
-			containerCmd = fmt.Sprintf("-c %s ", containerName)
-		}
-		userCmd, err := util.RunCommandSanitize(req.Cmd.Command)
-		if err != nil {
-			return "", fmt.Errorf("bad command: %s", err)
-		}
-		cmdStr := fmt.Sprintf("%s kubectl exec -n %s -it %s%s -- %s",
-			names.KconfEnv, namespace, containerCmd, podName, userCmd)
+		b64UserArgs := base64.StdEncoding.EncodeToString([]byte(req.Cmd.Command))
+		cmdStr := fmt.Sprintf("exec-container --containerType k8s --kubeconfig %s --namespace %s --podName %s --container %s --userArgs %s", names.KconfName, namespace, podName, containerName, b64UserArgs)
+		log.SpanLog(ctx, log.DebugLevelInfra, "got container command", "cmdStr", cmdStr)
 		return cmdStr, nil
 	}
 	if req.Log != nil {

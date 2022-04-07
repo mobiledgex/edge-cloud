@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -20,6 +22,7 @@ import (
 )
 
 const ExecRequestIgnoredPlatformInactive = "ExecRequestIgnoredPlatformInactive"
+const ExecContainerPackagePath = "artifactory/packages/pool/exec-container_0.1_amd64.deb"
 
 // ExecReqHandler just satisfies the Recv() function for the
 // ExecRequest receive notify interface, and calls into the
@@ -402,6 +405,17 @@ func (s *RunExec) proxyRawConn(turnConn net.Conn) error {
 		log.DebugLog(log.DebugLevelApi,
 			"failed to exec",
 			"cmd", s.contcmd, "err", err)
+	}
+	return err
+}
+
+func InstallExecContainerBinary(ctx context.Context, accessApi platform.AccessApi, registryPath string) error {
+	log.SpanLog(ctx, log.DebugLevelInfra, "InstallExecContainerBinary", "registryPath", registryPath)
+
+	imageUrl := registryPath + "/" + ExecContainerPackagePath
+	err := cloudcommon.DownloadFile(ctx, accessApi, imageUrl, cloudcommon.NoCreds, imageUrl, nil)
+	if err != nil {
+		return fmt.Errorf("error downloading exec container from %s, %v", imageUrl, err)
 	}
 	return err
 }

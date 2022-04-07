@@ -2,6 +2,7 @@ package dockermgmt
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -492,11 +493,8 @@ func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App,
 		}
 	}
 	if req.Cmd != nil {
-		userCmd, err := util.RunCommandSanitize(req.Cmd.Command)
-		if err != nil {
-			return "", fmt.Errorf("bad command: %s", err)
-		}
-		cmdStr := fmt.Sprintf("docker exec -it %s %s", req.ContainerId, userCmd)
+		b64Args := base64.StdEncoding.EncodeToString([]byte(req.Cmd.Command))
+		cmdStr := fmt.Sprintf("exec-container --containerType docker --container %s --userArgs %s", req.ContainerId, b64Args)
 		return cmdStr, nil
 	}
 	if req.Log != nil {
