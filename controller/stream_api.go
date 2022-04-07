@@ -395,4 +395,40 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, stream
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", streamKey, "err", err)
 	}
+	// If the pubsub subscriber (i.e. controller) restarts in middle of message streaming, then
+	// stream will be left incomplete as it will not be stopped by the caller controller.
+	// Hence, check here if there are no subscribers to the stream, then mark the end of stream,
+	// if not already marked
+	// Note: `PubSubNumSub` is synchronous call as the connection between redis client & redis server
+	//       is closed (due to controller restart)
+	chMap, err := redisClient.PubSubNumSub(streamKey).Result()
+	if err != nil {
+		log.SpanLog(ctx, log.DebugLevelApi, "Failed to get subscribe count on redis pubsub", "key", streamKey, "err", err)
+		return
+	}
+	if cnt, ok := chMap[streamKey]; ok {
+		if cnt == 0 {
+			streamClosed := false
+			streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
+			if err == nil && len(streamMsgs) > 0 {
+				for msgType, _ := range streamMsgs[len(streamMsgs)-1].Values {
+					switch msgType {
+					case StreamMsgTypeEOM:
+						fallthrough
+					case StreamMsgTypeError:
+						streamClosed = true
+					}
+				}
+			}
+			if !streamClosed {
+				streamMsg := map[string]interface{}{
+					StreamMsgTypeEOM: "",
+				}
+				err := addMsgToRedisStream(ctx, streamKey, streamMsg)
+				if err != nil {
+					log.SpanLog(ctx, log.DebugLevelApi, "Failed to add EOM message to redis stream", "key", streamKey, "err", err)
+				}
+			}
+		}
+	}
 }
