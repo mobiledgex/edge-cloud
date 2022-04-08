@@ -205,6 +205,18 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		if err != nil {
 			return err
 		}
+		// Setup build storage paths
+		for ii, build := range in.Builds {
+			driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
+			if err != nil {
+				return err
+			}
+			ext := filepath.Ext(driverFileName)
+			in.Builds[ii].StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&in.Key, *region, build.Name, ext)
+			if err != nil {
+				return err
+			}
+		}
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -234,15 +246,6 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			cb.Send(&edgeproto.Result{Message: "Setting up GPU driver build " + build.Name})
 			if creds, ok := credsMap[build.Name]; ok {
 				build.DriverPathCreds = creds
-			}
-			driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
-			if err != nil {
-				return err
-			}
-			ext := filepath.Ext(driverFileName)
-			in.Builds[ii].StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&in.Key, *region, build.Name, ext)
-			if err != nil {
-				return err
 			}
 			driverPathUrl, err := setupGPUDriver(ctx, storageClient, in, &build, cb)
 			if err != nil {
@@ -571,6 +574,15 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 			if gpuDriver.Builds[ii].Name == in.Build.Name {
 				return fmt.Errorf("GPU driver build with same name already exists")
 			}
+		}
+		driverFileName, err := cloudcommon.GetFileNameWithExt(in.Build.DriverPath)
+		if err != nil {
+			return err
+		}
+		ext := filepath.Ext(driverFileName)
+		in.Build.StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&in.Key, *region, in.Build.Name, ext)
+		if err != nil {
+			return err
 		}
 		gpuDriver.Builds = append(gpuDriver.Builds, in.Build)
 		gpuDriver.State = ChangeInProgress
