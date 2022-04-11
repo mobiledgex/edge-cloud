@@ -124,6 +124,18 @@ func K8SSanitize(name string) string {
 	return strings.ToLower(r.Replace(name))
 }
 
+func K8SServiceSanitize(name string) string {
+	str := DNSSanitize(name)
+	if str == "" {
+		return str
+	}
+	if !unicode.IsLetter(rune(str[0])) {
+		// first character must be alpha for services
+		str = "a" + str
+	}
+	return str
+}
+
 // Namespaces are limited to 63 characters and cannot end in "-"
 func NamespaceSanitize(name string) string {
 	r := DNSSanitize(name)

@@ -113,7 +113,7 @@ func (g *kubeBasicGen) kubeLb(protos []string) {
 		return
 	}
 	lb := lbData{
-		Name:  util.DNSSanitize(appID(g.app) + "-" + protos[0]),
+		Name:  util.K8SServiceSanitize(appID(g.app) + "-" + protos[0]),
 		Run:   util.K8SSanitize(appID(g.app)),
 		Ports: []kubePort{},
 	}
