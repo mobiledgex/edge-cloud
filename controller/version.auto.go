@@ -52,6 +52,7 @@ var VersionHash_UpgradeFuncs = map[int32]VersionUpgradeFunc{
 	40: AddSetupSpecificAppDNSRootForCloudlets,
 	41: AddGPUDriverStoragePaths,
 	42: AddGPUDriverBuildStoragePaths,
+	43: FixInvalidGPUDriverPaths,
 }
 var VersionHash_UpgradeFuncNames = map[int32]string{
 	0:  "",
@@ -89,6 +90,7 @@ var VersionHash_UpgradeFuncNames = map[int32]string{
 	40: "AddSetupSpecificAppDNSRootForCloudlets",
 	41: "AddGPUDriverStoragePaths",
 	42: "AddGPUDriverBuildStoragePaths",
+	43: "FixInvalidGPUDriverPaths",
 }
 
 // Auto-generated code: DO NOT EDIT
