@@ -84,6 +84,10 @@ external-doc:
 third_party:
 	parsedeps --gennotice ./cloud-resource-manager/cmd/crmserver ./controller ./d-match-engine/dme-server ./cluster-svc ./edgeturn ./notifyroot > THIRD-PARTY-NOTICES
 
+# adds license header to all files, see https://github.com/google/addlicense
+addlicense:
+	addlicense -c "MobiledgeX, Inc" -l apache .
+
 lint:
 	(cd $(GOPATH)/src/github.com/uber/prototool; go install ./cmd/prototool)
 	$(RM) link-gogo-protobuf
