@@ -1251,7 +1251,7 @@ func GetEnumParseHelp(t reflect.Type) (string, string, bool) {
 	case reflect.TypeOf(StreamState(0)):
 		return "StreamState", ", valid values are one of Unknown, Start, Stop, Error, or 0, 1, 2, 3", true
 	case reflect.TypeOf(VersionHash(0)):
-		return "VersionHash", ", valid values are one of D41D8Cd98F00B204E9800998Ecf8427E, D4Ca5418A77D22D968Ce7A2Afc549Dfe, 7848D42E3A2Eaf36E53Bbd3Af581B13A, F31B7A9D7E06F72107E0Ab13C708704E, 03Fad51F0343D41F617329151F474D2B, 7D32A983Fafc3Da768E045B1Dc4D5F50, 747C14Bdfe2043F09D251568E4A722C6, C7Fb20F545A5Bc9869B00Bb770753C31, 83Cd5C44B5C7387Ebf7D055E7345Ab42, D8A4E697D0D693479Cfd9C1C523D7E06, E8360Aa30F234Ecefdfdb9Fb2Dc79C20, C53C7840D242Efc7209549A36Fcf9E04, 1A57396698C4Ade15F0579C9F5714Cd6, 71C580746Ee2A6B7D1A4182B3A54407A, A18636Af1F4272C38Ca72881B2A8Bcea, Efbddcee4Ba444E3656F64E430A5E3Be, C2C322505017054033953F6104002Bf5, Facc3C3C9C76463C8D8B3C874Ce43487, 8Ba950479A03Ab77Edfad426Ea53C173, F4Eb139F7A8373A484Ab9749Eadc31F5, 09Fae4D440Aa06Acb9664167D2E1F036, 8C5A9C29Caff4Ace0A23A9Dab9A15Bf7, B7C6A74Ce2F30B3Bda179E00617459Cf, 911D86A4Eb2Bbfbff1173Ffbdd197A8C, 99349A696D0B5872542F81B4B0B4788E, 264850A5C1F7A054B4De1A87E5D28Dcc, 748B47Eaf414B0F2C15E4C6A9298B5F1, 1480647750F7638Ff5494C0E715Bb98C, 208A22352E46F6Bbe34F3B72Aaf99Ee5, 6F8F268D3945699608651E1A8Bb38E5E, 2Dfdb2Ed2Cf52241B2B3Db1D39E11Bc6, 6585Ad5E26Ee92A955Abd26C38067065, 4Ddeb801651B2Acb84F5D182E445Fce1, 156Def83Eec72A44248Fabd79199Efbe, 636A7D17Efd0532933313E27E6De0A5B, or 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42", true
+		return "VersionHash", ", valid values are one of D41D8Cd98F00B204E9800998Ecf8427E, D4Ca5418A77D22D968Ce7A2Afc549Dfe, 7848D42E3A2Eaf36E53Bbd3Af581B13A, F31B7A9D7E06F72107E0Ab13C708704E, 03Fad51F0343D41F617329151F474D2B, 7D32A983Fafc3Da768E045B1Dc4D5F50, 747C14Bdfe2043F09D251568E4A722C6, C7Fb20F545A5Bc9869B00Bb770753C31, 83Cd5C44B5C7387Ebf7D055E7345Ab42, D8A4E697D0D693479Cfd9C1C523D7E06, E8360Aa30F234Ecefdfdb9Fb2Dc79C20, C53C7840D242Efc7209549A36Fcf9E04, 1A57396698C4Ade15F0579C9F5714Cd6, 71C580746Ee2A6B7D1A4182B3A54407A, A18636Af1F4272C38Ca72881B2A8Bcea, Efbddcee4Ba444E3656F64E430A5E3Be, C2C322505017054033953F6104002Bf5, Facc3C3C9C76463C8D8B3C874Ce43487, 8Ba950479A03Ab77Edfad426Ea53C173, F4Eb139F7A8373A484Ab9749Eadc31F5, 09Fae4D440Aa06Acb9664167D2E1F036, 8C5A9C29Caff4Ace0A23A9Dab9A15Bf7, B7C6A74Ce2F30B3Bda179E00617459Cf, 911D86A4Eb2Bbfbff1173Ffbdd197A8C, 99349A696D0B5872542F81B4B0B4788E, 264850A5C1F7A054B4De1A87E5D28Dcc, 748B47Eaf414B0F2C15E4C6A9298B5F1, 1480647750F7638Ff5494C0E715Bb98C, 208A22352E46F6Bbe34F3B72Aaf99Ee5, 6F8F268D3945699608651E1A8Bb38E5E, 2Dfdb2Ed2Cf52241B2B3Db1D39E11Bc6, 6585Ad5E26Ee92A955Abd26C38067065, 4Ddeb801651B2Acb84F5D182E445Fce1, 156Def83Eec72A44248Fabd79199Efbe, 636A7D17Efd0532933313E27E6De0A5B, 0A418578Eee77Cabd2B8E1Dd1Fa64Dbe, or 0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43", true
 	}
 	return "", "", false
 }
@@ -1383,37 +1383,37 @@ var AllKeyTagsMap = map[string]struct{}{
 // References generated from the refers_to and tracks_refs_by protogen options
 func GetReferencesMap() map[string][]string {
 	refs := make(map[string][]string)
-	refs["AutoProvPolicy"] = []string{"Cloudlet"}
-	refs["AutoProvCounts"] = []string{"Cloudlet"}
-	refs["AppInst"] = []string{"ClusterInst", "Flavor"}
-	refs["DeploymentCloudletRequest"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
-	refs["AppInstLookup"] = []string{"ClusterInst"}
-	refs["App"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
-	refs["AppAlertPolicy"] = []string{"AlertPolicy", "App"}
-	refs["VMResource"] = []string{"Cloudlet"}
-	refs["CloudletResMap"] = []string{"Cloudlet", "ResTagTable"}
-	refs["AllData"] = []string{"AlertPolicy", "App", "AutoProvPolicy", "AutoScalePolicy", "Cloudlet", "CloudletPool", "ClusterInst", "Flavor", "GPUDriver", "Network", "ResTagTable", "TrustPolicy", "VMPool"}
-	refs["AppInstKey"] = []string{"ClusterInst"}
-	refs["GPUConfig"] = []string{"GPUDriver"}
-	refs["NetworkKey"] = []string{"Cloudlet"}
-	refs["ExecRequest"] = []string{"ClusterInst"}
-	refs["AutoProvCount"] = []string{"Cloudlet"}
-	refs["AppAutoProvPolicy"] = []string{"App", "AutoProvPolicy"}
-	refs["ClusterInst"] = []string{"AutoScalePolicy", "Cloudlet", "Flavor", "Network"}
-	refs["CloudletPool"] = []string{"Cloudlet"}
-	refs["Cloudlet"] = []string{"Flavor", "GPUDriver", "ResTagTable", "TrustPolicy", "VMPool"}
-	refs["AutoProvPolicyCloudlet"] = []string{"AutoProvPolicy", "Cloudlet"}
-	refs["TrustPolicyExceptionKey"] = []string{"App", "CloudletPool"}
-	refs["AppInstLookup2"] = []string{"ClusterInst"}
-	refs["AppInstRefs"] = []string{"AppInst"}
-	refs["CloudletPoolMember"] = []string{"Cloudlet", "CloudletPool"}
 	refs["ClusterRefs"] = []string{"AppInst"}
-	refs["ClusterInstKey"] = []string{"Cloudlet"}
-	refs["Network"] = []string{"Cloudlet"}
-	refs["TrustPolicyException"] = []string{"App", "CloudletPool"}
-	refs["AppInstLatency"] = []string{"ClusterInst"}
+	refs["AppInstRefs"] = []string{"AppInst"}
+	refs["TrustPolicyExceptionKey"] = []string{"App", "CloudletPool"}
+	refs["AppInst"] = []string{"ClusterInst", "Flavor"}
+	refs["AppInstKey"] = []string{"ClusterInst"}
 	refs["AppInstClient"] = []string{"ClusterInst"}
+	refs["CloudletPoolMember"] = []string{"Cloudlet", "CloudletPool"}
+	refs["AppInstLatency"] = []string{"ClusterInst"}
+	refs["AppAlertPolicy"] = []string{"AlertPolicy", "App"}
+	refs["ClusterInst"] = []string{"AutoScalePolicy", "Cloudlet", "Flavor", "Network"}
+	refs["TrustPolicyException"] = []string{"App", "CloudletPool"}
+	refs["GPUConfig"] = []string{"GPUDriver"}
+	refs["Network"] = []string{"Cloudlet"}
+	refs["AutoProvPolicy"] = []string{"Cloudlet"}
+	refs["AutoProvCount"] = []string{"Cloudlet"}
+	refs["Cloudlet"] = []string{"Flavor", "GPUDriver", "ResTagTable", "TrustPolicy", "VMPool"}
+	refs["AutoProvCounts"] = []string{"Cloudlet"}
+	refs["AppInstLookup"] = []string{"ClusterInst"}
 	refs["CloudletRefs"] = []string{"ClusterInst"}
+	refs["ExecRequest"] = []string{"ClusterInst"}
+	refs["ClusterInstKey"] = []string{"Cloudlet"}
+	refs["App"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
+	refs["CloudletResMap"] = []string{"Cloudlet", "ResTagTable"}
+	refs["AppInstLookup2"] = []string{"ClusterInst"}
+	refs["NetworkKey"] = []string{"Cloudlet"}
+	refs["CloudletPool"] = []string{"Cloudlet"}
+	refs["AutoProvPolicyCloudlet"] = []string{"AutoProvPolicy", "Cloudlet"}
+	refs["VMResource"] = []string{"Cloudlet"}
+	refs["AppAutoProvPolicy"] = []string{"App", "AutoProvPolicy"}
+	refs["DeploymentCloudletRequest"] = []string{"AlertPolicy", "AutoProvPolicy", "Flavor"}
+	refs["AllData"] = []string{"AlertPolicy", "App", "AutoProvPolicy", "AutoScalePolicy", "Cloudlet", "CloudletPool", "ClusterInst", "Flavor", "GPUDriver", "Network", "ResTagTable", "TrustPolicy", "VMPool"}
 	return refs
 }
 func (m *Alert) Size() (n int) {
