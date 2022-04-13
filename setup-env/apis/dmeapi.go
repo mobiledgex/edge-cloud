@@ -306,7 +306,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiFileVars map[stri
 		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
 		return false
 	}
-	util.PrintToFile(api+".yml", outputDir, string(out), true)
+	util.PrintToFile(api+".yml", outputDir, util.PatchLicense(string(out)), true)
 	return true
 }
 
@@ -344,7 +344,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 				fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
 				return false, nil
 			}
-			util.PrintToFile("register.yml", outputDir, string(out), true)
+			util.PrintToFile("register.yml", outputDir, util.PatchLicense(string(out)), true)
 			readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
 		}
 		sessionCookie = registerStatus.Reply.SessionCookie
@@ -369,7 +369,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 					fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
 					return false, nil
 				}
-				util.PrintToFile("edgeeventfindcloudlet.yml", outputDir, string(out), true)
+				util.PrintToFile("edgeeventfindcloudlet.yml", outputDir, util.PatchLicense(string(out)), true)
 				util.ReadYamlFile(outputDir+"/edgeeventfindcloudlet.yml", &findCloudlet)
 			}
 			eeCookie = findCloudlet.Reply.EdgeEventsCookie
