@@ -132,13 +132,13 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 			case StreamMsgTypeMessage:
 				val, ok := v.(string)
 				if !ok {
-					return done, fmt.Errorf("Invalid stream message %v, must be of type string", v)
+					return done, infoDone, fmt.Errorf("Invalid stream message %v, must be of type string", v)
 				}
 				cb.Send(&edgeproto.Result{Message: val})
 			case StreamMsgTypeError:
 				val, ok := v.(string)
 				if !ok {
-					return done, fmt.Errorf("Invalid stream error %v, must be of type string", v)
+					return done, infoDone, fmt.Errorf("Invalid stream error %v, must be of type string", v)
 				}
 				return done, infoDone, fmt.Errorf(val)
 			case StreamMsgTypeEOM:
@@ -214,7 +214,7 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 		if infoDone {
 			// Since CUD operation on the object is done from CRM side,
 			// reduce the timeout as it shouldn't take much time to end the operation
-			timeout = StreamMsgInfoReadTimeout
+			readTimeout = StreamMsgInfoReadTimeout
 		}
 	}
 }
