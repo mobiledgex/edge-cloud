@@ -1,3 +1,17 @@
+// Copyright 2022 MobiledgeX, Inc
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -205,6 +219,18 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 		if err != nil {
 			return err
 		}
+		// Setup build storage paths
+		for ii, build := range in.Builds {
+			driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
+			if err != nil {
+				return err
+			}
+			ext := filepath.Ext(driverFileName)
+			in.Builds[ii].StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&in.Key, *region, build.Name, ext)
+			if err != nil {
+				return err
+			}
+		}
 		s.store.STMPut(stm, in)
 		return nil
 	})
@@ -234,15 +260,6 @@ func (s *GPUDriverApi) CreateGPUDriver(in *edgeproto.GPUDriver, cb edgeproto.GPU
 			cb.Send(&edgeproto.Result{Message: "Setting up GPU driver build " + build.Name})
 			if creds, ok := credsMap[build.Name]; ok {
 				build.DriverPathCreds = creds
-			}
-			driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
-			if err != nil {
-				return err
-			}
-			ext := filepath.Ext(driverFileName)
-			in.Builds[ii].StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&in.Key, *region, build.Name, ext)
-			if err != nil {
-				return err
 			}
 			driverPathUrl, err := setupGPUDriver(ctx, storageClient, in, &build, cb)
 			if err != nil {
@@ -571,6 +588,15 @@ func (s *GPUDriverApi) AddGPUDriverBuild(in *edgeproto.GPUDriverBuildMember, cb 
 			if gpuDriver.Builds[ii].Name == in.Build.Name {
 				return fmt.Errorf("GPU driver build with same name already exists")
 			}
+		}
+		driverFileName, err := cloudcommon.GetFileNameWithExt(in.Build.DriverPath)
+		if err != nil {
+			return err
+		}
+		ext := filepath.Ext(driverFileName)
+		in.Build.StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&in.Key, *region, in.Build.Name, ext)
+		if err != nil {
+			return err
 		}
 		gpuDriver.Builds = append(gpuDriver.Builds, in.Build)
 		gpuDriver.State = ChangeInProgress

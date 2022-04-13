@@ -1,3 +1,17 @@
+// Copyright 2022 MobiledgeX, Inc
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // version definitions
 
 syntax = "proto3";
@@ -48,6 +62,7 @@ enum VersionHash {
   HASH_4ddeb801651b2acb84f5d182e445fce1 = 40 [(protogen.upgrade_func) = "AddSetupSpecificAppDNSRootForCloudlets"];
   HASH_156def83eec72a44248fabd79199efbe = 41 [(protogen.upgrade_func) = "AddGPUDriverStoragePaths"];
   HASH_636a7d17efd0532933313e27e6de0a5b = 42 [(protogen.upgrade_func) = "AddGPUDriverBuildStoragePaths"];
+  HASH_0a418578eee77cabd2b8e1dd1fa64dbe = 43 [(protogen.upgrade_func) = "FixInvalidGPUDriverPaths"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "6";
+  option (protogen.version_hash_salt) = "7";
 }
