@@ -284,7 +284,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 			}
 			if len(streamMsgs) > 0 {
 				for k, _ := range streamMsgs[len(streamMsgs)-1].Values {
-					if k == StreamMsgTypeEOM || k == StreamMsgTypeError {
+					if k == StreamMsgTypeEOM || k == StreamMsgTypeError || k == StreamMsgTypeInfoEOM {
 						// Since last msg was EOM/Error, reset this stream
 						// as it is for a new API call
 						cleanupOldStream = true
