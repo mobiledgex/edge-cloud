@@ -410,12 +410,32 @@ func PrintToFile(fname string, outputDir string, out string, truncate bool) {
 	}
 }
 
+var LicenseTxt = `# Copyright 2022 MobiledgeX, Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+`
+
+func PatchLicense(in string) string {
+	return LicenseTxt + in
+}
+
 func PrintToYamlFile(fname, outputDir string, data interface{}, truncate bool) {
 	out, err := yaml.Marshal(data)
 	if err != nil {
 		log.Fatalf("yaml marshal data failed, %v, %+v\n", err, data)
 	}
-	PrintToFile(fname, outputDir, string(out), truncate)
+	PrintToFile(fname, outputDir, PatchLicense(string(out)), truncate)
 }
 
 //creates an output directory with an optional timestamp.  Server log files, output from APIs, and
@@ -545,7 +565,8 @@ func CompareYamlFiles(name string, actions []string, compare *CompareYaml) bool 
 	log.Printf("Actions: %s\n%s", strings.Join(actions, ", "), string(compareInfo))
 
 	// figure out which file is the expected data based on the path
-	diffArgs := []string{"-au"}
+	// ignore comments
+	diffArgs := []string{"-au", "-I", "# .*"}
 	expectedFile := ""
 	if strings.Contains(compare.Yaml1, "github.com/mobiledgex/") {
 		diffArgs = append(diffArgs, compare.Yaml1, compare.Yaml2)

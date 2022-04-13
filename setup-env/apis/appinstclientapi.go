@@ -33,6 +33,12 @@ func RunAppInstClientAPI(api string, workerId string, apiFile string, outputDir 
 	outputFile := outputDir + "/" + "show-appinstclients-" + workerId + ".yml"
 	pidFile := "showAppInstClient" + workerId + ".pid"
 	if api == "start" {
+		err := ioutil.WriteFile(outputFile, []byte(util.LicenseTxt), 0644)
+		if err != nil {
+			log.Printf("Error - failed to write file: %s, %v\n", outputFile, err)
+			return false
+		}
+
 		ctrl := util.GetController("")
 		args := []string{"edgectl"}
 		tlsFile := ctrl.GetTlsFile()
@@ -45,11 +51,11 @@ func RunAppInstClientAPI(api string, workerId string, apiFile string, outputDir 
 		args = append(args, "controller", "ShowAppInstClient", "--datafile", apiFile)
 		// hide Location, since timestamps are always changing
 		args = append(args, "--hidetags", "nocmp")
-		args = append(args, ">", outputFile)
+		args = append(args, ">>", outputFile)
 		cmdStr := strings.Join(args, " ")
 		cmd := exec.Command("sh", "-c", cmdStr)
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-		err := cmd.Start()
+		err = cmd.Start()
 		if err != nil || cmd.Process == nil {
 			log.Printf("Error - failed to start command: %v\n", cmd)
 			return false
