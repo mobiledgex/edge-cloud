@@ -66,6 +66,6 @@ func RunInfluxAPI(api, influxname, apiFile string, apiFileVars map[string]string
 		return false
 	}
 	truncate := true
-	util.PrintToFile("show-commands.yml", outputDir, string(out), truncate)
+	util.PrintToFile("show-commands.yml", outputDir, util.PatchLicense(string(out)), truncate)
 	return true
 }
