@@ -565,7 +565,8 @@ func CompareYamlFiles(name string, actions []string, compare *CompareYaml) bool 
 	log.Printf("Actions: %s\n%s", strings.Join(actions, ", "), string(compareInfo))
 
 	// figure out which file is the expected data based on the path
-	diffArgs := []string{"-au"}
+	// ignore comments
+	diffArgs := []string{"-au", "-I", "# .*"}
 	expectedFile := ""
 	if strings.Contains(compare.Yaml1, "github.com/mobiledgex/") {
 		diffArgs = append(diffArgs, compare.Yaml1, compare.Yaml2)
