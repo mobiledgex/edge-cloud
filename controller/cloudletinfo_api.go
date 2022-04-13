@@ -76,7 +76,7 @@ func (s *CloudletInfoApi) Update(ctx context.Context, in *edgeproto.CloudletInfo
 	}
 
 	// publish the received info object on redis
-	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+	s.all.streamObjApi.UpdateStatus(ctx, in, nil, &in.State, in.Key.StreamKey())
 
 	in.Fields = edgeproto.CloudletInfoAllFields
 	in.Controller = ControllerId

@@ -1606,7 +1606,7 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 	log.SpanLog(ctx, log.DebugLevelApi, "update ClusterInst", "key", in.Key, "state", in.State, "status", in.Status, "resources", in.Resources)
 
 	// publish the received info object on redis
-	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+	s.all.streamObjApi.UpdateStatus(ctx, in, &in.State, nil, in.Key.StreamKey())
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		saveInst := false
@@ -1642,7 +1642,7 @@ func (s *ClusterInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.Clust
 		s.DeleteFromInfo(ctx, in)
 		// update stream message about deletion of main object
 		in.State = edgeproto.TrackedState_NOT_PRESENT
-		s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+		s.all.streamObjApi.UpdateStatus(ctx, in, &in.State, nil, in.Key.StreamKey())
 	}
 }
 

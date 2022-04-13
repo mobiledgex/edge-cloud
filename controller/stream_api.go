@@ -23,6 +23,7 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/rediscache"
@@ -34,8 +35,10 @@ var (
 	StreamMsgTypeError   = "error"
 	StreamMsgTypeSOM     = "start-of-stream-message"
 	StreamMsgTypeEOM     = "end-of-stream-message"
+	StreamMsgTypeInfoEOM = "end-of-info-stream-message"
 
-	StreamMsgReadTimeout = 30 * time.Minute
+	StreamMsgReadTimeout     = 30 * time.Minute
+	StreamMsgInfoReadTimeout = 3 * time.Second
 )
 
 type CleanupStreamAction bool
@@ -121,39 +124,45 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 		return err
 	}
 
-	decodeStreamMsg := func(sMsg map[string]interface{}) (bool, error) {
+	decodeStreamMsg := func(sMsg map[string]interface{}) (bool, bool, error) {
 		done := false
+		infoDone := false
 		for k, v := range sMsg {
 			switch k {
 			case StreamMsgTypeMessage:
 				val, ok := v.(string)
 				if !ok {
-					return done, fmt.Errorf("Invalid stream message %v, must be of type string", v)
+					return done, infoDone, fmt.Errorf("Invalid stream message %v, must be of type string", v)
 				}
 				cb.Send(&edgeproto.Result{Message: val})
 			case StreamMsgTypeError:
 				val, ok := v.(string)
 				if !ok {
-					return done, fmt.Errorf("Invalid stream error %v, must be of type string", v)
+					return done, infoDone, fmt.Errorf("Invalid stream error %v, must be of type string", v)
 				}
-				return done, fmt.Errorf(val)
+				return done, infoDone, fmt.Errorf(val)
 			case StreamMsgTypeEOM:
 				done = true
 				break
+			case StreamMsgTypeInfoEOM:
+				infoDone = true
+				// continue as there might be more messages after this
 			case StreamMsgTypeSOM:
 				// ignore
 			default:
-				return done, fmt.Errorf("Unsupported message type received: %v", k)
+				return done, infoDone, fmt.Errorf("Unsupported message type received: %v", k)
 			}
 
 		}
-		return done, nil
+		return done, infoDone, nil
 	}
 
 	lastStreamMsgId := ""
+	done := false
+	infoDone := false
 	for _, sMsg := range streamMsgs {
 		lastStreamMsgId = sMsg.ID
-		done, err := decodeStreamMsg(sMsg.Values)
+		done, infoDone, err = decodeStreamMsg(sMsg.Values)
 		if err != nil {
 			return err
 		}
@@ -161,19 +170,30 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 			return nil
 		}
 	}
+	// If infoDone is true, then exit as the CUD operation is done on the object.
+	// If controller restarts during such operation, then EOM will not be set and
+	// hence rely on InfoEOM to exit the stream
+	if infoDone {
+		return nil
+	}
 	if lastStreamMsgId == "" {
 		lastStreamMsgId = rediscache.RedisSmallestId
 	}
 
+	readTimeout := StreamMsgReadTimeout
 	for {
 		// Blocking read for new stream messages until EOM is found
 		xreadArgs := redis.XReadArgs{
 			Streams: []string{streamKey, lastStreamMsgId},
 			Count:   1,
-			Block:   StreamMsgReadTimeout,
+			Block:   readTimeout,
 		}
 		sMsg, err := redisClient.XRead(&xreadArgs).Result()
 		if err != nil {
+			if err == redis.Nil {
+				// timed out
+				return nil
+			}
 			return fmt.Errorf("Error reading from stream %s, %v", streamKey, err)
 		}
 		if len(sMsg) != 1 {
@@ -184,12 +204,17 @@ func (s *StreamObjApi) StreamMsgs(streamKey string, cb edgeproto.StreamObjApi_St
 			return fmt.Errorf("Output should only be for a single message, but multiple found %s, %v", streamKey, sMsgs)
 		}
 		lastStreamMsgId = sMsgs[0].ID
-		done, err := decodeStreamMsg(sMsgs[0].Values)
+		done, infoDone, err := decodeStreamMsg(sMsgs[0].Values)
 		if err != nil {
 			return err
 		}
 		if done {
 			return nil
+		}
+		if infoDone {
+			// Since CUD operation on the object is done from CRM side,
+			// reduce the timeout as it shouldn't take much time to end the operation
+			readTimeout = StreamMsgInfoReadTimeout
 		}
 	}
 }
@@ -259,7 +284,7 @@ func (s *StreamObjApi) startStream(ctx context.Context, cctx *CallContext, strea
 			}
 			if len(streamMsgs) > 0 {
 				for k, _ := range streamMsgs[len(streamMsgs)-1].Values {
-					if k == StreamMsgTypeEOM || k == StreamMsgTypeError {
+					if k == StreamMsgTypeEOM || k == StreamMsgTypeError || k == StreamMsgTypeInfoEOM {
 						// Since last msg was EOM/Error, reset this stream
 						// as it is for a new API call
 						cleanupOldStream = true
@@ -399,7 +424,7 @@ func (s *StreamObjApi) stopStream(ctx context.Context, cctx *CallContext, stream
 
 // Publish info object received from CRM to redis so that controller
 // can act on status messages & info state accordingly
-func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, streamKey string) {
+func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, state *edgeproto.TrackedState, cloudletState *dme.CloudletState, streamKey string) {
 	inObj, err := json.Marshal(obj)
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to marshal json object", "obj", obj, "err", err)
@@ -408,5 +433,44 @@ func (s *StreamObjApi) UpdateStatus(ctx context.Context, obj interface{}, stream
 	_, err = redisClient.Publish(streamKey, string(inObj)).Result()
 	if err != nil {
 		log.SpanLog(ctx, log.DebugLevelApi, "Failed to publish message on redis channel", "key", streamKey, "err", err)
+	}
+	infoDone := false
+	if state != nil {
+		if *state == edgeproto.TrackedState_READY ||
+			*state == edgeproto.TrackedState_CREATE_ERROR ||
+			*state == edgeproto.TrackedState_UPDATE_ERROR ||
+			*state == edgeproto.TrackedState_DELETE_ERROR ||
+			*state == edgeproto.TrackedState_NOT_PRESENT {
+			infoDone = true
+		}
+	}
+	if cloudletState != nil {
+		if *cloudletState == dme.CloudletState_CLOUDLET_STATE_READY ||
+			*cloudletState == dme.CloudletState_CLOUDLET_STATE_ERRORS {
+			infoDone = true
+		}
+	}
+	if infoDone {
+		streamClosed := false
+		streamMsgs, err := redisClient.XRange(streamKey, rediscache.RedisSmallestId, rediscache.RedisGreatestId).Result()
+		if err == nil && len(streamMsgs) > 0 {
+			for msgType, _ := range streamMsgs[len(streamMsgs)-1].Values {
+				switch msgType {
+				case StreamMsgTypeEOM:
+					fallthrough
+				case StreamMsgTypeError:
+					streamClosed = true
+				}
+			}
+		}
+		if !streamClosed {
+			streamMsg := map[string]interface{}{
+				StreamMsgTypeInfoEOM: "",
+			}
+			err := addMsgToRedisStream(ctx, streamKey, streamMsg)
+			if err != nil {
+				log.SpanLog(ctx, log.DebugLevelApi, "Failed to add info EOM message to redis stream", "key", streamKey, "err", err)
+			}
+		}
 	}
 }
