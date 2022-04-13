@@ -50,9 +50,10 @@ var VersionHash_UpgradeFuncs = map[int32]VersionUpgradeFunc{
 	38: AddDnsLabels,
 	39: AddCloudletKeyToCloudletPool,
 	40: AddSetupSpecificAppDNSRootForCloudlets,
-	41: AddGPUDriverStoragePaths,
-	42: AddGPUDriverBuildStoragePaths,
-	43: FixInvalidGPUDriverPaths,
+	41: nil,
+	42: nil,
+	43: nil,
+	44: AddGPUDriverStoragePaths,
 }
 var VersionHash_UpgradeFuncNames = map[int32]string{
 	0:  "",
@@ -88,9 +89,10 @@ var VersionHash_UpgradeFuncNames = map[int32]string{
 	38: "AddDnsLabels",
 	39: "AddCloudletKeyToCloudletPool",
 	40: "AddSetupSpecificAppDNSRootForCloudlets",
-	41: "AddGPUDriverStoragePaths",
-	42: "AddGPUDriverBuildStoragePaths",
-	43: "FixInvalidGPUDriverPaths",
+	41: "",
+	42: "",
+	43: "",
+	44: "AddGPUDriverStoragePaths",
 }
 
 // Auto-generated code: DO NOT EDIT

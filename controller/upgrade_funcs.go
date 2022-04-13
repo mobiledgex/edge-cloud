@@ -823,122 +823,6 @@ func AddSetupSpecificAppDNSRootForCloudlets(ctx context.Context, objStore objsto
 	return nil
 }
 
-func AddGPUDriverStoragePaths(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
-	// Process GPU drivers
-	gpuDriverKeys, err := getDbObjectKeys(objStore, "GPUDriver")
-	if err != nil {
-		return err
-	}
-	for key, _ := range gpuDriverKeys {
-		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
-			// get gpuDriver
-			gpuDriverStr := stm.Get(key)
-			if gpuDriverStr == "" {
-				return nil // was deleted
-			}
-			gpuDriver := edgeproto.GPUDriver{}
-			err := json.Unmarshal([]byte(gpuDriverStr), &gpuDriver)
-			if err != nil {
-				return fmt.Errorf("Unmarshal GPUDriver %s failed: %s", key, err)
-			}
-			if gpuDriver.StorageBucketName != "" && gpuDriver.LicenseConfigStoragePath != "" {
-				return nil // already done
-			}
-			gpuDriver.StorageBucketName = cloudcommon.GetGPUDriverBucketName(nodeMgr.DeploymentTag)
-			// old format doesn't have region in the storage path
-			gpuDriver.LicenseConfigStoragePath, err = cloudcommon.GetGPUDriverLicenseStoragePath(&gpuDriver.Key, "")
-			if err != nil {
-				return err
-			}
-			allApis.gpuDriverApi.store.STMPut(stm, &gpuDriver)
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	}
-
-	// Process cloudlets
-	cloudletKeys, err := getDbObjectKeys(objStore, "Cloudlet")
-	if err != nil {
-		return err
-	}
-	for key, _ := range cloudletKeys {
-		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
-			// get cloudlet
-			cloudletStr := stm.Get(key)
-			if cloudletStr == "" {
-				return nil // was deleted
-			}
-			cloudlet := edgeproto.Cloudlet{}
-			err := json.Unmarshal([]byte(cloudletStr), &cloudlet)
-			if err != nil {
-				return fmt.Errorf("Unmarshal Cloudlet %s failed: %s", key, err)
-			}
-			if cloudlet.LicenseConfigStoragePath != "" {
-				return nil // already done
-			}
-			// old format doesn't have region in the storage path
-			cloudlet.LicenseConfigStoragePath, err = cloudcommon.GetGPUDriverLicenseCloudletStoragePath(&cloudlet.GpuConfig.Driver, "", &cloudlet.Key)
-			if err != nil {
-				return err
-			}
-			allApis.cloudletApi.store.STMPut(stm, &cloudlet)
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func AddGPUDriverBuildStoragePaths(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
-	// Process GPU drivers
-	gpuDriverKeys, err := getDbObjectKeys(objStore, "GPUDriver")
-	if err != nil {
-		return err
-	}
-	for key, _ := range gpuDriverKeys {
-		_, err = objStore.ApplySTM(ctx, func(stm concurrency.STM) error {
-			// get gpuDriver
-			gpuDriverStr := stm.Get(key)
-			if gpuDriverStr == "" {
-				return nil // was deleted
-			}
-			gpuDriver := edgeproto.GPUDriver{}
-			err := json.Unmarshal([]byte(gpuDriverStr), &gpuDriver)
-			if err != nil {
-				return fmt.Errorf("Unmarshal GPUDriver %s failed: %s", key, err)
-			}
-			changed := false
-			for ii, build := range gpuDriver.Builds {
-				if build.StoragePath != "" {
-					continue
-				}
-				driverFileName, err := cloudcommon.GetFileNameWithExt(build.DriverPath)
-				if err != nil {
-					return err
-				}
-				ext := filepath.Ext(driverFileName)
-				gpuDriver.Builds[ii].StoragePath, err = cloudcommon.GetGPUDriverBuildStoragePath(&gpuDriver.Key, "", build.Name, ext)
-				if err != nil {
-					return err
-				}
-				changed = true
-			}
-			if changed {
-				allApis.gpuDriverApi.store.STMPut(stm, &gpuDriver)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func OldGetGPUDriverLicenseStoragePath(key *edgeproto.GPUDriverKey) (string, error) {
 	path, err := cloudcommon.GetGPUDriverStoragePath(key, "")
 	if err != nil {
@@ -963,7 +847,7 @@ func OldGetGPUDriverBuildStoragePath(key *edgeproto.GPUDriverKey, buildName, ext
 	return fmt.Sprintf("%s/%s%s", path, buildName, ext), nil
 }
 
-func FixInvalidGPUDriverPaths(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
+func AddGPUDriverStoragePaths(ctx context.Context, objStore objstore.KVStore, allApis *AllApis) error {
 	// Process GPU drivers
 	gpuDriverKeys, err := getDbObjectKeys(objStore, "GPUDriver")
 	if err != nil {
@@ -981,13 +865,10 @@ func FixInvalidGPUDriverPaths(ctx context.Context, objStore objstore.KVStore, al
 			if err != nil {
 				return fmt.Errorf("Unmarshal GPUDriver %s failed: %s", key, err)
 			}
-			invalidLicCfgPath, err := cloudcommon.GetGPUDriverLicenseStoragePath(&gpuDriver.Key, "")
-			if err != nil {
-				return err
+			if gpuDriver.StorageBucketName != "" && gpuDriver.LicenseConfigStoragePath != "" {
+				return nil // already done
 			}
-			if gpuDriver.LicenseConfigStoragePath != invalidLicCfgPath {
-				return nil // already fixed
-			}
+			gpuDriver.StorageBucketName = cloudcommon.GetGPUDriverBucketName(nodeMgr.DeploymentTag)
 			gpuDriver.LicenseConfigStoragePath, err = OldGetGPUDriverLicenseStoragePath(&gpuDriver.Key)
 			if err != nil {
 				return err
@@ -999,12 +880,8 @@ func FixInvalidGPUDriverPaths(ctx context.Context, objStore objstore.KVStore, al
 					return err
 				}
 				ext := filepath.Ext(driverFileName)
-				invalidStoragePath, err := cloudcommon.GetGPUDriverBuildStoragePath(&gpuDriver.Key, "", build.Name, ext)
-				if err != nil {
-					return err
-				}
-				if build.StoragePath != invalidStoragePath {
-					continue // already fixed
+				if build.StoragePath != "" {
+					continue // already done
 				}
 				gpuDriver.Builds[ii].StoragePath, err = OldGetGPUDriverBuildStoragePath(&gpuDriver.Key, build.Name, ext)
 				if err != nil {
@@ -1036,12 +913,8 @@ func FixInvalidGPUDriverPaths(ctx context.Context, objStore objstore.KVStore, al
 			if err != nil {
 				return fmt.Errorf("Unmarshal Cloudlet %s failed: %s", key, err)
 			}
-			invalidLicCfgPath, err := cloudcommon.GetGPUDriverLicenseCloudletStoragePath(&cloudlet.GpuConfig.Driver, "", &cloudlet.Key)
-			if err != nil {
-				return err
-			}
-			if cloudlet.LicenseConfigStoragePath != invalidLicCfgPath {
-				return nil // already fixed
+			if cloudlet.LicenseConfigStoragePath != "" {
+				return nil // already done
 			}
 			cloudlet.LicenseConfigStoragePath, err = OldGetGPUDriverLicenseCloudletStoragePath(&cloudlet.GpuConfig.Driver, cloudlet.Key.Name)
 			if err != nil {
