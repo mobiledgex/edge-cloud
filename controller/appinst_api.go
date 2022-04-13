@@ -2029,7 +2029,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 	log.SpanLog(ctx, log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State, "status", in.Status, "powerstate", in.PowerState, "uri", in.Uri)
 
 	// publish the received info object on redis
-	s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+	s.all.streamObjApi.UpdateStatus(ctx, in, &in.State, nil, in.Key.StreamKey())
 
 	s.sync.ApplySTMWait(ctx, func(stm concurrency.STM) error {
 		applyUpdate := false
@@ -2093,7 +2093,7 @@ func (s *AppInstApi) UpdateFromInfo(ctx context.Context, in *edgeproto.AppInstIn
 		s.DeleteFromInfo(ctx, in)
 		// update stream message about deletion of main object
 		in.State = edgeproto.TrackedState_NOT_PRESENT
-		s.all.streamObjApi.UpdateStatus(ctx, in, in.Key.StreamKey())
+		s.all.streamObjApi.UpdateStatus(ctx, in, &in.State, nil, in.Key.StreamKey())
 	}
 }
 
