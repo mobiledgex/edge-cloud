@@ -2967,7 +2967,13 @@ func (m *mex) generateGetReferences() {
 		}
 		refMap[obj] = refs
 	}
-	for obj, refs := range refMap {
+	objs := []string{}
+	for obj, _ := range refMap {
+		objs = append(objs, obj)
+	}
+	sort.Strings(objs)
+	for _, obj := range objs {
+		refs := refMap[obj]
 		strs := []string{}
 		for ref, _ := range refs {
 			strs = append(strs, "\""+ref+"\"")
