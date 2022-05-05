@@ -23,8 +23,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/gensupport"
-	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/gensupport"
+	"github.com/edgexr/edge-cloud/protogen"
 )
 
 type TestCud struct {
@@ -517,13 +517,13 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 		t.PrintImport("", "github.com/stretchr/testify/require")
 	}
 	if t.importLog {
-		t.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
+		t.PrintImport("", "github.com/edgexr/edge-cloud/log")
 	}
 	if t.importCli {
-		t.PrintImport("", "github.com/mobiledgex/edge-cloud/cli")
+		t.PrintImport("", "github.com/edgexr/edge-cloud/cli")
 	}
 	if t.importWrapper {
-		t.PrintImport("", "github.com/mobiledgex/edge-cloud/edgectl/wrapper")
+		t.PrintImport("", "github.com/edgexr/edge-cloud/edgectl/wrapper")
 	}
 }
 

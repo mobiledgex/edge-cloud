@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 var LocalTestZone = "localtest.net"

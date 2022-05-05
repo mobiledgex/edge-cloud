@@ -20,8 +20,8 @@ import (
 
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/gensupport"
-	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/gensupport"
+	"github.com/edgexr/edge-cloud/protogen"
 	"github.com/spf13/cobra"
 )
 
@@ -104,7 +104,7 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 		g.PrintImport("", "errors")
 	}
 	if g.importCli {
-		g.PrintImport("", "github.com/mobiledgex/edge-cloud/cli")
+		g.PrintImport("", "github.com/edgexr/edge-cloud/cli")
 	}
 	if g.importStatus {
 		g.PrintImport("", "google.golang.org/grpc/status")

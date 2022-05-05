@@ -19,7 +19,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/objstore"
 )
 
 //based on the api some errors will be converted to no error

@@ -16,7 +16,7 @@ package edgeproto
 
 import (
 	v3 "github.com/coreos/etcd/clientv3"
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/objstore"
 )
 
 func GetSTMOpts(opts ...objstore.KVOp) []v3.OpOption {

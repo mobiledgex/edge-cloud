@@ -27,11 +27,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
-	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	edgeutil "github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	dmecommon "github.com/edgexr/edge-cloud/d-match-engine/dme-common"
+	dmeproto "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/setup-env/util"
+	edgeutil "github.com/edgexr/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
@@ -600,7 +600,7 @@ func runDmeAPIiter(ctx context.Context, api, apiFile, outputDir string, apiReque
 		var expirySeconds int64 = 600
 		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
 			goPath := os.Getenv("GOPATH")
-			datadir := goPath + "/" + "src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data"
+			datadir := goPath + "/" + "src/github.com/edgexr/edge-cloud/setup-env/e2e-tests/data"
 			privKeyFile := datadir + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
 			expTime := time.Now().Add(time.Duration(expirySeconds) * time.Second).Unix()
 			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.OrgName,

@@ -17,7 +17,7 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "result.proto";
-import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/edgexr/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "app.proto";
 import "cloudletpool.proto";

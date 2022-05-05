@@ -19,11 +19,11 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/util/tasks"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	influxq "github.com/edgexr/edge-cloud/controller/influxq_client"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/util/tasks"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )

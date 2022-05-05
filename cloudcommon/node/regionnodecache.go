@@ -17,7 +17,7 @@ package node
 import (
 	"context"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 // Wrapper around edgeproto.NodeCache to add in the region

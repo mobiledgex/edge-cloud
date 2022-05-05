@@ -22,7 +22,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 type authClaims struct {

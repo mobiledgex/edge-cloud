@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 func SendReq(uri string, app *edgeproto.App) (string, error) {

@@ -18,9 +18,9 @@ import (
 	fmt "fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/objstore"
 	"github.com/opentracing/opentracing-go"
 	context "golang.org/x/net/context"
 )

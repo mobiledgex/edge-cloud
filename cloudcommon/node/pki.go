@@ -25,10 +25,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	mextls "github.com/mobiledgex/edge-cloud/tls"
-	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	mextls "github.com/edgexr/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/vault"
 )
 
 var refreshCertInterval = 48 * time.Hour

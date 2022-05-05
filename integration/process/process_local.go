@@ -41,8 +41,8 @@ import (
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/elastic/go-elasticsearch/v7"
 	influxclient "github.com/influxdata/influxdb/client/v2"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
-	mextls "github.com/mobiledgex/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/cloudcommon/influxsup"
+	mextls "github.com/edgexr/edge-cloud/tls"
 	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -907,7 +907,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 
 	// run setup script
 	gopath := os.Getenv("GOPATH")
-	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh"
+	setup := gopath + "/src/github.com/edgexr/edge-cloud/vault/setup.sh"
 	out := p.Run("/bin/sh", setup, &err)
 	fmt.Println(out)
 	// get roleIDs and secretIDs
@@ -920,7 +920,7 @@ func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	}
 	for _, region := range strings.Split(p.Regions, ",") {
 		// run setup script
-		setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup-region.sh " + region
+		setup := gopath + "/src/github.com/edgexr/edge-cloud/vault/setup-region.sh " + region
 		out := p.Run("/bin/sh", setup, &err)
 		if err != nil {
 			fmt.Println(out)

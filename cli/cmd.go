@@ -22,9 +22,9 @@ import (
 	"reflect"
 	"strings"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	edgeproto "github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/util"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

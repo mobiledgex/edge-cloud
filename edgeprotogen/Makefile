@@ -1,7 +1,7 @@
 # Makefile
 
 APIS		= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/googleapis)
-EDGEPROTOGENDIR	= ${GOPATH}/src/github.com/mobiledgex/edge-proto/edgeprotogen
+EDGEPROTOGENDIR	= ${GOPATH}/src/github.com/edgexr/edge-proto/edgeprotogen
 PROTOS		= edgeprotogen.proto
 
 build: $(PROTOS)

@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 const EtcdLocalData string = "etcdLocal_data"

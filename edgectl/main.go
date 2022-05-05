@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mobiledgex/edge-cloud/cli"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/gencmd"
-	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/cli"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/gencmd"
+	"github.com/edgexr/edge-cloud/tls"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )

@@ -17,14 +17,14 @@ package defaultoperator
 import (
 	"context"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/version"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/version"
 
-	operator "github.com/mobiledgex/edge-cloud/d-match-engine/operator"
-	simulatedloc "github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator/simulated-location"
-	simulatedqos "github.com/mobiledgex/edge-cloud/d-match-engine/operator/defaultoperator/simulated-qos"
+	operator "github.com/edgexr/edge-cloud/d-match-engine/operator"
+	simulatedloc "github.com/edgexr/edge-cloud/d-match-engine/operator/defaultoperator/simulated-location"
+	simulatedqos "github.com/edgexr/edge-cloud/d-match-engine/operator/defaultoperator/simulated-qos"
 
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 //OperatorApiGw represents an Operator API Gateway

@@ -6,9 +6,9 @@ package edgeproto
 import (
 	"encoding/json"
 	fmt "fmt"
+	"github.com/edgexr/edge-cloud/util"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/mobiledgex/edge-cloud/util"
 	io "io"
 	math "math"
 	math_bits "math/bits"

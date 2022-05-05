@@ -17,7 +17,7 @@ package testutil
 import (
 	"context"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 func (s *DummyServer) AddVMPoolMember(ctx context.Context, cloudlet *edgeproto.VMPoolMember) (*edgeproto.Result, error) {

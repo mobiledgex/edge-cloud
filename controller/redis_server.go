@@ -17,8 +17,8 @@
 package main
 
 import (
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 func StartLocalRedisServer(opts ...process.StartOp) (*process.RedisCache, error) {

@@ -24,7 +24,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"github.com/edgexr/edge-cloud/setup-env/util"
 )
 
 func RunCommands(apiFile string, apiFileVars map[string]string, outputDir string, retry *bool) bool {

@@ -17,7 +17,7 @@ package k8smgmt
 import (
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 

@@ -17,7 +17,7 @@
 syntax = "proto3";
 package edgeproto;
 
-import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/edgexr/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 import "cluster.proto";
 import "decimal.proto";

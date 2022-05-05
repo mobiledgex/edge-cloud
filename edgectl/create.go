@@ -17,9 +17,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/cli"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/gencmd"
+	"github.com/edgexr/edge-cloud/cli"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/gencmd"
 )
 
 var createCmd = &cli.Command{

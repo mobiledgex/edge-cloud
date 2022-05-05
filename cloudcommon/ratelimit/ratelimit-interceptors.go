@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"

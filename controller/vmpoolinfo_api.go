@@ -17,7 +17,7 @@ package main
 import (
 	"context"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 type VMPoolInfoApi struct {

@@ -30,15 +30,15 @@ import (
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/common/xind"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/kind"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/setup-env/apis"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/platform/common/xind"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/platform/kind"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/platform/pc"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/setup-env/apis"
+	"github.com/edgexr/edge-cloud/setup-env/util"
 
-	uutil "github.com/mobiledgex/edge-cloud/util"
+	uutil "github.com/edgexr/edge-cloud/util"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -179,7 +179,7 @@ func ReadSetupFile(setupfile string, deployment interface{}, vars map[string]str
 			fmt.Fprintf(os.Stderr, "GOPATH not set, cannot calculate tlsoutdir")
 			return false
 		}
-		tlsDir = goPath + "/src/github.com/mobiledgex/edge-cloud/tls"
+		tlsDir = goPath + "/src/github.com/edgexr/edge-cloud/tls"
 		tlsOutDir = tlsDir + "/out"
 		vars["tlsoutdir"] = tlsOutDir
 	}

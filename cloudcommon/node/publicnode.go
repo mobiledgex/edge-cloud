@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/log"
-	mextls "github.com/mobiledgex/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/log"
+	mextls "github.com/edgexr/edge-cloud/tls"
 )
 
 // Third party services that we deploy all have their own letsencrypt-public

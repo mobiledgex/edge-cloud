@@ -23,12 +23,12 @@ import (
 	strings "strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	distributed_match_engine "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/util"
 	context "golang.org/x/net/context"
 )
 

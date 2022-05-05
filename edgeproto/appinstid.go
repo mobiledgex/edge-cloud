@@ -18,7 +18,7 @@ import (
 	fmt "fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/objstore"
 )
 
 type AppInstIdStore struct{}

@@ -21,13 +21,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/tls"
-	"github.com/mobiledgex/edge-cloud/version"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/version"
 	"google.golang.org/grpc"
 )
 

@@ -18,7 +18,7 @@ syntax = "proto3";
 package edgeproto;
 
 import "result.proto";
-import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/edgexr/edge-cloud/protogen/protogen.proto";
 import "google/api/annotations.proto";
 import "gogoproto/gogo.proto";
 

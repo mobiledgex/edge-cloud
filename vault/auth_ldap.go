@@ -19,7 +19,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 type LdapAuth struct {

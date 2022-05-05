@@ -30,8 +30,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"github.com/edgexr/edge-cloud/setup-env/e2e-tests/e2eapi"
+	"github.com/edgexr/edge-cloud/setup-env/util"
 )
 
 var (
@@ -113,7 +113,7 @@ func validateArgs() {
 	testConfig.Vars["outputdir"] = *outputDir
 	dataDir, found := testConfig.Vars["datadir"]
 	if !found {
-		dataDir = "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data"
+		dataDir = "$GOPATH/src/github.com/edgexr/edge-cloud/setup-env/e2e-tests/data"
 		testConfig.Vars["datadir"] = dataDir
 	}
 

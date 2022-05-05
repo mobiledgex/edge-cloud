@@ -19,7 +19,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 	"github.com/stretchr/testify/require"
 )
 

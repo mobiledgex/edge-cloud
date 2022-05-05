@@ -18,7 +18,7 @@ syntax = "proto3";
 package edgeproto;
 
 import "google/api/annotations.proto";
-import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/edgexr/edge-cloud/protogen/protogen.proto";
 import "cloudletkey.proto";
 import "flavor.proto";
 import "result.proto";
@@ -26,9 +26,9 @@ import "restagtable.proto";
 import "common.proto";
 import "infraresources.proto";
 import "org.proto";
-import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "github.com/edgexr/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "gogoproto/gogo.proto";
-import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
+import "github.com/edgexr/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;
 option (gogoproto.goproto_unkeyed_all) = false;

@@ -75,7 +75,7 @@ func main() {
 
 		count := 0
 		packages.Visit(binPkgs, func(dep *packages.Package) bool {
-			if strings.HasPrefix(dep.PkgPath, "github.com/mobiledgex/edge-cloud/") || strings.HasPrefix(dep.PkgPath, "github.com/mobiledgex/edge-cloud-infra/") {
+			if strings.HasPrefix(dep.PkgPath, "github.com/edgexr/edge-cloud/") || strings.HasPrefix(dep.PkgPath, "github.com/edgexr/edge-cloud-infra/") {
 				// self-referenced package, visit but do not process as dep
 				return true
 			}

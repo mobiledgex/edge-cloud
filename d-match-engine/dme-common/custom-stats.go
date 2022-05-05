@@ -17,9 +17,9 @@ package dmecommon
 import (
 	"sync"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	grpcstats "github.com/edgexr/edge-cloud/metrics/grpc"
 )
 
 // Filled in by DME. Added to EdgeEventStatCall to update stats

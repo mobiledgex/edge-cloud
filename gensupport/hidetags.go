@@ -21,7 +21,7 @@ import (
 	"github.com/gogo/protobuf/gogoproto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/protogen"
 )
 
 // GenerateHideTags requires "strings" and "cli" packages to be imported.

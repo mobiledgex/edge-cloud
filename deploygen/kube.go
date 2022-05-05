@@ -20,7 +20,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/util"
 )
 
 var kubeLbT *template.Template

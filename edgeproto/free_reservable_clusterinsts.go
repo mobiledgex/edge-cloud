@@ -17,7 +17,7 @@ package edgeproto
 import (
 	"sync"
 
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 	context "golang.org/x/net/context"
 )
 

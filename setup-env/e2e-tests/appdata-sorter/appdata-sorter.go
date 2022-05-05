@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 	yaml "github.com/mobiledgex/yaml/v2"
 )
 

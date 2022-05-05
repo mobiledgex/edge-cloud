@@ -35,10 +35,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/log"
-	edgetls "github.com/mobiledgex/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	"github.com/edgexr/edge-cloud/log"
+	edgetls "github.com/edgexr/edge-cloud/tls"
 	"github.com/segmentio/ksuid"
 	"github.com/xtaci/smux"
 )

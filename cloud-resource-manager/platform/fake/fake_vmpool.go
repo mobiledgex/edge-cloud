@@ -14,7 +14,7 @@
 
 package fake
 
-import "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+import "github.com/edgexr/edge-cloud/cloud-resource-manager/platform"
 
 type PlatformVMPool struct {
 	Platform

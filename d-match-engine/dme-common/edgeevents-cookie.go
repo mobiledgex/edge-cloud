@@ -21,8 +21,8 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/log"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 type EdgeEventsCookieKey struct {

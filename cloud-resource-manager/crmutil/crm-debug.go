@@ -21,8 +21,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 const (

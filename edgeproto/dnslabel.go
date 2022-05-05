@@ -19,8 +19,8 @@ import (
 	fmt "fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/objstore"
 )
 
 // CloudletDnsLabelStore is used to store Cloudlet DNS labels which are

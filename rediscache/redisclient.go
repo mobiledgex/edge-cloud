@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 const (

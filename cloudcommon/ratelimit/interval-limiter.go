@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/util"
 )
 
 /*

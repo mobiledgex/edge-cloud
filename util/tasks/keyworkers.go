@@ -18,7 +18,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 // KeyWorkers manages worker threads for keys. Each key gets its own thread,

@@ -1,4 +1,4 @@
-module github.com/mobiledgex/edge-cloud
+module github.com/edgexr/edge-cloud
 
 go 1.15
 

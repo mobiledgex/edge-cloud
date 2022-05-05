@@ -22,7 +22,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/deploygen"
+	"github.com/edgexr/edge-cloud/deploygen"
 )
 
 var addr = flag.String("addr", "127.0.0.1:61001", "listener address")

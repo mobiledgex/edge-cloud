@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/vault"
 )
 
 type ApiKeyData struct {

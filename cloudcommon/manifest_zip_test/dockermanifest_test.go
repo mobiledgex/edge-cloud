@@ -22,8 +22,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/log"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/require"
 )

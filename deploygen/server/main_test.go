@@ -19,8 +19,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/deploygen"
-	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/edgexr/edge-cloud/deploygen"
+	"github.com/edgexr/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
 

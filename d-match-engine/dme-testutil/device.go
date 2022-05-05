@@ -15,8 +15,8 @@
 package dmetest
 
 import (
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
 )
 
 var platosUniqueId = "MEL-ID"

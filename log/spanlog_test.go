@@ -120,6 +120,6 @@ func TestLoggingSpeed(t *testing.T) {
 	// log time took 31.009287796s
 	// span log time took 51.11326687s
 	// PASS
-	// ok  	github.com/mobiledgex/edge-cloud/log	82.191s
+	// ok  	github.com/edgexr/edge-cloud/log	82.191s
 
 }

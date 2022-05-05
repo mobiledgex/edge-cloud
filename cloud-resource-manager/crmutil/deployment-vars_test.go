@@ -17,7 +17,7 @@ package crmutil
 import (
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/cloudcommon"
 	"github.com/stretchr/testify/assert"
 )
 

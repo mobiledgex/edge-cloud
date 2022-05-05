@@ -18,9 +18,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/testutil"
 	"github.com/stretchr/testify/require"
 )
 

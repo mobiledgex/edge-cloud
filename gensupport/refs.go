@@ -20,7 +20,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/protogen"
 )
 
 // Handle references between protobuffer objects (Messages).

@@ -15,9 +15,9 @@
 package simulatedlocation
 
 import (
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/log"
+	dmecommon "github.com/edgexr/edge-cloud/d-match-engine/dme-common"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 var fakeLocation = dme.Loc{Latitude: 32.013988, Longitude: -96.598243}

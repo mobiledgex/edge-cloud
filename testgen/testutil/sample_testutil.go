@@ -6,13 +6,13 @@ package testutil
 import (
 	"context"
 	fmt "fmt"
+	_ "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/edgectl/wrapper"
+	"github.com/edgexr/edge-cloud/log"
+	_ "github.com/edgexr/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/testgen"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
-	"github.com/mobiledgex/edge-cloud/log"
-	_ "github.com/mobiledgex/edge-cloud/protogen"
-	"github.com/mobiledgex/edge-cloud/testgen"
 	"google.golang.org/grpc"
 	math "math"
 )

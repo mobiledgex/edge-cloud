@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/util"
 )
 
 var FlavorData = []edgeproto.Flavor{

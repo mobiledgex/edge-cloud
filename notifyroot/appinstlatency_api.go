@@ -18,9 +18,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	dmecommon "github.com/edgexr/edge-cloud/d-match-engine/dme-common"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 type AppInstLatencyApi struct{}

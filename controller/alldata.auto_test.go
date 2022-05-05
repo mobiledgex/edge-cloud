@@ -6,10 +6,10 @@ package main
 import (
 	"context"
 	fmt "fmt"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	_ "github.com/edgexr/edge-cloud/protogen"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	_ "github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/stretchr/testify/require"
 	math "math"
 	"testing"

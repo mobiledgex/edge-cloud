@@ -17,8 +17,8 @@ package main
 import (
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/objstore"
 	"github.com/stretchr/testify/require"
 )
 

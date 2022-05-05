@@ -6,10 +6,10 @@ package gencmd
 import (
 	"context"
 	fmt "fmt"
+	"github.com/edgexr/edge-cloud/cli"
+	edgeproto "github.com/edgexr/edge-cloud/edgeproto"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/mobiledgex/edge-cloud/cli"
-	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/status"
 	math "math"

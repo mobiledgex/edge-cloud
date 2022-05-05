@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/mobiledgex/edge-cloud/gensupport"
+import "github.com/edgexr/edge-cloud/gensupport"
 
 func main() {
 	plugin := ControllerGen{}

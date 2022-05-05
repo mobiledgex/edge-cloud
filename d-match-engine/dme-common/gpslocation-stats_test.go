@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
 	"github.com/stretchr/testify/assert"
 )
 

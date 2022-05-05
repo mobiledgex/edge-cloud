@@ -30,9 +30,9 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/gensupport"
-	"github.com/mobiledgex/edge-cloud/protogen"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/gensupport"
+	"github.com/edgexr/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/util"
 )
 
 func RegisterMex() {
@@ -153,14 +153,14 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if hasGenerateCud {
 		m.gen.PrintImport("", "encoding/json")
-		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/objstore")
+		m.gen.PrintImport("", "github.com/edgexr/edge-cloud/objstore")
 		m.gen.PrintImport("", "github.com/coreos/etcd/clientv3/concurrency")
 	}
 	if m.importUtil {
-		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
+		m.gen.PrintImport("", "github.com/edgexr/edge-cloud/util")
 	}
 	if m.importLog {
-		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
+		m.gen.PrintImport("", "github.com/edgexr/edge-cloud/log")
 	}
 	if m.importStrings {
 		m.gen.PrintImport("strings", "strings")

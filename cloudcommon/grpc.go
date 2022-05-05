@@ -22,8 +22,8 @@ import (
 
 	"github.com/gogo/gateway"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

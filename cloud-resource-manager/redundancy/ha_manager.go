@@ -21,11 +21,11 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/rediscache"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/rediscache"
 	yaml "github.com/mobiledgex/yaml/v2"
 )
 

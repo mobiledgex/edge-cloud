@@ -21,15 +21,15 @@ import (
 	"strings"
 
 	"github.com/cloudflare/cloudflare-go"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/chefmgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/cloudflaremgmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/federationmgmt"
-	pfutils "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/utils"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/gcs"
-	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/chefmgmt"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/cloudflaremgmt"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/federationmgmt"
+	pfutils "github.com/edgexr/edge-cloud/cloud-resource-manager/platform/utils"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/gcs"
+	"github.com/edgexr/edge-cloud/vault"
 )
 
 // This is a global in order to cache it across all platforms in the Controller.

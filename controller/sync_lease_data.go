@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/log"
 )
 
 var leaseTimeoutSec int64 = 5

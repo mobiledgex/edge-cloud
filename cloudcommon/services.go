@@ -25,11 +25,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/rediscache"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/rediscache"
+	"github.com/edgexr/edge-cloud/util"
 )
 
 func GetCloudletLogFile(filePrefix string) string {

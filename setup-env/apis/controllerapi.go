@@ -24,14 +24,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/edgectl/wrapper"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/rediscache"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	"github.com/mobiledgex/edge-cloud/testutil"
-	uutil "github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/edgectl/wrapper"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/rediscache"
+	"github.com/edgexr/edge-cloud/setup-env/util"
+	"github.com/edgexr/edge-cloud/testutil"
+	uutil "github.com/edgexr/edge-cloud/util"
 )
 
 var appData edgeproto.AllData

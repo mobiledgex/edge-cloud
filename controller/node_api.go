@@ -20,7 +20,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 // Nodes are not stored in the etcd database, because they

@@ -20,9 +20,9 @@ import (
 	"time"
 
 	client "github.com/influxdata/influxdb/client/v2"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
 	"github.com/opentracing/opentracing-go"
 )
 

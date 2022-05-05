@@ -19,8 +19,8 @@ import (
 	"log"
 	"time"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	dmetest "github.com/edgexr/edge-cloud/d-match-engine/dme-testutil"
 	"golang.org/x/net/context"
 )
 

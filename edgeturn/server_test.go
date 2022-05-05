@@ -28,10 +28,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	edgetls "github.com/mobiledgex/edge-cloud/tls"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/setup-env/util"
+	edgetls "github.com/edgexr/edge-cloud/tls"
 	"github.com/stretchr/testify/require"
 	"github.com/xtaci/smux"
 )

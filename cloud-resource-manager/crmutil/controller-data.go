@@ -23,16 +23,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/redundancy"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/redundancy"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
-	"github.com/mobiledgex/edge-cloud/cloudcommon"
-	"github.com/mobiledgex/edge-cloud/cloudcommon/node"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util/tasks"
+	"github.com/edgexr/edge-cloud/cloud-resource-manager/platform"
+	"github.com/edgexr/edge-cloud/cloudcommon"
+	"github.com/edgexr/edge-cloud/cloudcommon/node"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/notify"
+	"github.com/edgexr/edge-cloud/util/tasks"
 	opentracing "github.com/opentracing/opentracing-go"
 )
 

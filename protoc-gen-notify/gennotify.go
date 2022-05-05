@@ -20,8 +20,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"github.com/mobiledgex/edge-cloud/gensupport"
-	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/gensupport"
+	"github.com/edgexr/edge-cloud/protogen"
 )
 
 type GenNotify struct {
@@ -50,7 +50,7 @@ func (g *GenNotify) GenerateImports(file *generator.FileDescriptor) {
 	}
 	g.PrintImport("", "github.com/gogo/protobuf/types")
 	if g.importLog {
-		g.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
+		g.PrintImport("", "github.com/edgexr/edge-cloud/log")
 	}
 	if g.importContext {
 		g.PrintImport("", "context")

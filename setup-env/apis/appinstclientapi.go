@@ -25,7 +25,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"github.com/edgexr/edge-cloud/setup-env/util"
 )
 
 // This starts and stops ShowAppInstClient apis

@@ -18,13 +18,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vault"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/vault"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	dme "github.com/edgexr/edge-cloud/d-match-engine/dme-proto"
 )
 
 func TestEdgeEventsCookie(t *testing.T) {

@@ -21,7 +21,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/cli"
+	"github.com/edgexr/edge-cloud/cli"
 )
 
 func RunEdgectl(args []string, ops ...RunOp) ([]byte, error) {

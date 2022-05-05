@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"testing"
 
-	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	edgeproto "github.com/edgexr/edge-cloud/edgeproto"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/require"
 )

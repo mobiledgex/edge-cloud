@@ -17,10 +17,10 @@ package main
 import (
 	"testing"
 
-	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
-	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/vault"
+	dmecommon "github.com/edgexr/edge-cloud/d-match-engine/dme-common"
+	dmetest "github.com/edgexr/edge-cloud/d-match-engine/dme-testutil"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/vault"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"

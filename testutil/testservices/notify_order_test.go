@@ -17,7 +17,7 @@ package testservices
 import (
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/edgexr/edge-cloud/notify"
 )
 
 func TestDummySendOrder(t *testing.T) {

@@ -26,10 +26,10 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
-	setupmex "github.com/mobiledgex/edge-cloud/setup-env/setup-mex"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	log "github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/setup-env/e2e-tests/e2eapi"
+	setupmex "github.com/edgexr/edge-cloud/setup-env/setup-mex"
+	"github.com/edgexr/edge-cloud/setup-env/util"
 )
 
 var actionList = fmt.Sprintf("%v", reflect.ValueOf(actionChoices).MapKeys())

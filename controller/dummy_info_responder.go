@@ -19,9 +19,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/log"
+	"github.com/edgexr/edge-cloud/notify"
 )
 
 // Set up dummy responses for info data expected from CRM.

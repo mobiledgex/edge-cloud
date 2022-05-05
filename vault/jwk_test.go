@@ -19,7 +19,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/edgexr/edge-cloud/integration/process"
 	"github.com/stretchr/testify/require"
 )
 

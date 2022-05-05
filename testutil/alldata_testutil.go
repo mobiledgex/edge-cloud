@@ -5,10 +5,10 @@ package testutil
 
 import (
 	fmt "fmt"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	_ "github.com/edgexr/edge-cloud/protogen"
 	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	_ "github.com/mobiledgex/edge-cloud/protogen"
 	math "math"
 )
 

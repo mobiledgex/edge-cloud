@@ -17,7 +17,7 @@ package node
 import (
 	"context"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/edgeproto"
 )
 
 // CloudletPoolLookup interface used by events to determine if cloudlet

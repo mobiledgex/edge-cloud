@@ -17,7 +17,7 @@ package notify
 import (
 	"context"
 
-	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	edgeproto "github.com/edgexr/edge-cloud/edgeproto"
 )
 
 // Define a settings receive handler for the common case of copying

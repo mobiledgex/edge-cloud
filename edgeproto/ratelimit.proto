@@ -17,7 +17,7 @@ package edgeproto;
 
 import "result.proto";
 import "google/api/annotations.proto";
-import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/edgexr/edge-cloud/protogen/protogen.proto";
 import "gogoproto/gogo.proto";
 
 option (gogoproto.goproto_unrecognized_all) = false;

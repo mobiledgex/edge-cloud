@@ -15,8 +15,8 @@
 package deploygen
 
 import (
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/edgexr/edge-cloud/edgeproto"
+	"github.com/edgexr/edge-cloud/util"
 )
 
 var KubernetesBasic = "kubernetes-basic"

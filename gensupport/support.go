@@ -35,8 +35,8 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/gogo/protobuf/vanity"
 	"github.com/gogo/protobuf/vanity/command"
-	"github.com/mobiledgex/edge-cloud/edgeprotogen"
-	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/edgexr/edge-cloud/edgeprotogen"
+	"github.com/edgexr/edge-cloud/protogen"
 )
 
 const AutoGenComment = "// Auto-generated code: DO NOT EDIT"
